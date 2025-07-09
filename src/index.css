@@ -8,33 +8,52 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Balanzzo Brand Colors - Professional Financial Theme */
+    --background: 43 37% 89%; /* #dad0bc - warm cream */
+    --foreground: 48 11% 7%; /* #100f0b - deep charcoal */
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%; /* Pure white for cards */
+    --card-foreground: 48 11% 7%; /* #100f0b */
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 48 11% 7%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 48 11% 7%; /* #100f0b - main brand dark */
+    --primary-foreground: 43 37% 89%; /* #dad0bc - cream text on dark */
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 91 15% 70%; /* #a6c39e - sage green */
+    --secondary-foreground: 48 11% 7%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 43 37% 89%; /* #dad0bc - cream */
+    --muted-foreground: 60 4% 37%; /* #5f5f57 - muted brown */
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 91 15% 70%; /* #a6c39e - sage accent */
+    --accent-foreground: 48 11% 7%;
 
-    --destructive: 0 84.2% 60.2%;
+    --success: 91 15% 70%; /* #a6c39e - sage for positive values */
+    --success-foreground: 48 11% 7%;
+
+    --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 43 37% 80%; /* Lighter version of cream */
+    --input: 43 37% 85%; /* Input background */
+    --ring: 91 15% 70%; /* #a6c39e for focus rings */
+
+    /* Financial Dashboard Specific */
+    --revenue: 91 15% 70%; /* #a6c39e - positive green */
+    --expense: 0 84% 60%; /* Red for expenses */
+    --neutral: 60 4% 37%; /* #5f5f57 - neutral brown */
+    
+    /* Gradients for modern look */
+    --gradient-primary: linear-gradient(135deg, hsl(48 11% 7%), hsl(60 4% 37%));
+    --gradient-success: linear-gradient(135deg, hsl(91 15% 70%), hsl(91 20% 80%));
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(43 37% 95%));
+    
+    /* Shadows for depth */
+    --shadow-soft: 0 2px 10px hsl(48 11% 7% / 0.1);
+    --shadow-medium: 0 4px 20px hsl(48 11% 7% / 0.15);
+    --shadow-strong: 0 8px 30px hsl(48 11% 7% / 0.2);
 
     --radius: 0.5rem;
 
@@ -56,41 +75,50 @@ All colors MUST be HSL.
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    /* Dark mode using Balanzzo palette */
+    --background: 48 11% 7%; /* #100f0b - deep charcoal */
+    --foreground: 43 37% 89%; /* #dad0bc - cream */
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 60 4% 15%; /* Darker version of #5f5f57 */
+    --card-foreground: 43 37% 89%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 60 4% 15%;
+    --popover-foreground: 43 37% 89%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 43 37% 89%; /* #dad0bc - cream becomes primary in dark */
+    --primary-foreground: 48 11% 7%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 60 4% 25%; /* Lighter brown for secondary */
+    --secondary-foreground: 43 37% 89%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 60 4% 25%;
+    --muted-foreground: 43 30% 70%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 91 15% 60%; /* Darker sage for dark mode */
+    --accent-foreground: 48 11% 7%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --success: 91 15% 60%;
+    --success-foreground: 48 11% 7%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --destructive: 0 62.8% 50%;
+    --destructive-foreground: 43 37% 89%;
+
+    --border: 60 4% 25%;
+    --input: 60 4% 20%;
+    --ring: 91 15% 60%;
+
+    --revenue: 91 15% 60%;
+    --expense: 0 62.8% 50%;
+    --neutral: 43 30% 70%;
+
+    --sidebar-background: 48 11% 7%;
+    --sidebar-foreground: 43 37% 89%;
+    --sidebar-primary: 91 15% 60%;
+    --sidebar-primary-foreground: 48 11% 7%;
+    --sidebar-accent: 60 4% 25%;
+    --sidebar-accent-foreground: 43 37% 89%;
+    --sidebar-border: 60 4% 25%;
+    --sidebar-ring: 91 15% 60%;
   }
 }
 
