@@ -2,13 +2,10 @@ import { useState } from "react";
 import { 
   BarChart3, 
   TrendingUp, 
-  DollarSign, 
   FileText, 
-  CreditCard,
   PieChart,
   Settings,
-  Users,
-  Banknote
+  CheckSquare
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 
@@ -27,16 +24,13 @@ import {
 
 const mainItems = [
   { title: "Dashboard", url: "/", icon: BarChart3 },
+  { title: "Conciliação", url: "/conciliacao", icon: CheckSquare },
   { title: "Fluxo de Caixa", url: "/fluxo-caixa", icon: TrendingUp },
-  { title: "Receitas", url: "/receitas", icon: DollarSign },
   { title: "DRE", url: "/dre", icon: FileText },
-  { title: "Contas a Pagar", url: "/contas-pagar", icon: CreditCard },
   { title: "Relatórios", url: "/relatorios", icon: PieChart },
 ];
 
 const settingsItems = [
-  { title: "Integração Bancária", url: "/integracao", icon: Banknote },
-  { title: "Usuários", url: "/usuarios", icon: Users },
   { title: "Configurações", url: "/configuracoes", icon: Settings },
 ];
 

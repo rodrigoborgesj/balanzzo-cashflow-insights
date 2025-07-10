@@ -56,6 +56,10 @@ export default {
 					DEFAULT: 'hsl(var(--success))',
 					foreground: 'hsl(var(--success-foreground))'
 				},
+				warning: {
+					DEFAULT: 'hsl(var(--warning))',
+					foreground: 'hsl(var(--warning-foreground))'
+				},
 				revenue: 'hsl(var(--revenue))',
 				expense: 'hsl(var(--expense))',
 				neutral: 'hsl(var(--neutral))',
