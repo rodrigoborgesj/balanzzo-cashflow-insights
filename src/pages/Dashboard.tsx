@@ -284,8 +284,8 @@ export default function Dashboard() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-semibold text-foreground">Integração Bancária</h3>
-                <p className="text-sm text-muted-foreground">Conecte suas contas</p>
+                <h3 className="font-semibold text-foreground">Conciliação Bancária</h3>
+                <p className="text-sm text-muted-foreground">Importe e categorize extratos</p>
               </div>
               <ArrowUpRight className="h-5 w-5 text-primary" />
             </div>

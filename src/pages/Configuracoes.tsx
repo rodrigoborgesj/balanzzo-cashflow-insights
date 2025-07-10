@@ -54,8 +54,8 @@ export default function Configuracoes() {
             </div>
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-medium">Sincronização bancária</p>
-                <p className="text-sm text-muted-foreground">Notificações sobre status da sincronização</p>
+                <p className="font-medium">Conciliação automática</p>
+                <p className="text-sm text-muted-foreground">Sugerir categorias para transações similares</p>
               </div>
               <Switch />
             </div>
@@ -91,32 +91,29 @@ export default function Configuracoes() {
           </CardContent>
         </Card>
 
-        {/* Integração */}
+        {/* Categorias */}
         <Card className="bg-gradient-to-br from-card to-card/80 border-border/50 shadow-soft">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Database className="h-5 w-5" />
-              Integrações
+              Categorias Personalizadas
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">WhatsApp Business</p>
-                <p className="text-sm text-muted-foreground">Receber relatórios via WhatsApp</p>
-              </div>
-              <Switch />
+            <div className="space-y-2">
+              <p className="font-medium">Receitas</p>
+              <p className="text-sm text-muted-foreground">Vendas, Prestação de Serviços, Recebimentos...</p>
+              <Button variant="outline" size="sm">
+                Gerenciar Receitas
+              </Button>
             </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">Google Sheets</p>
-                <p className="text-sm text-muted-foreground">Exportar dados automaticamente</p>
-              </div>
-              <Switch />
+            <div className="space-y-2">
+              <p className="font-medium">Despesas</p>
+              <p className="text-sm text-muted-foreground">Fornecedores, Salários, Impostos...</p>
+              <Button variant="outline" size="sm">
+                Gerenciar Despesas
+              </Button>
             </div>
-            <Button variant="outline" className="w-full">
-              Gerenciar APIs
-            </Button>
           </CardContent>
         </Card>
 

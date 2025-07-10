@@ -1,84 +1,91 @@
 import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FileUploader } from "@/components/FileUploader";
+import { FileParser, Transaction } from "@/utils/fileParser";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Upload, 
-  FileSpreadsheet, 
+  Search, 
+  Filter, 
   CheckCircle, 
-  AlertCircle, 
-  Filter,
-  Download,
-  Plus,
-  Search
+  Clock, 
+  TrendingUp, 
+  TrendingDown,
+  FileText,
+  DollarSign,
+  AlertCircle
 } from "lucide-react";
 
-// Mock data para transações
-const mockTransactions = [
-  {
-    id: 1,
-    date: "2024-01-15",
-    description: "PIX RECEBIDO - CLIENTE ABC LTDA",
-    amount: 2500.00,
-    type: "entrada",
-    category: null,
-    status: "pendente"
-  },
-  {
-    id: 2,
-    date: "2024-01-14",
-    description: "TED ENVIADO - FORNECEDOR XYZ",
-    amount: -850.00,
-    type: "saida",
-    category: "Fornecedores",
-    status: "conciliado"
-  },
-  {
-    id: 3,
-    date: "2024-01-13",
-    description: "DOC RECEBIDO - VENDA PRODUTO",
-    amount: 1200.00,
-    type: "entrada",
-    category: null,
-    status: "pendente"
-  },
-  {
-    id: 4,
-    date: "2024-01-12",
-    description: "PAGAMENTO BOLETO - ENERGIA ELETRICA",
-    amount: -450.00,
-    type: "saida",
-    category: "Despesas Operacionais",
-    status: "conciliado"
-  },
-];
-
+// Categorias para classificação
 const categoriesReceitas = [
-  "Vendas de Produtos",
+  "Vendas",
   "Prestação de Serviços", 
-  "Receitas Financeiras",
-  "Outras Receitas"
+  "Recebimentos",
+  "Juros e Rendimentos",
+  "Outros Receitas"
 ];
 
 const categoriesDespesas = [
-  "Despesas Administrativas",
-  "Despesas Operacionais", 
-  "Despesas com Pessoal",
-  "Impostos e Taxas",
   "Fornecedores",
-  "Outras Despesas"
+  "Salários",
+  "Impostos",
+  "Aluguel",
+  "Utilidades",
+  "Marketing",
+  "Outros Despesas"
 ];
 
 export default function Conciliacao() {
-  const [transactions, setTransactions] = useState(mockTransactions);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [filterStatus, setFilterStatus] = useState("todos");
   const [searchTerm, setSearchTerm] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
+  const { toast } = useToast();
+
+  const handleFileSelect = async (file: File) => {
+    setSelectedFile(file);
+    setIsProcessing(true);
+
+    try {
+      const parsedTransactions = await FileParser.parseFile(file);
+      setTransactions(parsedTransactions);
+      
+      toast({
+        title: "Extrato importado com sucesso!",
+        description: `${parsedTransactions.length} transações foram carregadas`,
+      });
+    } catch (error) {
+      toast({
+        title: "Erro ao processar arquivo",
+        description: error instanceof Error ? error.message : "Erro desconhecido",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleCategorize = (transactionId: string, category: string) => {
+    setTransactions(prev => 
+      prev.map(transaction => 
+        transaction.id === transactionId 
+          ? { ...transaction, category, status: "conciliado" as const }
+          : transaction
+      )
+    );
+    
+    toast({
+      title: "Transação categorizada",
+      description: "Transação marcada como conciliada",
+    });
+  };
 
   const filteredTransactions = transactions.filter(transaction => {
     const matchesSearch = transaction.description.toLowerCase().includes(searchTerm.toLowerCase());
@@ -90,152 +97,142 @@ export default function Conciliacao() {
   const reconciledCount = transactions.filter(t => t.status === "conciliado").length;
   const totalAmount = transactions.reduce((sum, t) => sum + t.amount, 0);
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
-    }
-  };
-
-  const handleCategorize = (transactionId: number, category: string) => {
-    setTransactions(prev => 
-      prev.map(t => 
-        t.id === transactionId 
-          ? { ...t, category, status: "conciliado" }
-          : t
-      )
-    );
-  };
-
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Conciliação Bancária</h1>
           <p className="text-muted-foreground">
-            Importe seus extratos e categorize as transações para maior controle financeiro
+            Importe seus extratos e categorize as transações
           </p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" className="gap-2">
-            <Download className="h-4 w-4" />
-            Exportar
-          </Button>
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pendentes</CardTitle>
-            <AlertCircle className="h-4 w-4 text-warning" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-warning">{pendingCount}</div>
-            <p className="text-xs text-muted-foreground">transações não categorizadas</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Conciliadas</CardTitle>
-            <CheckCircle className="h-4 w-4 text-success" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-success">{reconciledCount}</div>
-            <p className="text-xs text-muted-foreground">transações categorizadas</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Saldo Total</CardTitle>
-            <FileSpreadsheet className="h-4 w-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {totalAmount.toLocaleString('pt-BR', { 
-                style: 'currency', 
-                currency: 'BRL' 
-              })}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="bg-gradient-to-br from-card to-card/80 border-border/50 shadow-soft">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Pendentes
+            </CardTitle>
+            <div className="p-2 bg-accent/20 rounded-lg">
+              <Clock className="h-5 w-5 text-accent-foreground" />
             </div>
-            <p className="text-xs text-muted-foreground">das transações importadas</p>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-foreground">
+              {pendingCount}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              transações não categorizadas
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-card to-card/80 border-border/50 shadow-soft">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Conciliadas
+            </CardTitle>
+            <div className="p-2 bg-success/20 rounded-lg">
+              <CheckCircle className="h-5 w-5 text-success" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-foreground">
+              {reconciledCount}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              transações categorizadas
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-card to-card/80 border-border/50 shadow-soft">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Saldo Total
+            </CardTitle>
+            <div className="p-2 bg-primary/20 rounded-lg">
+              <DollarSign className="h-5 w-5 text-primary" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-foreground">
+              R$ {totalAmount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              das transações importadas
+            </p>
           </CardContent>
         </Card>
       </div>
 
-      <Tabs defaultValue="importar" className="space-y-4">
-        <TabsList>
+      {/* Tabs */}
+      <Tabs defaultValue="importar" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="importar">Importar Extrato</TabsTrigger>
           <TabsTrigger value="conciliar">Conciliar Transações</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="importar" className="space-y-4">
+        {/* Importar Tab */}
+        <TabsContent value="importar">
           <Card>
             <CardHeader>
-              <CardTitle>Upload de Extrato Bancário</CardTitle>
-              <CardDescription>
-                Envie seu extrato nos formatos OFX, CSV ou PDF para iniciar a conciliação
-              </CardDescription>
+              <CardTitle className="flex items-center gap-2">
+                <Upload className="h-5 w-5" />
+                Importar Extrato Bancário
+              </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid w-full max-w-sm items-center gap-1.5">
-                <Label htmlFor="extrato">Arquivo do Extrato</Label>
-                <Input 
-                  id="extrato" 
-                  type="file" 
-                  accept=".ofx,.csv,.pdf"
-                  onChange={handleFileUpload}
-                />
-              </div>
+            <CardContent className="space-y-6">
+              <FileUploader 
+                onFileSelect={handleFileSelect}
+                acceptedFormats={['.csv', '.ofx', '.pdf']}
+                maxSize={10}
+              />
               
-              {selectedFile && (
-                <div className="flex items-center gap-2 p-3 bg-muted rounded-md">
-                  <FileSpreadsheet className="h-4 w-4" />
-                  <span className="text-sm">{selectedFile.name}</span>
-                  <Badge variant="secondary">
-                    {(selectedFile.size / 1024).toFixed(1)} KB
-                  </Badge>
-                </div>
+              {isProcessing && (
+                <Card className="bg-accent/10 border-accent/20">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
+                      <span className="text-sm">Processando extrato...</span>
+                    </div>
+                  </CardContent>
+                </Card>
               )}
 
-              <div className="flex gap-2">
-                <Button className="gap-2" disabled={!selectedFile}>
-                  <Upload className="h-4 w-4" />
-                  Processar Extrato
-                </Button>
-                {selectedFile && (
-                  <Button variant="outline" onClick={() => setSelectedFile(null)}>
-                    Cancelar
-                  </Button>
-                )}
-              </div>
-
-              <div className="text-sm text-muted-foreground">
-                <p><strong>Formatos aceitos:</strong></p>
-                <ul className="list-disc list-inside mt-1 space-y-1">
-                  <li>OFX - Formato padrão dos bancos</li>
-                  <li>CSV - Planilha com dados estruturados</li>
-                  <li>PDF - Extrato digitalizado (OCR automático)</li>
-                </ul>
-              </div>
+              {transactions.length > 0 && (
+                <Card className="bg-success/10 border-success/20">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-2 text-success">
+                      <CheckCircle className="h-5 w-5" />
+                      <span className="font-medium">
+                        {transactions.length} transações importadas com sucesso!
+                      </span>
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Vá para a aba "Conciliar" para categorizar as transações
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="conciliar" className="space-y-4">
+        {/* Conciliar Tab */}
+        <TabsContent value="conciliar" className="space-y-6">
           {/* Filtros */}
           <Card>
             <CardContent className="pt-6">
-              <div className="flex flex-col gap-4 md:flex-row md:items-center">
-                <div className="flex-1">
-                  <Label htmlFor="search">Buscar Transação</Label>
+              <div className="flex flex-col gap-4 md:flex-row md:items-end">
+                <div className="flex-1 space-y-2">
+                  <label className="text-sm font-medium">Buscar Transação</label>
                   <div className="relative">
                     <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                     <Input
-                      id="search"
                       placeholder="Buscar por descrição..."
                       className="pl-10"
                       value={searchTerm}
@@ -243,25 +240,18 @@ export default function Conciliacao() {
                     />
                   </div>
                 </div>
-                
-                <div className="flex gap-2">
-                  <div>
-                    <Label htmlFor="status-filter">Status</Label>
-                    <Select value={filterStatus} onValueChange={setFilterStatus}>
-                      <SelectTrigger className="w-40">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="todos">Todos</SelectItem>
-                        <SelectItem value="pendente">Pendentes</SelectItem>
-                        <SelectItem value="conciliado">Conciliadas</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <Button variant="outline" size="icon" className="mt-6">
-                    <Filter className="h-4 w-4" />
-                  </Button>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Status</label>
+                  <Select value={filterStatus} onValueChange={setFilterStatus}>
+                    <SelectTrigger className="w-40">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="todos">Todos</SelectItem>
+                      <SelectItem value="pendente">Pendentes</SelectItem>
+                      <SelectItem value="conciliado">Conciliadas</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
             </CardContent>
@@ -271,9 +261,6 @@ export default function Conciliacao() {
           <Card>
             <CardHeader>
               <CardTitle>Transações para Conciliação</CardTitle>
-              <CardDescription>
-                Categorize as transações para organizar seu fluxo financeiro
-              </CardDescription>
             </CardHeader>
             <CardContent>
               <Table>
@@ -282,72 +269,71 @@ export default function Conciliacao() {
                     <TableHead>Data</TableHead>
                     <TableHead>Descrição</TableHead>
                     <TableHead>Valor</TableHead>
-                    <TableHead>Categoria</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Ações</TableHead>
+                    <TableHead>Categoria</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredTransactions.map((transaction) => (
-                    <TableRow key={transaction.id}>
-                      <TableCell>
-                        {new Date(transaction.date).toLocaleDateString('pt-BR')}
-                      </TableCell>
-                      <TableCell className="max-w-xs truncate">
-                        {transaction.description}
-                      </TableCell>
-                      <TableCell>
-                        <span className={transaction.amount > 0 ? 'text-success' : 'text-destructive'}>
-                          {transaction.amount.toLocaleString('pt-BR', { 
-                            style: 'currency', 
-                            currency: 'BRL' 
-                          })}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        {transaction.status === "pendente" ? (
-                          <Select onValueChange={(value) => handleCategorize(transaction.id, value)}>
-                            <SelectTrigger className="w-48">
-                              <SelectValue placeholder="Selecionar categoria" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {transaction.type === "entrada" ? (
-                                <>
-                                  {categoriesReceitas.map(cat => (
-                                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                                  ))}
-                                </>
-                              ) : (
-                                <>
-                                  {categoriesDespesas.map(cat => (
-                                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                                  ))}
-                                </>
-                              )}
-                            </SelectContent>
-                          </Select>
-                        ) : (
-                          <Badge variant="secondary">{transaction.category}</Badge>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={transaction.status === "conciliado" ? "default" : "secondary"}>
-                          {transaction.status === "conciliado" ? "Conciliada" : "Pendente"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {transaction.status === "conciliado" && (
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => handleCategorize(transaction.id, "")}
-                          >
-                            Editar
-                          </Button>
-                        )}
+                  {filteredTransactions.length > 0 ? (
+                    filteredTransactions.map((transaction) => (
+                      <TableRow key={transaction.id}>
+                        <TableCell>{transaction.date}</TableCell>
+                        <TableCell className="max-w-xs truncate">{transaction.description}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            {transaction.type === "entrada" ? (
+                              <TrendingUp className="h-4 w-4 text-success" />
+                            ) : (
+                              <TrendingDown className="h-4 w-4 text-destructive" />
+                            )}
+                            <span className={transaction.type === "entrada" ? "text-success" : "text-destructive"}>
+                              R$ {Math.abs(transaction.amount).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={transaction.status === "conciliado" ? "default" : "secondary"}>
+                            {transaction.status === "conciliado" ? (
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                            ) : (
+                              <Clock className="h-3 w-3 mr-1" />
+                            )}
+                            {transaction.status === "conciliado" ? "Conciliado" : "Pendente"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {transaction.status === "pendente" ? (
+                            <Select
+                              onValueChange={(value) => handleCategorize(transaction.id, value)}
+                            >
+                              <SelectTrigger className="w-40">
+                                <SelectValue placeholder="Selecionar" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {(transaction.type === "entrada" ? categoriesReceitas : categoriesDespesas).map((category) => (
+                                  <SelectItem key={category} value={category}>
+                                    {category}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            <span className="text-sm font-medium">{transaction.category}</span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center py-8">
+                        <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                          <AlertCircle className="h-8 w-8" />
+                          <p>Nenhuma transação encontrada</p>
+                          <p className="text-sm">Importe um extrato para começar a conciliação</p>
+                        </div>
                       </TableCell>
                     </TableRow>
-                  ))}
+                  )}
                 </TableBody>
               </Table>
             </CardContent>
