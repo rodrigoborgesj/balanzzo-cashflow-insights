@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,41 +6,105 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { Lock, Mail, Eye, EyeOff, Building2 } from "lucide-react";
+import { Lock, Mail, Eye, EyeOff, Building2, Chrome } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { useProfile } from "@/hooks/useProfile";
+import { SignupForm } from "@/components/SignupForm";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [isLogin, setIsLogin] = useState(true);
+  const [mode, setMode] = useState<'login' | 'signup' | 'form'>('login');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { signIn, signInWithGoogle, isAuthenticated, user } = useAuth();
+  const { hasProfile, isLoading: profileLoading } = useProfile();
+
+  useEffect(() => {
+    if (isAuthenticated && user && !profileLoading) {
+      if (hasProfile) {
+        navigate("/");
+      } else {
+        // Se o usuário está autenticado mas não tem perfil completo,
+        // direciona para o formulário de cadastro
+        setMode('form');
+      }
+    }
+  }, [isAuthenticated, user, hasProfile, profileLoading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simular autenticação
-    setTimeout(() => {
-      if (email && password) {
-        localStorage.setItem("isAuthenticated", "true");
-        localStorage.setItem("userEmail", email);
+    try {
+      const { error } = await signIn(email, password);
+      
+      if (error) {
         toast({
-          title: isLogin ? "Login realizado com sucesso!" : "Conta criada com sucesso!",
-          description: `Bem-vindo ao Balanzzo${isLogin ? " de volta" : ""}!`,
+          title: "Erro no login",
+          description: error.message,
+          variant: "destructive",
         });
-        navigate("/");
-      } else {
+        return;
+      }
+
+      toast({
+        title: "Login realizado com sucesso!",
+        description: "Bem-vindo de volta!",
+      });
+      
+      // Navigation will be handled by useEffect
+    } catch (error: any) {
+      toast({
+        title: "Erro no login",
+        description: error.message || "Erro inesperado",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setIsLoading(true);
+    try {
+      const { error } = await signInWithGoogle();
+      
+      if (error) {
         toast({
-          title: "Erro na autenticação",
-          description: "Por favor, preencha todos os campos.",
+          title: "Erro no login",
+          description: error.message,
           variant: "destructive",
         });
       }
+    } catch (error: any) {
+      toast({
+        title: "Erro no login",
+        description: error.message || "Erro inesperado",
+        variant: "destructive",
+      });
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
+
+  if (mode === 'form') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5 flex items-center justify-center p-4">
+        <SignupForm onBack={() => setMode('signup')} />
+      </div>
+    );
+  }
+
+  if (mode === 'signup') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5 flex items-center justify-center p-4">
+        <SignupForm onBack={() => setMode('login')} />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5 flex items-center justify-center p-4">
@@ -54,13 +118,10 @@ export default function Login() {
             <h1 className="text-3xl font-bold text-foreground">Balanzzo</h1>
           </div>
           <h2 className="text-xl font-semibold text-foreground">
-            {isLogin ? "Entre na sua conta" : "Crie sua conta"}
+            Entre na sua conta
           </h2>
           <p className="text-muted-foreground">
-            {isLogin 
-              ? "Gerencie suas finanças de forma inteligente" 
-              : "Comece a organizar suas finanças hoje"
-            }
+            Gerencie suas finanças de forma inteligente
           </p>
         </div>
 
@@ -110,22 +171,45 @@ export default function Login() {
               </div>
 
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Carregando..." : (isLogin ? "Entrar" : "Criar conta")}
+                {isLoading ? "Carregando..." : "Entrar"}
               </Button>
             </form>
 
             <div className="mt-6">
-              <Separator />
+              <div className="space-y-4">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  className="w-full" 
+                  onClick={handleGoogleSignIn}
+                  disabled={isLoading}
+                >
+                  <Chrome className="mr-2 h-4 w-4" />
+                  Continuar com Google
+                </Button>
+                
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <Separator className="w-full" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-background px-2 text-muted-foreground">
+                      Ou
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
               <div className="text-center mt-4">
                 <p className="text-sm text-muted-foreground">
-                  {isLogin ? "Não tem uma conta?" : "Já tem uma conta?"}
+                  Não tem uma conta?
                   <Button
                     type="button"
                     variant="link"
                     className="p-0 ml-1"
-                    onClick={() => setIsLogin(!isLogin)}
+                    onClick={() => setMode('signup')}
                   >
-                    {isLogin ? "Criar conta" : "Fazer login"}
+                    Criar conta
                   </Button>
                 </p>
               </div>

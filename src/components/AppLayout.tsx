@@ -13,8 +13,8 @@ export function AppLayout({ children }: AppLayoutProps) {
   const { userEmail, logout } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate("/login");
   };
 
