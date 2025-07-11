@@ -76,7 +76,7 @@ export default function Conciliacao() {
     setTransactions(prev => 
       prev.map(transaction => 
         transaction.id === transactionId 
-          ? { ...transaction, category, status: "conciliado" as const }
+          ? { ...transaction, category, status: "conciliado" as const, reconciled: true }
           : transaction
       )
     );

@@ -6,6 +6,7 @@ export interface Transaction {
   type: 'entrada' | 'saida';
   category?: string;
   status: 'pendente' | 'conciliado';
+  reconciled: boolean;
 }
 
 export class FileParser {
@@ -96,6 +97,7 @@ export class FileParser {
         amount,
         type: amount >= 0 ? 'entrada' : 'saida',
         status: 'pendente',
+        reconciled: false,
       };
     } catch (error) {
       console.error('Error parsing CSV line:', error);
@@ -172,6 +174,7 @@ export class FileParser {
             amount,
             type: amount >= 0 ? 'entrada' : 'saida',
             status: 'pendente',
+            reconciled: false,
           });
         }
       }
