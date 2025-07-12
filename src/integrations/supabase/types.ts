@@ -26,8 +26,12 @@ export type Database = {
           cnpj: string
           company_name: string
           created_at: string | null
+          display_order: number | null
+          holding_parent_id: string | null
           id: string
+          is_holding: boolean | null
           revenue_range: string
+          status: string | null
           updated_at: string | null
           user_id: string
         }
@@ -42,8 +46,12 @@ export type Database = {
           cnpj: string
           company_name: string
           created_at?: string | null
+          display_order?: number | null
+          holding_parent_id?: string | null
           id?: string
+          is_holding?: boolean | null
           revenue_range: string
+          status?: string | null
           updated_at?: string | null
           user_id: string
         }
@@ -58,8 +66,94 @@ export type Database = {
           cnpj?: string
           company_name?: string
           created_at?: string | null
+          display_order?: number | null
+          holding_parent_id?: string | null
           id?: string
+          is_holding?: boolean | null
           revenue_range?: string
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "companies_holding_parent_id_fkey"
+            columns: ["holding_parent_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      financial_data: {
+        Row: {
+          cash_flow: number | null
+          company_id: string
+          created_at: string | null
+          date: string
+          expenses: number | null
+          id: string
+          profit: number | null
+          revenue: number | null
+          type: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          cash_flow?: number | null
+          company_id: string
+          created_at?: string | null
+          date: string
+          expenses?: number | null
+          id?: string
+          profit?: number | null
+          revenue?: number | null
+          type?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          cash_flow?: number | null
+          company_id?: string
+          created_at?: string | null
+          date?: string
+          expenses?: number | null
+          id?: string
+          profit?: number | null
+          revenue?: number | null
+          type?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_data_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      holding_settings: {
+        Row: {
+          consolidation_view_default: boolean | null
+          created_at: string | null
+          id: string
+          is_holding_enabled: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          consolidation_view_default?: boolean | null
+          created_at?: string | null
+          id?: string
+          is_holding_enabled?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          consolidation_view_default?: boolean | null
+          created_at?: string | null
+          id?: string
+          is_holding_enabled?: boolean | null
           updated_at?: string | null
           user_id?: string
         }

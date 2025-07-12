@@ -11,6 +11,7 @@ import FluxoCaixa from "./pages/FluxoCaixa";
 import DRE from "./pages/DRE";
 import Relatorios from "./pages/Relatorios";
 import Configuracoes from "./pages/Configuracoes";
+import Holding from "./pages/Holding";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 
@@ -63,6 +64,13 @@ const App = () => (
             <ProtectedRoute>
               <AppLayout>
                 <Configuracoes />
+              </AppLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/holding" element={
+            <ProtectedRoute>
+              <AppLayout>
+                <Holding />
               </AppLayout>
             </ProtectedRoute>
           } />
