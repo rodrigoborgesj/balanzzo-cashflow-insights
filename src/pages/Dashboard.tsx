@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { KPICard } from "@/components/KPICard";
 import { Button } from "@/components/ui/button";
@@ -5,19 +6,16 @@ import {
   DollarSign, 
   TrendingUp, 
   TrendingDown, 
-  CreditCard,
+  Activity,
   BarChart3,
   Calendar,
   ArrowUpRight,
-  ArrowDownRight,
-  Activity
+  Plus
 } from "lucide-react";
 import { 
   ResponsiveContainer, 
   LineChart, 
   Line, 
-  AreaChart, 
-  Area, 
   XAxis, 
   YAxis, 
   CartesianGrid, 
@@ -28,38 +26,68 @@ import {
   BarChart,
   Bar
 } from "recharts";
-
-// Mock data - Posteriormente será integrado com dados reais dos bancos
-const monthlyRevenueData = [
-  { month: "Jan", revenue: 45000, expenses: 32000, profit: 13000 },
-  { month: "Fev", revenue: 52000, expenses: 35000, profit: 17000 },
-  { month: "Mar", revenue: 48000, expenses: 33000, profit: 15000 },
-  { month: "Abr", revenue: 61000, expenses: 38000, profit: 23000 },
-  { month: "Mai", revenue: 55000, expenses: 36000, profit: 19000 },
-  { month: "Jun", revenue: 67000, expenses: 42000, profit: 25000 },
-];
-
-const expenseCategories = [
-  { name: "Pessoal", value: 35, color: "hsl(var(--primary))" },
-  { name: "Operacional", value: 25, color: "hsl(var(--accent))" },
-  { name: "Administrativo", value: 20, color: "hsl(var(--muted-foreground))" },
-  { name: "Impostos", value: 15, color: "hsl(var(--destructive))" },
-  { name: "Outros", value: 5, color: "hsl(var(--secondary))" },
-];
-
-const revenueByProduct = [
-  { product: "Produto A", revenue: 28000 },
-  { product: "Produto B", revenue: 22000 },
-  { product: "Serviço A", revenue: 12000 },
-  { product: "Serviço B", revenue: 5000 },
-];
+import { useFinancialData } from "@/hooks/useFinancialData";
+import { useNavigate } from "react-router-dom";
 
 export default function Dashboard() {
-  const currentMonth = "Junho 2024";
-  const currentRevenue = 67000;
-  const currentExpenses = 42000;
-  const currentProfit = 25000;
-  const profitMargin = ((currentProfit / currentRevenue) * 100).toFixed(1);
+  const { consolidatedData, isLoading } = useFinancialData();
+  const navigate = useNavigate();
+
+  if (isLoading) {
+    return (
+      <div className="p-6 space-y-6 bg-background min-h-full">
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!consolidatedData) {
+    return (
+      <div className="p-6 space-y-6 bg-background min-h-full">
+        <div className="text-center py-12">
+          <h2 className="text-2xl font-bold text-muted-foreground mb-4">
+            Nenhum dado financeiro encontrado
+          </h2>
+          <p className="text-muted-foreground mb-6">
+            Adicione dados financeiros para visualizar seu dashboard
+          </p>
+          <Button onClick={() => navigate("/fluxo-caixa")} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Adicionar Dados
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  const currentMonth = new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+  const profitMargin = consolidatedData.totalRevenue > 0 
+    ? ((consolidatedData.totalProfit / consolidatedData.totalRevenue) * 100).toFixed(1) 
+    : '0';
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    }).format(value);
+  };
+
+  const formatMonthlyData = consolidatedData.monthlyData.map(item => ({
+    month: new Date(item.month + '-01').toLocaleDateString('pt-BR', { month: 'short' }),
+    revenue: item.revenue,
+    expenses: item.expenses,
+    profit: item.profit
+  }));
+
+  const expenseColors = [
+    "hsl(var(--primary))",
+    "hsl(var(--accent))", 
+    "hsl(var(--muted-foreground))",
+    "hsl(var(--destructive))",
+    "hsl(var(--secondary))"
+  ];
 
   return (
     <div className="p-6 space-y-6 bg-background min-h-full">
@@ -76,7 +104,7 @@ export default function Dashboard() {
             <Calendar className="h-4 w-4 mr-2" />
             {currentMonth}
           </Button>
-          <Button size="sm">
+          <Button size="sm" onClick={() => navigate("/relatorios")}>
             <Activity className="h-4 w-4 mr-2" />
             Relatório Mensal
           </Button>
@@ -86,8 +114,8 @@ export default function Dashboard() {
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <KPICard
-          title="Faturamento Mensal"
-          value={`R$ ${currentRevenue.toLocaleString("pt-BR")}`}
+          title="Faturamento Total"
+          value={formatCurrency(consolidatedData.totalRevenue)}
           change="+12.5% vs mês anterior"
           changeType="positive"
           icon={DollarSign}
@@ -96,7 +124,7 @@ export default function Dashboard() {
         
         <KPICard
           title="Lucro Líquido"
-          value={`R$ ${currentProfit.toLocaleString("pt-BR")}`}
+          value={formatCurrency(consolidatedData.totalProfit)}
           change="+8.3% vs mês anterior"
           changeType="positive"
           icon={TrendingUp}
@@ -105,7 +133,7 @@ export default function Dashboard() {
         
         <KPICard
           title="Total de Despesas"
-          value={`R$ ${currentExpenses.toLocaleString("pt-BR")}`}
+          value={formatCurrency(consolidatedData.totalExpenses)}
           change="+3.2% vs mês anterior"
           changeType="negative"
           icon={TrendingDown}
@@ -114,7 +142,7 @@ export default function Dashboard() {
         
         <KPICard
           title="Fluxo de Caixa"
-          value={`R$ ${currentProfit.toLocaleString("pt-BR")}`}
+          value={formatCurrency(consolidatedData.totalCashFlow)}
           change="Positivo"
           changeType="positive"
           icon={Activity}
@@ -134,7 +162,7 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={monthlyRevenueData}>
+              <LineChart data={formatMonthlyData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis 
                   dataKey="month" 
@@ -147,7 +175,7 @@ export default function Dashboard() {
                   tickFormatter={(value) => `R$ ${(value / 1000).toFixed(0)}k`}
                 />
                 <Tooltip 
-                  formatter={(value: number) => [`R$ ${value.toLocaleString("pt-BR")}`, ""]}
+                  formatter={(value: number) => [formatCurrency(value), ""]}
                   labelFormatter={(label) => `Mês: ${label}`}
                 />
                 <Line 
@@ -188,30 +216,30 @@ export default function Dashboard() {
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
-                  data={expenseCategories}
+                  data={consolidatedData.expensesByCategory}
                   cx="50%"
                   cy="50%"
                   innerRadius={60}
                   outerRadius={100}
                   paddingAngle={5}
-                  dataKey="value"
+                  dataKey="amount"
                 >
-                  {expenseCategories.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  {consolidatedData.expensesByCategory.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={expenseColors[index]} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value: number) => [`${value}%`, "Porcentagem"]} />
+                <Tooltip formatter={(value: number) => [formatCurrency(value), "Valor"]} />
               </PieChart>
             </ResponsiveContainer>
             <div className="grid grid-cols-2 gap-2 mt-4">
-              {expenseCategories.map((category, index) => (
+              {consolidatedData.expensesByCategory.map((category, index) => (
                 <div key={index} className="flex items-center gap-2 text-sm">
                   <div 
                     className="w-3 h-3 rounded-full" 
-                    style={{ backgroundColor: category.color }}
+                    style={{ backgroundColor: expenseColors[index] }}
                   />
-                  <span className="text-muted-foreground">{category.name}</span>
-                  <span className="font-medium">{category.value}%</span>
+                  <span className="text-muted-foreground">{category.category}</span>
+                  <span className="font-medium">{category.percentage}%</span>
                 </div>
               ))}
             </div>
@@ -219,44 +247,12 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* Revenue by Product/Service */}
-      <Card className="bg-gradient-to-br from-card to-card/80 border-border/50 shadow-soft">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <DollarSign className="h-5 w-5" />
-            Receita por Linha de Produto/Serviço
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={revenueByProduct}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis 
-                dataKey="product" 
-                stroke="hsl(var(--muted-foreground))"
-                fontSize={12}
-              />
-              <YAxis 
-                stroke="hsl(var(--muted-foreground))"
-                fontSize={12}
-                tickFormatter={(value) => `R$ ${(value / 1000).toFixed(0)}k`}
-              />
-              <Tooltip 
-                formatter={(value: number) => [`R$ ${value.toLocaleString("pt-BR")}`, "Receita"]}
-              />
-              <Bar 
-                dataKey="revenue" 
-                fill="hsl(var(--accent))"
-                radius={[4, 4, 0, 0]}
-              />
-            </BarChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
-
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-gradient-to-br from-accent/10 to-accent/5 border-accent/20">
+        <Card 
+          className="bg-gradient-to-br from-accent/10 to-accent/5 border-accent/20 cursor-pointer hover:shadow-md transition-shadow"
+          onClick={() => navigate("/fluxo-caixa")}
+        >
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -268,7 +264,10 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-success/10 to-success/5 border-success/20">
+        <Card 
+          className="bg-gradient-to-br from-success/10 to-success/5 border-success/20 cursor-pointer hover:shadow-md transition-shadow"
+          onClick={() => navigate("/dre")}
+        >
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -280,7 +279,10 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
+        <Card 
+          className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20 cursor-pointer hover:shadow-md transition-shadow"
+          onClick={() => navigate("/conciliacao")}
+        >
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>

@@ -1,3 +1,4 @@
+
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { Navigate } from "react-router-dom";
@@ -7,10 +8,13 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const { hasProfile, isLoading: profileLoading } = useProfile();
 
-  if (isLoading || profileLoading) {
+  console.log('ProtectedRoute - isAuthenticated:', isAuthenticated, 'hasProfile:', hasProfile, 'authLoading:', authLoading, 'profileLoading:', profileLoading);
+
+  // Show loading while checking auth or profile
+  if (authLoading || profileLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -18,9 +22,18 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     );
   }
 
-  if (!isAuthenticated || !hasProfile) {
+  // If not authenticated, redirect to login
+  if (!isAuthenticated) {
+    console.log('Not authenticated, redirecting to login');
     return <Navigate to="/login" replace />;
   }
 
+  // If authenticated but no profile, redirect to login to complete signup
+  if (!hasProfile) {
+    console.log('No profile found, redirecting to login');
+    return <Navigate to="/login" replace />;
+  }
+
+  // User is authenticated and has profile, show protected content
   return <>{children}</>;
 }
