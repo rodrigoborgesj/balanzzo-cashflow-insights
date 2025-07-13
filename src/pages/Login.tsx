@@ -26,12 +26,12 @@ export default function Login() {
   useEffect(() => {
     console.log('Login useEffect - isAuthenticated:', isAuthenticated, 'hasProfile:', hasProfile, 'authLoading:', authLoading, 'profileLoading:', profileLoading);
     
-    // Only redirect if we're sure about the auth state (not loading) and user has complete profile
-    if (!authLoading && !profileLoading && isAuthenticated && hasProfile) {
-      console.log('User is authenticated and has profile, redirecting to dashboard');
+    // Redirect authenticated users to dashboard, regardless of profile completion
+    if (!authLoading && isAuthenticated) {
+      console.log('User is authenticated, redirecting to dashboard');
       navigate("/", { replace: true });
     }
-  }, [isAuthenticated, hasProfile, profileLoading, authLoading, navigate]);
+  }, [isAuthenticated, authLoading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -73,8 +73,9 @@ export function useProfile() {
         .eq('id', user.id)
         .maybeSingle();
 
-      if (profileError) {
+      if (profileError && profileError.code !== 'PGRST116') {
         console.error('Error loading profile:', profileError);
+        throw profileError;
       }
 
       // Load company
@@ -84,9 +85,13 @@ export function useProfile() {
         .eq('user_id', user.id)
         .maybeSingle();
 
-      if (companyError) {
+      if (companyError && companyError.code !== 'PGRST116') {
         console.error('Error loading company:', companyError);
+        throw companyError;
       }
+
+      console.log('Profile loaded:', profileData);
+      console.log('Company loaded:', companyData);
 
       setProfile(profileData);
       setCompany(companyData);
@@ -143,7 +148,7 @@ export function useProfile() {
     profile,
     company,
     isLoading,
-    hasProfile: !!profile && !!company,
+    hasProfile: !!profile, // User has profile if profile exists (company is optional)
     createProfile,
     loadProfile,
   };
