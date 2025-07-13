@@ -26,11 +26,9 @@ export default function Login() {
     if (isAuthenticated && user && !profileLoading) {
       if (hasProfile) {
         navigate("/");
-      } else {
-        // Se o usuário está autenticado mas não tem perfil completo,
-        // direciona para o formulário de cadastro
-        setMode('form');
       }
+      // Remove o redirecionamento automático para o formulário de cadastro
+      // O usuário deve fazer login explicitamente após o cadastro
     }
   }, [isAuthenticated, user, hasProfile, profileLoading, navigate]);
 

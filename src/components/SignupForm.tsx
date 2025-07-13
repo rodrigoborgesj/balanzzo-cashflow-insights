@@ -113,8 +113,11 @@ export function SignupForm({ onBack }: SignupFormProps) {
 
       toast({
         title: "Conta criada com sucesso!",
-        description: "Verifique seu email para confirmar a conta.",
+        description: "Faça login com suas credenciais para acessar o sistema.",
       });
+
+      // Redireciona para tela de login após cadastro bem-sucedido
+      onBack();
     } catch (error: any) {
       toast({
         title: "Erro no cadastro",
