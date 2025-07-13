@@ -65,23 +65,38 @@ export function useProfile() {
 
     setIsLoading(true);
 
-    // Load profile
-    const { data: profileData } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single();
+    try {
+      // Load profile
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .maybeSingle();
 
-    // Load company
-    const { data: companyData } = await supabase
-      .from('companies')
-      .select('*')
-      .eq('user_id', user.id)
-      .single();
+      if (profileError) {
+        console.error('Error loading profile:', profileError);
+      }
 
-    setProfile(profileData);
-    setCompany(companyData);
-    setIsLoading(false);
+      // Load company
+      const { data: companyData, error: companyError } = await supabase
+        .from('companies')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (companyError) {
+        console.error('Error loading company:', companyError);
+      }
+
+      setProfile(profileData);
+      setCompany(companyData);
+    } catch (error) {
+      console.error('Error in loadProfile:', error);
+      setProfile(null);
+      setCompany(null);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const createProfile = async (data: ProfileData) => {

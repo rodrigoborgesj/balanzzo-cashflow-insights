@@ -28,9 +28,9 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     return <Navigate to="/login" replace />;
   }
 
-  // If authenticated but no profile, redirect to login to complete signup
-  if (!hasProfile) {
-    console.log('No profile found, redirecting to login');
+  // If authenticated but no profile, redirect to signup completion
+  if (isAuthenticated && !hasProfile) {
+    console.log('Authenticated but no profile, staying on login for signup');
     return <Navigate to="/login" replace />;
   }
 

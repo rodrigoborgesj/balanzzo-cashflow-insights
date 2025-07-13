@@ -25,6 +25,9 @@ export function useAuth() {
       setSession(session);
       setUser(session?.user ?? null);
       setIsLoading(false);
+    }).catch((error) => {
+      console.error('Error getting session:', error);
+      setIsLoading(false);
     });
 
     return () => subscription.unsubscribe();

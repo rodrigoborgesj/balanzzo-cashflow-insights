@@ -26,12 +26,12 @@ export default function Login() {
   useEffect(() => {
     console.log('Login useEffect - isAuthenticated:', isAuthenticated, 'hasProfile:', hasProfile, 'authLoading:', authLoading, 'profileLoading:', profileLoading);
     
-    // Only redirect if we're sure about the auth state (not loading)
-    if (!authLoading && !profileLoading && isAuthenticated && user && hasProfile) {
+    // Only redirect if we're sure about the auth state (not loading) and user has complete profile
+    if (!authLoading && !profileLoading && isAuthenticated && hasProfile) {
       console.log('User is authenticated and has profile, redirecting to dashboard');
       navigate("/", { replace: true });
     }
-  }, [isAuthenticated, user, hasProfile, profileLoading, authLoading, navigate]);
+  }, [isAuthenticated, hasProfile, profileLoading, authLoading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -89,8 +89,8 @@ export default function Login() {
     }
   };
 
-  // Don't render login form if user is already authenticated and has profile
-  if (!authLoading && !profileLoading && isAuthenticated && hasProfile) {
+  // Show loading if still checking auth state
+  if (authLoading || profileLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
