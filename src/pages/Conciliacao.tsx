@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,8 +7,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileUploader } from "@/components/FileUploader";
-import { FileParser, Transaction } from "@/utils/fileParser";
-import { useToast } from "@/hooks/use-toast";
+import { FileParser } from "@/utils/fileParserUpdated";
+import { useConciliacao, Transaction } from "@/hooks/useConciliacao";
 import { 
   Upload, 
   Search, 
@@ -42,12 +42,27 @@ const categoriesDespesas = [
 ];
 
 export default function Conciliacao() {
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [filterStatus, setFilterStatus] = useState("todos");
   const [searchTerm, setSearchTerm] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
-  const { toast } = useToast();
+  
+  const {
+    transactions,
+    userCategories,
+    isLoading,
+    loadTransactions,
+    loadUserCategories,
+    saveTransactions,
+    updateTransactionCategory,
+    createUserCategory,
+  } = useConciliacao();
+
+  // Carregar dados ao montar o componente
+  useEffect(() => {
+    loadTransactions();
+    loadUserCategories();
+  }, [loadTransactions, loadUserCategories]);
 
   const handleFileSelect = async (file: File) => {
     setSelectedFile(file);
@@ -55,47 +70,37 @@ export default function Conciliacao() {
 
     try {
       const parsedTransactions = await FileParser.parseFile(file);
-      setTransactions(parsedTransactions);
-      
-      toast({
-        title: "Extrato importado com sucesso!",
-        description: `${parsedTransactions.length} transações foram carregadas`,
-      });
+      await saveTransactions(parsedTransactions);
+      setSelectedFile(null);
     } catch (error) {
-      toast({
-        title: "Erro ao processar arquivo",
-        description: error instanceof Error ? error.message : "Erro desconhecido",
-        variant: "destructive",
-      });
+      console.error('Erro ao processar arquivo:', error);
     } finally {
       setIsProcessing(false);
     }
   };
 
-  const handleCategorize = (transactionId: string, category: string) => {
-    setTransactions(prev => 
-      prev.map(transaction => 
-        transaction.id === transactionId 
-          ? { ...transaction, category, status: "conciliado" as const, reconciled: true }
-          : transaction
-      )
-    );
-    
-    toast({
-      title: "Transação categorizada",
-      description: "Transação marcada como conciliada",
-    });
+  const handleCategorize = async (transactionId: string, category: string) => {
+    await updateTransactionCategory(transactionId, category);
   };
 
   const filteredTransactions = transactions.filter(transaction => {
-    const matchesSearch = transaction.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = filterStatus === "todos" || transaction.status === filterStatus;
+    const matchesSearch = transaction.descricao.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = filterStatus === "todos" || 
+      (filterStatus === "pendente" && !transaction.status_conciliacao) ||
+      (filterStatus === "conciliado" && transaction.status_conciliacao);
     return matchesSearch && matchesStatus;
   });
 
-  const pendingCount = transactions.filter(t => t.status === "pendente").length;
-  const reconciledCount = transactions.filter(t => t.status === "conciliado").length;
-  const totalAmount = transactions.reduce((sum, t) => sum + t.amount, 0);
+  const pendingCount = transactions.filter(t => !t.status_conciliacao).length;
+  const reconciledCount = transactions.filter(t => t.status_conciliacao).length;
+  const totalAmount = transactions.reduce((sum, t) => sum + t.valor, 0);
+
+  // Combinar categorias padrão com categorias do usuário
+  const allCategories = [
+    ...categoriesReceitas,
+    ...categoriesDespesas,
+    ...userCategories.map(cat => cat.nome_categoria)
+  ];
 
   return (
     <div className="space-y-6">
@@ -270,55 +275,64 @@ export default function Conciliacao() {
                     <TableHead>Descrição</TableHead>
                     <TableHead>Valor</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Categoria</TableHead>
+                    <TableHead>Categoria Sugerida / Final</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredTransactions.length > 0 ? (
                     filteredTransactions.map((transaction) => (
                       <TableRow key={transaction.id}>
-                        <TableCell>{transaction.date}</TableCell>
-                        <TableCell className="max-w-xs truncate">{transaction.description}</TableCell>
+                        <TableCell>
+                          {new Date(transaction.data_transacao).toLocaleDateString('pt-BR')}
+                        </TableCell>
+                        <TableCell className="max-w-xs truncate">{transaction.descricao}</TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            {transaction.type === "entrada" ? (
+                            {transaction.tipo === "entrada" ? (
                               <TrendingUp className="h-4 w-4 text-success" />
                             ) : (
                               <TrendingDown className="h-4 w-4 text-destructive" />
                             )}
-                            <span className={transaction.type === "entrada" ? "text-success" : "text-destructive"}>
-                              R$ {Math.abs(transaction.amount).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                            <span className={transaction.tipo === "entrada" ? "text-success" : "text-destructive"}>
+                              R$ {Math.abs(transaction.valor).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                             </span>
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge variant={transaction.status === "conciliado" ? "default" : "secondary"}>
-                            {transaction.status === "conciliado" ? (
+                          <Badge variant={transaction.status_conciliacao ? "default" : "secondary"}>
+                            {transaction.status_conciliacao ? (
                               <CheckCircle className="h-3 w-3 mr-1" />
                             ) : (
                               <Clock className="h-3 w-3 mr-1" />
                             )}
-                            {transaction.status === "conciliado" ? "Conciliado" : "Pendente"}
+                            {transaction.status_conciliacao ? "Conciliado" : "Pendente"}
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          {transaction.status === "pendente" ? (
-                            <Select
-                              onValueChange={(value) => handleCategorize(transaction.id, value)}
-                            >
-                              <SelectTrigger className="w-40">
-                                <SelectValue placeholder="Selecionar" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {(transaction.type === "entrada" ? categoriesReceitas : categoriesDespesas).map((category) => (
-                                  <SelectItem key={category} value={category}>
-                                    {category}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                          {!transaction.status_conciliacao ? (
+                            <div className="space-y-2">
+                              {transaction.categoria_sugerida && (
+                                <div className="text-xs text-muted-foreground">
+                                  Sugerida: {transaction.categoria_sugerida}
+                                </div>
+                              )}
+                              <Select
+                                onValueChange={(value) => handleCategorize(transaction.id, value)}
+                              >
+                                <SelectTrigger className="w-40">
+                                  <SelectValue placeholder="Selecionar" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {allCategories.map((category) => (
+                                    <SelectItem key={category} value={category}>
+                                      {category}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
                           ) : (
-                            <span className="text-sm font-medium">{transaction.category}</span>
+                            <span className="text-sm font-medium">{transaction.categoria_final}</span>
                           )}
                         </TableCell>
                       </TableRow>

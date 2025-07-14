@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      categorias_usuario: {
+        Row: {
+          ativo: boolean | null
+          cor: string | null
+          id: string
+          nome_categoria: string
+          user_id: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          cor?: string | null
+          id?: string
+          nome_categoria: string
+          user_id?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          cor?: string | null
+          id?: string
+          nome_categoria?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       companies: {
         Row: {
           address_city: string
@@ -186,12 +210,60 @@ export type Database = {
         }
         Relationships: []
       }
+      transacoes_conciliadas: {
+        Row: {
+          categoria_final: string | null
+          categoria_sugerida: string | null
+          criado_em: string | null
+          data_transacao: string
+          descricao: string | null
+          hash_transacao: string | null
+          id: string
+          origem_arquivo: string | null
+          status_conciliacao: boolean | null
+          tipo: string | null
+          user_id: string | null
+          valor: number
+        }
+        Insert: {
+          categoria_final?: string | null
+          categoria_sugerida?: string | null
+          criado_em?: string | null
+          data_transacao: string
+          descricao?: string | null
+          hash_transacao?: string | null
+          id?: string
+          origem_arquivo?: string | null
+          status_conciliacao?: boolean | null
+          tipo?: string | null
+          user_id?: string | null
+          valor: number
+        }
+        Update: {
+          categoria_final?: string | null
+          categoria_sugerida?: string | null
+          criado_em?: string | null
+          data_transacao?: string
+          descricao?: string | null
+          hash_transacao?: string | null
+          id?: string
+          origem_arquivo?: string | null
+          status_conciliacao?: boolean | null
+          tipo?: string | null
+          user_id?: string | null
+          valor?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      sugerir_categoria: {
+        Args: { descricao_input: string }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
