@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileUploader } from "@/components/FileUploader";
+import { CategoryManager } from "@/components/CategoryManager";
 import { FileParser } from "@/utils/fileParserUpdated";
 import { useConciliacao, Transaction } from "@/hooks/useConciliacao";
 import { 
@@ -214,7 +215,7 @@ export default function Conciliacao() {
                     <div className="flex items-center gap-2 text-success">
                       <CheckCircle className="h-5 w-5" />
                       <span className="font-medium">
-                        {transactions.length} transações importadas com sucesso!
+                        {transactions.length} transações disponíveis para conciliação!
                       </span>
                     </div>
                     <p className="text-sm text-muted-foreground mt-1">
@@ -223,6 +224,16 @@ export default function Conciliacao() {
                   </CardContent>
                 </Card>
               )}
+
+              {/* Gerenciador de Categorias */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Gerenciar Categorias</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <CategoryManager />
+                </CardContent>
+              </Card>
             </CardContent>
           </Card>
         </TabsContent>
