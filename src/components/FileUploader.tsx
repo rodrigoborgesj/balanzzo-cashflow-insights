@@ -13,7 +13,7 @@ interface FileUploaderProps {
 export function FileUploader({ 
   onFileSelect, 
   acceptedFormats = ['.csv', '.ofx', '.pdf'],
-  maxSize = 10 
+  maxSize = 20 
 }: FileUploaderProps) {
   const [dragActive, setDragActive] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);

@@ -195,7 +195,7 @@ export default function Conciliacao() {
               <FileUploader 
                 onFileSelect={handleFileSelect}
                 acceptedFormats={['.csv', '.ofx', '.pdf']}
-                maxSize={10}
+                maxSize={20}
               />
               
               {isProcessing && (
