@@ -3,8 +3,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useToast } from './use-toast';
 
-import { useIntelligentCategorization } from './useIntelligentCategorization';
-
 export interface Transaction {
   id: string;
   user_id?: string;
@@ -37,7 +35,6 @@ export function useConciliacao() {
   const [selectedMonth, setSelectedMonth] = useState<string>(new Date().toISOString().slice(0, 7));
   const { user } = useAuth();
   const { toast } = useToast();
-  const { processTransactions, improveWithUserHistory } = useIntelligentCategorization();
 
   // Função para sugerir categoria baseada na descrição (mantido para compatibilidade)
   const suggestCategory = useCallback(async (descricao: string): Promise<string> => {
@@ -123,12 +120,12 @@ export function useConciliacao() {
     }
   }, [user?.id]);
 
-  // Salvar transações no banco com suporte a empresa e mês de referência
+  // Salvar transações no banco com processamento otimizado
   const saveTransactions = useCallback(async (newTransactions: Omit<Transaction, 'user_id' | 'categoria_sugerida' | 'hash_transacao'>[]) => {
-    console.log('=== ENTRANDO EM saveTransactions ===');
+    console.log('=== INÍCIO DO PROCESSAMENTO OTIMIZADO ===');
     console.log('User ID:', user?.id);
     console.log('Número de transações recebidas:', newTransactions.length);
-    console.log('Primeira transação recebida:', newTransactions[0]);
+    
     if (!user?.id) {
       console.error('Usuário não autenticado');
       toast({
@@ -141,22 +138,17 @@ export function useConciliacao() {
 
     setIsLoading(true);
     try {
-      console.log('Iniciando processamento de', newTransactions.length, 'transações para o usuário', user.id);
+      console.log('Iniciando processamento rápido de', newTransactions.length, 'transações');
       
       if (!newTransactions || newTransactions.length === 0) {
         throw new Error('Nenhuma transação para salvar');
       }
       
-      // Processar transações com categorização inteligente
-      console.log('Aplicando categorização inteligente...');
-      const intelligentlyProcessed = await processTransactions(newTransactions);
+      // Processamento simplificado e rápido
+      console.log('Aplicando categorização básica...');
       
-      // Aplicar melhorias baseadas no histórico do usuário
-      console.log('Aplicando aprendizado baseado no histórico...');
-      const improvedTransactions = await improveWithUserHistory(user.id, intelligentlyProcessed);
-
-      // Preparar transações para inserção com validação rigorosa
-      const transactionsWithCategories = improvedTransactions.map((transaction, index) => {
+      // Preparar transações para inserção
+      const transactionsToSave = newTransactions.map((transaction) => {
         // Validar data antes de processar
         if (!transaction.data_transacao || transaction.data_transacao === '') {
           console.warn('Transação com data inválida ignorada:', transaction);
@@ -172,6 +164,29 @@ export function useConciliacao() {
         // Gerar hash único para evitar duplicatas
         const transactionData = `${transaction.data_transacao}-${transaction.descricao}-${transaction.valor}-${user.id}`;
         const hash_transacao = btoa(transactionData).replace(/[^a-zA-Z0-9]/g, '').substring(0, 32);
+
+        // Categorização básica e rápida baseada no valor
+        let categoria_sugerida = 'Outros';
+        const isIncome = transaction.valor >= 0;
+        const description = transaction.descricao.toLowerCase();
+        
+        if (isIncome) {
+          if (description.includes('pix') || description.includes('transferencia') || description.includes('deposito')) {
+            categoria_sugerida = 'Recebimentos';
+          } else if (description.includes('venda') || description.includes('pagamento')) {
+            categoria_sugerida = 'Vendas';
+          } else {
+            categoria_sugerida = 'Outros Receitas';
+          }
+        } else {
+          if (description.includes('tarifa') || description.includes('taxa')) {
+            categoria_sugerida = 'Tarifa bancária';
+          } else if (description.includes('transferencia') || description.includes('pix')) {
+            categoria_sugerida = 'Fornecedores';
+          } else {
+            categoria_sugerida = 'Outros Despesas';
+          }
+        }
 
         // Garantir que mes_referencia seja uma data válida
         let mes_referencia;
@@ -192,22 +207,25 @@ export function useConciliacao() {
           ...transaction,
           user_id: user.id,
           hash_transacao,
+          categoria_sugerida,
           status_conciliacao: false,
           mes_referencia,
           categoria_final: null, // Será definida pelo usuário posteriormente
+          tipo: isIncome ? 'entrada' : 'saida'
         };
       }).filter(Boolean); // Remove transações nulas
 
-      console.log('Transações válidas preparadas para salvamento:', transactionsWithCategories.length);
+      console.log('Transações válidas preparadas para salvamento:', transactionsToSave.length);
 
-      if (transactionsWithCategories.length === 0) {
+      if (transactionsToSave.length === 0) {
         throw new Error('Nenhuma transação válida foi encontrada após o processamento. Verifique o formato do arquivo.');
       }
 
       // Inserir no banco (com tratamento de duplicatas)
+      console.log('Salvando no banco de dados...');
       const { data, error } = await supabase
         .from('transacoes_conciliadas')
-        .upsert(transactionsWithCategories, { 
+        .upsert(transactionsToSave, { 
           onConflict: 'hash_transacao',
           ignoreDuplicates: true 
         })
@@ -227,7 +245,7 @@ export function useConciliacao() {
       console.log('Transações salvas no banco com sucesso:', savedCount);
 
       // Detectar o mês das transações salvas para ajustar o filtro automaticamente
-      const transactionMonths = transactionsWithCategories
+      const transactionMonths = transactionsToSave
         .map(t => t.data_transacao.substring(0, 7))
         .filter((month, index, arr) => arr.indexOf(month) === index);
       
@@ -243,7 +261,7 @@ export function useConciliacao() {
       
       toast({
         title: 'Transações processadas com sucesso!',
-        description: `${savedCount} transações foram categorizadas inteligentemente e estão prontas para revisão.`,
+        description: `${savedCount} transações foram categorizadas e estão prontas para revisão.`,
       });
       
       return true;
@@ -258,7 +276,7 @@ export function useConciliacao() {
     } finally {
       setIsLoading(false);
     }
-  }, [user?.id, processTransactions, improveWithUserHistory, loadTransactions, selectedMonth, setSelectedMonth, toast]);
+  }, [user?.id, loadTransactions, selectedMonth, setSelectedMonth, toast]);
 
   // Atualizar transação (categoria, descrição, etc.)
   const updateTransactionCategory = useCallback(async (transactionId: string, updates: Partial<Transaction> | string) => {
