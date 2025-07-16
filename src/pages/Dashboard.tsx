@@ -26,12 +26,13 @@ import {
   BarChart,
   Bar
 } from "recharts";
-import { useFinancialData } from "@/hooks/useFinancialData";
+
 import { useNavigate } from "react-router-dom";
 
 export default function Dashboard() {
-  const { consolidatedData, isLoading } = useFinancialData();
   const navigate = useNavigate();
+  const isLoading = false;
+  const consolidatedData = null;
 
   if (isLoading) {
     return (

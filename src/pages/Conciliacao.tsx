@@ -8,21 +8,15 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileUploader } from "@/components/FileUploader";
 import { CategoryManager } from "@/components/CategoryManager";
-import { ReconciliationResults } from "@/components/ReconciliationResults";
-import { TransactionProcessor } from "@/components/TransactionProcessor";
 import { FileParser } from "@/utils/fileParserUpdated";
 import { useConciliacao, Transaction } from "@/hooks/useConciliacao";
-import { useHolding } from "@/hooks/useHolding";
-import { ReconciliationMatch } from "@/hooks/useAutomaticReconciliation";
 import { 
   Upload, 
   Search, 
-  Filter, 
   CheckCircle, 
   Clock, 
   TrendingUp, 
   TrendingDown,
-  FileText,
   DollarSign,
   AlertCircle
 } from "lucide-react";
@@ -57,26 +51,19 @@ export default function Conciliacao() {
     userCategories,
     isLoading,
     selectedMonth,
-    selectedCompanyId,
-    reconciliationResult,
-    isReconciling,
     setSelectedMonth,
-    setSelectedCompanyId,
     loadTransactions,
     loadUserCategories,
     saveTransactions,
     updateTransactionCategory,
     createUserCategory,
-    applyAutomaticReconciliation,
   } = useConciliacao();
-
-  const { companies, isHoldingEnabled } = useHolding();
 
   // Carregar dados ao montar o componente
   useEffect(() => {
-    loadTransactions(selectedCompanyId || undefined, selectedMonth);
+    loadTransactions(undefined, selectedMonth);
     loadUserCategories();
-  }, [loadTransactions, loadUserCategories, selectedCompanyId, selectedMonth]);
+  }, [loadTransactions, loadUserCategories, selectedMonth]);
 
   const handleFileSelect = async (file: File) => {
     setSelectedFile(file);
@@ -91,7 +78,7 @@ export default function Conciliacao() {
         throw new Error('Nenhuma transação válida encontrada no arquivo');
       }
       
-      const success = await saveTransactions(parsedTransactions, selectedCompanyId || undefined, selectedMonth + '-01');
+      const success = await saveTransactions(parsedTransactions, undefined, selectedMonth + '-01');
       
       if (success) {
         console.log('Transações salvas com sucesso');
@@ -101,8 +88,6 @@ export default function Conciliacao() {
       }
     } catch (error) {
       console.error('Erro ao processar arquivo:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido ao processar arquivo';
-      // Não mostrar toast aqui pois o saveTransactions já mostra
     } finally {
       setIsProcessing(false);
     }
@@ -110,15 +95,6 @@ export default function Conciliacao() {
 
   const handleCategorize = async (transactionId: string, category: string) => {
     await updateTransactionCategory(transactionId, category);
-  };
-
-  const handleApplyAutomatic = async () => {
-    await applyAutomaticReconciliation();
-  };
-
-  const handleReviewManual = (match: ReconciliationMatch) => {
-    // Implementar revisão manual se necessário
-    console.log('Revisão manual para:', match);
   };
 
   const filteredTransactions = transactions.filter(transaction => {
@@ -151,40 +127,15 @@ export default function Conciliacao() {
           </p>
         </div>
         
-        {/* Filtros de Holding */}
-        {isHoldingEnabled && (
-          <div className="flex gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Empresa</label>
-              <Select 
-                value={selectedCompanyId || "todas"} 
-                onValueChange={(value) => setSelectedCompanyId(value === "todas" ? null : value)}
-              >
-                <SelectTrigger className="w-48">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todas">Todas as empresas</SelectItem>
-                  {companies.map((company) => (
-                    <SelectItem key={company.id} value={company.id}>
-                      {company.company_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Mês de Referência</label>
-              <Input
-                type="month"
-                value={selectedMonth}
-                onChange={(e) => setSelectedMonth(e.target.value)}
-                className="w-40"
-              />
-            </div>
-          </div>
-        )}
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Mês de Referência</label>
+          <Input
+            type="month"
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
+            className="w-40"
+          />
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -249,9 +200,8 @@ export default function Conciliacao() {
 
       {/* Tabs */}
       <Tabs defaultValue="importar" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="importar">Importar Extrato</TabsTrigger>
-          <TabsTrigger value="processar">Processar Movimentações</TabsTrigger>
           <TabsTrigger value="conciliar">Conciliar Transações</TabsTrigger>
         </TabsList>
 
@@ -271,36 +221,18 @@ export default function Conciliacao() {
                 maxSize={20}
               />
               
-              {isHoldingEnabled && selectedCompanyId && (
-                <Card className="bg-blue-50 border-blue-200">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2 text-blue-700">
-                      <FileText className="h-5 w-5" />
-                      <span className="font-medium">
-                        Importando para: {companies.find(c => c.id === selectedCompanyId)?.company_name}
-                      </span>
-                    </div>
-                    <p className="text-sm text-blue-600 mt-1">
-                      Mês de referência: {new Date(selectedMonth + '-01').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
-                    </p>
-                  </CardContent>
-                </Card>
-              )}
-              
-              {(isProcessing || isReconciling) && (
+              {isProcessing && (
                 <Card className="bg-accent/10 border-accent/20">
                   <CardContent className="p-4">
                     <div className="flex items-center gap-3">
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
-                      <span className="text-sm">
-                        {isProcessing ? 'Processando extrato...' : 'Executando conciliação automática...'}
-                      </span>
+                      <span className="text-sm">Processando extrato...</span>
                     </div>
                   </CardContent>
                 </Card>
               )}
 
-              {transactions.length > 0 && !reconciliationResult && (
+              {transactions.length > 0 && (
                 <Card className="bg-success/10 border-success/20">
                   <CardContent className="p-4">
                     <div className="flex items-center gap-2 text-success">
@@ -310,20 +242,10 @@ export default function Conciliacao() {
                       </span>
                     </div>
                     <p className="text-sm text-muted-foreground mt-1">
-                      Vá para "Processar Movimentações" para revisar e editar as categorizações
+                      Vá para "Conciliar Transações" para revisar e editar as categorizações
                     </p>
                   </CardContent>
                 </Card>
-              )}
-
-              {/* Resultado da Conciliação Automática */}
-              {reconciliationResult && (
-                <ReconciliationResults
-                  result={reconciliationResult}
-                  onApplyAutomatic={handleApplyAutomatic}
-                  onReviewManual={handleReviewManual}
-                  isApplying={isLoading}
-                />
               )}
 
               {/* Gerenciador de Categorias */}
@@ -339,27 +261,8 @@ export default function Conciliacao() {
           </Card>
         </TabsContent>
 
-        {/* Processar Movimentações Tab */}
-        <TabsContent value="processar">
-          <TransactionProcessor
-            transactions={transactions}
-            availableCategories={allCategories}
-            onUpdateTransaction={updateTransactionCategory}
-            onCreateCategory={createUserCategory}
-          />
-        </TabsContent>
-
         {/* Conciliar Tab */}
         <TabsContent value="conciliar" className="space-y-6">
-          {/* Resultado da Conciliação se disponível */}
-          {reconciliationResult && (
-            <ReconciliationResults
-              result={reconciliationResult}
-              onApplyAutomatic={handleApplyAutomatic}
-              onReviewManual={handleReviewManual}
-              isApplying={isLoading}
-            />
-          )}
           {/* Filtros */}
           <Card>
             <CardContent className="pt-6">

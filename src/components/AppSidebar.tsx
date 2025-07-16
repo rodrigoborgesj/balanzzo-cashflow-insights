@@ -5,8 +5,7 @@ import {
   FileText, 
   PieChart,
   Settings,
-  CheckSquare,
-  Building2
+  CheckSquare
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 
@@ -29,7 +28,6 @@ const mainItems = [
   { title: "Fluxo de Caixa", url: "/fluxo-caixa", icon: TrendingUp },
   { title: "DRE", url: "/dre", icon: FileText },
   { title: "Relatórios", url: "/relatorios", icon: PieChart },
-  { title: "Holdings", url: "/holding", icon: Building2 },
 ];
 
 const settingsItems = [

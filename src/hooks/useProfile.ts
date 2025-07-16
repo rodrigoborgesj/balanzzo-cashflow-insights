@@ -22,10 +22,7 @@ export interface Company {
   address_city: string;
   address_state: string;
   address_zip_code: string;
-  is_holding: boolean;
-  holding_parent_id?: string;
   status: string;
-  display_order: number;
 }
 
 export interface ProfileData {
@@ -149,9 +146,7 @@ export function useProfile() {
         address_city: data.address_city,
         address_state: data.address_state,
         address_zip_code: data.address_zip_code,
-        is_holding: false,
         status: 'active',
-        display_order: 0,
       });
 
     if (companyError) throw companyError;
@@ -209,9 +204,7 @@ export function useProfile() {
           address_city: data.address_city,
           address_state: data.address_state,
           address_zip_code: data.address_zip_code,
-          is_holding: false,
           status: 'active',
-          display_order: 0,
         });
 
       if (companyError) throw companyError;
