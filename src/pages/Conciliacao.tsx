@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileUploader } from "@/components/FileUploader";
 import { CategoryManager } from "@/components/CategoryManager";
+import TransactionProcessor from "@/components/TransactionProcessor";
 import { FileParser } from "@/utils/fileParserUpdated";
 import { useConciliacao, Transaction } from "@/hooks/useConciliacao";
 import { 
@@ -200,9 +201,10 @@ export default function Conciliacao() {
 
       {/* Tabs */}
       <Tabs defaultValue="importar" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="importar">Importar Extrato</TabsTrigger>
           <TabsTrigger value="conciliar">Conciliar Transações</TabsTrigger>
+          <TabsTrigger value="processar">Processar Movimentações</TabsTrigger>
         </TabsList>
 
         {/* Importar Tab */}
@@ -386,6 +388,11 @@ export default function Conciliacao() {
               </Table>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Processar Tab */}
+        <TabsContent value="processar">
+          <TransactionProcessor onDataChange={() => loadTransactions(undefined, selectedMonth)} />
         </TabsContent>
       </Tabs>
     </div>

@@ -27,23 +27,24 @@ import {
   BarChart,
   Bar
 } from "recharts";
-import { useCashFlow } from "@/hooks/useCashFlow";
-import { Transaction } from "@/utils/fileParser";
+import { useCashFlowIntegration } from "@/hooks/useCashFlowIntegration";
+import { useNavigate } from "react-router-dom";
 
 export default function FluxoCaixa() {
-  // State for managing transactions and settings
-  const [transactions] = useState<Transaction[]>([]);
   const [saldoInicial, setSaldoInicial] = useState(0);
   const [showSettings, setShowSettings] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState<string>(new Date().toISOString().slice(0, 7));
+  const navigate = useNavigate();
 
-  // Use cash flow hook to calculate everything
+  // Use integrated cash flow hook
   const { 
     summary, 
     categorySummary, 
-    cashFlowData, 
+    chartData, 
     recentTransactions, 
-    hasData 
-  } = useCashFlow(transactions, saldoInicial);
+    hasData,
+    isLoading
+  } = useCashFlowIntegration(selectedMonth);
 
   return (
     <div className="space-y-6">
@@ -52,10 +53,16 @@ export default function FluxoCaixa() {
         <div>
           <h1 className="text-3xl font-bold text-foreground">Fluxo de Caixa</h1>
           <p className="text-muted-foreground">
-            Baseado nas transações conciliadas - Saldo inicial: R$ {saldoInicial.toLocaleString("pt-BR")}
+            Baseado nas transações conciliadas - {selectedMonth}
           </p>
         </div>
         <div className="flex items-center gap-3">
+          <Input
+            type="month"
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
+            className="w-40"
+          />
           <Button 
             variant="outline" 
             size="sm"
@@ -105,7 +112,7 @@ export default function FluxoCaixa() {
             <p className="text-muted-foreground mb-4">
               Para visualizar o fluxo de caixa, você precisa primeiro importar e conciliar transações.
             </p>
-            <Button variant="outline">
+            <Button variant="outline" onClick={() => navigate("/conciliacao")}>
               Ir para Conciliação
             </Button>
           </CardContent>
@@ -118,12 +125,12 @@ export default function FluxoCaixa() {
           <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-primary">Saldo Inicial</p>
-                  <p className="text-xl font-bold text-foreground">
-                    R$ {summary.saldoInicial.toLocaleString("pt-BR")}
-                  </p>
-                </div>
+              <div>
+                <p className="text-sm font-medium text-primary">Total Transações</p>
+                <p className="text-xl font-bold text-foreground">
+                  {summary.transacoesCount}
+                </p>
+              </div>
                 <Calendar className="h-6 w-6 text-primary" />
               </div>
             </CardContent>
@@ -158,7 +165,7 @@ export default function FluxoCaixa() {
           </Card>
 
           <Card className={`bg-gradient-to-br border-2 ${
-            summary.saldoFinal >= 0 
+            summary.saldoLiquido >= 0 
               ? 'from-success/10 to-success/5 border-success/20' 
               : 'from-destructive/10 to-destructive/5 border-destructive/20'
           }`}>
@@ -166,15 +173,15 @@ export default function FluxoCaixa() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className={`text-sm font-medium ${
-                    summary.saldoFinal >= 0 ? 'text-success' : 'text-destructive'
+                    summary.saldoLiquido >= 0 ? 'text-success' : 'text-destructive'
                   }`}>
-                    Saldo Final
+                    Saldo Líquido
                   </p>
                   <p className="text-xl font-bold text-foreground">
-                    R$ {summary.saldoFinal.toLocaleString("pt-BR")}
+                    R$ {summary.saldoLiquido.toLocaleString("pt-BR")}
                   </p>
                 </div>
-                {summary.saldoFinal >= 0 ? (
+                {summary.saldoLiquido >= 0 ? (
                   <TrendingUp className="h-6 w-6 text-success" />
                 ) : (
                   <TrendingDown className="h-6 w-6 text-destructive" />
@@ -186,7 +193,7 @@ export default function FluxoCaixa() {
       )}
 
       {/* Gráfico de Evolução */}
-      {hasData && cashFlowData.length > 0 && (
+      {hasData && chartData.length > 0 && (
         <Card className="bg-gradient-to-br from-card to-card/80 border-border/50 shadow-soft">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -196,10 +203,10 @@ export default function FluxoCaixa() {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={cashFlowData}>
+              <AreaChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis 
-                  dataKey="date" 
+                  dataKey="data" 
                   stroke="hsl(var(--muted-foreground))"
                   fontSize={12}
                 />
@@ -256,20 +263,20 @@ export default function FluxoCaixa() {
                     <div key={index} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
                       <div className="flex items-center gap-3">
                         <div className={`w-3 h-3 rounded-full ${
-                          item.type === "entrada" ? "bg-success" : "bg-destructive"
+                          item.tipo === "entrada" ? "bg-success" : "bg-destructive"
                         }`} />
                         <div>
-                          <span className="font-medium text-sm">{item.category}</span>
+                          <span className="font-medium text-sm">{item.categoria}</span>
                           <div className="text-xs text-muted-foreground">{item.count} transações</div>
                         </div>
                       </div>
                       <div className="text-right">
                         <div className={`font-bold ${
-                          item.type === "entrada" ? "text-success" : "text-destructive"
+                          item.tipo === "entrada" ? "text-success" : "text-destructive"
                         }`}>
-                          R$ {item.amount.toLocaleString("pt-BR")}
+                          R$ {item.valor.toLocaleString("pt-BR")}
                         </div>
-                        <div className="text-xs text-muted-foreground">{item.percent}%</div>
+                        <div className="text-xs text-muted-foreground">{item.percentual.toFixed(1)}%</div>
                       </div>
                     </div>
                   ))}
@@ -295,20 +302,22 @@ export default function FluxoCaixa() {
                     <div key={transaction.id} className="flex items-center justify-between p-3 border border-border rounded-lg">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="font-medium text-sm truncate">{transaction.description}</span>
-                          {transaction.category && (
+                          <span className="font-medium text-sm truncate">{transaction.descricao}</span>
+                          {(transaction.categoria_final || transaction.categoria_sugerida) && (
                             <Badge variant="outline" className="text-xs">
-                              {transaction.category}
+                              {transaction.categoria_final || transaction.categoria_sugerida}
                             </Badge>
                           )}
                         </div>
-                        <div className="text-xs text-muted-foreground">{transaction.date}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {new Date(transaction.data_transacao).toLocaleDateString('pt-BR')}
+                        </div>
                       </div>
                       <div className={`font-bold text-sm ${
-                        transaction.type === "entrada" ? "text-success" : "text-destructive"
+                        transaction.tipo === "entrada" ? "text-success" : "text-destructive"
                       }`}>
-                        {transaction.type === "entrada" ? "+" : "-"}
-                        R$ {Math.abs(transaction.amount).toLocaleString("pt-BR")}
+                        {transaction.tipo === "entrada" ? "+" : "-"}
+                        R$ {Math.abs(transaction.valor).toLocaleString("pt-BR")}
                       </div>
                     </div>
                   ))}

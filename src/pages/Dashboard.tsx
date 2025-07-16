@@ -28,11 +28,21 @@ import {
 } from "recharts";
 
 import { useNavigate } from "react-router-dom";
+import { useCashFlowIntegration } from "@/hooks/useCashFlowIntegration";
+import { useState } from "react";
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const isLoading = false;
-  const consolidatedData = null;
+  const [selectedMonth] = useState<string>(new Date().toISOString().slice(0, 7));
+  
+  // Usar dados do fluxo de caixa integrado
+  const { 
+    summary, 
+    categorySummary, 
+    chartData, 
+    isLoading, 
+    hasData 
+  } = useCashFlowIntegration(selectedMonth);
 
   if (isLoading) {
     return (
@@ -44,7 +54,7 @@ export default function Dashboard() {
     );
   }
 
-  if (!consolidatedData) {
+  if (!hasData) {
     return (
       <div className="p-6 space-y-6 bg-background min-h-full">
         <div className="text-center py-12">
@@ -64,8 +74,8 @@ export default function Dashboard() {
   }
 
   const currentMonth = new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
-  const profitMargin = consolidatedData.totalRevenue > 0 
-    ? ((consolidatedData.totalProfit / consolidatedData.totalRevenue) * 100).toFixed(1) 
+  const profitMargin = summary.totalEntradas > 0 
+    ? ((summary.saldoLiquido / summary.totalEntradas) * 100).toFixed(1) 
     : '0';
 
   const formatCurrency = (value: number) => {
@@ -75,12 +85,8 @@ export default function Dashboard() {
     }).format(value);
   };
 
-  const formatMonthlyData = consolidatedData.monthlyData.map(item => ({
-    month: new Date(item.month + '-01').toLocaleDateString('pt-BR', { month: 'short' }),
-    revenue: item.revenue,
-    expenses: item.expenses,
-    profit: item.profit
-  }));
+  // Dados do gráfico já formatados
+  const formatMonthlyData = chartData;
 
   const expenseColors = [
     "hsl(var(--primary))",
@@ -115,39 +121,39 @@ export default function Dashboard() {
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <KPICard
-          title="Faturamento Total"
-          value={formatCurrency(consolidatedData.totalRevenue)}
-          change="+12.5% vs mês anterior"
+          title="Total Entradas"
+          value={formatCurrency(summary.totalEntradas)}
+          change={`${summary.transacoesCount} transações`}
           changeType="positive"
           icon={DollarSign}
           description="Total de receitas do período"
         />
         
         <KPICard
-          title="Lucro Líquido"
-          value={formatCurrency(consolidatedData.totalProfit)}
-          change="+8.3% vs mês anterior"
-          changeType="positive"
+          title="Saldo Líquido"
+          value={formatCurrency(summary.saldoLiquido)}
+          change={`Margem: ${profitMargin}%`}
+          changeType={summary.saldoLiquido >= 0 ? "positive" : "negative"}
           icon={TrendingUp}
-          description={`Margem: ${profitMargin}%`}
+          description="Resultado do período"
         />
         
         <KPICard
-          title="Total de Despesas"
-          value={formatCurrency(consolidatedData.totalExpenses)}
-          change="+3.2% vs mês anterior"
+          title="Total de Saídas"
+          value={formatCurrency(summary.totalSaidas)}
+          change="Despesas do período"
           changeType="negative"
           icon={TrendingDown}
           description="Despesas operacionais totais"
         />
         
         <KPICard
-          title="Fluxo de Caixa"
-          value={formatCurrency(consolidatedData.totalCashFlow)}
-          change="Positivo"
+          title="Movimentações"
+          value={summary.transacoesCount.toString()}
+          change="Transações processadas"
           changeType="positive"
           icon={Activity}
-          description="Entradas - Saídas"
+          description="Total de movimentações"
         />
       </div>
 
@@ -181,24 +187,24 @@ export default function Dashboard() {
                 />
                 <Line 
                   type="monotone" 
-                  dataKey="revenue" 
+                  dataKey="entradas" 
                   stroke="hsl(var(--success))" 
                   strokeWidth={3}
-                  name="Receita"
+                  name="Entradas"
                 />
                 <Line 
                   type="monotone" 
-                  dataKey="expenses" 
+                  dataKey="saidas" 
                   stroke="hsl(var(--destructive))" 
                   strokeWidth={3}
-                  name="Despesas"
+                  name="Saídas"
                 />
                 <Line 
                   type="monotone" 
-                  dataKey="profit" 
+                  dataKey="saldo" 
                   stroke="hsl(var(--primary))" 
                   strokeWidth={3}
-                  name="Lucro"
+                  name="Saldo Acumulado"
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -217,30 +223,33 @@ export default function Dashboard() {
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
-                  data={consolidatedData.expensesByCategory}
+                  data={categorySummary.map((cat, index) => ({
+                    ...cat,
+                    color: expenseColors[index % expenseColors.length]
+                  }))}
                   cx="50%"
                   cy="50%"
                   innerRadius={60}
                   outerRadius={100}
                   paddingAngle={5}
-                  dataKey="amount"
+                  dataKey="valor"
                 >
-                  {consolidatedData.expensesByCategory.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={expenseColors[index]} />
+                  {categorySummary.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={expenseColors[index % expenseColors.length]} />
                   ))}
                 </Pie>
                 <Tooltip formatter={(value: number) => [formatCurrency(value), "Valor"]} />
               </PieChart>
             </ResponsiveContainer>
             <div className="grid grid-cols-2 gap-2 mt-4">
-              {consolidatedData.expensesByCategory.map((category, index) => (
+              {categorySummary.slice(0, 6).map((category, index) => (
                 <div key={index} className="flex items-center gap-2 text-sm">
                   <div 
                     className="w-3 h-3 rounded-full" 
-                    style={{ backgroundColor: expenseColors[index] }}
+                    style={{ backgroundColor: expenseColors[index % expenseColors.length] }}
                   />
-                  <span className="text-muted-foreground">{category.category}</span>
-                  <span className="font-medium">{category.percentage}%</span>
+                  <span className="text-muted-foreground">{category.categoria}</span>
+                  <span className="font-medium">{category.percentual.toFixed(1)}%</span>
                 </div>
               ))}
             </div>
