@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FileUploader } from "@/components/FileUploader";
 import { CategoryManager } from "@/components/CategoryManager";
 import { ReconciliationResults } from "@/components/ReconciliationResults";
+import { TransactionProcessor } from "@/components/TransactionProcessor";
 import { FileParser } from "@/utils/fileParserUpdated";
 import { useConciliacao, Transaction } from "@/hooks/useConciliacao";
 import { useHolding } from "@/hooks/useHolding";
@@ -248,8 +249,9 @@ export default function Conciliacao() {
 
       {/* Tabs */}
       <Tabs defaultValue="importar" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="importar">Importar Extrato</TabsTrigger>
+          <TabsTrigger value="processar">Processar Movimentações</TabsTrigger>
           <TabsTrigger value="conciliar">Conciliar Transações</TabsTrigger>
         </TabsList>
 
@@ -304,11 +306,11 @@ export default function Conciliacao() {
                     <div className="flex items-center gap-2 text-success">
                       <CheckCircle className="h-5 w-5" />
                       <span className="font-medium">
-                        {transactions.length} transações disponíveis para conciliação!
+                        {transactions.length} transações processadas com categorização inteligente!
                       </span>
                     </div>
                     <p className="text-sm text-muted-foreground mt-1">
-                      Vá para a aba "Conciliar" para categorizar as transações
+                      Vá para "Processar Movimentações" para revisar e editar as categorizações
                     </p>
                   </CardContent>
                 </Card>
@@ -335,6 +337,16 @@ export default function Conciliacao() {
               </Card>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Processar Movimentações Tab */}
+        <TabsContent value="processar">
+          <TransactionProcessor
+            transactions={transactions}
+            availableCategories={allCategories}
+            onUpdateTransaction={updateTransactionCategory}
+            onCreateCategory={createUserCategory}
+          />
         </TabsContent>
 
         {/* Conciliar Tab */}

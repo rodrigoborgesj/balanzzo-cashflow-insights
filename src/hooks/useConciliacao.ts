@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useToast } from './use-toast';
 import { useAutomaticReconciliation, ReconciliationResult } from './useAutomaticReconciliation';
+import { useIntelligentCategorization } from './useIntelligentCategorization';
 
 export interface Transaction {
   id: string;
@@ -40,8 +41,9 @@ export function useConciliacao() {
   const { user } = useAuth();
   const { toast } = useToast();
   const { performAutomaticReconciliation, applyAutomaticReconciliations } = useAutomaticReconciliation();
+  const { processTransactions, improveWithUserHistory } = useIntelligentCategorization();
 
-  // Função para sugerir categoria baseada na descrição
+  // Função para sugerir categoria baseada na descrição (mantido para compatibilidade)
   const suggestCategory = useCallback(async (descricao: string): Promise<string> => {
     try {
       const { data, error } = await supabase
@@ -146,29 +148,30 @@ export function useConciliacao() {
       if (!newTransactions || newTransactions.length === 0) {
         throw new Error('Nenhuma transação para salvar');
       }
-      const transactionsWithCategories = await Promise.all(
-        newTransactions.map(async (transaction) => {
-          const categoria_sugerida = await suggestCategory(transaction.descricao);
-          
-          // Gerar hash para evitar duplicatas
-          const hashData = `${transaction.data_transacao}_${transaction.valor}_${transaction.descricao}_${user.id}_${companyId || 'default'}`;
-          const hash_transacao = btoa(hashData).replace(/[^a-zA-Z0-9]/g, '');
+      // Processar transações com categorização inteligente
+      console.log('Aplicando categorização inteligente...');
+      const intelligentlyProcessed = await processTransactions(newTransactions);
+      
+      // Melhorar com histórico do usuário
+      const improvedTransactions = await improveWithUserHistory(user.id, intelligentlyProcessed);
 
-          // Determinar o mês de referência baseado na data da transação ou no filtro atual
-          const transactionDate = new Date(transaction.data_transacao);
-          const mes_referencia = monthRef || selectedMonth + '-01';
+      const transactionsWithCategories = improvedTransactions.map((transaction) => {
+        // Gerar hash para evitar duplicatas
+        const hashData = `${transaction.data_transacao}_${transaction.valor}_${transaction.descricao}_${user.id}_${companyId || 'default'}`;
+        const hash_transacao = btoa(hashData).replace(/[^a-zA-Z0-9]/g, '');
 
-          return {
-            ...transaction,
-            user_id: user.id,
-            company_id: companyId || null,
-            categoria_sugerida,
-            hash_transacao,
-            mes_referencia,
-            status_conciliacao: false,
-          };
-        })
-      );
+        // Determinar o mês de referência baseado na data da transação ou no filtro atual
+        const mes_referencia = monthRef || selectedMonth + '-01';
+
+        return {
+          ...transaction,
+          user_id: user.id,
+          company_id: companyId || null,
+          hash_transacao,
+          mes_referencia,
+          status_conciliacao: false,
+        };
+      });
 
       // Inserir no banco (com tratamento de duplicatas)
       const { error } = await supabase
@@ -225,24 +228,26 @@ export function useConciliacao() {
     }
   }, [user?.id, suggestCategory, loadTransactions, selectedCompanyId, selectedMonth, toast]);
 
-  // Atualizar categoria final de uma transação
-  const updateTransactionCategory = useCallback(async (transactionId: string, categoria_final: string) => {
+  // Atualizar transação (categoria, descrição, etc.)
+  const updateTransactionCategory = useCallback(async (transactionId: string, updates: Partial<Transaction> | string) => {
     if (!user?.id) return false;
 
     try {
+      // Se o segundo parâmetro for string, trata como categoria_final (para compatibilidade)
+      const updateData = typeof updates === 'string' 
+        ? { categoria_final: updates, status_conciliacao: true }
+        : { ...updates, status_conciliacao: true };
+
       const { error } = await supabase
         .from('transacoes_conciliadas')
-        .update({ 
-          categoria_final,
-          status_conciliacao: true 
-        })
+        .update(updateData)
         .eq('id', transactionId)
         .eq('user_id', user.id);
 
       if (error) {
-        console.error('Erro ao atualizar categoria:', error);
+        console.error('Erro ao atualizar transação:', error);
         toast({
-          title: 'Erro ao atualizar categoria',
+          title: 'Erro ao atualizar transação',
           description: error.message,
           variant: 'destructive',
         });
@@ -253,21 +258,21 @@ export function useConciliacao() {
       setTransactions(prev => 
         prev.map(t => 
           t.id === transactionId 
-            ? { ...t, categoria_final, status_conciliacao: true }
+            ? { ...t, ...updateData }
             : t
         )
       );
 
       toast({
-        title: 'Categoria atualizada',
-        description: 'Transação foi categorizada com sucesso',
+        title: 'Transação atualizada',
+        description: 'Transação foi atualizada com sucesso',
       });
 
       return true;
     } catch (error) {
-      console.error('Erro ao atualizar categoria:', error);
+      console.error('Erro ao atualizar transação:', error);
       toast({
-        title: 'Erro ao atualizar categoria',
+        title: 'Erro ao atualizar transação',
         description: 'Erro desconhecido',
         variant: 'destructive',
       });
