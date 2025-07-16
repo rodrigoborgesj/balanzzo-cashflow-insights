@@ -6,6 +6,7 @@ import { useToast } from './use-toast';
 export interface Transaction {
   id: string;
   user_id?: string;
+  company_id?: string;
   data_transacao: string;
   valor: number;
   descricao: string;
@@ -15,6 +16,7 @@ export interface Transaction {
   status_conciliacao: boolean;
   origem_arquivo?: string;
   hash_transacao?: string;
+  mes_referencia?: string;
   criado_em?: string;
 }
 
@@ -30,6 +32,8 @@ export function useConciliacao() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [userCategories, setUserCategories] = useState<UserCategory[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState<string>(new Date().toISOString().slice(0, 7));
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -51,17 +55,28 @@ export function useConciliacao() {
     }
   }, []);
 
-  // Carregar transações do usuário
-  const loadTransactions = useCallback(async () => {
+  // Carregar transações do usuário com filtros de mês e empresa
+  const loadTransactions = useCallback(async (companyId?: string, monthFilter?: string) => {
     if (!user?.id) return;
 
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('transacoes_conciliadas')
         .select('*')
-        .eq('user_id', user.id)
-        .order('data_transacao', { ascending: false });
+        .eq('user_id', user.id);
+
+      // Filtrar por empresa se especificado
+      if (companyId) {
+        query = query.eq('company_id', companyId);
+      }
+
+      // Filtrar por mês se especificado
+      if (monthFilter) {
+        query = query.eq('mes_referencia', monthFilter + '-01');
+      }
+
+      const { data, error } = await query.order('data_transacao', { ascending: false });
 
       if (error) {
         console.error('Erro ao carregar transações:', error);
@@ -109,8 +124,8 @@ export function useConciliacao() {
     }
   }, [user?.id]);
 
-  // Salvar transações no banco
-  const saveTransactions = useCallback(async (newTransactions: Transaction[]) => {
+  // Salvar transações no banco com suporte a empresa e mês de referência
+  const saveTransactions = useCallback(async (newTransactions: Transaction[], companyId?: string, monthRef?: string) => {
     if (!user?.id) return false;
 
     setIsLoading(true);
@@ -121,14 +136,21 @@ export function useConciliacao() {
           const categoria_sugerida = await suggestCategory(transaction.descricao);
           
           // Gerar hash para evitar duplicatas
-          const hashData = `${transaction.data_transacao}_${transaction.valor}_${transaction.descricao}_${user.id}`;
+          const hashData = `${transaction.data_transacao}_${transaction.valor}_${transaction.descricao}_${user.id}_${companyId || 'default'}`;
           const hash_transacao = btoa(hashData).replace(/[^a-zA-Z0-9]/g, '');
+
+          // Determinar o mês de referência baseado na data da transação ou no filtro atual
+          const transactionDate = new Date(transaction.data_transacao);
+          const mes_referencia = monthRef || selectedMonth + '-01';
 
           return {
             ...transaction,
+            id: crypto.randomUUID(), // Sempre usar UUID válido para o banco
             user_id: user.id,
+            company_id: companyId || null,
             categoria_sugerida,
             hash_transacao,
+            mes_referencia,
             status_conciliacao: false,
           };
         })
@@ -152,11 +174,11 @@ export function useConciliacao() {
         return false;
       }
 
-      await loadTransactions();
+      await loadTransactions(selectedCompanyId || undefined, selectedMonth);
       
       toast({
         title: 'Transações importadas',
-        description: `${transactionsWithCategories.length} transações foram processadas`,
+        description: `${transactionsWithCategories.length} transações foram processadas${companyId ? ' para a empresa selecionada' : ''}`,
       });
 
       return true;
@@ -171,7 +193,7 @@ export function useConciliacao() {
     } finally {
       setIsLoading(false);
     }
-  }, [user?.id, suggestCategory, loadTransactions, toast]);
+  }, [user?.id, suggestCategory, loadTransactions, selectedCompanyId, selectedMonth, toast]);
 
   // Atualizar categoria final de uma transação
   const updateTransactionCategory = useCallback(async (transactionId: string, categoria_final: string) => {
@@ -270,6 +292,10 @@ export function useConciliacao() {
     transactions,
     userCategories,
     isLoading,
+    selectedMonth,
+    selectedCompanyId,
+    setSelectedMonth,
+    setSelectedCompanyId,
     loadTransactions,
     loadUserCategories,
     saveTransactions,

@@ -10,6 +10,7 @@ import { FileUploader } from "@/components/FileUploader";
 import { CategoryManager } from "@/components/CategoryManager";
 import { FileParser } from "@/utils/fileParserUpdated";
 import { useConciliacao, Transaction } from "@/hooks/useConciliacao";
+import { useHolding } from "@/hooks/useHolding";
 import { 
   Upload, 
   Search, 
@@ -52,6 +53,10 @@ export default function Conciliacao() {
     transactions,
     userCategories,
     isLoading,
+    selectedMonth,
+    selectedCompanyId,
+    setSelectedMonth,
+    setSelectedCompanyId,
     loadTransactions,
     loadUserCategories,
     saveTransactions,
@@ -59,11 +64,13 @@ export default function Conciliacao() {
     createUserCategory,
   } = useConciliacao();
 
+  const { companies, isHoldingEnabled } = useHolding();
+
   // Carregar dados ao montar o componente
   useEffect(() => {
-    loadTransactions();
+    loadTransactions(selectedCompanyId || undefined, selectedMonth);
     loadUserCategories();
-  }, [loadTransactions, loadUserCategories]);
+  }, [loadTransactions, loadUserCategories, selectedCompanyId, selectedMonth]);
 
   const handleFileSelect = async (file: File) => {
     setSelectedFile(file);
@@ -71,7 +78,7 @@ export default function Conciliacao() {
 
     try {
       const parsedTransactions = await FileParser.parseFile(file);
-      await saveTransactions(parsedTransactions);
+      await saveTransactions(parsedTransactions, selectedCompanyId || undefined, selectedMonth + '-01');
       setSelectedFile(null);
     } catch (error) {
       console.error('Erro ao processar arquivo:', error);
@@ -113,6 +120,41 @@ export default function Conciliacao() {
             Importe seus extratos e categorize as transações
           </p>
         </div>
+        
+        {/* Filtros de Holding */}
+        {isHoldingEnabled && (
+          <div className="flex gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Empresa</label>
+              <Select 
+                value={selectedCompanyId || "todas"} 
+                onValueChange={(value) => setSelectedCompanyId(value === "todas" ? null : value)}
+              >
+                <SelectTrigger className="w-48">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todas">Todas as empresas</SelectItem>
+                  {companies.map((company) => (
+                    <SelectItem key={company.id} value={company.id}>
+                      {company.company_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Mês de Referência</label>
+              <Input
+                type="month"
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(e.target.value)}
+                className="w-40"
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Stats Cards */}
@@ -197,6 +239,22 @@ export default function Conciliacao() {
                 acceptedFormats={['.csv', '.ofx', '.pdf']}
                 maxSize={20}
               />
+              
+              {isHoldingEnabled && selectedCompanyId && (
+                <Card className="bg-blue-50 border-blue-200">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-2 text-blue-700">
+                      <FileText className="h-5 w-5" />
+                      <span className="font-medium">
+                        Importando para: {companies.find(c => c.id === selectedCompanyId)?.company_name}
+                      </span>
+                    </div>
+                    <p className="text-sm text-blue-600 mt-1">
+                      Mês de referência: {new Date(selectedMonth + '-01').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
               
               {isProcessing && (
                 <Card className="bg-accent/10 border-accent/20">

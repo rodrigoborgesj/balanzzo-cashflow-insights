@@ -82,7 +82,7 @@ export class FileParser {
       if (isNaN(valor)) return null;
 
       return {
-        id: crypto.randomUUID(),
+        id: `import_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         data_transacao,
         descricao,
         valor,
@@ -159,7 +159,7 @@ export class FileParser {
 
         if (data_transacao && !isNaN(valor)) {
           transactions.push({
-            id: fitId || crypto.randomUUID(),
+            id: fitId || `import_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             data_transacao,
             descricao: memo,
             valor,
