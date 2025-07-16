@@ -196,10 +196,17 @@ export class FileParser {
       const reader = new FileReader();
       
       reader.onload = (event) => {
-        const content = event.target?.result as string;
-        const extension = file.name.toLowerCase().split('.').pop();
-
         try {
+          const content = event.target?.result as string;
+          
+          if (!content || content.trim().length === 0) {
+            reject(new Error('Arquivo está vazio ou não pôde ser lido'));
+            return;
+          }
+          
+          const extension = file.name.toLowerCase().split('.').pop();
+          console.log('Processando arquivo com extensão:', extension);
+
           let transactions: Omit<Transaction, 'user_id' | 'categoria_sugerida' | 'hash_transacao'>[] = [];
 
           switch (extension) {
@@ -210,13 +217,16 @@ export class FileParser {
               transactions = this.parseOFX(content);
               break;
             case 'pdf':
-              // PDF parsing would require a more complex implementation
-              // For now, we'll show an error
               reject(new Error('Parsing de PDF ainda não implementado. Use CSV ou OFX.'));
               return;
             default:
-              reject(new Error('Formato de arquivo não suportado'));
+              reject(new Error(`Formato de arquivo '${extension}' não suportado. Use CSV, OFX ou PDF.`));
               return;
+          }
+
+          if (!transactions || transactions.length === 0) {
+            reject(new Error('Nenhuma transação válida encontrada no arquivo. Verifique o formato e conteúdo.'));
+            return;
           }
 
           // Add origem_arquivo to all transactions
@@ -225,14 +235,20 @@ export class FileParser {
             origem_arquivo: file.name,
           }));
 
+          console.log(`${transactions.length} transações parseadas com sucesso`);
           resolve(transactions);
         } catch (error) {
-          reject(error);
+          console.error('Erro durante o parsing:', error);
+          const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido durante o processamento';
+          reject(new Error(`Erro ao processar arquivo: ${errorMessage}`));
         }
       };
 
-      reader.onerror = () => reject(new Error('Erro ao ler o arquivo'));
-      reader.readAsText(file);
+      reader.onerror = () => {
+        reject(new Error('Erro ao ler o arquivo. Verifique se o arquivo não está corrompido.'));
+      };
+      
+      reader.readAsText(file, 'UTF-8');
     });
   }
 }

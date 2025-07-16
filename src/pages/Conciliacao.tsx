@@ -77,11 +77,26 @@ export default function Conciliacao() {
     setIsProcessing(true);
 
     try {
+      console.log('Iniciando processamento do arquivo:', file.name);
       const parsedTransactions = await FileParser.parseFile(file);
-      await saveTransactions(parsedTransactions, selectedCompanyId || undefined, selectedMonth + '-01');
-      setSelectedFile(null);
+      console.log('Transações parseadas:', parsedTransactions.length);
+      
+      if (parsedTransactions.length === 0) {
+        throw new Error('Nenhuma transação válida encontrada no arquivo');
+      }
+      
+      const success = await saveTransactions(parsedTransactions, selectedCompanyId || undefined, selectedMonth + '-01');
+      
+      if (success) {
+        console.log('Transações salvas com sucesso');
+        setSelectedFile(null);
+      } else {
+        throw new Error('Falha ao salvar transações no banco de dados');
+      }
     } catch (error) {
       console.error('Erro ao processar arquivo:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido ao processar arquivo';
+      // Não mostrar toast aqui pois o saveTransactions já mostra
     } finally {
       setIsProcessing(false);
     }

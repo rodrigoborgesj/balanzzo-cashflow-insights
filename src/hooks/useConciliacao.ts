@@ -126,11 +126,22 @@ export function useConciliacao() {
 
   // Salvar transações no banco com suporte a empresa e mês de referência
   const saveTransactions = useCallback(async (newTransactions: Transaction[], companyId?: string, monthRef?: string) => {
-    if (!user?.id) return false;
+    if (!user?.id) {
+      toast({
+        title: 'Erro de autenticação',
+        description: 'Você precisa estar logado para importar transações',
+        variant: 'destructive',
+      });
+      return false;
+    }
 
     setIsLoading(true);
     try {
-      // Processar transações para sugerir categorias
+      console.log('Salvando', newTransactions.length, 'transações para o usuário', user.id);
+      
+      if (!newTransactions || newTransactions.length === 0) {
+        throw new Error('Nenhuma transação para salvar');
+      }
       const transactionsWithCategories = await Promise.all(
         newTransactions.map(async (transaction) => {
           const categoria_sugerida = await suggestCategory(transaction.descricao);
