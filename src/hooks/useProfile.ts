@@ -53,6 +53,21 @@ export function useProfile() {
   useEffect(() => {
     if (user) {
       loadProfile();
+      // Check for pending profile data from signup
+      const pendingData = localStorage.getItem('pendingProfileData');
+      if (pendingData) {
+        try {
+          const profileData: ProfileData = JSON.parse(pendingData);
+          setTimeout(() => {
+            updateProfile(profileData).then(() => {
+              localStorage.removeItem('pendingProfileData');
+            }).catch(console.error);
+          }, 1000);
+        } catch (error) {
+          console.error('Error processing pending profile data:', error);
+          localStorage.removeItem('pendingProfileData');
+        }
+      }
     } else {
       setProfile(null);
       setCompany(null);
@@ -107,15 +122,15 @@ export function useProfile() {
   const createProfile = async (data: ProfileData) => {
     if (!user) throw new Error('User not authenticated');
 
-    // Create profile
+    // Update profile with real data
     const { error: profileError } = await supabase
       .from('profiles')
-      .insert({
-        id: user.id,
+      .update({
         full_name: data.full_name,
         phone: data.phone,
         position: data.position,
-      });
+      })
+      .eq('id', user.id);
 
     if (profileError) throw profileError;
 
@@ -144,12 +159,74 @@ export function useProfile() {
     await loadProfile();
   };
 
+  const updateProfile = async (data: ProfileData) => {
+    if (!user) throw new Error('User not authenticated');
+
+    // Update profile
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .update({
+        full_name: data.full_name,
+        phone: data.phone,
+        position: data.position,
+      })
+      .eq('id', user.id);
+
+    if (profileError) throw profileError;
+
+    // Update or create company if doesn't exist
+    if (company) {
+      const { error: companyError } = await supabase
+        .from('companies')
+        .update({
+          company_name: data.company_name,
+          cnpj: data.cnpj,
+          revenue_range: data.revenue_range,
+          address_street: data.address_street,
+          address_number: data.address_number,
+          address_complement: data.address_complement,
+          address_neighborhood: data.address_neighborhood,
+          address_city: data.address_city,
+          address_state: data.address_state,
+          address_zip_code: data.address_zip_code,
+        })
+        .eq('id', company.id);
+
+      if (companyError) throw companyError;
+    } else {
+      // Create company if doesn't exist
+      const { error: companyError } = await supabase
+        .from('companies')
+        .insert({
+          user_id: user.id,
+          company_name: data.company_name,
+          cnpj: data.cnpj,
+          revenue_range: data.revenue_range,
+          address_street: data.address_street,
+          address_number: data.address_number,
+          address_complement: data.address_complement,
+          address_neighborhood: data.address_neighborhood,
+          address_city: data.address_city,
+          address_state: data.address_state,
+          address_zip_code: data.address_zip_code,
+          is_holding: false,
+          status: 'active',
+          display_order: 0,
+        });
+
+      if (companyError) throw companyError;
+    }
+
+    await loadProfile();
+  };
+
   return {
     profile,
     company,
     isLoading,
     hasProfile: !!profile, // User has profile if profile exists (company is optional)
     createProfile,
+    updateProfile,
     loadProfile,
   };
 }

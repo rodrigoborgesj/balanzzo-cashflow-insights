@@ -92,6 +92,25 @@ export function SignupForm({ onBack }: SignupFormProps) {
         return;
       }
 
+      // Store profile data in localStorage to be used after email confirmation
+      const profileData: ProfileData = {
+        full_name: data.full_name,
+        phone: data.phone,
+        position: data.position,
+        company_name: data.company_name,
+        cnpj: data.cnpj,
+        revenue_range: data.revenue_range,
+        address_street: data.address_street,
+        address_number: data.address_number,
+        address_complement: data.address_complement,
+        address_neighborhood: data.address_neighborhood,
+        address_city: data.address_city,
+        address_state: data.address_state,
+        address_zip_code: data.address_zip_code,
+      };
+      
+      localStorage.setItem('pendingProfileData', JSON.stringify(profileData));
+
       toast({
         title: "Conta criada com sucesso!",
         description: "Verifique seu email para confirmar a conta e depois faça login.",
