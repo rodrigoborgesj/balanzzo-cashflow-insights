@@ -161,10 +161,12 @@ export default function Conciliacao() {
       
       if (success) {
         console.log('Processamento concluído com sucesso');
+        // Limpar dados da sessão após sucesso
         setSelectedFile(null);
         setParsedTransactions([]);
+        setParseStats(null);
+        setParseErrors([]);
         
-        // Mostrar feedback adicional
         toast({
           title: 'Upload concluído!',
           description: `${validTransactions.length} transações foram importadas e estão prontas para revisão na aba "Conciliar Transações".`,
@@ -313,12 +315,14 @@ export default function Conciliacao() {
                 maxSize={20}
               />
               
-              {isProcessing && (
+              {(isProcessing || isLoading) && (
                 <Card className="bg-accent/10 border-accent/20">
                   <CardContent className="p-4">
                     <div className="flex items-center gap-3">
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
-                      <span className="text-sm">Processando extrato...</span>
+                      <span className="text-sm">
+                        {isProcessing ? 'Processando extrato...' : 'Salvando transações...'}
+                      </span>
                     </div>
                   </CardContent>
                 </Card>
@@ -368,7 +372,7 @@ export default function Conciliacao() {
               )}
 
               {/* Preview das transações parseadas */}
-              {parsedTransactions.length > 0 && !isProcessing && (
+              {parsedTransactions.length > 0 && !isProcessing && !isLoading && (
                 <Card className="bg-primary/10 border-primary/20">
                   <CardContent className="p-4 space-y-4">
                     <div className="flex items-center gap-2 text-primary">
@@ -405,9 +409,9 @@ export default function Conciliacao() {
                       onClick={handleProcessTransactions}
                       className="w-full"
                       size="lg"
-                      disabled={isProcessing}
+                      disabled={isProcessing || isLoading}
                     >
-                      Processar Transações com Categorização Inteligente
+                      {isProcessing || isLoading ? 'Processando...' : 'Processar Transações com Categorização Inteligente'}
                     </Button>
                   </CardContent>
                 </Card>
