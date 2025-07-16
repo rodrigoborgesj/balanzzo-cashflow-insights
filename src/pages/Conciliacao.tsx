@@ -46,6 +46,7 @@ export default function Conciliacao() {
   const [filterStatus, setFilterStatus] = useState("todos");
   const [searchTerm, setSearchTerm] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [parsedTransactions, setParsedTransactions] = useState<Transaction[]>([]);
   
   const {
     transactions,
@@ -68,34 +69,45 @@ export default function Conciliacao() {
 
   const handleFileSelect = async (file: File) => {
     setSelectedFile(file);
+    setParsedTransactions([]);
     
-    // Processar automaticamente após seleção
-    setTimeout(async () => {
-      setIsProcessing(true);
-
-      try {
-        console.log('Iniciando processamento do arquivo:', file.name);
-        const parsedTransactions = await FileParser.parseFile(file);
-        console.log('Transações parseadas:', parsedTransactions.length);
-        
-        if (parsedTransactions.length === 0) {
-          throw new Error('Nenhuma transação válida encontrada no arquivo');
-        }
-        
-        const success = await saveTransactions(parsedTransactions);
-        
-        if (success) {
-          console.log('Transações salvas com sucesso');
-          setSelectedFile(null);
-        } else {
-          throw new Error('Falha ao salvar transações no banco de dados');
-        }
-      } catch (error) {
-        console.error('Erro ao processar arquivo:', error);
-      } finally {
-        setIsProcessing(false);
+    // Apenas fazer o parsing do arquivo, não salvar ainda
+    try {
+      console.log('Fazendo parsing do arquivo:', file.name);
+      const parsed = await FileParser.parseFile(file);
+      console.log('Transações parseadas:', parsed.length);
+      
+      if (parsed.length === 0) {
+        throw new Error('Nenhuma transação válida encontrada no arquivo');
       }
-    }, 500); // Delay para mostrar feedback visual
+      
+      setParsedTransactions(parsed);
+    } catch (error) {
+      console.error('Erro ao fazer parsing do arquivo:', error);
+      setParsedTransactions([]);
+    }
+  };
+
+  const handleProcessTransactions = async () => {
+    if (!selectedFile || parsedTransactions.length === 0) return;
+    
+    setIsProcessing(true);
+    try {
+      console.log('Processando transações com categorização inteligente...');
+      const success = await saveTransactions(parsedTransactions);
+      
+      if (success) {
+        console.log('Transações salvas com sucesso');
+        setSelectedFile(null);
+        setParsedTransactions([]);
+      } else {
+        throw new Error('Falha ao salvar transações no banco de dados');
+      }
+    } catch (error) {
+      console.error('Erro ao processar transações:', error);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handleCategorize = async (transactionId: string, category: string) => {
@@ -238,6 +250,49 @@ export default function Conciliacao() {
                 </Card>
               )}
 
+              {/* Preview das transações parseadas */}
+              {parsedTransactions.length > 0 && !isProcessing && (
+                <Card className="bg-primary/10 border-primary/20">
+                  <CardContent className="p-4 space-y-4">
+                    <div className="flex items-center gap-2 text-primary">
+                      <CheckCircle className="h-5 w-5" />
+                      <span className="font-medium">
+                        {parsedTransactions.length} transações encontradas no extrato
+                      </span>
+                    </div>
+                    
+                    {/* Preview das primeiras transações */}
+                    <div className="bg-background rounded-lg p-3 border">
+                      <h4 className="text-sm font-medium mb-2">Preview das transações:</h4>
+                      <div className="space-y-1 max-h-32 overflow-y-auto">
+                        {parsedTransactions.slice(0, 5).map((transaction, index) => (
+                          <div key={index} className="text-xs flex justify-between items-center p-1 border-b last:border-b-0">
+                            <span className="truncate max-w-[200px]">{transaction.descricao}</span>
+                            <span className={transaction.valor >= 0 ? "text-success" : "text-destructive"}>
+                              R$ {Math.abs(transaction.valor).toFixed(2)}
+                            </span>
+                          </div>
+                        ))}
+                        {parsedTransactions.length > 5 && (
+                          <div className="text-xs text-muted-foreground text-center pt-1">
+                            ... e mais {parsedTransactions.length - 5} transações
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <Button 
+                      onClick={handleProcessTransactions}
+                      className="w-full"
+                      size="lg"
+                    >
+                      Processar Transações com Categorização Inteligente
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Resultado do processamento */}
               {transactions.length > 0 && (
                 <Card className="bg-success/10 border-success/20">
                   <CardContent className="p-4">
