@@ -145,7 +145,6 @@ export function useConciliacao() {
 
           return {
             ...transaction,
-            id: crypto.randomUUID(), // Sempre usar UUID válido para o banco
             user_id: user.id,
             company_id: companyId || null,
             categoria_sugerida,
