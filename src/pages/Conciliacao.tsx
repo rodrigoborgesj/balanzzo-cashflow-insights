@@ -68,30 +68,34 @@ export default function Conciliacao() {
 
   const handleFileSelect = async (file: File) => {
     setSelectedFile(file);
-    setIsProcessing(true);
+    
+    // Processar automaticamente após seleção
+    setTimeout(async () => {
+      setIsProcessing(true);
 
-    try {
-      console.log('Iniciando processamento do arquivo:', file.name);
-      const parsedTransactions = await FileParser.parseFile(file);
-      console.log('Transações parseadas:', parsedTransactions.length);
-      
-      if (parsedTransactions.length === 0) {
-        throw new Error('Nenhuma transação válida encontrada no arquivo');
+      try {
+        console.log('Iniciando processamento do arquivo:', file.name);
+        const parsedTransactions = await FileParser.parseFile(file);
+        console.log('Transações parseadas:', parsedTransactions.length);
+        
+        if (parsedTransactions.length === 0) {
+          throw new Error('Nenhuma transação válida encontrada no arquivo');
+        }
+        
+        const success = await saveTransactions(parsedTransactions);
+        
+        if (success) {
+          console.log('Transações salvas com sucesso');
+          setSelectedFile(null);
+        } else {
+          throw new Error('Falha ao salvar transações no banco de dados');
+        }
+      } catch (error) {
+        console.error('Erro ao processar arquivo:', error);
+      } finally {
+        setIsProcessing(false);
       }
-      
-      const success = await saveTransactions(parsedTransactions);
-      
-      if (success) {
-        console.log('Transações salvas com sucesso');
-        setSelectedFile(null);
-      } else {
-        throw new Error('Falha ao salvar transações no banco de dados');
-      }
-    } catch (error) {
-      console.error('Erro ao processar arquivo:', error);
-    } finally {
-      setIsProcessing(false);
-    }
+    }, 500); // Delay para mostrar feedback visual
   };
 
   const handleCategorize = async (transactionId: string, category: string) => {
