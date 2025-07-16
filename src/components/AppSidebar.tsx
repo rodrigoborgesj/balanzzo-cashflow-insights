@@ -3,7 +3,9 @@ import {
   BarChart3, 
   TrendingUp, 
   Settings,
-  CheckSquare
+  CheckSquare,
+  FileText,
+  Package
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 
@@ -21,13 +23,11 @@ import {
 } from "@/components/ui/sidebar";
 
 const mainItems = [
-  { title: "Dashboard", url: "/", icon: BarChart3 },
-  { title: "Conciliação", url: "/conciliacao", icon: CheckSquare },
+  { title: "Painel", url: "/", icon: BarChart3 },
   { title: "Fluxo de Caixa", url: "/fluxo-caixa", icon: TrendingUp },
-];
-
-const settingsItems = [
-  { title: "Configurações", url: "/configuracoes", icon: Settings },
+  { title: "Conciliação Bancária", url: "/conciliacao", icon: CheckSquare },
+  { title: "Relatórios", url: "/relatorios", icon: FileText },
+  { title: "Holdings", url: "/holdings", icon: Package },
 ];
 
 export function AppSidebar() {
@@ -51,40 +51,18 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar className={`${collapsed ? "w-16" : "w-64"} border-r border-border bg-card/30 backdrop-blur-sm`}>
-      <SidebarContent className="px-3 py-4">
+    <Sidebar className={`${collapsed ? "w-16" : "w-64"} border-r border-border bg-white`}>
+      <SidebarContent className="px-3 py-6">
+        {/* Logo */}
+        <div className="mb-8 px-3">
+          <h1 className="text-xl font-bold text-gray-900">BALANZIO</h1>
+        </div>
+
         {/* Main Navigation */}
         <SidebarGroup>
-          <SidebarGroupLabel className="text-xs uppercase tracking-wider text-muted-foreground font-medium mb-2">
-            Principal
-          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="space-y-1">
               {mainItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <NavLink 
-                      to={item.url} 
-                      className={getNavClass(item.url)}
-                    >
-                      <item.icon className="h-5 w-5 flex-shrink-0" />
-                      {!collapsed && <span className="ml-3">{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        {/* Settings Navigation */}
-        <SidebarGroup className="mt-8">
-          <SidebarGroupLabel className="text-xs uppercase tracking-wider text-muted-foreground font-medium mb-2">
-            Configurações
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu className="space-y-1">
-              {settingsItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <NavLink 

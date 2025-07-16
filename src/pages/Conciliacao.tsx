@@ -212,110 +212,137 @@ export default function Conciliacao() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Conciliação Bancária</h1>
-          <p className="text-muted-foreground">
-            Importe seus extratos e categorize as transações
-          </p>
-        </div>
-        
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Mês de Referência</label>
-          <Input
-            type="month"
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(e.target.value)}
-            className="w-40"
-          />
+      <div className="bg-white p-6 border-b border-gray-200">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-semibold text-gray-900">Conciliação Bancária</h1>
+            <p className="text-gray-600 mt-1">
+              Importe seus extratos e categorize as transações
+            </p>
+          </div>
+          
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Mês de Referência</label>
+            <Input
+              type="month"
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+              className="w-40"
+            />
+          </div>
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="bg-gradient-to-br from-card to-card/80 border-border/50 shadow-soft">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Pendentes
-            </CardTitle>
-            <div className="p-2 bg-accent/20 rounded-lg">
-              <Clock className="h-5 w-5 text-accent-foreground" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">
-              {pendingCount}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              transações não categorizadas
-            </p>
-          </CardContent>
-        </Card>
+      <div className="p-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Pendentes Card */}
+          <Card className="bg-white border border-gray-200 rounded-lg">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Pendentes</p>
+                  <p className="text-2xl font-semibold text-gray-900">
+                    R$ {transactions.filter(t => !t.status_conciliacao).reduce((sum, t) => sum + t.valor, 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                  </p>
+                  <p className="text-xs text-gray-500">transações não categorizadas</p>
+                </div>
+                <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                  <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-        <Card className="bg-gradient-to-br from-card to-card/80 border-border/50 shadow-soft">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Conciliadas
-            </CardTitle>
-            <div className="p-2 bg-success/20 rounded-lg">
-              <CheckCircle className="h-5 w-5 text-success" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">
-              {reconciledCount}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              transações categorizadas
-            </p>
-          </CardContent>
-        </Card>
+          {/* Conciliadas Card */}
+          <Card className="bg-white border border-gray-200 rounded-lg">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Conciliadas</p>
+                  <p className="text-2xl font-semibold text-gray-900">
+                    R$ {transactions.filter(t => t.status_conciliacao).reduce((sum, t) => sum + t.valor, 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                  </p>
+                  <p className="text-xs text-gray-500">transações categorizadas</p>
+                </div>
+                <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                  <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-        <Card className="bg-gradient-to-br from-card to-card/80 border-border/50 shadow-soft">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Saldo Total
-            </CardTitle>
-            <div className="p-2 bg-primary/20 rounded-lg">
-              <DollarSign className="h-5 w-5 text-primary" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">
-              R$ {totalAmount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              das transações importadas
-            </p>
-          </CardContent>
-        </Card>
+          {/* Saldo Total Card - Verde */}
+          <Card className="bg-green-500 text-white rounded-lg">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-green-100 mb-1">Saldo Total</p>
+                  <p className="text-2xl font-semibold text-white">
+                    R$ {totalAmount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                  </p>
+                  <p className="text-xs text-green-100">das transações importadas</p>
+                </div>
+                <div className="w-10 h-10 bg-green-400 rounded-full flex items-center justify-center">
+                  <div className="w-3 h-3 bg-white rounded-full"></div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
-      {/* Tabs */}
-      <Tabs defaultValue="importar" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="importar">Importar Extrato</TabsTrigger>
-          <TabsTrigger value="conciliar">Conciliar Transações</TabsTrigger>
-          <TabsTrigger value="processar">Processar Movimentações</TabsTrigger>
-        </TabsList>
+      {/* Main Content */}
+      <div className="p-6 bg-gray-50">
+        {/* Upload Area */}
+        <div className="mb-8">
+          <Card className="bg-white border border-gray-200 rounded-lg">
+            <CardContent className="p-8">
+              <div className="text-center space-y-4">
+                <div className="flex justify-center">
+                  <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <Upload className="h-8 w-8 text-gray-400" />
+                  </div>
+                </div>
+                <div>
+                  <p className="text-lg text-gray-700 mb-2">Arraste seu extrato aqui ou clique para selecionar</p>
+                  <p className="text-sm text-gray-500">Formatos aceitos: csv, ofx, pdf (max. 20MB)</p>
+                </div>
+                <div className="flex justify-center">
+                  <FileUploader 
+                    onFileSelect={handleFileSelect}
+                    acceptedFormats={['.csv', '.ofx', '.pdf']}
+                    maxSize={20}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
-        {/* Importar Tab */}
-        <TabsContent value="importar">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Upload className="h-5 w-5" />
-                Importar Extrato Bancário
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <FileUploader 
-                onFileSelect={handleFileSelect}
-                acceptedFormats={['.csv', '.ofx', '.pdf']}
-                maxSize={20}
-              />
-              
-              {(isProcessing || isLoading) && (
+        {/* Gerenciar Categorias */}
+        <div>
+          <Card className="bg-white border border-gray-200 rounded-lg">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">Gerenciar Categorias</h3>
+                  <p className="text-sm text-gray-600">Categorias Personalizadas</p>
+                </div>
+                <Button className="bg-green-500 hover:bg-green-600 text-white">
+                  Nova Categoria
+                </Button>
+              </div>
+              <div className="mt-4">
+                <CategoryManager />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Status Messages */}
+        <div className="mt-6 space-y-4">
+          {(isProcessing || isLoading) && (
                 <Card className="bg-accent/10 border-accent/20">
                   <CardContent className="p-4">
                     <div className="flex items-center gap-3">
@@ -431,24 +458,19 @@ export default function Conciliacao() {
                       Vá para "Conciliar Transações" para revisar e editar as categorizações
                     </p>
                   </CardContent>
-                </Card>
-              )}
+                 </Card>
+               )}
+        </div>
 
-              {/* Gerenciador de Categorias */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Gerenciar Categorias</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <CategoryManager />
-                </CardContent>
-              </Card>
-            </CardContent>
-          </Card>
-        </TabsContent>
+        {/* Tabs para navegação adicional */}
+        <Tabs defaultValue="conciliar" className="mt-6">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="conciliar">Conciliar Transações</TabsTrigger>
+            <TabsTrigger value="processar">Processar Movimentações</TabsTrigger>
+          </TabsList>
 
         {/* Conciliar Tab */}
-        <TabsContent value="conciliar" className="space-y-6">
+        <TabsContent value="conciliar" className="space-y-6 mt-6">
           {/* Filtros */}
           <Card>
             <CardContent className="pt-6">
@@ -578,7 +600,8 @@ export default function Conciliacao() {
         <TabsContent value="processar">
           <TransactionProcessor onDataChange={() => loadTransactions(selectedMonth)} />
         </TabsContent>
-      </Tabs>
+        </Tabs>
+      </div>
     </div>
   );
 }
