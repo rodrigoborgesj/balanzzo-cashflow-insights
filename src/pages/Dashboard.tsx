@@ -111,9 +111,9 @@ export default function Dashboard() {
             <Calendar className="h-4 w-4 mr-2" />
             {currentMonth}
           </Button>
-          <Button size="sm" onClick={() => navigate("/relatorios")}>
+          <Button size="sm" onClick={() => navigate("/conciliacao")}>
             <Activity className="h-4 w-4 mr-2" />
-            Relatório Mensal
+            Importar Extrato
           </Button>
         </div>
       </div>
@@ -258,7 +258,7 @@ export default function Dashboard() {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card 
           className="bg-gradient-to-br from-accent/10 to-accent/5 border-accent/20 cursor-pointer hover:shadow-md transition-shadow"
           onClick={() => navigate("/fluxo-caixa")}
@@ -270,21 +270,6 @@ export default function Dashboard() {
                 <p className="text-sm text-muted-foreground">Acompanhe entradas e saídas</p>
               </div>
               <ArrowUpRight className="h-5 w-5 text-accent" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card 
-          className="bg-gradient-to-br from-success/10 to-success/5 border-success/20 cursor-pointer hover:shadow-md transition-shadow"
-          onClick={() => navigate("/dre")}
-        >
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-semibold text-foreground">Relatório DRE</h3>
-                <p className="text-sm text-muted-foreground">Demonstrativo de resultados</p>
-              </div>
-              <ArrowUpRight className="h-5 w-5 text-success" />
             </div>
           </CardContent>
         </Card>

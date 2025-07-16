@@ -35,7 +35,6 @@ export function useConciliacao() {
   const [userCategories, setUserCategories] = useState<UserCategory[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState<string>(new Date().toISOString().slice(0, 7));
-  const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
   const { processTransactions, improveWithUserHistory } = useIntelligentCategorization();
@@ -59,7 +58,7 @@ export function useConciliacao() {
   }, []);
 
   // Carregar transações do usuário com filtros de mês e empresa
-  const loadTransactions = useCallback(async (companyId?: string, monthFilter?: string) => {
+  const loadTransactions = useCallback(async (monthFilter?: string) => {
     if (!user?.id) return;
 
     setIsLoading(true);
@@ -69,14 +68,11 @@ export function useConciliacao() {
         .select('*')
         .eq('user_id', user.id);
 
-      // Filtrar por empresa se especificado
-      if (companyId) {
-        query = query.eq('company_id', companyId);
-      }
-
       // Filtrar por mês se especificado
       if (monthFilter) {
-        query = query.eq('mes_referencia', monthFilter + '-01');
+        const startDate = `${monthFilter}-01`;
+        const endDate = `${monthFilter}-31`;
+        query = query.gte('data_transacao', startDate).lte('data_transacao', endDate);
       }
 
       const { data, error } = await query.order('data_transacao', { ascending: false });
@@ -128,7 +124,7 @@ export function useConciliacao() {
   }, [user?.id]);
 
   // Salvar transações no banco com suporte a empresa e mês de referência
-  const saveTransactions = useCallback(async (newTransactions: Transaction[], companyId?: string, monthRef?: string) => {
+  const saveTransactions = useCallback(async (newTransactions: Transaction[]) => {
     if (!user?.id) {
       toast({
         title: 'Erro de autenticação',
@@ -154,21 +150,22 @@ export function useConciliacao() {
 
       const transactionsWithCategories = improvedTransactions.map((transaction) => {
         // Gerar hash para evitar duplicatas
-        const hashData = `${transaction.data_transacao}_${transaction.valor}_${transaction.descricao}_${user.id}_${companyId || 'default'}`;
+        const hashData = `${transaction.data_transacao}_${transaction.valor}_${transaction.descricao}_${user.id}`;
         const hash_transacao = btoa(hashData).replace(/[^a-zA-Z0-9]/g, '');
 
-        // Determinar o mês de referência baseado na data da transação ou no filtro atual
-        const mes_referencia = monthRef || selectedMonth + '-01';
+        // Validar dados obrigatórios
+        if (!transaction.data_transacao || transaction.valor === null || transaction.valor === undefined) {
+          console.error('Transação com dados inválidos:', transaction);
+          return null;
+        }
 
         return {
           ...transaction,
           user_id: user.id,
-          company_id: companyId || null,
           hash_transacao,
-          mes_referencia,
           status_conciliacao: false,
         };
-      });
+      }).filter(Boolean); // Remove transações nulas
 
       // Inserir no banco (com tratamento de duplicatas)
       const { error } = await supabase
@@ -188,7 +185,7 @@ export function useConciliacao() {
         return false;
       }
 
-      await loadTransactions(selectedCompanyId || undefined, selectedMonth);
+      await loadTransactions(selectedMonth);
       
       toast({
         title: 'Transações importadas',
@@ -207,7 +204,7 @@ export function useConciliacao() {
     } finally {
       setIsLoading(false);
     }
-  }, [user?.id, suggestCategory, loadTransactions, selectedCompanyId, selectedMonth, toast]);
+  }, [user?.id, suggestCategory, loadTransactions, selectedMonth, toast]);
 
   // Atualizar transação (categoria, descrição, etc.)
   const updateTransactionCategory = useCallback(async (transactionId: string, updates: Partial<Transaction> | string) => {
@@ -310,14 +307,11 @@ export function useConciliacao() {
     userCategories,
     isLoading,
     selectedMonth,
-    selectedCompanyId,
     setSelectedMonth,
-    setSelectedCompanyId,
     loadTransactions,
     loadUserCategories,
     saveTransactions,
     updateTransactionCategory,
     createUserCategory,
-    
   };
 }

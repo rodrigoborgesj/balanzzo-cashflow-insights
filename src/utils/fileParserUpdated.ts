@@ -54,41 +54,49 @@ export class FileParser {
   private static createTransactionFromCSV(fields: string[], index: number): Omit<Transaction, 'user_id' | 'categoria_sugerida' | 'hash_transacao'> | null {
     try {
       // Common CSV formats: [date, description, amount] or [date, description, debit, credit]
-      let data_transacao = fields[0];
-      let descricao = fields[1];
-      let valor: number;
+      let date = fields[0];
+      let description = fields[1];
+      let amount: number;
 
       // Try to parse date
-      data_transacao = this.normalizeDate(data_transacao);
-      if (!data_transacao) return null;
+      date = this.normalizeDate(date);
+      if (!date) {
+        console.warn(`Data inválida ignorada: ${fields[0]}`);
+        return null;
+      }
 
       // Clean description
-      descricao = descricao.replace(/['"]/g, '').trim();
-      if (!descricao) descricao = 'Transação importada';
+      description = description.replace(/['"]/g, '').trim();
+      if (!description) description = 'Transação importada';
 
       // Parse amount - handle different formats
       if (fields.length === 3) {
         // Format: date, description, amount
-        valor = this.parseAmount(fields[2]);
+        amount = this.parseAmount(fields[2]);
       } else if (fields.length >= 4) {
         // Format: date, description, debit, credit
         const debit = this.parseAmount(fields[2]);
         const credit = this.parseAmount(fields[3]);
-        valor = credit || -Math.abs(debit);
+        amount = credit || -Math.abs(debit);
       } else {
         return null;
       }
 
-      if (isNaN(valor)) return null;
+      // Validar valor obrigatório
+      if (isNaN(amount) || amount === 0) {
+        console.warn(`Valor inválido ignorado: ${fields[2] || fields[3]}`);
+        return null;
+      }
 
       return {
-        id: crypto.randomUUID(),
-        data_transacao,
-        descricao,
-        valor,
-        tipo: valor >= 0 ? 'entrada' : 'saida',
+        id: `import_${Date.now()}_${index}`,
+        data_transacao: date,
+        descricao: description,
+        valor: amount,
+        tipo: amount >= 0 ? 'entrada' : 'saida',
         status_conciliacao: false,
         origem_arquivo: 'CSV',
+        mes_referencia: date.substring(0, 7) + '-01' // YYYY-MM-01
       };
     } catch (error) {
       console.error('Error parsing CSV line:', error);
@@ -100,7 +108,7 @@ export class FileParser {
     // Remove quotes and trim
     dateStr = dateStr.replace(/['"]/g, '').trim();
     
-    // Try different date formats and convert to YYYY-MM-DD
+    // Try different date formats
     const formats = [
       /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/, // DD/MM/YYYY
       /^(\d{4})-(\d{1,2})-(\d{1,2})$/, // YYYY-MM-DD
@@ -110,16 +118,36 @@ export class FileParser {
     for (const format of formats) {
       const match = dateStr.match(format);
       if (match) {
+        let day, month, year;
+        
         if (format === formats[1]) {
-          // YYYY-MM-DD format (already correct)
-          return `${match[1]}-${match[2].padStart(2, '0')}-${match[3].padStart(2, '0')}`;
+          // YYYY-MM-DD format
+          year = match[1];
+          month = match[2];
+          day = match[3];
         } else {
-          // DD/MM/YYYY or DD-MM-YYYY format (convert to YYYY-MM-DD)
-          return `${match[3]}-${match[2].padStart(2, '0')}-${match[1].padStart(2, '0')}`;
+          // DD/MM/YYYY or DD-MM-YYYY format
+          day = match[1];
+          month = match[2];
+          year = match[3];
         }
+
+        // Validar valores de data
+        const dayNum = parseInt(day);
+        const monthNum = parseInt(month);
+        const yearNum = parseInt(year);
+
+        if (dayNum < 1 || dayNum > 31 || monthNum < 1 || monthNum > 12 || yearNum < 1900 || yearNum > 2100) {
+          console.warn(`Data inválida: ${dateStr}`);
+          return '';
+        }
+
+        // Retornar no formato YYYY-MM-DD
+        return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
       }
     }
 
+    console.warn(`Formato de data não reconhecido: ${dateStr}`);
     return '';
   }
 
@@ -135,7 +163,11 @@ export class FileParser {
       cleaned = '-' + cleaned.slice(1, -1);
     }
 
-    return parseFloat(cleaned) || 0;
+    // Remove any remaining non-numeric characters except minus and dot
+    cleaned = cleaned.replace(/[^-0-9.]/g, '');
+
+    const result = parseFloat(cleaned);
+    return isNaN(result) ? 0 : result;
   }
 
   static parseOFX(content: string): Omit<Transaction, 'user_id' | 'categoria_sugerida' | 'hash_transacao'>[] {
@@ -154,18 +186,19 @@ export class FileParser {
       const fitId = this.extractOFXValue(trnContent, 'FITID');
 
       if (trnAmt && dtPosted) {
-        const valor = parseFloat(trnAmt);
-        const data_transacao = this.parseOFXDate(dtPosted);
+        const amount = parseFloat(trnAmt);
+        const date = this.parseOFXDate(dtPosted);
 
-        if (data_transacao && !isNaN(valor)) {
+        if (date && !isNaN(amount) && amount !== 0) {
           transactions.push({
-            id: crypto.randomUUID(),
-            data_transacao,
+            id: fitId || `ofx_${Date.now()}_${transactions.length}`,
+            data_transacao: date,
             descricao: memo,
-            valor,
-            tipo: valor >= 0 ? 'entrada' : 'saida',
+            valor: amount,
+            tipo: amount >= 0 ? 'entrada' : 'saida',
             status_conciliacao: false,
             origem_arquivo: 'OFX',
+            mes_referencia: date.substring(0, 7) + '-01' // YYYY-MM-01
           });
         }
       }
@@ -186,6 +219,17 @@ export class FileParser {
       const year = dateStr.substring(0, 4);
       const month = dateStr.substring(4, 6);
       const day = dateStr.substring(6, 8);
+      
+      // Validar valores de data
+      const dayNum = parseInt(day);
+      const monthNum = parseInt(month);
+      const yearNum = parseInt(year);
+
+      if (dayNum < 1 || dayNum > 31 || monthNum < 1 || monthNum > 12 || yearNum < 1900 || yearNum > 2100) {
+        console.warn(`Data OFX inválida: ${dateStr}`);
+        return '';
+      }
+      
       return `${year}-${month}-${day}`;
     }
     return '';
@@ -196,17 +240,10 @@ export class FileParser {
       const reader = new FileReader();
       
       reader.onload = (event) => {
-        try {
-          const content = event.target?.result as string;
-          
-          if (!content || content.trim().length === 0) {
-            reject(new Error('Arquivo está vazio ou não pôde ser lido'));
-            return;
-          }
-          
-          const extension = file.name.toLowerCase().split('.').pop();
-          console.log('Processando arquivo com extensão:', extension);
+        const content = event.target?.result as string;
+        const extension = file.name.toLowerCase().split('.').pop();
 
+        try {
           let transactions: Omit<Transaction, 'user_id' | 'categoria_sugerida' | 'hash_transacao'>[] = [];
 
           switch (extension) {
@@ -217,38 +254,25 @@ export class FileParser {
               transactions = this.parseOFX(content);
               break;
             case 'pdf':
+              // PDF parsing would require a more complex implementation
+              // For now, we'll show an error
               reject(new Error('Parsing de PDF ainda não implementado. Use CSV ou OFX.'));
               return;
             default:
-              reject(new Error(`Formato de arquivo '${extension}' não suportado. Use CSV, OFX ou PDF.`));
+              reject(new Error('Formato de arquivo não suportado'));
               return;
           }
 
-          if (!transactions || transactions.length === 0) {
-            reject(new Error('Nenhuma transação válida encontrada no arquivo. Verifique o formato e conteúdo.'));
-            return;
-          }
-
-          // Add origem_arquivo to all transactions
-          transactions = transactions.map(t => ({
-            ...t,
-            origem_arquivo: file.name,
-          }));
-
-          console.log(`${transactions.length} transações parseadas com sucesso`);
+          console.log(`Parsed ${transactions.length} transactions from ${extension.toUpperCase()}`);
           resolve(transactions);
         } catch (error) {
-          console.error('Erro durante o parsing:', error);
-          const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido durante o processamento';
-          reject(new Error(`Erro ao processar arquivo: ${errorMessage}`));
+          console.error('Erro no parsing do arquivo:', error);
+          reject(error);
         }
       };
 
-      reader.onerror = () => {
-        reject(new Error('Erro ao ler o arquivo. Verifique se o arquivo não está corrompido.'));
-      };
-      
-      reader.readAsText(file, 'UTF-8');
+      reader.onerror = () => reject(new Error('Erro ao ler o arquivo'));
+      reader.readAsText(file);
     });
   }
 }

@@ -47,7 +47,7 @@ export default function TransactionProcessor({ onDataChange }: TransactionProces
   const { toast } = useToast();
 
   useEffect(() => {
-    loadTransactions(undefined, selectedMonth);
+    loadTransactions(selectedMonth);
   }, [selectedMonth, loadTransactions]);
 
   // Categorias predefinidas + categorias do usuário
@@ -203,7 +203,7 @@ export default function TransactionProcessor({ onDataChange }: TransactionProces
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             <CardTitle>Movimentações Financeiras</CardTitle>
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={() => loadTransactions(undefined, selectedMonth)}>
+              <Button variant="outline" size="sm" onClick={() => loadTransactions(selectedMonth)}>
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Atualizar
               </Button>

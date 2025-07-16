@@ -62,7 +62,7 @@ export default function Conciliacao() {
 
   // Carregar dados ao montar o componente
   useEffect(() => {
-    loadTransactions(undefined, selectedMonth);
+    loadTransactions(selectedMonth);
     loadUserCategories();
   }, [loadTransactions, loadUserCategories, selectedMonth]);
 
@@ -79,7 +79,7 @@ export default function Conciliacao() {
         throw new Error('Nenhuma transação válida encontrada no arquivo');
       }
       
-      const success = await saveTransactions(parsedTransactions, undefined, selectedMonth + '-01');
+      const success = await saveTransactions(parsedTransactions);
       
       if (success) {
         console.log('Transações salvas com sucesso');
@@ -392,7 +392,7 @@ export default function Conciliacao() {
 
         {/* Processar Tab */}
         <TabsContent value="processar">
-          <TransactionProcessor onDataChange={() => loadTransactions(undefined, selectedMonth)} />
+          <TransactionProcessor onDataChange={() => loadTransactions(selectedMonth)} />
         </TabsContent>
       </Tabs>
     </div>

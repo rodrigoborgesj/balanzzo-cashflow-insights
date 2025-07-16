@@ -2,8 +2,6 @@ import { useState } from "react";
 import { 
   BarChart3, 
   TrendingUp, 
-  FileText, 
-  PieChart,
   Settings,
   CheckSquare
 } from "lucide-react";
@@ -26,8 +24,6 @@ const mainItems = [
   { title: "Dashboard", url: "/", icon: BarChart3 },
   { title: "Conciliação", url: "/conciliacao", icon: CheckSquare },
   { title: "Fluxo de Caixa", url: "/fluxo-caixa", icon: TrendingUp },
-  { title: "DRE", url: "/dre", icon: FileText },
-  { title: "Relatórios", url: "/relatorios", icon: PieChart },
 ];
 
 const settingsItems = [
