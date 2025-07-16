@@ -141,6 +141,7 @@ export function useConciliacao() {
       if (!newTransactions || newTransactions.length === 0) {
         throw new Error('Nenhuma transação para salvar');
       }
+      
       // Processar transações com categorização inteligente
       console.log('Aplicando categorização inteligente...');
       const intelligentlyProcessed = await processTransactions(newTransactions);
@@ -164,16 +165,20 @@ export function useConciliacao() {
           user_id: user.id,
           hash_transacao,
           status_conciliacao: false,
+          mes_referencia: transaction.data_transacao.substring(0, 7) + '-01',
         };
       }).filter(Boolean); // Remove transações nulas
 
+      console.log('Transações preparadas para salvamento:', transactionsWithCategories.length);
+
       // Inserir no banco (com tratamento de duplicatas)
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('transacoes_conciliadas')
         .upsert(transactionsWithCategories, { 
           onConflict: 'hash_transacao',
           ignoreDuplicates: true 
-        });
+        })
+        .select();
 
       if (error) {
         console.error('Erro ao salvar transações:', error);
@@ -185,6 +190,9 @@ export function useConciliacao() {
         return false;
       }
 
+      console.log('Transações salvas no banco:', data?.length || 0);
+
+      // Recarregar transações após salvar
       await loadTransactions(selectedMonth);
       
       toast({
@@ -197,14 +205,14 @@ export function useConciliacao() {
       console.error('Erro ao salvar transações:', error);
       toast({
         title: 'Erro ao salvar transações',
-        description: 'Erro desconhecido',
+        description: error instanceof Error ? error.message : 'Erro desconhecido',
         variant: 'destructive',
       });
       return false;
     } finally {
       setIsLoading(false);
     }
-  }, [user?.id, suggestCategory, loadTransactions, selectedMonth, toast]);
+  }, [user?.id, processTransactions, improveWithUserHistory, loadTransactions, selectedMonth, toast]);
 
   // Atualizar transação (categoria, descrição, etc.)
   const updateTransactionCategory = useCallback(async (transactionId: string, updates: Partial<Transaction> | string) => {
