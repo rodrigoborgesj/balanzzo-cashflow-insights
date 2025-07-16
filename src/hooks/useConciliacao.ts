@@ -124,8 +124,9 @@ export function useConciliacao() {
   }, [user?.id]);
 
   // Salvar transações no banco com suporte a empresa e mês de referência
-  const saveTransactions = useCallback(async (newTransactions: Transaction[]) => {
+  const saveTransactions = useCallback(async (newTransactions: Omit<Transaction, 'user_id' | 'categoria_sugerida' | 'hash_transacao'>[]) => {
     if (!user?.id) {
+      console.error('Usuário não autenticado');
       toast({
         title: 'Erro de autenticação',
         description: 'Você precisa estar logado para importar transações',
@@ -136,7 +137,7 @@ export function useConciliacao() {
 
     setIsLoading(true);
     try {
-      console.log('Salvando', newTransactions.length, 'transações para o usuário', user.id);
+      console.log('Iniciando processamento de', newTransactions.length, 'transações para o usuário', user.id);
       
       if (!newTransactions || newTransactions.length === 0) {
         throw new Error('Nenhuma transação para salvar');
@@ -146,17 +147,40 @@ export function useConciliacao() {
       console.log('Aplicando categorização inteligente...');
       const intelligentlyProcessed = await processTransactions(newTransactions);
       
-      // Melhorar com histórico do usuário
+      // Aplicar melhorias baseadas no histórico do usuário
+      console.log('Aplicando aprendizado baseado no histórico...');
       const improvedTransactions = await improveWithUserHistory(user.id, intelligentlyProcessed);
 
-      const transactionsWithCategories = improvedTransactions.map((transaction) => {
-        // Gerar hash para evitar duplicatas
-        const hashData = `${transaction.data_transacao}_${transaction.valor}_${transaction.descricao}_${user.id}`;
-        const hash_transacao = btoa(hashData).replace(/[^a-zA-Z0-9]/g, '');
+      // Preparar transações para inserção com validação rigorosa
+      const transactionsWithCategories = improvedTransactions.map((transaction, index) => {
+        // Validar data antes de processar
+        if (!transaction.data_transacao || transaction.data_transacao === '') {
+          console.warn('Transação com data inválida ignorada:', transaction);
+          return null;
+        }
 
-        // Validar dados obrigatórios
-        if (!transaction.data_transacao || transaction.valor === null || transaction.valor === undefined) {
-          console.error('Transação com dados inválidos:', transaction);
+        // Validar valor
+        if (transaction.valor === null || transaction.valor === undefined || isNaN(transaction.valor)) {
+          console.warn('Transação com valor inválido ignorada:', transaction);
+          return null;
+        }
+
+        // Gerar hash único para evitar duplicatas
+        const transactionData = `${transaction.data_transacao}-${transaction.descricao}-${transaction.valor}-${user.id}`;
+        const hash_transacao = btoa(transactionData).replace(/[^a-zA-Z0-9]/g, '').substring(0, 32);
+
+        // Garantir que mes_referencia seja uma data válida
+        let mes_referencia;
+        try {
+          mes_referencia = transaction.data_transacao.substring(0, 7) + '-01';
+          // Validar se a data resultante é válida
+          const testDate = new Date(mes_referencia);
+          if (isNaN(testDate.getTime())) {
+            console.warn('Data de referência inválida para transação:', transaction);
+            return null;
+          }
+        } catch (error) {
+          console.warn('Erro ao gerar mes_referencia para transação:', transaction);
           return null;
         }
 
@@ -165,11 +189,16 @@ export function useConciliacao() {
           user_id: user.id,
           hash_transacao,
           status_conciliacao: false,
-          mes_referencia: transaction.data_transacao.substring(0, 7) + '-01',
+          mes_referencia,
+          categoria_final: null, // Será definida pelo usuário posteriormente
         };
       }).filter(Boolean); // Remove transações nulas
 
-      console.log('Transações preparadas para salvamento:', transactionsWithCategories.length);
+      console.log('Transações válidas preparadas para salvamento:', transactionsWithCategories.length);
+
+      if (transactionsWithCategories.length === 0) {
+        throw new Error('Nenhuma transação válida foi encontrada após o processamento. Verifique o formato do arquivo.');
+      }
 
       // Inserir no banco (com tratamento de duplicatas)
       const { data, error } = await supabase
@@ -181,38 +210,51 @@ export function useConciliacao() {
         .select();
 
       if (error) {
-        console.error('Erro ao salvar transações:', error);
+        console.error('Erro detalhado ao salvar transações:', error);
         toast({
           title: 'Erro ao salvar transações',
-          description: error.message,
+          description: `Erro no banco de dados: ${error.message}`,
           variant: 'destructive',
         });
         return false;
       }
 
-      console.log('Transações salvas no banco:', data?.length || 0);
+      const savedCount = data?.length || 0;
+      console.log('Transações salvas no banco com sucesso:', savedCount);
 
-      // Recarregar transações após salvar
-      await loadTransactions(selectedMonth);
+      // Detectar o mês das transações salvas para ajustar o filtro automaticamente
+      const transactionMonths = transactionsWithCategories
+        .map(t => t.data_transacao.substring(0, 7))
+        .filter((month, index, arr) => arr.indexOf(month) === index);
+      
+      // Se há transações de um mês específico, ajustar o filtro para esse mês
+      if (transactionMonths.length === 1 && transactionMonths[0] !== selectedMonth) {
+        console.log('Ajustando filtro de mês para:', transactionMonths[0]);
+        setSelectedMonth(transactionMonths[0]);
+        await loadTransactions(transactionMonths[0]);
+      } else {
+        // Recarregar transações do mês atual
+        await loadTransactions(selectedMonth);
+      }
       
       toast({
-        title: 'Transações importadas',
-        description: `${transactionsWithCategories.length} transações importadas com sucesso`,
+        title: 'Transações processadas com sucesso!',
+        description: `${savedCount} transações foram categorizadas inteligentemente e estão prontas para revisão.`,
       });
-
+      
       return true;
     } catch (error) {
       console.error('Erro ao salvar transações:', error);
       toast({
-        title: 'Erro ao salvar transações',
-        description: error instanceof Error ? error.message : 'Erro desconhecido',
+        title: 'Erro ao processar transações',
+        description: error instanceof Error ? error.message : 'Erro desconhecido. Verifique o formato do arquivo.',
         variant: 'destructive',
       });
       return false;
     } finally {
       setIsLoading(false);
     }
-  }, [user?.id, processTransactions, improveWithUserHistory, loadTransactions, selectedMonth, toast]);
+  }, [user?.id, processTransactions, improveWithUserHistory, loadTransactions, selectedMonth, setSelectedMonth, toast]);
 
   // Atualizar transação (categoria, descrição, etc.)
   const updateTransactionCategory = useCallback(async (transactionId: string, updates: Partial<Transaction> | string) => {

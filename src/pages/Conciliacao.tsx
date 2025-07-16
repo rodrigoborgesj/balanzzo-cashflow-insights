@@ -21,6 +21,7 @@ import {
   DollarSign,
   AlertCircle
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 // Categorias para classificação
 const categoriesReceitas = [
@@ -61,6 +62,8 @@ export default function Conciliacao() {
     createUserCategory,
   } = useConciliacao();
 
+  const { toast } = useToast();
+
   // Carregar dados ao montar o componente
   useEffect(() => {
     loadTransactions(selectedMonth);
@@ -93,18 +96,44 @@ export default function Conciliacao() {
     
     setIsProcessing(true);
     try {
-      console.log('Processando transações com categorização inteligente...');
-      const success = await saveTransactions(parsedTransactions);
+      console.log('Processando', parsedTransactions.length, 'transações com categorização inteligente...');
+      
+      // Filtrar transações válidas antes de processar
+      const validTransactions = parsedTransactions.filter(t => 
+        t.data_transacao && 
+        t.data_transacao !== '' && 
+        !isNaN(t.valor) && 
+        t.valor !== 0
+      );
+
+      console.log('Transações válidas encontradas:', validTransactions.length);
+
+      if (validTransactions.length === 0) {
+        throw new Error('Nenhuma transação válida encontrada no arquivo. Verifique o formato dos dados.');
+      }
+
+      const success = await saveTransactions(validTransactions);
       
       if (success) {
-        console.log('Transações salvas com sucesso');
+        console.log('Processamento concluído com sucesso');
         setSelectedFile(null);
         setParsedTransactions([]);
+        
+        // Mostrar feedback adicional
+        toast({
+          title: 'Upload concluído!',
+          description: `${validTransactions.length} transações foram importadas e estão prontas para revisão na aba "Conciliar Transações".`,
+        });
       } else {
         throw new Error('Falha ao salvar transações no banco de dados');
       }
     } catch (error) {
       console.error('Erro ao processar transações:', error);
+      toast({
+        title: 'Erro no processamento',
+        description: error instanceof Error ? error.message : 'Erro desconhecido',
+        variant: 'destructive',
+      });
     } finally {
       setIsProcessing(false);
     }

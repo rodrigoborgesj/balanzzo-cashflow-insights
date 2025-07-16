@@ -132,18 +132,39 @@ export class FileParser {
           year = match[3];
         }
 
-        // Validar valores de data
+        // Validar valores de data com verificação mais rigorosa
         const dayNum = parseInt(day);
         const monthNum = parseInt(month);
         const yearNum = parseInt(year);
 
+        // Validação básica de ranges
         if (dayNum < 1 || dayNum > 31 || monthNum < 1 || monthNum > 12 || yearNum < 1900 || yearNum > 2100) {
-          console.warn(`Data inválida: ${dateStr}`);
+          console.warn(`Data inválida - valores fora do range: ${dateStr}`);
           return '';
         }
 
-        // Retornar no formato YYYY-MM-DD
-        return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+        // Validação avançada considerando dias por mês
+        const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+        
+        // Verificar anos bissextos
+        if ((yearNum % 4 === 0 && yearNum % 100 !== 0) || (yearNum % 400 === 0)) {
+          daysInMonth[1] = 29; // Fevereiro em ano bissexto
+        }
+        
+        if (dayNum > daysInMonth[monthNum - 1]) {
+          console.warn(`Data inválida - dia não existe no mês: ${dateStr} (dia ${dayNum} no mês ${monthNum})`);
+          return '';
+        }
+
+        // Validar se a data não é no futuro distante
+        const currentYear = new Date().getFullYear();
+        if (yearNum > currentYear + 1) {
+          console.warn(`Data inválida - ano muito no futuro: ${dateStr}`);
+          return '';
+        }
+
+        // Retornar no formato YYYY-MM-DD com zero padding
+        return `${yearNum}-${monthNum.toString().padStart(2, '0')}-${dayNum.toString().padStart(2, '0')}`;
       }
     }
 
