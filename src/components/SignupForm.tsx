@@ -92,28 +92,9 @@ export function SignupForm({ onBack }: SignupFormProps) {
         return;
       }
 
-      // Create profile data
-      const profileData: ProfileData = {
-        full_name: data.full_name,
-        phone: data.phone,
-        position: data.position,
-        company_name: data.company_name,
-        cnpj: data.cnpj,
-        revenue_range: data.revenue_range,
-        address_street: data.address_street,
-        address_number: data.address_number,
-        address_complement: data.address_complement,
-        address_neighborhood: data.address_neighborhood,
-        address_city: data.address_city,
-        address_state: data.address_state,
-        address_zip_code: data.address_zip_code,
-      };
-
-      await createProfile(profileData);
-
       toast({
         title: "Conta criada com sucesso!",
-        description: "Faça login com suas credenciais para acessar o sistema.",
+        description: "Verifique seu email para confirmar a conta e depois faça login.",
       });
 
       // Redireciona para tela de login após cadastro bem-sucedido

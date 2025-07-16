@@ -214,11 +214,13 @@ export type Database = {
         Row: {
           categoria_final: string | null
           categoria_sugerida: string | null
+          company_id: string | null
           criado_em: string | null
           data_transacao: string
           descricao: string | null
           hash_transacao: string | null
           id: string
+          mes_referencia: string | null
           origem_arquivo: string | null
           status_conciliacao: boolean | null
           tipo: string | null
@@ -228,11 +230,13 @@ export type Database = {
         Insert: {
           categoria_final?: string | null
           categoria_sugerida?: string | null
+          company_id?: string | null
           criado_em?: string | null
           data_transacao: string
           descricao?: string | null
           hash_transacao?: string | null
           id?: string
+          mes_referencia?: string | null
           origem_arquivo?: string | null
           status_conciliacao?: boolean | null
           tipo?: string | null
@@ -242,18 +246,28 @@ export type Database = {
         Update: {
           categoria_final?: string | null
           categoria_sugerida?: string | null
+          company_id?: string | null
           criado_em?: string | null
           data_transacao?: string
           descricao?: string | null
           hash_transacao?: string | null
           id?: string
+          mes_referencia?: string | null
           origem_arquivo?: string | null
           status_conciliacao?: boolean | null
           tipo?: string | null
           user_id?: string | null
           valor?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "transacoes_conciliadas_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
