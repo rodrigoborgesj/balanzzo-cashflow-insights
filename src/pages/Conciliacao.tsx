@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FileUploader } from "@/components/FileUploader";
 import { CategoryManager } from "@/components/CategoryManager";
 import TransactionProcessor from "@/components/TransactionProcessor";
-import { FileParser } from "@/utils/fileParserUpdated";
+import { RobustCSVParser } from "@/utils/robustCSVParser";
 import { useConciliacao, Transaction } from "@/hooks/useConciliacao";
 import { 
   Upload, 
@@ -48,6 +48,8 @@ export default function Conciliacao() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [parsedTransactions, setParsedTransactions] = useState<Transaction[]>([]);
+  const [parseErrors, setParseErrors] = useState<string[]>([]);
+  const [parseStats, setParseStats] = useState<{totalRows: number; validTransactions: number; skippedRows: number} | null>(null);
   
   const {
     transactions,
@@ -71,33 +73,46 @@ export default function Conciliacao() {
   }, [loadTransactions, loadUserCategories, selectedMonth]);
 
   const handleFileSelect = async (file: File) => {
-    console.log('=== INÍCIO DO PROCESSO DE UPLOAD ===');
+    console.log('🚀 INÍCIO DO PROCESSO DE UPLOAD ROBUSTO');
     console.log('Arquivo selecionado:', file.name, 'Tamanho:', file.size, 'Tipo:', file.type);
     
     setSelectedFile(file);
     setParsedTransactions([]);
+    setParseErrors([]);
+    setParseStats(null);
+    setIsProcessing(true);
     
-    // Apenas fazer o parsing do arquivo, não salvar ainda
     try {
-      console.log('Fazendo parsing do arquivo:', file.name);
-      const parsed = await FileParser.parseFile(file);
-      console.log('Resultado do parsing:', parsed.length, 'transações');
-      console.log('Primeira transação parseada:', parsed[0]);
+      console.log('Iniciando parsing robusto do arquivo:', file.name);
+      const result = await RobustCSVParser.parseCSV(file);
       
-      if (parsed.length === 0) {
-        console.error('Nenhuma transação encontrada no arquivo');
+      console.log('📊 Resultado do parsing robusto:', result);
+      
+      setParseStats(result.stats);
+      setParseErrors(result.errors);
+      
+      if (result.transactions.length === 0) {
+        console.error('❌ Nenhuma transação encontrada no arquivo');
         toast({
-          title: 'Arquivo vazio',
-          description: 'Nenhuma transação válida encontrada no arquivo',
+          title: 'Arquivo não processado',
+          description: result.errors.length > 0 
+            ? `Erros encontrados: ${result.errors.join('; ')}` 
+            : 'Nenhuma transação válida encontrada no arquivo',
           variant: 'destructive',
         });
         return;
       }
       
-      setParsedTransactions(parsed);
-      console.log('Estado atualizado com transações parseadas');
+      setParsedTransactions(result.transactions);
+      
+      toast({
+        title: 'Arquivo processado com sucesso!',
+        description: `${result.transactions.length} transação(ões) encontrada(s) de ${result.stats.totalRows} linha(s)`,
+      });
+      
+      console.log('✅ Estado atualizado com transações parseadas');
     } catch (error) {
-      console.error('Erro detalhado no parsing:', error);
+      console.error('❌ Erro crítico no parsing:', error);
       toast({
         title: 'Erro no parsing',
         description: error instanceof Error ? error.message : 'Erro ao processar arquivo',
@@ -309,6 +324,49 @@ export default function Conciliacao() {
                 </Card>
               )}
 
+              {/* Estatísticas de Parsing */}
+              {parseStats && !isProcessing && (
+                <Card className="bg-accent/10 border-accent/20">
+                  <CardContent className="p-4">
+                    <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
+                      <DollarSign className="h-4 w-4" />
+                      Estatísticas de Processamento
+                    </h4>
+                    <div className="grid grid-cols-3 gap-4 text-center">
+                      <div>
+                        <div className="text-lg font-bold">{parseStats.totalRows}</div>
+                        <div className="text-xs text-muted-foreground">Linhas Lidas</div>
+                      </div>
+                      <div>
+                        <div className="text-lg font-bold text-success">{parseStats.validTransactions}</div>
+                        <div className="text-xs text-muted-foreground">Transações Válidas</div>
+                      </div>
+                      <div>
+                        <div className="text-lg font-bold text-destructive">{parseStats.skippedRows}</div>
+                        <div className="text-xs text-muted-foreground">Linhas Ignoradas</div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Erros de Parsing */}
+              {parseErrors.length > 0 && !isProcessing && (
+                <Card className="bg-destructive/10 border-destructive/20">
+                  <CardContent className="p-4">
+                    <h4 className="text-sm font-medium mb-2 flex items-center gap-2 text-destructive">
+                      <AlertCircle className="h-4 w-4" />
+                      Avisos de Processamento
+                    </h4>
+                    <div className="space-y-1">
+                      {parseErrors.map((error, index) => (
+                        <div key={index} className="text-xs text-destructive/80">• {error}</div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Preview das transações parseadas */}
               {parsedTransactions.length > 0 && !isProcessing && (
                 <Card className="bg-primary/10 border-primary/20">
@@ -316,7 +374,7 @@ export default function Conciliacao() {
                     <div className="flex items-center gap-2 text-primary">
                       <CheckCircle className="h-5 w-5" />
                       <span className="font-medium">
-                        {parsedTransactions.length} transações encontradas no extrato
+                        {parsedTransactions.length} transações encontradas e prontas para processamento
                       </span>
                     </div>
                     
@@ -326,9 +384,12 @@ export default function Conciliacao() {
                       <div className="space-y-1 max-h-32 overflow-y-auto">
                         {parsedTransactions.slice(0, 5).map((transaction, index) => (
                           <div key={index} className="text-xs flex justify-between items-center p-1 border-b last:border-b-0">
-                            <span className="truncate max-w-[200px]">{transaction.descricao}</span>
-                            <span className={transaction.valor >= 0 ? "text-success" : "text-destructive"}>
-                              R$ {Math.abs(transaction.valor).toFixed(2)}
+                            <div className="flex-1 truncate max-w-[200px]">
+                              <div>{transaction.descricao}</div>
+                              <div className="text-muted-foreground">{new Date(transaction.data_transacao).toLocaleDateString('pt-BR')}</div>
+                            </div>
+                            <span className={transaction.valor >= 0 ? "text-success font-medium" : "text-destructive font-medium"}>
+                              {transaction.valor >= 0 ? '+' : ''}R$ {transaction.valor.toFixed(2)}
                             </span>
                           </div>
                         ))}
@@ -344,6 +405,7 @@ export default function Conciliacao() {
                       onClick={handleProcessTransactions}
                       className="w-full"
                       size="lg"
+                      disabled={isProcessing}
                     >
                       Processar Transações com Categorização Inteligente
                     </Button>
