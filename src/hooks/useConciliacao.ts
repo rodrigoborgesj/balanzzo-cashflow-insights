@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useToast } from './use-toast';
+import { useAutomaticReconciliation, ReconciliationResult } from './useAutomaticReconciliation';
 
 export interface Transaction {
   id: string;
@@ -34,8 +35,11 @@ export function useConciliacao() {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState<string>(new Date().toISOString().slice(0, 7));
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
+  const [reconciliationResult, setReconciliationResult] = useState<ReconciliationResult | null>(null);
+  const [isReconciling, setIsReconciling] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
+  const { performAutomaticReconciliation, applyAutomaticReconciliations } = useAutomaticReconciliation();
 
   // Função para sugerir categoria baseada na descrição
   const suggestCategory = useCallback(async (descricao: string): Promise<string> => {
@@ -186,10 +190,26 @@ export function useConciliacao() {
 
       await loadTransactions(selectedCompanyId || undefined, selectedMonth);
       
-      toast({
-        title: 'Transações importadas',
-        description: `${transactionsWithCategories.length} transações foram processadas${companyId ? ' para a empresa selecionada' : ''}`,
-      });
+      // Executar conciliação automática após salvar as transações
+      setIsReconciling(true);
+      try {
+        const reconciliation = await performAutomaticReconciliation(transactionsWithCategories, companyId);
+        setReconciliationResult(reconciliation);
+        
+        toast({
+          title: 'Conciliação Automática Concluída',
+          description: `${reconciliation.automaticMatches} de ${reconciliation.totalTransactions} transações conciliadas automaticamente`,
+        });
+      } catch (reconciliationError) {
+        console.error('Erro na conciliação automática:', reconciliationError);
+        toast({
+          title: 'Transações importadas',
+          description: `${transactionsWithCategories.length} transações importadas, mas houve erro na conciliação automática`,
+          variant: 'destructive',
+        });
+      } finally {
+        setIsReconciling(false);
+      }
 
       return true;
     } catch (error) {
@@ -298,12 +318,46 @@ export function useConciliacao() {
     }
   }, [user?.id, loadUserCategories, toast]);
 
+  // Aplicar conciliações automáticas
+  const applyAutomaticReconciliation = useCallback(async () => {
+    if (!reconciliationResult) return false;
+
+    setIsLoading(true);
+    try {
+      const success = await applyAutomaticReconciliations(reconciliationResult.matches);
+      
+      if (success) {
+        await loadTransactions(selectedCompanyId || undefined, selectedMonth);
+        setReconciliationResult(null);
+        
+        toast({
+          title: 'Conciliações aplicadas',
+          description: `${reconciliationResult.automaticMatches} transações foram conciliadas automaticamente`,
+        });
+      }
+      
+      return success;
+    } catch (error) {
+      console.error('Erro ao aplicar conciliações:', error);
+      toast({
+        title: 'Erro ao aplicar conciliações',
+        description: 'Erro desconhecido',
+        variant: 'destructive',
+      });
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [reconciliationResult, applyAutomaticReconciliations, loadTransactions, selectedCompanyId, selectedMonth, toast]);
+
   return {
     transactions,
     userCategories,
     isLoading,
     selectedMonth,
     selectedCompanyId,
+    reconciliationResult,
+    isReconciling,
     setSelectedMonth,
     setSelectedCompanyId,
     loadTransactions,
@@ -311,5 +365,6 @@ export function useConciliacao() {
     saveTransactions,
     updateTransactionCategory,
     createUserCategory,
+    applyAutomaticReconciliation,
   };
 }

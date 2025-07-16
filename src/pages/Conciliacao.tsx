@@ -8,9 +8,11 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileUploader } from "@/components/FileUploader";
 import { CategoryManager } from "@/components/CategoryManager";
+import { ReconciliationResults } from "@/components/ReconciliationResults";
 import { FileParser } from "@/utils/fileParserUpdated";
 import { useConciliacao, Transaction } from "@/hooks/useConciliacao";
 import { useHolding } from "@/hooks/useHolding";
+import { ReconciliationMatch } from "@/hooks/useAutomaticReconciliation";
 import { 
   Upload, 
   Search, 
@@ -55,6 +57,8 @@ export default function Conciliacao() {
     isLoading,
     selectedMonth,
     selectedCompanyId,
+    reconciliationResult,
+    isReconciling,
     setSelectedMonth,
     setSelectedCompanyId,
     loadTransactions,
@@ -62,6 +66,7 @@ export default function Conciliacao() {
     saveTransactions,
     updateTransactionCategory,
     createUserCategory,
+    applyAutomaticReconciliation,
   } = useConciliacao();
 
   const { companies, isHoldingEnabled } = useHolding();
@@ -104,6 +109,15 @@ export default function Conciliacao() {
 
   const handleCategorize = async (transactionId: string, category: string) => {
     await updateTransactionCategory(transactionId, category);
+  };
+
+  const handleApplyAutomatic = async () => {
+    await applyAutomaticReconciliation();
+  };
+
+  const handleReviewManual = (match: ReconciliationMatch) => {
+    // Implementar revisão manual se necessário
+    console.log('Revisão manual para:', match);
   };
 
   const filteredTransactions = transactions.filter(transaction => {
@@ -271,18 +285,20 @@ export default function Conciliacao() {
                 </Card>
               )}
               
-              {isProcessing && (
+              {(isProcessing || isReconciling) && (
                 <Card className="bg-accent/10 border-accent/20">
                   <CardContent className="p-4">
                     <div className="flex items-center gap-3">
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
-                      <span className="text-sm">Processando extrato...</span>
+                      <span className="text-sm">
+                        {isProcessing ? 'Processando extrato...' : 'Executando conciliação automática...'}
+                      </span>
                     </div>
                   </CardContent>
                 </Card>
               )}
 
-              {transactions.length > 0 && (
+              {transactions.length > 0 && !reconciliationResult && (
                 <Card className="bg-success/10 border-success/20">
                   <CardContent className="p-4">
                     <div className="flex items-center gap-2 text-success">
@@ -296,6 +312,16 @@ export default function Conciliacao() {
                     </p>
                   </CardContent>
                 </Card>
+              )}
+
+              {/* Resultado da Conciliação Automática */}
+              {reconciliationResult && (
+                <ReconciliationResults
+                  result={reconciliationResult}
+                  onApplyAutomatic={handleApplyAutomatic}
+                  onReviewManual={handleReviewManual}
+                  isApplying={isLoading}
+                />
               )}
 
               {/* Gerenciador de Categorias */}
@@ -313,6 +339,15 @@ export default function Conciliacao() {
 
         {/* Conciliar Tab */}
         <TabsContent value="conciliar" className="space-y-6">
+          {/* Resultado da Conciliação se disponível */}
+          {reconciliationResult && (
+            <ReconciliationResults
+              result={reconciliationResult}
+              onApplyAutomatic={handleApplyAutomatic}
+              onReviewManual={handleReviewManual}
+              isApplying={isLoading}
+            />
+          )}
           {/* Filtros */}
           <Card>
             <CardContent className="pt-6">
