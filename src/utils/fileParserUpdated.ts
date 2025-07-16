@@ -2,24 +2,38 @@ import { Transaction } from '@/hooks/useConciliacao';
 
 export class FileParser {
   static parseCSV(content: string): Omit<Transaction, 'user_id' | 'categoria_sugerida' | 'hash_transacao'>[] {
+    console.log('Iniciando parsing CSV. Conteúdo recebido:', content.length, 'caracteres');
+    
     const lines = content.split('\n').filter(line => line.trim());
+    console.log('Linhas encontradas:', lines.length);
+    
     const transactions: Omit<Transaction, 'user_id' | 'categoria_sugerida' | 'hash_transacao'>[] = [];
 
     // Skip header if present
     const startIndex = this.hasCSVHeader(lines[0]) ? 1 : 0;
+    console.log('Índice de início (pulando header):', startIndex);
 
     for (let i = startIndex; i < lines.length; i++) {
       const line = lines[i];
+      console.log(`Processando linha ${i}:`, line);
+      
       const fields = this.parseCSVLine(line);
+      console.log('Campos extraídos:', fields);
       
       if (fields.length >= 3) {
         const transaction = this.createTransactionFromCSV(fields, i);
         if (transaction) {
+          console.log('Transação criada:', transaction);
           transactions.push(transaction);
+        } else {
+          console.log('Transação inválida ignorada na linha', i);
         }
+      } else {
+        console.log('Linha com poucos campos ignorada:', fields.length);
       }
     }
 
+    console.log('Total de transações parseadas:', transactions.length);
     return transactions;
   }
 

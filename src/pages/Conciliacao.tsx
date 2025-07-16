@@ -71,6 +71,9 @@ export default function Conciliacao() {
   }, [loadTransactions, loadUserCategories, selectedMonth]);
 
   const handleFileSelect = async (file: File) => {
+    console.log('=== INÍCIO DO PROCESSO DE UPLOAD ===');
+    console.log('Arquivo selecionado:', file.name, 'Tamanho:', file.size, 'Tipo:', file.type);
+    
     setSelectedFile(file);
     setParsedTransactions([]);
     
@@ -78,41 +81,68 @@ export default function Conciliacao() {
     try {
       console.log('Fazendo parsing do arquivo:', file.name);
       const parsed = await FileParser.parseFile(file);
-      console.log('Transações parseadas:', parsed.length);
+      console.log('Resultado do parsing:', parsed.length, 'transações');
+      console.log('Primeira transação parseada:', parsed[0]);
       
       if (parsed.length === 0) {
-        throw new Error('Nenhuma transação válida encontrada no arquivo');
+        console.error('Nenhuma transação encontrada no arquivo');
+        toast({
+          title: 'Arquivo vazio',
+          description: 'Nenhuma transação válida encontrada no arquivo',
+          variant: 'destructive',
+        });
+        return;
       }
       
       setParsedTransactions(parsed);
+      console.log('Estado atualizado com transações parseadas');
     } catch (error) {
-      console.error('Erro ao fazer parsing do arquivo:', error);
+      console.error('Erro detalhado no parsing:', error);
+      toast({
+        title: 'Erro no parsing',
+        description: error instanceof Error ? error.message : 'Erro ao processar arquivo',
+        variant: 'destructive',
+      });
       setParsedTransactions([]);
     }
   };
 
   const handleProcessTransactions = async () => {
-    if (!selectedFile || parsedTransactions.length === 0) return;
+    console.log('=== INÍCIO DO PROCESSAMENTO ===');
+    console.log('Arquivo selecionado:', selectedFile?.name);
+    console.log('Transações parseadas:', parsedTransactions.length);
+    
+    if (!selectedFile || parsedTransactions.length === 0) {
+      console.error('Condições não atendidas para processamento');
+      return;
+    }
     
     setIsProcessing(true);
     try {
       console.log('Processando', parsedTransactions.length, 'transações com categorização inteligente...');
       
       // Filtrar transações válidas antes de processar
-      const validTransactions = parsedTransactions.filter(t => 
-        t.data_transacao && 
-        t.data_transacao !== '' && 
-        !isNaN(t.valor) && 
-        t.valor !== 0
-      );
+      const validTransactions = parsedTransactions.filter(t => {
+        const isValid = t.data_transacao && 
+                        t.data_transacao !== '' && 
+                        !isNaN(t.valor) && 
+                        t.valor !== 0;
+        if (!isValid) {
+          console.log('Transação inválida filtrada:', t);
+        }
+        return isValid;
+      });
 
       console.log('Transações válidas encontradas:', validTransactions.length);
+      console.log('Exemplo de transação válida:', validTransactions[0]);
 
       if (validTransactions.length === 0) {
         throw new Error('Nenhuma transação válida encontrada no arquivo. Verifique o formato dos dados.');
       }
 
+      console.log('Chamando saveTransactions...');
       const success = await saveTransactions(validTransactions);
+      console.log('Resultado do saveTransactions:', success);
       
       if (success) {
         console.log('Processamento concluído com sucesso');
@@ -128,7 +158,7 @@ export default function Conciliacao() {
         throw new Error('Falha ao salvar transações no banco de dados');
       }
     } catch (error) {
-      console.error('Erro ao processar transações:', error);
+      console.error('Erro completo no processamento:', error);
       toast({
         title: 'Erro no processamento',
         description: error instanceof Error ? error.message : 'Erro desconhecido',

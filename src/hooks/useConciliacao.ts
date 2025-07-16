@@ -125,6 +125,10 @@ export function useConciliacao() {
 
   // Salvar transações no banco com suporte a empresa e mês de referência
   const saveTransactions = useCallback(async (newTransactions: Omit<Transaction, 'user_id' | 'categoria_sugerida' | 'hash_transacao'>[]) => {
+    console.log('=== ENTRANDO EM saveTransactions ===');
+    console.log('User ID:', user?.id);
+    console.log('Número de transações recebidas:', newTransactions.length);
+    console.log('Primeira transação recebida:', newTransactions[0]);
     if (!user?.id) {
       console.error('Usuário não autenticado');
       toast({
