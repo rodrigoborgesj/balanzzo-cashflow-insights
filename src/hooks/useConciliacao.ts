@@ -120,7 +120,86 @@ export function useConciliacao() {
     }
   }, [user?.id]);
 
-  // Salvar transações no banco com processamento otimizado
+  // Função auxiliar para normalizar valores monetários
+  const normalizeValue = (value: any): number | null => {
+    if (value === null || value === undefined || value === '') return null;
+    
+    // Se já for um número válido, retorna
+    if (typeof value === 'number' && !isNaN(value)) return value;
+    
+    // Se for string, normaliza
+    if (typeof value === 'string') {
+      // Remove espaços e caracteres não numéricos exceto vírgula, ponto e sinal negativo
+      let cleanValue = value.trim().replace(/[^\d,.-]/g, '');
+      
+      // Converte vírgula decimal para ponto (formato brasileiro para americano)
+      // Se tem vírgula e ponto, assume que vírgula é decimal
+      if (cleanValue.includes(',') && cleanValue.includes('.')) {
+        // Ex: 1.234,56 -> 1234.56
+        cleanValue = cleanValue.replace(/\./g, '').replace(',', '.');
+      } else if (cleanValue.includes(',')) {
+        // Se só tem vírgula, verifica se é separador de milhar ou decimal
+        const parts = cleanValue.split(',');
+        if (parts.length === 2 && parts[1].length <= 2) {
+          // Provavelmente decimal: 1234,56 -> 1234.56
+          cleanValue = cleanValue.replace(',', '.');
+        } else {
+          // Provavelmente separador de milhar: 1,234 -> 1234
+          cleanValue = cleanValue.replace(/,/g, '');
+        }
+      }
+      
+      const parsed = parseFloat(cleanValue);
+      return isNaN(parsed) ? null : parsed;
+    }
+    
+    return null;
+  };
+
+  // Função auxiliar para normalizar datas
+  const normalizeDate = (dateStr: any): string | null => {
+    if (!dateStr) return null;
+    
+    const str = String(dateStr).trim();
+    if (!str) return null;
+
+    // Tenta diferentes formatos de data
+    const formats = [
+      /^(\d{4})-(\d{2})-(\d{2})$/, // YYYY-MM-DD
+      /^(\d{2})\/(\d{2})\/(\d{4})$/, // DD/MM/YYYY
+      /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/, // D/M/YYYY
+    ];
+
+    for (const format of formats) {
+      const match = str.match(format);
+      if (match) {
+        if (format === formats[0]) {
+          // YYYY-MM-DD já está no formato correto
+          return str;
+        } else {
+          // DD/MM/YYYY -> YYYY-MM-DD
+          const day = match[1].padStart(2, '0');
+          const month = match[2].padStart(2, '0');
+          const year = match[3];
+          return `${year}-${month}-${day}`;
+        }
+      }
+    }
+
+    // Tenta fazer parse da data como último recurso
+    try {
+      const date = new Date(str);
+      if (!isNaN(date.getTime())) {
+        return date.toISOString().split('T')[0];
+      }
+    } catch (error) {
+      console.warn('Erro ao converter data:', str);
+    }
+
+    return null;
+  };
+
+  // Salvar transações no banco com processamento otimizado e validações robustas
   const saveTransactions = useCallback(async (newTransactions: Omit<Transaction, 'user_id' | 'categoria_sugerida' | 'hash_transacao'>[]) => {
     console.log('=== INÍCIO DO PROCESSAMENTO OTIMIZADO ===');
     console.log('User ID:', user?.id);
@@ -144,44 +223,54 @@ export function useConciliacao() {
         throw new Error('Nenhuma transação para salvar');
       }
       
-      // Processamento simplificado e rápido
-      console.log('Aplicando categorização básica...');
+      console.log('Aplicando validação e normalização...');
       
-      // Preparar transações para inserção
-      const transactionsToSave = newTransactions.map((transaction) => {
-        // Validar data antes de processar
-        if (!transaction.data_transacao || transaction.data_transacao === '') {
-          console.warn('Transação com data inválida ignorada:', transaction);
+      // Validar e normalizar transações
+      const transactionsToSave = newTransactions.map((transaction, index) => {
+        console.log(`Processando transação ${index + 1}:`, transaction);
+
+        // Normalizar e validar data
+        const normalizedDate = normalizeDate(transaction.data_transacao);
+        if (!normalizedDate) {
+          console.warn(`Transação ${index + 1} com data inválida ignorada:`, transaction.data_transacao);
           return null;
         }
 
-        // Validar valor
-        if (transaction.valor === null || transaction.valor === undefined || isNaN(transaction.valor)) {
-          console.warn('Transação com valor inválido ignorada:', transaction);
+        // Normalizar e validar valor
+        const normalizedValue = normalizeValue(transaction.valor);
+        if (normalizedValue === null) {
+          console.warn(`Transação ${index + 1} com valor inválido ignorada:`, transaction.valor);
+          return null;
+        }
+
+        // Validar descrição
+        const description = transaction.descricao ? String(transaction.descricao).trim() : '';
+        if (!description) {
+          console.warn(`Transação ${index + 1} sem descrição ignorada:`, transaction);
           return null;
         }
 
         // Gerar hash único para evitar duplicatas
-        const transactionData = `${transaction.data_transacao}-${transaction.descricao}-${transaction.valor}-${user.id}`;
+        const transactionData = `${normalizedDate}-${description}-${normalizedValue}-${user.id}`;
         const hash_transacao = btoa(transactionData).replace(/[^a-zA-Z0-9]/g, '').substring(0, 50);
 
         // Categorização básica e rápida baseada no valor
         let categoria_sugerida = 'Outros';
-        const isIncome = transaction.valor >= 0;
-        const description = transaction.descricao.toLowerCase();
+        const isIncome = normalizedValue >= 0;
+        const descriptionLower = description.toLowerCase();
         
         if (isIncome) {
-          if (description.includes('pix') || description.includes('transferencia') || description.includes('deposito')) {
+          if (descriptionLower.includes('pix') || descriptionLower.includes('transferencia') || descriptionLower.includes('deposito')) {
             categoria_sugerida = 'Recebimentos';
-          } else if (description.includes('venda') || description.includes('pagamento')) {
+          } else if (descriptionLower.includes('venda') || descriptionLower.includes('pagamento')) {
             categoria_sugerida = 'Vendas';
           } else {
             categoria_sugerida = 'Outros Receitas';
           }
         } else {
-          if (description.includes('tarifa') || description.includes('taxa')) {
+          if (descriptionLower.includes('tarifa') || descriptionLower.includes('taxa')) {
             categoria_sugerida = 'Tarifa bancária';
-          } else if (description.includes('transferencia') || description.includes('pix')) {
+          } else if (descriptionLower.includes('transferencia') || descriptionLower.includes('pix')) {
             categoria_sugerida = 'Fornecedores';
           } else {
             categoria_sugerida = 'Outros Despesas';
@@ -191,7 +280,7 @@ export function useConciliacao() {
         // Garantir que mes_referencia seja uma data válida
         let mes_referencia;
         try {
-          mes_referencia = transaction.data_transacao.substring(0, 7) + '-01';
+          mes_referencia = normalizedDate.substring(0, 7) + '-01';
           // Validar se a data resultante é válida
           const testDate = new Date(mes_referencia);
           if (isNaN(testDate.getTime())) {
@@ -204,14 +293,17 @@ export function useConciliacao() {
         }
 
         return {
-          ...transaction,
+          data_transacao: normalizedDate,
+          valor: normalizedValue,
+          descricao: description,
           user_id: user.id,
           hash_transacao,
           categoria_sugerida,
           status_conciliacao: false,
           mes_referencia,
-          categoria_final: null, // Será definida pelo usuário posteriormente
-          tipo: isIncome ? 'entrada' : 'saida'
+          categoria_final: null,
+          tipo: isIncome ? 'entrada' : 'saida',
+          origem_arquivo: transaction.origem_arquivo || 'csv_import'
         };
       }).filter(Boolean); // Remove transações nulas
 
