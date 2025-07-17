@@ -23,12 +23,13 @@ export class RobustCSVParser {
   ];
 
   private static readonly HEADER_KEYWORDS = {
-    data: ['data', 'date', 'dt', 'operacao', 'movimento', 'transacao', 'lancamento', 'dt_transacao', 'dt_movimento', 'data da operação', 'data da transação'],
-    descricao: ['descricao', 'description', 'historico', 'memo', 'detalhe', 'observacao', 'name', 'detalhes', 'complemento', 'descrição'],
-    valor: ['valor', 'amount', 'quantia', 'montante', 'total', 'vl_transacao', 'vl_movimento', 'valor (r$)', 'value'],
+    data: ['data', 'date', 'dt', 'operacao', 'movimento', 'transacao', 'lancamento', 'dt_transacao', 'dt_movimento', 'data da operação', 'data da transação', 'data de pagamento', 'transaction date'],
+    descricao: ['descricao', 'description', 'historico', 'memo', 'detalhe', 'observacao', 'name', 'detalhes', 'complemento', 'descrição', 'descrição da transação', 'identificador'],
+    valor: ['valor', 'amount', 'quantia', 'montante', 'total', 'vl_transacao', 'vl_movimento', 'valor (r$)', 'value', 'valor final'],
     credito: ['credito', 'credit', 'entrada', 'receita', 'crédito'],
     debito: ['debito', 'debit', 'saida', 'despesa', 'débito'],
-    tipo: ['tipo', 'type', 'operacao', 'movimento', 'tipo de operação', 'movimentação']
+    tipo: ['tipo', 'type', 'operacao', 'movimento', 'tipo de operação', 'movimentação', 'categoria', 'transação', 'crédito/débito'],
+    categoria: ['categoria', 'category', 'tipo', 'classificacao', 'classificação']
   };
 
   static async parseCSV(file: File): Promise<CSVParseResult> {
@@ -85,8 +86,9 @@ export class RobustCSVParser {
         return result;
       }
 
-      // Detectar colunas automaticamente
-      const columnMapping = this.detectColumnMapping(rows[0]);
+      // Detectar colunas automaticamente - usar múltiplas linhas para melhor detecção
+      const sampleRows = rows.slice(0, Math.min(3, rows.length));
+      const columnMapping = this.detectColumnMapping(sampleRows);
       console.log('🗂️ Mapeamento de colunas detectado:', columnMapping);
 
       // Determinar se primeira linha é header
@@ -216,9 +218,14 @@ export class RobustCSVParser {
     return bestDelimiter;
   }
 
-  private static detectColumnMapping(firstRow: string[]): Record<string, number> {
+  private static detectColumnMapping(sampleRows: string[][]): Record<string, number> {
     const mapping: Record<string, number> = {};
     
+    if (sampleRows.length === 0) return mapping;
+    
+    const firstRow = sampleRows[0];
+    
+    // Primeira tentativa: detectar por cabeçalhos
     firstRow.forEach((header, index) => {
       const normalizedHeader = header.toLowerCase().trim().replace(/[^a-z0-9\s]/g, '');
       
@@ -233,48 +240,77 @@ export class RobustCSVParser {
       }
     });
 
-    // Fallback inteligente para posições padrão
+    // Segunda tentativa: análise heurística com dados das primeiras linhas
     if (Object.keys(mapping).length < 2) {
-      console.log('🔄 Usando mapeamento padrão por posição e heurística');
+      console.log('🔄 Usando análise heurística com dados amostrais');
       
-      // Análise heurística das primeiras linhas para detectar colunas
       const intelligentMapping: Record<string, number> = {};
       
-      for (let i = 0; i < Math.min(firstRow.length, 6); i++) {
-        const cell = firstRow[i].toLowerCase();
+      for (let colIndex = 0; colIndex < firstRow.length; colIndex++) {
+        let dateScore = 0;
+        let valueScore = 0;
+        let textScore = 0;
         
-        // Detectar possível coluna de data
-        if (i <= 2 && !intelligentMapping.data) {
-          if (/data|date|dt/.test(cell) || this.parseDate(firstRow[i])) {
-            intelligentMapping.data = i;
-            continue;
+        // Analisar cada linha de amostra para esta coluna
+        for (const row of sampleRows) {
+          if (row[colIndex]) {
+            const cell = row[colIndex].trim();
+            
+            // Pontuação para data
+            if (this.parseDate(cell)) {
+              dateScore += 10;
+            } else if (/\d{1,4}[\/\-]\d{1,2}[\/\-]\d{2,4}/.test(cell)) {
+              dateScore += 5;
+            }
+            
+            // Pontuação para valor
+            if (!isNaN(this.parseAmount(cell)) && this.parseAmount(cell) !== 0) {
+              valueScore += 10;
+            } else if (/[\d,\.]+/.test(cell)) {
+              valueScore += 3;
+            }
+            
+            // Pontuação para texto descritivo
+            if (cell.length > 5 && /[a-zA-Z]/.test(cell) && !/^\d+[,.\d]*$/.test(cell)) {
+              textScore += 5;
+            }
           }
         }
         
-        // Detectar possível coluna de valor
-        if (i >= 1 && !intelligentMapping.valor) {
-          if (/valor|amount|total|r\$|\d+[,\.]\d+/.test(cell) || this.parseAmount(firstRow[i]) !== 0) {
-            intelligentMapping.valor = i;
-            continue;
-          }
+        // Definir colunas baseado nas pontuações
+        if (dateScore >= 5 && !intelligentMapping.data) {
+          intelligentMapping.data = colIndex;
+          console.log(`📅 Coluna de data detectada por heurística na posição ${colIndex} (score: ${dateScore})`);
         }
         
-        // Detectar colunas de débito/crédito
-        if (/debito|debit|saida/.test(cell) && !intelligentMapping.debito) {
-          intelligentMapping.debito = i;
-        } else if (/credito|credit|entrada/.test(cell) && !intelligentMapping.credito) {
-          intelligentMapping.credito = i;
+        if (valueScore >= 10 && !intelligentMapping.valor) {
+          intelligentMapping.valor = colIndex;
+          console.log(`💰 Coluna de valor detectada por heurística na posição ${colIndex} (score: ${valueScore})`);
+        }
+        
+        if (textScore >= 15 && !intelligentMapping.descricao && colIndex !== intelligentMapping.data) {
+          intelligentMapping.descricao = colIndex;
+          console.log(`📝 Coluna de descrição detectada por heurística na posição ${colIndex} (score: ${textScore})`);
         }
       }
       
-      return {
-        data: intelligentMapping.data ?? 0,
-        descricao: 1,
-        valor: intelligentMapping.valor ?? 2,
-        debito: intelligentMapping.debito ?? (firstRow.length >= 4 ? 2 : -1),
-        credito: intelligentMapping.credito ?? (firstRow.length >= 4 ? 3 : -1)
-      };
+      // Aplicar mapeamento inteligente se não temos mapeamento suficiente
+      if (Object.keys(mapping).length < 2) {
+        return {
+          data: intelligentMapping.data ?? 0,
+          descricao: intelligentMapping.descricao ?? 1,
+          valor: intelligentMapping.valor ?? 2,
+          debito: firstRow.length >= 4 ? 3 : -1,
+          credito: firstRow.length >= 5 ? 4 : -1,
+          categoria: firstRow.length >= 6 ? 5 : -1
+        };
+      }
     }
+
+    // Garantir que temos as colunas essenciais mapeadas
+    if (!mapping.data && firstRow.length > 0) mapping.data = 0;
+    if (!mapping.descricao && firstRow.length > 1) mapping.descricao = 1;
+    if (!mapping.valor && !mapping.debito && !mapping.credito && firstRow.length > 2) mapping.valor = 2;
 
     return mapping;
   }
@@ -298,7 +334,7 @@ export class RobustCSVParser {
     
     try {
       // Extrair data
-      const dateIndex = mapping.date ?? 0;
+      const dateIndex = mapping.data ?? 0;
       const rawDate = row[dateIndex]?.trim();
       
       if (!rawDate) {
@@ -352,19 +388,27 @@ export class RobustCSVParser {
         
         amount = this.parseAmount(rawValue);
       } else {
-        // Fallback - tentar encontrar valor em qualquer coluna numérica
+        // Fallback - tentar encontrar valor automaticamente em colunas numéricas
         console.log(`Linha ${rowIndex}: tentando detectar valor automaticamente`);
         
-        for (let i = 2; i < Math.min(row.length, 6); i++) {
-          const possibleValue = this.parseAmount(row[i] || '0');
-          if (!isNaN(possibleValue) && possibleValue !== 0) {
+        let foundValue = false;
+        for (let i = 1; i < Math.min(row.length, 6); i++) {
+          // Pular colunas já identificadas como data ou descrição
+          if (i === mapping.data || i === mapping.descricao) continue;
+          
+          const cellValue = row[i]?.trim();
+          if (!cellValue) continue;
+          
+          const possibleValue = this.parseAmount(cellValue);
+          if (!isNaN(possibleValue) && Math.abs(possibleValue) > 0) {
             amount = possibleValue;
             console.log(`Linha ${rowIndex}: valor detectado na coluna ${i}: ${amount}`);
+            foundValue = true;
             break;
           }
         }
         
-        if (amount === undefined) {
+        if (!foundValue) {
           console.warn(`Linha ${rowIndex}: nenhum valor válido encontrado`);
           return null;
         }
@@ -373,6 +417,15 @@ export class RobustCSVParser {
       if (isNaN(amount)) {
         console.warn(`Linha ${rowIndex}: valor inválido`);
         return null;
+      }
+
+      // Extrair categoria se disponível
+      let categoria = 'Outros';
+      if (mapping.categoria !== undefined && mapping.categoria >= 0 && mapping.categoria < row.length) {
+        const rawCategoria = row[mapping.categoria]?.trim();
+        if (rawCategoria && rawCategoria.length > 0) {
+          categoria = rawCategoria;
+        }
       }
 
       // Criar transação com valores absolutos (conforme padrão do banco)
@@ -384,7 +437,8 @@ export class RobustCSVParser {
         tipo: amount >= 0 ? 'entrada' as const : 'saida' as const,
         status_conciliacao: false,
         origem_arquivo: 'CSV',
-        mes_referencia: parsedDate.substring(0, 7) + '-01'
+        mes_referencia: parsedDate.substring(0, 7) + '-01',
+        categoria_final: categoria // Adicionar categoria se detectada
       };
 
       return transaction;
@@ -447,22 +501,26 @@ export class RobustCSVParser {
     
     console.log('💰 Processando valor original:', amountStr);
     
-    // Detectar se é negativo (parênteses ou sinal)
+    // Detectar se é negativo (parênteses, sinal, ou palavras-chave)
     const isNegative = amountStr.includes('(') || amountStr.includes('-') || 
                       amountStr.toLowerCase().includes('debito') || 
-                      amountStr.toLowerCase().includes('saída');
+                      amountStr.toLowerCase().includes('saída') ||
+                      amountStr.toLowerCase().includes('débito');
     
-    // Remover símbolos de moeda e espaços
+    // Remover símbolos de moeda, espaços e caracteres especiais
     let cleaned = amountStr
       .replace(/[R$€£¥₹₽\s"'()]/g, '')
       .replace(/[^\d,.-]/g, '')
       .trim();
     
-    console.log('💰 Após limpeza:', cleaned);
+    console.log('💰 Após limpeza inicial:', cleaned);
     
-    if (!cleaned) return 0;
+    if (!cleaned || cleaned === '-') return 0;
     
-    // Normalizar separadores decimais
+    // Remover sinais negativos múltiplos
+    cleaned = cleaned.replace(/^-+/, isNegative ? '-' : '');
+    
+    // Casos especiais para formatos brasileiros e internacionais
     if (cleaned.includes('.') && cleaned.includes(',')) {
       // Formato: 1.234.567,89 (brasileiro) ou 1,234,567.89 (americano)
       const lastComma = cleaned.lastIndexOf(',');
@@ -480,19 +538,40 @@ export class RobustCSVParser {
       const commaIndex = cleaned.lastIndexOf(',');
       const afterComma = cleaned.substring(commaIndex + 1);
       
-      if (afterComma.length <= 2) {
+      if (afterComma.length <= 2 && afterComma.length > 0) {
         // Provavelmente decimal: 1234,56 -> 1234.56
         cleaned = cleaned.replace(',', '.');
+      } else if (afterComma.length === 0) {
+        // Vírgula no final, remover
+        cleaned = cleaned.replace(',', '');
       } else {
         // Provavelmente separador de milhares: 1,234,567 -> 1234567
         cleaned = cleaned.replace(/,/g, '');
       }
+    } else if (cleaned.includes('.')) {
+      // Só ponto - verificar se é decimal ou separador de milhares
+      const dotIndex = cleaned.lastIndexOf('.');
+      const afterDot = cleaned.substring(dotIndex + 1);
+      
+      if (afterDot.length > 2) {
+        // Pontos são separadores de milhares: 1.234.567
+        cleaned = cleaned.replace(/\./g, '');
+      }
+      // Se afterDot.length <= 2, assumir que é decimal
     }
     
-    const result = parseFloat(cleaned);
-    const finalValue = isNaN(result) ? 0 : (isNegative ? -Math.abs(result) : result);
+    console.log('💰 Valor final limpo:', cleaned);
     
-    console.log('💰 Valor final calculado:', finalValue);
+    const result = parseFloat(cleaned);
+    
+    if (isNaN(result)) {
+      console.warn('💰 Resultado inválido após parse:', cleaned);
+      return 0;
+    }
+    
+    const finalValue = isNegative ? -Math.abs(result) : Math.abs(result);
+    
+    console.log('💰 Resultado final:', finalValue);
     
     return finalValue;
   }
