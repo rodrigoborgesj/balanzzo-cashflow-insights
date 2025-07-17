@@ -163,7 +163,7 @@ export function useConciliacao() {
 
         // Gerar hash único para evitar duplicatas
         const transactionData = `${transaction.data_transacao}-${transaction.descricao}-${transaction.valor}-${user.id}`;
-        const hash_transacao = btoa(transactionData).replace(/[^a-zA-Z0-9]/g, '').substring(0, 32);
+        const hash_transacao = btoa(transactionData).replace(/[^a-zA-Z0-9]/g, '').substring(0, 50);
 
         // Categorização básica e rápida baseada no valor
         let categoria_sugerida = 'Outros';
