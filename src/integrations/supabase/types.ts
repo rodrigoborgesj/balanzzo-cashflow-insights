@@ -149,6 +149,51 @@ export type Database = {
           },
         ]
       }
+      painel_mensal: {
+        Row: {
+          ano: number
+          atualizado_em: string | null
+          categoria_gastos: Json | null
+          categoria_receitas: Json | null
+          criado_em: string | null
+          dados_brutos: Json | null
+          id: string
+          insights: Json | null
+          mes: number
+          total_entradas: number | null
+          total_saidas: number | null
+          usuario_id: string
+        }
+        Insert: {
+          ano: number
+          atualizado_em?: string | null
+          categoria_gastos?: Json | null
+          categoria_receitas?: Json | null
+          criado_em?: string | null
+          dados_brutos?: Json | null
+          id?: string
+          insights?: Json | null
+          mes: number
+          total_entradas?: number | null
+          total_saidas?: number | null
+          usuario_id: string
+        }
+        Update: {
+          ano?: number
+          atualizado_em?: string | null
+          categoria_gastos?: Json | null
+          categoria_receitas?: Json | null
+          criado_em?: string | null
+          dados_brutos?: Json | null
+          id?: string
+          insights?: Json | null
+          mes?: number
+          total_entradas?: number | null
+          total_saidas?: number | null
+          usuario_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string | null

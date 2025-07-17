@@ -513,10 +513,159 @@ export function useConciliacao() {
         // Não bloqueia o processo principal, apenas registra o erro
       } else {
         console.log('Fluxo de caixa alimentado com sucesso');
+        // Após alimentar o fluxo de caixa, alimentar o painel mensal
+        await alimentarPainelMensal(transacoes);
       }
     } catch (error) {
       console.error('Erro ao alimentar fluxo de caixa:', error);
       // Não bloqueia o processo principal
+    }
+  }, [user?.id]);
+
+  // Função para alimentar painel mensal com dados consolidados e insights
+  const alimentarPainelMensal = useCallback(async (transacoes: any[]) => {
+    if (!user?.id || !transacoes || transacoes.length === 0) return;
+
+    try {
+      console.log('Alimentando painel mensal com', transacoes.length, 'transações');
+
+      // Agrupar transações por mês/ano
+      const dadosPorMes = new Map();
+
+      transacoes.forEach(transacao => {
+        const data = new Date(transacao.data_transacao);
+        const ano = data.getFullYear();
+        const mes = data.getMonth() + 1;
+        const chave = `${ano}-${mes}`;
+
+        if (!dadosPorMes.has(chave)) {
+          dadosPorMes.set(chave, {
+            ano,
+            mes,
+            total_entradas: 0,
+            total_saidas: 0,
+            categoria_gastos: {},
+            categoria_receitas: {},
+            dados_brutos: []
+          });
+        }
+
+        const dadosMes = dadosPorMes.get(chave);
+        const categoria = transacao.categoria_final || transacao.categoria_sugerida || 'Outros';
+        const valor = Math.abs(transacao.valor);
+
+        dadosMes.dados_brutos.push(transacao);
+
+        if (transacao.valor >= 0) {
+          dadosMes.total_entradas += valor;
+          dadosMes.categoria_receitas[categoria] = (dadosMes.categoria_receitas[categoria] || 0) + valor;
+        } else {
+          dadosMes.total_saidas += valor;
+          dadosMes.categoria_gastos[categoria] = (dadosMes.categoria_gastos[categoria] || 0) + valor;
+        }
+      });
+
+      // Para cada mês, inserir ou atualizar no painel mensal
+      for (const [chave, dados] of dadosPorMes) {
+        // Gerar insights para o mês
+        const insights = await gerarInsights(dados);
+
+        const dadosPainel = {
+          usuario_id: user.id,
+          ano: dados.ano,
+          mes: dados.mes,
+          total_entradas: dados.total_entradas,
+          total_saidas: dados.total_saidas,
+          categoria_gastos: dados.categoria_gastos,
+          categoria_receitas: dados.categoria_receitas,
+          dados_brutos: dados.dados_brutos,
+          insights: insights
+        };
+
+        // Usar upsert para inserir ou atualizar
+        const { error } = await supabase
+          .from('painel_mensal')
+          .upsert(dadosPainel, {
+            onConflict: 'usuario_id,ano,mes'
+          });
+
+        if (error) {
+          console.error('Erro ao alimentar painel mensal:', error);
+        } else {
+          console.log(`Painel mensal atualizado para ${dados.mes}/${dados.ano}`);
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao processar painel mensal:', error);
+    }
+  }, [user?.id]);
+
+  // Função para gerar insights inteligentes
+  const gerarInsights = useCallback(async (dadosMes: any) => {
+    if (!user?.id) return {};
+
+    try {
+      const { ano, mes } = dadosMes;
+      
+      // Buscar dados do mês anterior para comparação
+      let mesAnterior = mes - 1;
+      let anoAnterior = ano;
+      if (mesAnterior === 0) {
+        mesAnterior = 12;
+        anoAnterior = ano - 1;
+      }
+
+      const { data: dadosAnteriores } = await supabase
+        .from('painel_mensal')
+        .select('*')
+        .eq('usuario_id', user.id)
+        .eq('ano', anoAnterior)
+        .eq('mes', mesAnterior)
+        .maybeSingle();
+
+      const insights = [];
+
+      // Insight sobre faturamento
+      if (dadosAnteriores && dadosMes.total_entradas > 0) {
+        const variacao = ((dadosMes.total_entradas - dadosAnteriores.total_entradas) / dadosAnteriores.total_entradas) * 100;
+        if (variacao > 0) {
+          insights.push(`Seu faturamento aumentou ${variacao.toFixed(1)}% em relação ao mês anterior.`);
+        } else if (variacao < 0) {
+          insights.push(`Seu faturamento diminuiu ${Math.abs(variacao).toFixed(1)}% em relação ao mês anterior.`);
+        }
+      }
+
+      // Insight sobre gastos
+      if (dadosAnteriores && dadosMes.total_saidas > 0) {
+        const variacao = ((dadosMes.total_saidas - dadosAnteriores.total_saidas) / dadosAnteriores.total_saidas) * 100;
+        if (variacao > 0) {
+          insights.push(`Seus gastos aumentaram ${variacao.toFixed(1)}% em comparação com o mês passado.`);
+        } else if (variacao < 0) {
+          insights.push(`Seus gastos diminuíram ${Math.abs(variacao).toFixed(1)}% em comparação com o mês passado.`);
+        }
+      }
+
+      // Insight sobre principal despesa
+      if (Object.keys(dadosMes.categoria_gastos).length > 0) {
+        const principalCategoria = Object.entries(dadosMes.categoria_gastos)
+          .sort(([,a], [,b]) => (b as number) - (a as number))[0];
+        insights.push(`Sua principal despesa foi com ${principalCategoria[0]}, totalizando R$ ${(principalCategoria[1] as number).toFixed(2).replace('.', ',')}.`);
+      }
+
+      // Insight sobre saldo líquido
+      const saldoLiquido = dadosMes.total_entradas - dadosMes.total_saidas;
+      if (dadosAnteriores) {
+        const saldoAnterior = dadosAnteriores.total_entradas - dadosAnteriores.total_saidas;
+        const tendencia = saldoLiquido > saldoAnterior ? 'alta' : 'queda';
+        insights.push(`Seu saldo líquido foi de R$ ${saldoLiquido.toFixed(2).replace('.', ',')}, representando uma ${tendencia} em relação ao mês anterior.`);
+      } else {
+        insights.push(`Seu saldo líquido foi de R$ ${saldoLiquido.toFixed(2).replace('.', ',')}.`);
+      }
+
+      return { insights, gerado_em: new Date().toISOString() };
+    } catch (error) {
+      console.error('Erro ao gerar insights:', error);
+      return {};
     }
   }, [user?.id]);
 
