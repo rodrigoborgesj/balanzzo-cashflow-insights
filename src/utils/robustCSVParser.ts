@@ -24,12 +24,20 @@ export class RobustCSVParser {
 
   private static readonly HEADER_KEYWORDS = {
     data: ['data', 'date', 'dt', 'operacao', 'movimento', 'transacao', 'lancamento', 'dt_transacao', 'dt_movimento', 'data da operação', 'data da transação', 'data de pagamento', 'transaction date'],
-    descricao: ['descricao', 'description', 'historico', 'memo', 'detalhe', 'observacao', 'name', 'detalhes', 'complemento', 'descrição', 'descrição da transação', 'identificador'],
+    descricao: ['descricao', 'description', 'historico', 'memo', 'detalhe', 'observacao', 'name', 'detalhes', 'complemento', 'descrição', 'descrição da transação'],
     valor: ['valor', 'amount', 'quantia', 'montante', 'total', 'vl_transacao', 'vl_movimento', 'valor (r$)', 'value', 'valor final'],
     credito: ['credito', 'credit', 'entrada', 'receita', 'crédito'],
     debito: ['debito', 'debit', 'saida', 'despesa', 'débito'],
     tipo: ['tipo', 'type', 'operacao', 'movimento', 'tipo de operação', 'movimentação', 'categoria', 'transação', 'crédito/débito'],
     categoria: ['categoria', 'category', 'tipo', 'classificacao', 'classificação']
+  };
+
+  private static readonly CATEGORY_RULES = {
+    'Alimentação': ['mercado', 'supermercado', 'carrefour', 'pão de açúcar', 'padaria', 'açougue', 'hortifruti', 'feira', 'extra', 'big', 'walmart'],
+    'Transporte': ['uber', '99', 'combustível', 'posto', 'gasolina', 'álcool', 'etanol', 'shell', 'ipiranga', 'br', 'taxi'],
+    'Moradia': ['aluguel', 'condomínio', 'luz', 'energia', 'copel', 'sabesp', 'água', 'gás', 'telefone', 'internet'],
+    'Lazer': ['netflix', 'spotify', 'cinema', 'ifood', 'delivery', 'restaurante', 'bar', 'show', 'teatro'],
+    'Receita': ['pix recebido', 'transferência recebida', 'depósito', 'salário', 'pagamento recebido', 'recebimento']
   };
 
   static async parseCSV(file: File): Promise<CSVParseResult> {
@@ -348,21 +356,17 @@ export class RobustCSVParser {
         return null;
       }
 
-      // Extrair descrição - com fallbacks inteligentes
+      // Extrair descrição - APENAS da coluna que contém "descrição"
       let description: string;
       
-      if (mapping.descricao !== undefined && mapping.descricao >= 0 && mapping.descricao < row.length) {
-        description = row[mapping.descricao]?.trim() || `Transação linha ${rowIndex}`;
+      // Buscar especificamente por coluna com "descrição" no cabeçalho
+      const descricaoIndex = this.findDescriptionColumn(row, mapping);
+      
+      if (descricaoIndex !== -1 && descricaoIndex < row.length) {
+        description = row[descricaoIndex]?.trim() || `Transação linha ${rowIndex}`;
       } else {
-        // Tentar encontrar coluna com texto descritivo
-        for (let i = 1; i < Math.min(row.length, 4); i++) {
-          const cell = row[i]?.trim();
-          if (cell && cell.length > 3 && !/^\d+[,.\d]*$/.test(cell) && !this.parseDate(cell)) {
-            description = cell;
-            break;
-          }
-        }
-        description = description || `Transação linha ${rowIndex}`;
+        description = `Transação linha ${rowIndex}`;
+        console.warn(`Linha ${rowIndex}: coluna de descrição não encontrada`);
       }
 
       // Extrair valor - com lógica inteligente para diferentes formatos
@@ -419,26 +423,24 @@ export class RobustCSVParser {
         return null;
       }
 
-      // Extrair categoria se disponível
-      let categoria = 'Outros';
-      if (mapping.categoria !== undefined && mapping.categoria >= 0 && mapping.categoria < row.length) {
-        const rawCategoria = row[mapping.categoria]?.trim();
-        if (rawCategoria && rawCategoria.length > 0) {
-          categoria = rawCategoria;
-        }
-      }
+      // Sugerir categoria automaticamente baseada na descrição
+      const categoriaSugerida = this.suggestCategory(description);
+      
+      // Determinar tipo de transação baseado na descrição
+      const tipoTransacao = this.identifyTransactionType(description, amount);
+      const valorAjustado = tipoTransacao === 'saida' ? Math.abs(amount) : Math.abs(amount);
 
-      // Criar transação com valores absolutos (conforme padrão do banco)
+      // Criar transação 
       const transaction = {
         id: `csv_${Date.now()}_${rowIndex}`,
         data_transacao: parsedDate,
         descricao: description,
-        valor: Math.abs(amount), // Sempre positivo no banco
-        tipo: amount >= 0 ? 'entrada' as const : 'saida' as const,
+        valor: valorAjustado,
+        tipo: tipoTransacao,
         status_conciliacao: false,
         origem_arquivo: 'CSV',
         mes_referencia: parsedDate.substring(0, 7) + '-01',
-        categoria_final: categoria // Adicionar categoria se detectada
+        categoria_final: categoriaSugerida
       };
 
       return transaction;
@@ -574,5 +576,58 @@ export class RobustCSVParser {
     console.log('💰 Resultado final:', finalValue);
     
     return finalValue;
+  }
+
+  private static findDescriptionColumn(row: string[], mapping: Record<string, number>): number {
+    // Primeiro, verificar se já temos mapeamento para descrição
+    if (mapping.descricao !== undefined && mapping.descricao >= 0) {
+      return mapping.descricao;
+    }
+    
+    // Se não temos mapeamento, buscar pela primeira coluna que não seja data nem valor
+    for (let i = 0; i < row.length; i++) {
+      if (i !== mapping.data && i !== mapping.valor && i !== mapping.debito && i !== mapping.credito) {
+        const cell = row[i]?.trim();
+        // Verificar se é uma coluna de texto descritivo (não é data nem número puro)
+        if (cell && cell.length > 2 && !/^\d+[,.\d]*$/.test(cell) && !this.parseDate(cell)) {
+          return i;
+        }
+      }
+    }
+    
+    return -1;
+  }
+
+  private static suggestCategory(description: string): string {
+    const descricaoLower = description.toLowerCase();
+    
+    for (const [categoria, termos] of Object.entries(this.CATEGORY_RULES)) {
+      if (termos.some(termo => descricaoLower.includes(termo))) {
+        return categoria;
+      }
+    }
+    
+    return 'Outros';
+  }
+
+  private static identifyTransactionType(description: string, amount: number): 'entrada' | 'saida' {
+    const descricaoLower = description.toLowerCase();
+    
+    // Palavras-chave para saídas
+    const saidaKeywords = ['compra', 'pagamento', 'pix enviado', 'débito', 'transferência enviada', 'saque', 'taxa'];
+    
+    // Palavras-chave para entradas  
+    const entradaKeywords = ['recebido', 'pix recebido', 'crédito', 'depósito', 'transferência recebida', 'salário'];
+    
+    if (saidaKeywords.some(palavra => descricaoLower.includes(palavra))) {
+      return 'saida';
+    }
+    
+    if (entradaKeywords.some(palavra => descricaoLower.includes(palavra))) {
+      return 'entrada';
+    }
+    
+    // Fallback: usar o sinal do valor original
+    return amount >= 0 ? 'entrada' : 'saida';
   }
 }
