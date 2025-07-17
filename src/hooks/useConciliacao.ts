@@ -669,6 +669,111 @@ export function useConciliacao() {
     }
   }, [user?.id]);
 
+  // Função para remover transações por mês de referência
+  const removeTransactionsByMonth = useCallback(async (monthReference: string) => {
+    if (!user?.id) {
+      toast({
+        title: "Erro",
+        description: "Usuário não autenticado",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    try {
+      setIsLoading(true);
+      
+      const { error } = await supabase
+        .from('transacoes_conciliadas')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('mes_referencia', monthReference)
+        .not('origem_arquivo', 'is', null); // Apenas transações importadas
+
+      if (error) {
+        console.error('Erro ao remover transações:', error);
+        toast({
+          title: "Erro",
+          description: "Erro ao remover transações do mês",
+          variant: "destructive",
+        });
+        return false;
+      }
+
+      // Recarregar transações
+      await loadTransactions(selectedMonth);
+      
+      toast({
+        title: "Sucesso",
+        description: "Transações do mês removidas com sucesso",
+      });
+      
+      return true;
+    } catch (error) {
+      console.error('Erro ao remover transações:', error);
+      toast({
+        title: "Erro",
+        description: "Erro interno ao remover transações",
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user?.id, selectedMonth, loadTransactions, toast]);
+
+  // Função para remover todas as transações importadas
+  const removeAllImportedTransactions = useCallback(async () => {
+    if (!user?.id) {
+      toast({
+        title: "Erro",
+        description: "Usuário não autenticado",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    try {
+      setIsLoading(true);
+      
+      const { error } = await supabase
+        .from('transacoes_conciliadas')
+        .delete()
+        .eq('user_id', user.id)
+        .not('origem_arquivo', 'is', null); // Apenas transações importadas
+
+      if (error) {
+        console.error('Erro ao remover todas as transações:', error);
+        toast({
+          title: "Erro",
+          description: "Erro ao remover todas as transações importadas",
+          variant: "destructive",
+        });
+        return false;
+      }
+
+      // Recarregar transações
+      await loadTransactions(selectedMonth);
+      
+      toast({
+        title: "Sucesso",
+        description: "Todas as transações importadas foram removidas",
+      });
+      
+      return true;
+    } catch (error) {
+      console.error('Erro ao remover todas as transações:', error);
+      toast({
+        title: "Erro",
+        description: "Erro interno ao remover transações",
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user?.id, selectedMonth, loadTransactions, toast]);
+
   return {
     transactions,
     userCategories,
@@ -680,5 +785,7 @@ export function useConciliacao() {
     saveTransactions,
     updateTransactionCategory,
     createUserCategory,
+    removeTransactionsByMonth,
+    removeAllImportedTransactions
   };
 }

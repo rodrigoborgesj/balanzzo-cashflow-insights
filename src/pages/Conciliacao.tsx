@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FileUploader } from "@/components/FileUploader";
 import { CategoryManager } from "@/components/CategoryManager";
 import TransactionProcessor from "@/components/TransactionProcessor";
+import TransactionRemover from "@/components/TransactionRemover";
 import { RobustCSVParser } from "@/utils/robustCSVParser";
 import { useConciliacao, Transaction } from "@/hooks/useConciliacao";
 import { 
@@ -285,7 +286,7 @@ export default function Conciliacao() {
         </div>
 
         {/* Upload Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
           {/* Upload Area */}
           <Card className="border border-gray-300">
             <CardHeader className="border-b border-gray-200">
@@ -344,6 +345,11 @@ export default function Conciliacao() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Transaction Remover */}
+          <div className="xl:col-span-1">
+            <TransactionRemover />
+          </div>
         </div>
 
         {/* Status Messages */}
