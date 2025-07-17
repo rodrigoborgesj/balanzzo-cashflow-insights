@@ -3,6 +3,19 @@ import { Transaction } from '@/hooks/useConciliacao';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 
+export interface FluxoCaixaRecord {
+  id: string;
+  company_id: string | null;
+  user_id: string;
+  data_competencia: string;
+  tipo: 'entrada' | 'saida';
+  categoria: string | null;
+  descricao: string | null;
+  valor: number;
+  transacao_origem_id: string | null;
+  created_at: string;
+}
+
 export interface CashFlowSummary {
   totalEntradas: number;
   totalSaidas: number;
@@ -27,67 +40,95 @@ export interface DailyFlow {
 }
 
 export function useCashFlowIntegration(selectedMonth: string) {
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [fluxoData, setFluxoData] = useState<FluxoCaixaRecord[]>([]);
+  const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuth();
 
-  // Carregar transações conciliadas do mês
-  const loadTransactions = useCallback(async () => {
+  // Carregar dados do fluxo de caixa integrado
+  const loadCashFlowData = useCallback(async () => {
     if (!user?.id || !selectedMonth) return;
 
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('transacoes_conciliadas')
+      const startDate = `${selectedMonth}-01`;
+      const endDate = `${selectedMonth}-31`;
+
+      // Carregar dados do fluxo de caixa
+      const { data: fluxoData, error: fluxoError } = await supabase
+        .from('fluxo_caixa')
         .select('*')
         .eq('user_id', user.id)
-        .eq('status_conciliacao', true) // Apenas transações conciliadas
-        .gte('data_transacao', `${selectedMonth}-01`)
-        .lt('data_transacao', `${selectedMonth}-32`)
-        .order('data_transacao', { ascending: true });
+        .gte('data_competencia', startDate)
+        .lte('data_competencia', endDate)
+        .order('data_competencia', { ascending: true });
 
-      if (error) {
-        console.error('Erro ao carregar transações:', error);
+      if (fluxoError) {
+        console.error('Erro ao carregar fluxo de caixa:', fluxoError);
         return;
       }
 
-      setTransactions((data || []) as Transaction[]);
+      setFluxoData((fluxoData || []) as FluxoCaixaRecord[]);
+
+      // Carregar transações recentes para referência
+      const { data: transactionsData, error: transactionsError } = await supabase
+        .from('transacoes_conciliadas')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('status_conciliacao', true)
+        .gte('data_transacao', startDate)
+        .lte('data_transacao', endDate)
+        .order('data_transacao', { ascending: false })
+        .limit(10);
+
+      if (transactionsError) {
+        console.error('Erro ao carregar transações recentes:', transactionsError);
+        return;
+      }
+
+      setRecentTransactions((transactionsData || []) as Transaction[]);
+
     } catch (error) {
-      console.error('Erro ao carregar transações:', error);
+      console.error('Erro ao carregar dados:', error);
     } finally {
       setIsLoading(false);
     }
   }, [user?.id, selectedMonth]);
 
   useEffect(() => {
-    loadTransactions();
-  }, [loadTransactions]);
+    loadCashFlowData();
+  }, [loadCashFlowData]);
 
-  // Calcular resumo do fluxo de caixa
+  // Calcular resumo do fluxo de caixa baseado nos dados da tabela fluxo_caixa
   const summary: CashFlowSummary = {
-    totalEntradas: transactions
-      .filter(t => t.tipo === 'entrada')
-      .reduce((sum, t) => sum + t.valor, 0),
-    totalSaidas: Math.abs(transactions
-      .filter(t => t.tipo === 'saida')
-      .reduce((sum, t) => sum + t.valor, 0)),
-    saldoLiquido: transactions.reduce((sum, t) => sum + t.valor, 0),
-    transacoesCount: transactions.length
+    totalEntradas: fluxoData
+      .filter(item => item.tipo === 'entrada')
+      .reduce((sum, item) => sum + item.valor, 0),
+    totalSaidas: fluxoData
+      .filter(item => item.tipo === 'saida')
+      .reduce((sum, item) => sum + item.valor, 0),
+    saldoLiquido: fluxoData
+      .filter(item => item.tipo === 'entrada')
+      .reduce((sum, item) => sum + item.valor, 0) - 
+      fluxoData
+      .filter(item => item.tipo === 'saida')
+      .reduce((sum, item) => sum + item.valor, 0),
+    transacoesCount: fluxoData.length
   };
 
-  // Resumo por categoria
-  const categorySummary: CategorySummary[] = transactions.reduce((acc, transaction) => {
-    const categoria = transaction.categoria_final || transaction.categoria_sugerida || 'Sem categoria';
-    const existing = acc.find(item => item.categoria === categoria && item.tipo === transaction.tipo);
+  // Resumo por categoria baseado nos dados do fluxo de caixa
+  const categorySummary: CategorySummary[] = fluxoData.reduce((acc, item) => {
+    const categoria = item.categoria || 'Sem categoria';
+    const existing = acc.find(cat => cat.categoria === categoria && cat.tipo === item.tipo);
     
     if (existing) {
-      existing.valor += Math.abs(transaction.valor);
+      existing.valor += item.valor;
       existing.count += 1;
     } else {
       acc.push({
         categoria,
-        tipo: transaction.tipo,
-        valor: Math.abs(transaction.valor),
+        tipo: item.tipo,
+        valor: item.valor,
         count: 1,
         percentual: 0 // Será calculado depois
       });
@@ -96,27 +137,27 @@ export function useCashFlowIntegration(selectedMonth: string) {
     return acc;
   }, [] as CategorySummary[]);
 
-  // Calcular percentuais
-  const totalGeral = summary.totalEntradas + summary.totalSaidas;
+  // Calcular percentuais por tipo
   categorySummary.forEach(item => {
-    item.percentual = totalGeral > 0 ? (item.valor / totalGeral) * 100 : 0;
+    const total = item.tipo === 'entrada' ? summary.totalEntradas : summary.totalSaidas;
+    item.percentual = total > 0 ? (item.valor / total) * 100 : 0;
   });
 
-  // Fluxo diário
-  const dailyFlow: DailyFlow[] = transactions.reduce((acc, transaction) => {
-    const data = transaction.data_transacao;
-    const existing = acc.find(item => item.data === data);
+  // Fluxo diário baseado nos dados do fluxo de caixa
+  const dailyFlow: DailyFlow[] = fluxoData.reduce((acc, item) => {
+    const data = item.data_competencia;
+    const existing = acc.find(day => day.data === data);
     
     if (existing) {
-      if (transaction.tipo === 'entrada') {
-        existing.entradas += transaction.valor;
+      if (item.tipo === 'entrada') {
+        existing.entradas += item.valor;
       } else {
-        existing.saidas += Math.abs(transaction.valor);
+        existing.saidas += item.valor;
       }
       existing.saldo = existing.entradas - existing.saidas;
     } else {
-      const entradas = transaction.tipo === 'entrada' ? transaction.valor : 0;
-      const saidas = transaction.tipo === 'saida' ? Math.abs(transaction.valor) : 0;
+      const entradas = item.tipo === 'entrada' ? item.valor : 0;
+      const saidas = item.tipo === 'saida' ? item.valor : 0;
       
       acc.push({
         data,
@@ -138,11 +179,6 @@ export function useCashFlowIntegration(selectedMonth: string) {
     day.saldoAcumulado = saldoAcumulado;
   });
 
-  // Transações mais recentes
-  const recentTransactions = transactions
-    .sort((a, b) => new Date(b.data_transacao).getTime() - new Date(a.data_transacao).getTime())
-    .slice(0, 10);
-
   // Dados para gráficos
   const chartData = dailyFlow.map(day => ({
     data: new Date(day.data).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
@@ -152,14 +188,14 @@ export function useCashFlowIntegration(selectedMonth: string) {
   }));
 
   return {
-    transactions,
+    fluxoData,
     summary,
     categorySummary: categorySummary.sort((a, b) => b.valor - a.valor),
     dailyFlow,
     recentTransactions,
     chartData,
     isLoading,
-    loadTransactions,
-    hasData: transactions.length > 0
+    loadCashFlowData,
+    hasData: fluxoData.length > 0
   };
 }

@@ -266,18 +266,18 @@ export default function FluxoCaixa() {
                           item.tipo === "entrada" ? "bg-success" : "bg-destructive"
                         }`} />
                         <div>
-                          <span className="font-medium text-sm">{item.categoria}</span>
-                          <div className="text-xs text-muted-foreground">{item.count} transações</div>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className={`font-bold ${
-                          item.tipo === "entrada" ? "text-success" : "text-destructive"
-                        }`}>
-                          R$ {item.valor.toLocaleString("pt-BR")}
-                        </div>
-                        <div className="text-xs text-muted-foreground">{item.percentual.toFixed(1)}%</div>
-                      </div>
+                           <span className="font-medium text-sm">{item.categoria}</span>
+                           <div className="text-xs text-muted-foreground">{item.count} transações</div>
+                         </div>
+                       </div>
+                       <div className="text-right">
+                         <div className={`font-bold ${
+                           item.tipo === "entrada" ? "text-success" : "text-destructive"
+                         }`}>
+                           R$ {item.valor.toLocaleString("pt-BR")}
+                         </div>
+                         <div className="text-xs text-muted-foreground">{item.percentual.toFixed(1)}%</div>
+                       </div>
                     </div>
                   ))}
                 </div>

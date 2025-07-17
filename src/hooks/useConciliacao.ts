@@ -336,6 +336,11 @@ export function useConciliacao() {
       const savedCount = data?.length || 0;
       console.log('Transações salvas no banco com sucesso:', savedCount);
 
+      // Alimentar automaticamente o fluxo de caixa
+      if (data && data.length > 0) {
+        await alimentarFluxoCaixa(data);
+      }
+
       // Detectar o mês das transações salvas para ajustar o filtro automaticamente
       const transactionMonths = transactionsToSave
         .map(t => t.data_transacao.substring(0, 7))
@@ -465,6 +470,55 @@ export function useConciliacao() {
     }
   }, [user?.id, loadUserCategories, toast]);
 
+  // Função para alimentar automaticamente o fluxo de caixa
+  const alimentarFluxoCaixa = useCallback(async (transacoes: any[]) => {
+    if (!user?.id || !transacoes || transacoes.length === 0) return;
+
+    try {
+      console.log('Alimentando fluxo de caixa com', transacoes.length, 'transações');
+
+      // Obter company_id do usuário (se existe)
+      const { data: companies } = await supabase
+        .from('companies')
+        .select('id')
+        .eq('user_id', user.id)
+        .limit(1);
+
+      const company_id = companies?.[0]?.id || null;
+
+      // Preparar dados para o fluxo de caixa
+      const fluxoCaixaData = transacoes.map(transacao => ({
+        company_id,
+        user_id: user.id,
+        data_competencia: transacao.data_transacao,
+        tipo: transacao.valor >= 0 ? 'entrada' : 'saida',
+        categoria: transacao.categoria_final || transacao.categoria_sugerida || 'Outros',
+        descricao: transacao.descricao,
+        valor: Math.abs(transacao.valor),
+        transacao_origem_id: transacao.id
+      }));
+
+      console.log('Dados preparados para fluxo de caixa:', fluxoCaixaData);
+
+      // Inserir no fluxo de caixa (usando upsert para evitar duplicatas)
+      const { error: fluxoError } = await supabase
+        .from('fluxo_caixa')
+        .upsert(fluxoCaixaData, { 
+          onConflict: 'transacao_origem_id',
+          ignoreDuplicates: true 
+        });
+
+      if (fluxoError) {
+        console.error('Erro ao alimentar fluxo de caixa:', fluxoError);
+        // Não bloqueia o processo principal, apenas registra o erro
+      } else {
+        console.log('Fluxo de caixa alimentado com sucesso');
+      }
+    } catch (error) {
+      console.error('Erro ao alimentar fluxo de caixa:', error);
+      // Não bloqueia o processo principal
+    }
+  }, [user?.id]);
 
   return {
     transactions,

@@ -92,6 +92,63 @@ export type Database = {
         }
         Relationships: []
       }
+      fluxo_caixa: {
+        Row: {
+          categoria: string | null
+          company_id: string
+          created_at: string
+          data_competencia: string
+          descricao: string | null
+          id: string
+          tipo: string
+          transacao_origem_id: string | null
+          updated_at: string
+          user_id: string
+          valor: number
+        }
+        Insert: {
+          categoria?: string | null
+          company_id: string
+          created_at?: string
+          data_competencia: string
+          descricao?: string | null
+          id?: string
+          tipo: string
+          transacao_origem_id?: string | null
+          updated_at?: string
+          user_id: string
+          valor: number
+        }
+        Update: {
+          categoria?: string | null
+          company_id?: string
+          created_at?: string
+          data_competencia?: string
+          descricao?: string | null
+          id?: string
+          tipo?: string
+          transacao_origem_id?: string | null
+          updated_at?: string
+          user_id?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_fluxo_caixa_company"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_fluxo_caixa_transacao"
+            columns: ["transacao_origem_id"]
+            isOneToOne: false
+            referencedRelation: "transacoes_conciliadas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string | null
