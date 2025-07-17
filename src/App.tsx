@@ -9,8 +9,6 @@ import Dashboard from "./pages/Dashboard";
 import Conciliacao from "./pages/Conciliacao";
 import FluxoCaixa from "./pages/FluxoCaixa";
 import Configuracoes from "./pages/Configuracoes";
-import Relatorios from "./pages/Relatorios";
-import Holdings from "./pages/Holdings";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 
@@ -49,20 +47,6 @@ const App = () => (
             <ProtectedRoute>
               <AppLayout>
                 <Configuracoes />
-              </AppLayout>
-            </ProtectedRoute>
-          } />
-          <Route path="/relatorios" element={
-            <ProtectedRoute>
-              <AppLayout>
-                <Relatorios />
-              </AppLayout>
-            </ProtectedRoute>
-          } />
-          <Route path="/holdings" element={
-            <ProtectedRoute>
-              <AppLayout>
-                <Holdings />
               </AppLayout>
             </ProtectedRoute>
           } />
