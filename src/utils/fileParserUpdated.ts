@@ -371,20 +371,39 @@ export class FileParser {
 
   static async parseFile(file: File): Promise<Omit<Transaction, 'user_id' | 'categoria_sugerida' | 'hash_transacao'>[]> {
     try {
-      console.log('Parsing file:', file.name, 'type:', file.type, 'size:', file.size);
+      console.log('🔄 Delegando para RobustCSVParser:', file.name);
       
-      const content = await this.readFileContent(file);
-      console.log('File content length:', content.length);
-      
+      // Usar o parser robusto para todos os arquivos CSV
       if (file.name.toLowerCase().endsWith('.csv') || file.type === 'text/csv') {
-        return this.parseCSV(content);
-      } else if (file.name.toLowerCase().endsWith('.ofx') || content.includes('<OFX>')) {
+        const { RobustCSVParser } = await import('./robustCSVParser');
+        const result = await RobustCSVParser.parseCSV(file);
+        
+        if (result.errors.length > 0) {
+          console.warn('⚠️ Parser robusto encontrou erros:', result.errors);
+        }
+        
+        if (result.warnings.length > 0) {
+          console.warn('⚠️ Parser robusto encontrou avisos:', result.warnings);
+        }
+        
+        console.log('✅ Parser robusto concluído:', {
+          transações: result.transactions.length,
+          processedRows: result.processedRows,
+          validRows: result.validRows,
+          encoding: result.encoding,
+          delimiter: result.delimiter
+        });
+        
+        return result.transactions;
+      } else if (file.name.toLowerCase().endsWith('.ofx')) {
+        // Manter OFX parsing original
+        const content = await this.readFileContent(file);
         return this.parseOFX(content);
       } else {
-        throw new Error('Formato de arquivo não suportado. Use CSV ou OFX.');
+        throw new Error('Formato não suportado. Use CSV ou OFX.');
       }
     } catch (error) {
-      console.error('Error parsing file:', error);
+      console.error('❌ Erro no parseFile:', error);
       throw error;
     }
   }

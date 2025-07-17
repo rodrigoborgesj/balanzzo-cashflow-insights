@@ -90,7 +90,11 @@ export default function Conciliacao() {
       
       console.log('📊 Resultado do parsing robusto:', result);
       
-      setParseStats(result.stats);
+      setParseStats({
+        totalRows: result.processedRows,
+        validTransactions: result.validRows,
+        skippedRows: result.processedRows - result.validRows
+      });
       setParseErrors(result.errors);
       
       if (result.transactions.length === 0) {
@@ -109,7 +113,7 @@ export default function Conciliacao() {
       
       toast({
         title: 'Arquivo processado com sucesso!',
-        description: `${result.transactions.length} transação(ões) encontrada(s) de ${result.stats.totalRows} linha(s)`,
+        description: `${result.transactions.length} transação(ões) encontrada(s) de ${result.processedRows} linha(s)`,
       });
       
       console.log('✅ Estado atualizado com transações parseadas');

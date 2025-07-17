@@ -1,14 +1,15 @@
 import Papa from 'papaparse';
 import { Transaction } from '@/hooks/useConciliacao';
 
-interface CSVParseResult {
+export interface CSVParseResult {
   transactions: Omit<Transaction, 'user_id' | 'categoria_sugerida' | 'hash_transacao'>[];
   errors: string[];
-  stats: {
-    totalRows: number;
-    validTransactions: number;
-    skippedRows: number;
-  };
+  warnings: string[];
+  processedRows: number;
+  validRows: number;
+  encoding: string;
+  delimiter: string;
+  hasHeader: boolean;
 }
 
 export class RobustCSVParser {
@@ -22,31 +23,43 @@ export class RobustCSVParser {
   ];
 
   private static readonly HEADER_KEYWORDS = {
-    date: ['data', 'date', 'dt_transacao', 'dt_lancamento', 'dt_movimento'],
-    description: ['descricao', 'description', 'historico', 'memo', 'detalhes', 'complemento'],
-    value: ['valor', 'value', 'amount', 'vl_transacao', 'vl_movimento'],
-    credit: ['credito', 'credit', 'entrada', 'receita'],
-    debit: ['debito', 'debit', 'saida', 'despesa'],
-    type: ['tipo', 'type', 'operacao']
+    data: ['data', 'date', 'dt', 'operacao', 'movimento', 'transacao', 'lancamento', 'dt_transacao', 'dt_movimento', 'data da operação', 'data da transação'],
+    descricao: ['descricao', 'description', 'historico', 'memo', 'detalhe', 'observacao', 'name', 'detalhes', 'complemento', 'descrição'],
+    valor: ['valor', 'amount', 'quantia', 'montante', 'total', 'vl_transacao', 'vl_movimento', 'valor (r$)', 'value'],
+    credito: ['credito', 'credit', 'entrada', 'receita', 'crédito'],
+    debito: ['debito', 'debit', 'saida', 'despesa', 'débito'],
+    tipo: ['tipo', 'type', 'operacao', 'movimento', 'tipo de operação', 'movimentação']
   };
 
   static async parseCSV(file: File): Promise<CSVParseResult> {
-    console.log('🚀 Iniciando parsing robusto do CSV:', file.name);
+    console.log('🚀 Iniciando parsing robusto universal para:', file.name);
     
     const result: CSVParseResult = {
       transactions: [],
       errors: [],
-      stats: { totalRows: 0, validTransactions: 0, skippedRows: 0 }
+      warnings: [],
+      processedRows: 0,
+      validRows: 0,
+      encoding: 'UTF-8',
+      delimiter: ',',
+      hasHeader: false
     };
 
     try {
-      // Detectar encoding e ler o arquivo
-      const content = await this.readFileWithEncoding(file);
-      console.log('📄 Conteúdo lido com sucesso, tamanho:', content.length);
+      // Detectar encoding e ler o arquivo com múltiplas tentativas
+      const { content, encoding } = await this.readFileWithEncoding(file);
+      result.encoding = encoding;
+      console.log('📄 Conteúdo lido com sucesso:', { tamanho: content.length, encoding });
 
-      // Detectar delimitador
+      if (!content || content.trim().length === 0) {
+        result.errors.push('Arquivo vazio ou sem conteúdo válido');
+        return result;
+      }
+
+      // Detectar delimitador automaticamente
       const delimiter = this.detectDelimiter(content);
-      console.log('🔍 Delimitador detectado:', delimiter);
+      result.delimiter = delimiter;
+      console.log('🔍 Delimitador detectado:', delimiter === '\t' ? 'TAB' : delimiter);
 
       // Parse com PapaParse
       const parseResult = Papa.parse(content, {
@@ -59,11 +72,11 @@ export class RobustCSVParser {
 
       if (parseResult.errors.length > 0) {
         console.warn('⚠️ Avisos durante o parse:', parseResult.errors);
-        result.errors.push(...parseResult.errors.map(e => e.message));
+        result.warnings.push(...parseResult.errors.map(e => e.message));
       }
 
       const rows = parseResult.data as string[][];
-      result.stats.totalRows = rows.length;
+      result.processedRows = rows.length;
       
       console.log('📊 Total de linhas parseadas:', rows.length);
 
@@ -78,6 +91,7 @@ export class RobustCSVParser {
 
       // Determinar se primeira linha é header
       const hasHeader = this.hasHeader(rows[0]);
+      result.hasHeader = hasHeader;
       const dataStartIndex = hasHeader ? 1 : 0;
       
       console.log('📋 Header detectado:', hasHeader, '- Iniciando dados na linha:', dataStartIndex);
@@ -87,7 +101,6 @@ export class RobustCSVParser {
         const row = rows[i];
         
         if (!row || row.length === 0) {
-          result.stats.skippedRows++;
           continue;
         }
 
@@ -95,15 +108,23 @@ export class RobustCSVParser {
         
         if (transaction) {
           result.transactions.push(transaction);
-          result.stats.validTransactions++;
+          result.validRows++;
           console.log(`✅ Transação ${i} criada:`, transaction);
         } else {
-          result.stats.skippedRows++;
+          result.warnings.push(`Linha ${i + 1}: Não foi possível processar (dados insuficientes ou inválidos)`);
           console.log(`⏭️ Linha ${i} ignorada - dados insuficientes ou inválidos`);
         }
       }
 
-      console.log('🎯 Resultado final:', result.stats);
+      console.log('🎯 Resultado final:', {
+        processedRows: result.processedRows,
+        validRows: result.validRows,
+        errors: result.errors.length,
+        warnings: result.warnings.length,
+        encoding: result.encoding,
+        delimiter: result.delimiter
+      });
+      
       return result;
 
     } catch (error) {
@@ -113,34 +134,39 @@ export class RobustCSVParser {
     }
   }
 
-  private static async readFileWithEncoding(file: File): Promise<string> {
-    // Tentar UTF-8 primeiro
-    try {
-      const content = await this.readFileAsText(file, 'UTF-8');
-      // Verificar se há caracteres de substituição que indicam encoding incorreto
-      if (!content.includes('\uFFFD')) {
-        return content;
-      }
-    } catch (error) {
-      console.log('UTF-8 falhou, tentando outros encodings...');
-    }
-
-    // Tentar encodings alternativos
-    const encodings = ['ISO-8859-1', 'Windows-1252'];
+  private static async readFileWithEncoding(file: File): Promise<{ content: string, encoding: string }> {
+    const encodings = ['UTF-8', 'ISO-8859-1', 'Windows-1252'];
     
     for (const encoding of encodings) {
       try {
+        console.log(`🔄 Tentando encoding: ${encoding}`);
         const content = await this.readFileAsText(file, encoding);
-        console.log(`✅ Arquivo lido com encoding: ${encoding}`);
-        return content;
+        
+        // Verificar qualidade do encoding
+        const hasReplacementChars = content.includes('\uFFFD');
+        const hasValidText = /[a-zA-Z0-9]/.test(content);
+        const hasValidDates = /\d{1,4}[\/\-]\d{1,2}[\/\-]\d{2,4}/.test(content);
+        
+        if (hasValidText && !hasReplacementChars && content.trim().length > 0) {
+          console.log(`✅ Sucesso com encoding: ${encoding}`);
+          return { content, encoding };
+        }
+        
+        if (hasValidDates && hasValidText) {
+          console.log(`✅ Encoding aceitável: ${encoding} (com alguns caracteres especiais)`);
+          return { content, encoding };
+        }
+        
       } catch (error) {
         console.log(`❌ Falha com encoding ${encoding}:`, error);
         continue;
       }
     }
-
-    // Fallback para UTF-8 mesmo com possíveis problemas
-    return this.readFileAsText(file, 'UTF-8');
+    
+    // Fallback final
+    console.log('🔄 Usando fallback UTF-8');
+    const content = await this.readFileAsText(file, 'UTF-8');
+    return { content, encoding: 'UTF-8' };
   }
 
   private static readFileAsText(file: File, encoding: string): Promise<string> {
@@ -194,11 +220,11 @@ export class RobustCSVParser {
     const mapping: Record<string, number> = {};
     
     firstRow.forEach((header, index) => {
-      const normalizedHeader = header.toLowerCase().trim();
+      const normalizedHeader = header.toLowerCase().trim().replace(/[^a-z0-9\s]/g, '');
       
       // Detectar colunas baseado em palavras-chave
       for (const [type, keywords] of Object.entries(this.HEADER_KEYWORDS)) {
-        if (keywords.some(keyword => normalizedHeader.includes(keyword))) {
+        if (keywords.some(keyword => normalizedHeader.includes(keyword.toLowerCase()))) {
           if (!mapping[type]) { // Usar a primeira correspondência
             mapping[type] = index;
             console.log(`📍 Coluna '${type}' detectada no índice ${index}: "${header}"`);
@@ -207,15 +233,46 @@ export class RobustCSVParser {
       }
     });
 
-    // Fallback para posições padrão se não detectou pelos headers
-    if (Object.keys(mapping).length === 0) {
-      console.log('🔄 Usando mapeamento padrão por posição');
+    // Fallback inteligente para posições padrão
+    if (Object.keys(mapping).length < 2) {
+      console.log('🔄 Usando mapeamento padrão por posição e heurística');
+      
+      // Análise heurística das primeiras linhas para detectar colunas
+      const intelligentMapping: Record<string, number> = {};
+      
+      for (let i = 0; i < Math.min(firstRow.length, 6); i++) {
+        const cell = firstRow[i].toLowerCase();
+        
+        // Detectar possível coluna de data
+        if (i <= 2 && !intelligentMapping.data) {
+          if (/data|date|dt/.test(cell) || this.parseDate(firstRow[i])) {
+            intelligentMapping.data = i;
+            continue;
+          }
+        }
+        
+        // Detectar possível coluna de valor
+        if (i >= 1 && !intelligentMapping.valor) {
+          if (/valor|amount|total|r\$|\d+[,\.]\d+/.test(cell) || this.parseAmount(firstRow[i]) !== 0) {
+            intelligentMapping.valor = i;
+            continue;
+          }
+        }
+        
+        // Detectar colunas de débito/crédito
+        if (/debito|debit|saida/.test(cell) && !intelligentMapping.debito) {
+          intelligentMapping.debito = i;
+        } else if (/credito|credit|entrada/.test(cell) && !intelligentMapping.credito) {
+          intelligentMapping.credito = i;
+        }
+      }
+      
       return {
-        date: 0,
-        description: 1,
-        value: firstRow.length >= 4 ? 2 : 2, // Se tem 4+ colunas, pode ser débito/crédito
-        debit: firstRow.length >= 4 ? 2 : -1,
-        credit: firstRow.length >= 4 ? 3 : -1
+        data: intelligentMapping.data ?? 0,
+        descricao: 1,
+        valor: intelligentMapping.valor ?? 2,
+        debito: intelligentMapping.debito ?? (firstRow.length >= 4 ? 2 : -1),
+        credito: intelligentMapping.credito ?? (firstRow.length >= 4 ? 3 : -1)
       };
     }
 
@@ -255,25 +312,38 @@ export class RobustCSVParser {
         return null;
       }
 
-      // Extrair descrição
-      const descIndex = mapping.description ?? 1;
-      const description = row[descIndex]?.trim() || `Transação linha ${rowIndex}`;
+      // Extrair descrição - com fallbacks inteligentes
+      let description: string;
+      
+      if (mapping.descricao !== undefined && mapping.descricao >= 0 && mapping.descricao < row.length) {
+        description = row[mapping.descricao]?.trim() || `Transação linha ${rowIndex}`;
+      } else {
+        // Tentar encontrar coluna com texto descritivo
+        for (let i = 1; i < Math.min(row.length, 4); i++) {
+          const cell = row[i]?.trim();
+          if (cell && cell.length > 3 && !/^\d+[,.\d]*$/.test(cell) && !this.parseDate(cell)) {
+            description = cell;
+            break;
+          }
+        }
+        description = description || `Transação linha ${rowIndex}`;
+      }
 
-      // Extrair valor
+      // Extrair valor - com lógica inteligente para diferentes formatos
       let amount: number;
       
-      if (mapping.debit !== undefined && mapping.credit !== undefined && 
-          mapping.debit >= 0 && mapping.credit >= 0) {
+      if (mapping.debito !== undefined && mapping.credito !== undefined && 
+          mapping.debito >= 0 && mapping.credito >= 0 && 
+          mapping.debito < row.length && mapping.credito < row.length) {
         // Formato débito/crédito separado
-        const debitValue = this.parseAmount(row[mapping.debit] || '0');
-        const creditValue = this.parseAmount(row[mapping.credit] || '0');
+        const debitValue = this.parseAmount(row[mapping.debito] || '0');
+        const creditValue = this.parseAmount(row[mapping.credito] || '0');
         
         amount = creditValue - debitValue;
         console.log(`Linha ${rowIndex}: débito=${debitValue}, crédito=${creditValue}, resultado=${amount}`);
-      } else {
+      } else if (mapping.valor !== undefined && mapping.valor >= 0 && mapping.valor < row.length) {
         // Formato valor único
-        const valueIndex = mapping.value ?? 2;
-        const rawValue = row[valueIndex]?.trim();
+        const rawValue = row[mapping.valor]?.trim();
         
         if (!rawValue) {
           console.warn(`Linha ${rowIndex}: valor vazio`);
@@ -281,6 +351,23 @@ export class RobustCSVParser {
         }
         
         amount = this.parseAmount(rawValue);
+      } else {
+        // Fallback - tentar encontrar valor em qualquer coluna numérica
+        console.log(`Linha ${rowIndex}: tentando detectar valor automaticamente`);
+        
+        for (let i = 2; i < Math.min(row.length, 6); i++) {
+          const possibleValue = this.parseAmount(row[i] || '0');
+          if (!isNaN(possibleValue) && possibleValue !== 0) {
+            amount = possibleValue;
+            console.log(`Linha ${rowIndex}: valor detectado na coluna ${i}: ${amount}`);
+            break;
+          }
+        }
+        
+        if (amount === undefined) {
+          console.warn(`Linha ${rowIndex}: nenhum valor válido encontrado`);
+          return null;
+        }
       }
 
       if (isNaN(amount)) {
@@ -288,12 +375,12 @@ export class RobustCSVParser {
         return null;
       }
 
-      // Criar transação
+      // Criar transação com valores absolutos (conforme padrão do banco)
       const transaction = {
         id: `csv_${Date.now()}_${rowIndex}`,
         data_transacao: parsedDate,
         descricao: description,
-        valor: amount,
+        valor: Math.abs(amount), // Sempre positivo no banco
         tipo: amount >= 0 ? 'entrada' as const : 'saida' as const,
         status_conciliacao: false,
         origem_arquivo: 'CSV',
@@ -356,34 +443,57 @@ export class RobustCSVParser {
   }
 
   private static parseAmount(amountStr: string): number {
-    if (!amountStr) return 0;
+    if (!amountStr || amountStr.trim() === '') return 0;
     
-    // Remover caracteres não numéricos exceto vírgula, ponto e sinais
+    console.log('💰 Processando valor original:', amountStr);
+    
+    // Detectar se é negativo (parênteses ou sinal)
+    const isNegative = amountStr.includes('(') || amountStr.includes('-') || 
+                      amountStr.toLowerCase().includes('debito') || 
+                      amountStr.toLowerCase().includes('saída');
+    
+    // Remover símbolos de moeda e espaços
     let cleaned = amountStr
+      .replace(/[R$€£¥₹₽\s"'()]/g, '')
       .replace(/[^\d,.-]/g, '')
       .trim();
-
-    // Tratar valores em parênteses como negativos
-    if (amountStr.includes('(') && amountStr.includes(')')) {
-      cleaned = '-' + cleaned;
-    }
-
-    // Detectar formato brasileiro (vírgula como decimal)
-    if (cleaned.includes(',') && cleaned.includes('.')) {
-      // Se tem ambos, vírgula é decimal
-      cleaned = cleaned.replace(/\./g, '').replace(',', '.');
+    
+    console.log('💰 Após limpeza:', cleaned);
+    
+    if (!cleaned) return 0;
+    
+    // Normalizar separadores decimais
+    if (cleaned.includes('.') && cleaned.includes(',')) {
+      // Formato: 1.234.567,89 (brasileiro) ou 1,234,567.89 (americano)
+      const lastComma = cleaned.lastIndexOf(',');
+      const lastDot = cleaned.lastIndexOf('.');
+      
+      if (lastComma > lastDot) {
+        // Vírgula é decimal: 1.234,56 -> 1234.56
+        cleaned = cleaned.replace(/\./g, '').replace(',', '.');
+      } else {
+        // Ponto é decimal: 1,234.56 -> 1234.56
+        cleaned = cleaned.replace(/,/g, '');
+      }
     } else if (cleaned.includes(',')) {
-      // Verificar se vírgula é separador de milhares ou decimal
-      const parts = cleaned.split(',');
-      if (parts.length === 2 && parts[1].length <= 2) {
-        // Vírgula como decimal
+      // Só vírgula - verificar se é decimal ou separador de milhares
+      const commaIndex = cleaned.lastIndexOf(',');
+      const afterComma = cleaned.substring(commaIndex + 1);
+      
+      if (afterComma.length <= 2) {
+        // Provavelmente decimal: 1234,56 -> 1234.56
         cleaned = cleaned.replace(',', '.');
       } else {
-        // Vírgula como separador de milhares
+        // Provavelmente separador de milhares: 1,234,567 -> 1234567
         cleaned = cleaned.replace(/,/g, '');
       }
     }
-
-    return parseFloat(cleaned) || 0;
+    
+    const result = parseFloat(cleaned);
+    const finalValue = isNaN(result) ? 0 : (isNegative ? -Math.abs(result) : result);
+    
+    console.log('💰 Valor final calculado:', finalValue);
+    
+    return finalValue;
   }
 }
