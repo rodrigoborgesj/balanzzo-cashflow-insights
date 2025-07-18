@@ -503,24 +503,24 @@ export class RobustCSVParser {
     
     console.log('💰 Processando valor original:', amountStr);
     
-    // Detectar se é negativo (parênteses, sinal, ou palavras-chave)
-    const isNegative = amountStr.includes('(') || amountStr.includes('-') || 
-                      amountStr.toLowerCase().includes('debito') || 
-                      amountStr.toLowerCase().includes('saída') ||
-                      amountStr.toLowerCase().includes('débito');
+    // Detectar se é negativo através do sinal (-) no início ou parênteses
+    const hasNegativeSign = amountStr.trim().startsWith('-') || amountStr.includes('(');
     
-    // Remover símbolos de moeda, espaços e caracteres especiais
+    // Remover símbolos de moeda, espaços e caracteres especiais, mas preservar o sinal negativo
     let cleaned = amountStr
       .replace(/[R$€£¥₹₽\s"'()]/g, '')
-      .replace(/[^\d,.-]/g, '')
+      .replace(/[^\d,.+-]/g, '')
       .trim();
     
     console.log('💰 Após limpeza inicial:', cleaned);
     
-    if (!cleaned || cleaned === '-') return 0;
+    if (!cleaned || cleaned === '-' || cleaned === '+') return 0;
     
-    // Remover sinais negativos múltiplos
-    cleaned = cleaned.replace(/^-+/, isNegative ? '-' : '');
+    // Preservar o sinal negativo se detectado
+    const isNegative = hasNegativeSign || cleaned.startsWith('-');
+    
+    // Remover todos os sinais para processamento
+    cleaned = cleaned.replace(/^[-+]+/, '');
     
     // Casos especiais para formatos brasileiros e internacionais
     if (cleaned.includes('.') && cleaned.includes(',')) {
@@ -571,9 +571,10 @@ export class RobustCSVParser {
       return 0;
     }
     
+    // Retornar o valor com o sinal correto
     const finalValue = isNegative ? -Math.abs(result) : Math.abs(result);
     
-    console.log('💰 Resultado final:', finalValue);
+    console.log('💰 Resultado final:', finalValue, '(original tinha sinal negativo:', isNegative, ')');
     
     return finalValue;
   }
@@ -619,6 +620,7 @@ export class RobustCSVParser {
     // Palavras-chave para entradas  
     const entradaKeywords = ['recebido', 'pix recebido', 'crédito', 'depósito', 'transferência recebida', 'salário'];
     
+    // Primeiro, verificar palavras-chave na descrição
     if (saidaKeywords.some(palavra => descricaoLower.includes(palavra))) {
       return 'saida';
     }
@@ -627,7 +629,9 @@ export class RobustCSVParser {
       return 'entrada';
     }
     
-    // Fallback: usar o sinal do valor original
-    return amount >= 0 ? 'entrada' : 'saida';
+    // Fallback principal: usar o sinal do valor para determinar o tipo
+    // Se o valor é negativo (tem sinal -), é uma saída/despesa
+    // Se o valor é positivo, é uma entrada/receita
+    return amount < 0 ? 'saida' : 'entrada';
   }
 }
