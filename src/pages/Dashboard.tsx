@@ -26,6 +26,7 @@ import {
   BarChart,
   Bar
 } from "recharts";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 import { useNavigate } from "react-router-dom";
 import { useCashFlowIntegration } from "@/hooks/useCashFlowIntegration";
@@ -33,7 +34,7 @@ import { useState } from "react";
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const [selectedMonth] = useState<string>(new Date().toISOString().slice(0, 7));
+  const [selectedMonth, setSelectedMonth] = useState<string>(new Date().toISOString().slice(0, 7));
   
   // Usar dados do fluxo de caixa integrado
   const { 
@@ -73,7 +74,9 @@ export default function Dashboard() {
     );
   }
 
-  const currentMonth = new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+  const [ano, mes] = selectedMonth.split('-').map(Number);
+  const selectedMonthName = new Date(ano, mes - 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+  
   const profitMargin = summary.totalEntradas > 0 
     ? ((summary.saldoLiquido / summary.totalEntradas) * 100).toFixed(1) 
     : '0';
@@ -84,6 +87,23 @@ export default function Dashboard() {
       currency: 'BRL',
     }).format(value);
   };
+
+  // Gerar opções de meses (12 meses anteriores + atual + 6 próximos)
+  const generateMonthOptions = () => {
+    const options = [];
+    const currentDate = new Date();
+    
+    for (let i = -12; i <= 6; i++) {
+      const date = new Date(currentDate.getFullYear(), currentDate.getMonth() + i, 1);
+      const value = date.toISOString().slice(0, 7);
+      const label = date.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+      options.push({ value, label });
+    }
+    
+    return options;
+  };
+
+  const monthOptions = generateMonthOptions();
 
   // Dados do gráfico já formatados
   const formatMonthlyData = chartData;
@@ -103,14 +123,23 @@ export default function Dashboard() {
         <div>
           <h1 className="text-3xl font-bold text-foreground">Dashboard Financeiro</h1>
           <p className="text-muted-foreground">
-            Visão geral do desempenho financeiro - {currentMonth}
+            Visão geral do desempenho financeiro - {selectedMonthName}
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm">
-            <Calendar className="h-4 w-4 mr-2" />
-            {currentMonth}
-          </Button>
+          <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+            <SelectTrigger className="w-48">
+              <Calendar className="h-4 w-4 mr-2" />
+              <SelectValue placeholder="Selecionar mês" />
+            </SelectTrigger>
+            <SelectContent>
+              {monthOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Button size="sm" onClick={() => navigate("/conciliacao")}>
             <Activity className="h-4 w-4 mr-2" />
             Importar Extrato

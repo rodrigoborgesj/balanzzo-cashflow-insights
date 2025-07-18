@@ -1,6 +1,10 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { CategoryManager } from "@/components/CategoryManager";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Settings, 
   Bell, 
@@ -12,6 +16,40 @@ import {
 } from "lucide-react";
 
 export default function Configuracoes() {
+  const { toast } = useToast();
+  
+  // Estados das configurações
+  const [settings, setSettings] = useState({
+    relatoriosMensais: true,
+    alertasVencimento: true,
+    conciliacaoAutomatica: false,
+    autenticacaoDoisFatores: false,
+    loginAutomatico: true,
+    modoEscuro: false
+  });
+
+  const [showCategoryManager, setShowCategoryManager] = useState(false);
+  const [categoryType, setCategoryType] = useState<'receitas' | 'despesas'>('receitas');
+
+  const handleSwitchChange = (key: keyof typeof settings) => {
+    setSettings(prev => ({
+      ...prev,
+      [key]: !prev[key]
+    }));
+  };
+
+  const handleSaveSettings = () => {
+    // Aqui você salvaria as configurações no banco de dados
+    toast({
+      title: "Configurações salvas",
+      description: "Suas preferências foram atualizadas com sucesso.",
+    });
+  };
+
+  const handleManageCategories = (type: 'receitas' | 'despesas') => {
+    setCategoryType(type);
+    setShowCategoryManager(true);
+  };
   return (
     <div className="p-6 space-y-6 bg-background min-h-full">
       {/* Header */}
@@ -22,7 +60,7 @@ export default function Configuracoes() {
             Personalize as configurações do sistema e preferências
           </p>
         </div>
-        <Button size="sm">
+        <Button size="sm" onClick={handleSaveSettings}>
           <Save className="h-4 w-4 mr-2" />
           Salvar Alterações
         </Button>
@@ -43,21 +81,30 @@ export default function Configuracoes() {
                 <p className="font-medium">Relatórios mensais</p>
                 <p className="text-sm text-muted-foreground">Receber relatórios automáticos por email</p>
               </div>
-              <Switch defaultChecked />
+              <Switch 
+                checked={settings.relatoriosMensais}
+                onCheckedChange={() => handleSwitchChange('relatoriosMensais')}
+              />
             </div>
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-medium">Alertas de vencimento</p>
                 <p className="text-sm text-muted-foreground">Avisos sobre contas próximas do vencimento</p>
               </div>
-              <Switch defaultChecked />
+              <Switch 
+                checked={settings.alertasVencimento}
+                onCheckedChange={() => handleSwitchChange('alertasVencimento')}
+              />
             </div>
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-medium">Conciliação automática</p>
                 <p className="text-sm text-muted-foreground">Sugerir categorias para transações similares</p>
               </div>
-              <Switch />
+              <Switch 
+                checked={settings.conciliacaoAutomatica}
+                onCheckedChange={() => handleSwitchChange('conciliacaoAutomatica')}
+              />
             </div>
           </CardContent>
         </Card>
@@ -76,14 +123,20 @@ export default function Configuracoes() {
                 <p className="font-medium">Autenticação de dois fatores</p>
                 <p className="text-sm text-muted-foreground">Maior segurança para sua conta</p>
               </div>
-              <Switch />
+              <Switch 
+                checked={settings.autenticacaoDoisFatores}
+                onCheckedChange={() => handleSwitchChange('autenticacaoDoisFatores')}
+              />
             </div>
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-medium">Login automático</p>
                 <p className="text-sm text-muted-foreground">Manter sessão ativa por 30 dias</p>
               </div>
-              <Switch defaultChecked />
+              <Switch 
+                checked={settings.loginAutomatico}
+                onCheckedChange={() => handleSwitchChange('loginAutomatico')}
+              />
             </div>
             <Button variant="outline" className="w-full">
               Alterar Senha
@@ -103,14 +156,22 @@ export default function Configuracoes() {
             <div className="space-y-2">
               <p className="font-medium">Receitas</p>
               <p className="text-sm text-muted-foreground">Vendas, Prestação de Serviços, Recebimentos...</p>
-              <Button variant="outline" size="sm">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => handleManageCategories('receitas')}
+              >
                 Gerenciar Receitas
               </Button>
             </div>
             <div className="space-y-2">
               <p className="font-medium">Despesas</p>
               <p className="text-sm text-muted-foreground">Fornecedores, Salários, Impostos...</p>
-              <Button variant="outline" size="sm">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => handleManageCategories('despesas')}
+              >
                 Gerenciar Despesas
               </Button>
             </div>
@@ -131,7 +192,10 @@ export default function Configuracoes() {
                 <p className="font-medium">Modo escuro</p>
                 <p className="text-sm text-muted-foreground">Tema escuro para melhor experiência</p>
               </div>
-              <Switch />
+              <Switch 
+                checked={settings.modoEscuro}
+                onCheckedChange={() => handleSwitchChange('modoEscuro')}
+              />
             </div>
             <div className="flex items-center justify-between">
               <div>
@@ -181,6 +245,18 @@ export default function Configuracoes() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Dialog para Gerenciar Categorias */}
+      <Dialog open={showCategoryManager} onOpenChange={setShowCategoryManager}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              Gerenciar {categoryType === 'receitas' ? 'Receitas' : 'Despesas'}
+            </DialogTitle>
+          </DialogHeader>
+          <CategoryManager />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
