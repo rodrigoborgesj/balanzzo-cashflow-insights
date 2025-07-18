@@ -426,9 +426,12 @@ export class RobustCSVParser {
       // Sugerir categoria automaticamente baseada na descrição
       const categoriaSugerida = this.suggestCategory(description);
       
-      // Determinar tipo de transação baseado na descrição
+      // Determinar tipo de transação baseado no sinal do valor
       const tipoTransacao = this.identifyTransactionType(description, amount);
-      const valorAjustado = tipoTransacao === 'saida' ? Math.abs(amount) : Math.abs(amount);
+      
+      // Preservar o valor original (com sinal) para que valores negativos sejam exibidos corretamente
+      // O tipo já foi determinado corretamente pela função identifyTransactionType
+      const valorAjustado = amount;
 
       // Criar transação 
       const transaction = {
