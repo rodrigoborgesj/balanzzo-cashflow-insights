@@ -45,7 +45,7 @@ export function useCashFlowIntegration(selectedMonth: string) {
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuth();
 
-  // Carregar dados do fluxo de caixa integrado
+  // Carregar dados das transações conciliadas para o dashboard
   const loadCashFlowData = useCallback(async () => {
     if (!user?.id || !selectedMonth) return;
 
@@ -54,23 +54,7 @@ export function useCashFlowIntegration(selectedMonth: string) {
       const startDate = `${selectedMonth}-01`;
       const endDate = `${selectedMonth}-31`;
 
-      // Carregar dados do fluxo de caixa
-      const { data: fluxoData, error: fluxoError } = await supabase
-        .from('fluxo_caixa')
-        .select('*')
-        .eq('user_id', user.id)
-        .gte('data_competencia', startDate)
-        .lte('data_competencia', endDate)
-        .order('data_competencia', { ascending: true });
-
-      if (fluxoError) {
-        console.error('Erro ao carregar fluxo de caixa:', fluxoError);
-        return;
-      }
-
-      setFluxoData((fluxoData || []) as FluxoCaixaRecord[]);
-
-      // Carregar transações recentes para referência
+      // Carregar dados das transações conciliadas diretamente
       const { data: transactionsData, error: transactionsError } = await supabase
         .from('transacoes_conciliadas')
         .select('*')
@@ -78,14 +62,30 @@ export function useCashFlowIntegration(selectedMonth: string) {
         .eq('status_conciliacao', true)
         .gte('data_transacao', startDate)
         .lte('data_transacao', endDate)
-        .order('data_transacao', { ascending: false })
-        .limit(10);
+        .order('data_transacao', { ascending: true });
 
       if (transactionsError) {
-        console.error('Erro ao carregar transações recentes:', transactionsError);
+        console.error('Erro ao carregar transações:', transactionsError);
         return;
       }
 
+      // Converter transações para formato do fluxo de caixa
+      const fluxoConverted: FluxoCaixaRecord[] = (transactionsData || []).map(transaction => ({
+        id: transaction.id,
+        company_id: transaction.company_id,
+        user_id: transaction.user_id || user.id,
+        data_competencia: transaction.data_transacao,
+        tipo: transaction.tipo as 'entrada' | 'saida',
+        categoria: transaction.categoria_final || transaction.categoria_sugerida,
+        descricao: transaction.descricao,
+        valor: Math.abs(transaction.valor), // Garantir valor positivo
+        transacao_origem_id: transaction.id,
+        created_at: transaction.criado_em || new Date().toISOString()
+      }));
+
+      setFluxoData(fluxoConverted);
+
+      // Carregar transações recentes para referência
       setRecentTransactions((transactionsData || []) as Transaction[]);
 
     } catch (error) {
