@@ -588,14 +588,33 @@ export class RobustCSVParser {
       return mapping.descricao;
     }
     
-    // Se não temos mapeamento, buscar pela primeira coluna que não seja data nem valor
+    // Se não temos mapeamento, buscar pela primeira coluna que contenha texto descritivo
     for (let i = 0; i < row.length; i++) {
       if (i !== mapping.data && i !== mapping.valor && i !== mapping.debito && i !== mapping.credito) {
         const cell = row[i]?.trim();
-        // Verificar se é uma coluna de texto descritivo (não é data nem número puro)
-        if (cell && cell.length > 2 && !/^\d+[,.\d]*$/.test(cell) && !this.parseDate(cell)) {
+        // Verificar se é uma coluna de texto descritivo:
+        // - Não é vazia
+        // - Tem mais de 2 caracteres
+        // - Contém letras (texto)
+        // - NÃO é apenas números/valores monetários
+        // - NÃO é uma data
+        if (cell && 
+            cell.length > 2 && 
+            /[a-zA-Z]/.test(cell) && 
+            !/^[\d\s,.\-\+R$]+$/.test(cell) && 
+            !this.parseDate(cell) &&
+            isNaN(this.parseAmount(cell))) {
+          console.log(`📝 Coluna de descrição encontrada no índice ${i}: "${cell}"`);
           return i;
         }
+      }
+    }
+    
+    // Fallback: se não encontrou texto descritivo, usar primeira coluna que não seja data/valor
+    for (let i = 0; i < row.length; i++) {
+      if (i !== mapping.data && i !== mapping.valor && i !== mapping.debito && i !== mapping.credito) {
+        console.log(`📝 Usando fallback para descrição no índice ${i}`);
+        return i;
       }
     }
     
