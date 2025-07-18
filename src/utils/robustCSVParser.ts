@@ -24,7 +24,7 @@ export class RobustCSVParser {
 
   private static readonly HEADER_KEYWORDS = {
     data: ['data', 'date', 'dt', 'operacao', 'movimento', 'transacao', 'lancamento', 'dt_transacao', 'dt_movimento', 'data da operação', 'data da transação', 'data de pagamento', 'transaction date'],
-    descricao: ['descricao', 'description', 'historico', 'memo', 'detalhe', 'observacao', 'name', 'detalhes', 'complemento', 'descrição', 'descrição da transação'],
+    descricao: ['descricao', 'description', 'historico', 'memo', 'detalhe', 'observacao', 'name', 'detalhes', 'complemento', 'descrição', 'descrição da transação', 'descrição da operação', 'detalhamento'],
     valor: ['valor', 'amount', 'quantia', 'montante', 'total', 'vl_transacao', 'vl_movimento', 'valor (r$)', 'value', 'valor final'],
     credito: ['credito', 'credit', 'entrada', 'receita', 'crédito'],
     debito: ['debito', 'debit', 'saida', 'despesa', 'débito'],
@@ -583,8 +583,9 @@ export class RobustCSVParser {
   }
 
   private static findDescriptionColumn(row: string[], mapping: Record<string, number>): number {
-    // Primeiro, verificar se já temos mapeamento para descrição
+    // PRIORIDADE MÁXIMA: Se já temos mapeamento para descrição, usar SEMPRE
     if (mapping.descricao !== undefined && mapping.descricao >= 0) {
+      console.log(`📝 Usando coluna de descrição mapeada: índice ${mapping.descricao}`);
       return mapping.descricao;
     }
     
