@@ -296,7 +296,8 @@ export class RobustCSVParser {
           console.log(`💰 Coluna de valor detectada por heurística na posição ${colIndex} (score: ${valueScore})`);
         }
         
-        if (textScore >= 15 && !intelligentMapping.descricao && colIndex !== intelligentMapping.data) {
+        if (textScore >= 15 && !intelligentMapping.descricao && 
+            colIndex !== intelligentMapping.data && colIndex !== intelligentMapping.valor) {
           intelligentMapping.descricao = colIndex;
           console.log(`📝 Coluna de descrição detectada por heurística na posição ${colIndex} (score: ${textScore})`);
         }
