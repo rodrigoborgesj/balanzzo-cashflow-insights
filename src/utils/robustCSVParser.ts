@@ -593,18 +593,18 @@ export class RobustCSVParser {
     for (let i = 0; i < row.length; i++) {
       if (i !== mapping.data && i !== mapping.valor && i !== mapping.debito && i !== mapping.credito) {
         const cell = row[i]?.trim();
+        
         // Verificar se é uma coluna de texto descritivo:
         // - Não é vazia
         // - Tem mais de 2 caracteres
         // - Contém letras (texto)
-        // - NÃO é apenas números/valores monetários
+        // - NÃO é apenas um número puro (como "1234.56" ou "-118.88")
         // - NÃO é uma data
         if (cell && 
             cell.length > 2 && 
             /[a-zA-Z]/.test(cell) && 
-            !/^[\d\s,.\-\+R$]+$/.test(cell) && 
-            !this.parseDate(cell) &&
-            isNaN(this.parseAmount(cell))) {
+            !/^[\d\s,.\-\+R$€£¥₹₽()'"]*$/.test(cell) && 
+            !this.parseDate(cell)) {
           console.log(`📝 Coluna de descrição encontrada no índice ${i}: "${cell}"`);
           return i;
         }
