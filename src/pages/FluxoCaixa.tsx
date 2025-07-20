@@ -22,6 +22,7 @@ import { useConciliacao, Transaction } from "@/hooks/useConciliacao";
 import { useNavigate } from "react-router-dom";
 import { ManualTransactionForm } from "@/components/ManualTransactionForm";
 import { TransactionActions } from "@/components/TransactionActions";
+import { DREStatement } from "@/components/DREStatement";
 
 interface CategoryGroup {
   category: string;
@@ -252,146 +253,191 @@ export default function FluxoCaixa() {
         </div>
       )}
 
-      {/* Professional Cash Flow by Category */}
+      {/* Professional Cash Flow - Line by Line Layout */}
       {hasData && (
-        <Card className="bg-gradient-to-br from-card to-card/80 border-border/50 shadow-soft">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
-              Fluxo de Caixa por Categoria
-            </CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Transações organizadas por categoria com base nos dados conciliados
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {categoryGroups.map((group, index) => (
-              <Collapsible 
-                key={group.category} 
-                open={group.isOpen} 
-                onOpenChange={() => toggleCategory(index)}
-              >
-                <CollapsibleTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className={`w-full justify-between p-4 h-auto border rounded-lg ${
-                      group.type === 'entrada' 
-                        ? 'border-success/30 bg-success/5 hover:bg-success/10' 
-                        : 'border-destructive/30 bg-destructive/5 hover:bg-destructive/10'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className={`w-3 h-3 rounded-full ${
-                        group.type === 'entrada' ? 'bg-success' : 'bg-destructive'
-                      }`} />
-                      <div className="text-left">
-                        <div className="font-semibold">{group.category}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {group.transactions.length} transaç{group.transactions.length === 1 ? 'ão' : 'ões'}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className={`text-right font-bold ${
-                        group.type === 'entrada' ? 'text-success' : 'text-destructive'
-                      }`}>
-                        {group.type === 'entrada' ? '+' : '-'}R$ {Math.abs(group.total).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                      </div>
-                      {group.isOpen ? (
-                        <ChevronDown className="h-4 w-4" />
-                      ) : (
-                        <ChevronRight className="h-4 w-4" />
-                      )}
-                    </div>
-                  </Button>
-                </CollapsibleTrigger>
-                <CollapsibleContent className="mt-2">
-                  <div className="border rounded-lg overflow-hidden">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="bg-muted/50">
-                          <TableHead className="w-[120px]">Data</TableHead>
-                          <TableHead>Descrição</TableHead>
-                          <TableHead className="text-right w-[140px]">Valor (R$)</TableHead>
-                          <TableHead className="w-[50px]"></TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {group.transactions.map((transaction) => (
-                          <TableRow key={transaction.id} className="hover:bg-muted/30">
-                            <TableCell className="font-medium">
-                              {new Date(transaction.data_transacao).toLocaleDateString('pt-BR')}
-                            </TableCell>
-                            <TableCell className="max-w-[300px]">
-                              <div className="flex items-center gap-2">
-                                <div className="truncate" title={transaction.descricao}>
-                                  {transaction.descricao}
-                                </div>
-                                {transaction.origem_arquivo === 'manual_entry' && (
-                                  <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20">
-                                    Manual
-                                  </Badge>
-                                )}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          {/* Cash Flow Section */}
+          <Card className="bg-gradient-to-br from-card to-card/80 border-border/50 shadow-soft">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5" />
+                Fluxo de Caixa Detalhado
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Entradas e saídas organizadas linha por linha
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Receipts Section */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 pb-2 border-b border-success/20">
+                  <ArrowUpCircle className="h-4 w-4 text-success" />
+                  <h3 className="font-semibold text-success">ENTRADAS</h3>
+                </div>
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-success/5">
+                      <TableHead className="w-[100px]">Data</TableHead>
+                      <TableHead className="w-[120px]">Categoria</TableHead>
+                      <TableHead>Descrição</TableHead>
+                      <TableHead className="text-right w-[120px]">Valor</TableHead>
+                      <TableHead className="w-[50px]"></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {transactions
+                      .filter(t => t.valor > 0)
+                      .sort((a, b) => new Date(a.data_transacao).getTime() - new Date(b.data_transacao).getTime())
+                      .map((transaction) => (
+                        <TableRow key={transaction.id} className="hover:bg-success/5">
+                          <TableCell className="font-medium text-sm">
+                            {new Date(transaction.data_transacao).toLocaleDateString('pt-BR', { 
+                              day: '2-digit', 
+                              month: '2-digit' 
+                            })}
+                          </TableCell>
+                          <TableCell className="text-sm">
+                            <Badge variant="outline" className="text-xs bg-success/10 text-success border-success/20">
+                              {transaction.categoria_final || transaction.categoria_sugerida || 'Outros'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="max-w-[200px]">
+                            <div className="flex items-center gap-2">
+                              <div className="truncate text-sm" title={transaction.descricao}>
+                                {transaction.descricao}
                               </div>
-                            </TableCell>
-                            <TableCell className={`text-right font-bold ${
-                              transaction.valor >= 0 ? 'text-success' : 'text-destructive'
-                            }`}>
-                              {transaction.valor >= 0 ? '+' : '-'}R$ {Math.abs(transaction.valor).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                            </TableCell>
-                            <TableCell>
-                              <TransactionActions 
-                                transaction={transaction}
-                                onTransactionUpdated={() => loadTransactions(selectedMonth)}
-                              />
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                        <TableRow className="bg-muted/20 font-semibold">
-                          <TableCell colSpan={3} className="text-right">
-                            <strong>Total da Categoria:</strong>
+                              {transaction.origem_arquivo === 'manual_entry' && (
+                                <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20">
+                                  Manual
+                                </Badge>
+                              )}
+                            </div>
                           </TableCell>
-                          <TableCell className={`text-right font-bold ${
-                            group.type === 'entrada' ? 'text-success' : 'text-destructive'
-                          }`}>
-                            {group.type === 'entrada' ? '+' : '-'}R$ {Math.abs(group.total).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                          <TableCell className="text-right font-bold text-success">
+                            R$ {transaction.valor.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                          </TableCell>
+                          <TableCell>
+                            <TransactionActions 
+                              transaction={transaction}
+                              onTransactionUpdated={() => loadTransactions(selectedMonth)}
+                            />
                           </TableCell>
                         </TableRow>
-                      </TableBody>
-                    </Table>
+                      ))}
+                    <TableRow className="bg-success/10 font-semibold">
+                      <TableCell colSpan={3} className="text-right">
+                        <strong>Total de Entradas:</strong>
+                      </TableCell>
+                      <TableCell className="text-right font-bold text-success">
+                        R$ {totalInflow.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      </TableCell>
+                      <TableCell></TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Payments Section */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 pb-2 border-b border-destructive/20">
+                  <ArrowDownCircle className="h-4 w-4 text-destructive" />
+                  <h3 className="font-semibold text-destructive">SAÍDAS</h3>
+                </div>
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-destructive/5">
+                      <TableHead className="w-[100px]">Data</TableHead>
+                      <TableHead className="w-[120px]">Categoria</TableHead>
+                      <TableHead>Descrição</TableHead>
+                      <TableHead className="text-right w-[120px]">Valor</TableHead>
+                      <TableHead className="w-[50px]"></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {transactions
+                      .filter(t => t.valor < 0)
+                      .sort((a, b) => new Date(a.data_transacao).getTime() - new Date(b.data_transacao).getTime())
+                      .map((transaction) => (
+                        <TableRow key={transaction.id} className="hover:bg-destructive/5">
+                          <TableCell className="font-medium text-sm">
+                            {new Date(transaction.data_transacao).toLocaleDateString('pt-BR', { 
+                              day: '2-digit', 
+                              month: '2-digit' 
+                            })}
+                          </TableCell>
+                          <TableCell className="text-sm">
+                            <Badge variant="outline" className="text-xs bg-destructive/10 text-destructive border-destructive/20">
+                              {transaction.categoria_final || transaction.categoria_sugerida || 'Outros'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="max-w-[200px]">
+                            <div className="flex items-center gap-2">
+                              <div className="truncate text-sm" title={transaction.descricao}>
+                                {transaction.descricao}
+                              </div>
+                              {transaction.origem_arquivo === 'manual_entry' && (
+                                <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20">
+                                  Manual
+                                </Badge>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right font-bold text-destructive">
+                            R$ {Math.abs(transaction.valor).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                          </TableCell>
+                          <TableCell>
+                            <TransactionActions 
+                              transaction={transaction}
+                              onTransactionUpdated={() => loadTransactions(selectedMonth)}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    <TableRow className="bg-destructive/10 font-semibold">
+                      <TableCell colSpan={3} className="text-right">
+                        <strong>Total de Saídas:</strong>
+                      </TableCell>
+                      <TableCell className="text-right font-bold text-destructive">
+                        R$ {totalOutflow.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      </TableCell>
+                      <TableCell></TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </div>
+              
+              {/* Net Cash Flow Summary */}
+              <div className="mt-6 p-4 border-2 border-primary/20 rounded-lg bg-primary/5">
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium text-success">Total de Entradas:</span>
+                    <span className="font-bold text-success">
+                      +R$ {totalInflow.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                    </span>
                   </div>
-                </CollapsibleContent>
-              </Collapsible>
-            ))}
-            
-            {/* Final Summary */}
-            <div className="mt-6 p-4 border-2 border-primary/20 rounded-lg bg-primary/5">
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="font-medium text-success">Total de Entradas:</span>
-                  <span className="font-bold text-success">
-                    +R$ {totalInflow.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="font-medium text-destructive">Total de Saídas:</span>
-                  <span className="font-bold text-destructive">
-                    -R$ {totalOutflow.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                  </span>
-                </div>
-                <div className="h-px bg-border my-2"></div>
-                <div className="flex justify-between items-center text-lg">
-                  <span className="font-bold">Resultado Líquido:</span>
-                  <span className={`font-bold text-xl ${
-                    netResult >= 0 ? 'text-success' : 'text-destructive'
-                  }`}>
-                    {netResult >= 0 ? '+' : ''}R$ {netResult.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                  </span>
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium text-destructive">Total de Saídas:</span>
+                    <span className="font-bold text-destructive">
+                      -R$ {totalOutflow.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                  <div className="h-px bg-border my-2"></div>
+                  <div className="flex justify-between items-center text-lg">
+                    <span className="font-bold">Resultado Líquido do Período:</span>
+                    <span className={`font-bold text-xl ${
+                      netResult >= 0 ? 'text-success' : 'text-destructive'
+                    }`}>
+                      {netResult >= 0 ? '+' : ''}R$ {netResult.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+
+          {/* DRE Section */}
+          <DREStatement transactions={transactions} selectedMonth={selectedMonth} />
+        </div>
       )}
     </div>
   );
