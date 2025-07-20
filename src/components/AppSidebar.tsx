@@ -4,6 +4,7 @@ import {
   TrendingUp, 
   Settings,
   CheckSquare,
+  Calculator,
   LogOut
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
@@ -25,6 +26,7 @@ import {
 const mainItems = [
   { title: "Painel", url: "/", icon: BarChart3 },
   { title: "Fluxo de Caixa", url: "/fluxo-caixa", icon: TrendingUp },
+  { title: "DRE", url: "/dre", icon: Calculator },
   { title: "Conciliação Bancária", url: "/conciliacao", icon: CheckSquare },
 ];
 

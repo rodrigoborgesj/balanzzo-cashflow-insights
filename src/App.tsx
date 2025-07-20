@@ -8,6 +8,7 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
 import Conciliacao from "./pages/Conciliacao";
 import FluxoCaixa from "./pages/FluxoCaixa";
+import DRE from "./pages/DRE";
 import Configuracoes from "./pages/Configuracoes";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
@@ -40,6 +41,13 @@ const App = () => (
             <ProtectedRoute>
               <AppLayout>
                 <FluxoCaixa />
+              </AppLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/dre" element={
+            <ProtectedRoute>
+              <AppLayout>
+                <DRE />
               </AppLayout>
             </ProtectedRoute>
           } />
