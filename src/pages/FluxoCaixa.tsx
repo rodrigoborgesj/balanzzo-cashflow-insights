@@ -20,6 +20,8 @@ import {
 } from "lucide-react";
 import { useConciliacao, Transaction } from "@/hooks/useConciliacao";
 import { useNavigate } from "react-router-dom";
+import { ManualTransactionForm } from "@/components/ManualTransactionForm";
+import { TransactionActions } from "@/components/TransactionActions";
 
 interface CategoryGroup {
   category: string;
@@ -37,12 +39,13 @@ export default function FluxoCaixa() {
   const navigate = useNavigate();
 
   // Use reconciliation hook to get categorized transactions
-  const { transactions, isLoading, loadTransactions } = useConciliacao();
+  const { transactions, isLoading, loadTransactions, userCategories, loadUserCategories } = useConciliacao();
 
   // Load transactions when month changes
   useEffect(() => {
     loadTransactions(selectedMonth);
-  }, [selectedMonth, loadTransactions]);
+    loadUserCategories();
+  }, [selectedMonth, loadTransactions, loadUserCategories]);
 
   // Group transactions by category
   useEffect(() => {
@@ -110,6 +113,10 @@ export default function FluxoCaixa() {
           </p>
         </div>
         <div className="flex items-center gap-3">
+          <ManualTransactionForm 
+            onTransactionAdded={() => loadTransactions(selectedMonth)}
+            userCategories={userCategories}
+          />
           <Input
             type="month"
             value={selectedMonth}
@@ -306,6 +313,7 @@ export default function FluxoCaixa() {
                           <TableHead className="w-[120px]">Data</TableHead>
                           <TableHead>Descrição</TableHead>
                           <TableHead className="text-right w-[140px]">Valor (R$)</TableHead>
+                          <TableHead className="w-[50px]"></TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -315,8 +323,15 @@ export default function FluxoCaixa() {
                               {new Date(transaction.data_transacao).toLocaleDateString('pt-BR')}
                             </TableCell>
                             <TableCell className="max-w-[300px]">
-                              <div className="truncate" title={transaction.descricao}>
-                                {transaction.descricao}
+                              <div className="flex items-center gap-2">
+                                <div className="truncate" title={transaction.descricao}>
+                                  {transaction.descricao}
+                                </div>
+                                {transaction.origem_arquivo === 'manual_entry' && (
+                                  <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20">
+                                    Manual
+                                  </Badge>
+                                )}
                               </div>
                             </TableCell>
                             <TableCell className={`text-right font-bold ${
@@ -324,10 +339,16 @@ export default function FluxoCaixa() {
                             }`}>
                               {transaction.valor >= 0 ? '+' : '-'}R$ {Math.abs(transaction.valor).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                             </TableCell>
+                            <TableCell>
+                              <TransactionActions 
+                                transaction={transaction}
+                                onTransactionUpdated={() => loadTransactions(selectedMonth)}
+                              />
+                            </TableCell>
                           </TableRow>
                         ))}
                         <TableRow className="bg-muted/20 font-semibold">
-                          <TableCell colSpan={2} className="text-right">
+                          <TableCell colSpan={3} className="text-right">
                             <strong>Total da Categoria:</strong>
                           </TableCell>
                           <TableCell className={`text-right font-bold ${
