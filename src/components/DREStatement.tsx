@@ -1,6 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TrendingUp, Calculator } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { TrendingUp, Calculator, Download, FileSpreadsheet } from "lucide-react";
 import { Transaction } from "@/hooks/useConciliacao";
+import { exportDREToPDF, exportDREToExcel } from "@/utils/dreExports";
 
 interface DREStatementProps {
   transactions: Transaction[];
@@ -162,13 +164,37 @@ export function DREStatement({ transactions, selectedMonth }: DREStatementProps)
   return (
     <Card className="bg-gradient-to-br from-card to-card/80 border-border/50 shadow-soft">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Calculator className="h-5 w-5" />
-          Demonstração do Resultado do Exercício (DRE)
-        </CardTitle>
-        <p className="text-sm text-muted-foreground">
-          Demonstrativo financeiro baseado nas transações categorizadas - {selectedMonth}
-        </p>
+        <div className="flex justify-between items-start">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Calculator className="h-5 w-5" />
+              Demonstração do Resultado do Exercício (DRE)
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Demonstrativo financeiro baseado nas transações categorizadas - {selectedMonth}
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => exportDREToPDF(transactions, selectedMonth)}
+              className="flex items-center gap-2"
+            >
+              <Download className="h-4 w-4" />
+              PDF
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => exportDREToExcel(transactions, selectedMonth)}
+              className="flex items-center gap-2"
+            >
+              <FileSpreadsheet className="h-4 w-4" />
+              Excel
+            </Button>
+          </div>
+        </div>
       </CardHeader>
       <CardContent className="space-y-2">
         {/* Revenue Section */}

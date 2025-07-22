@@ -1,21 +1,67 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { AlertCircle, Calculator } from "lucide-react";
+import { AlertCircle, Calculator, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { DREStatement } from "@/components/DREStatement";
 import { useConciliacao } from "@/hooks/useConciliacao";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function DRE() {
   const [selectedMonth, setSelectedMonth] = useState<string>(new Date().toISOString().slice(0, 7));
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const navigate = useNavigate();
   
-  const { transactions, isLoading, loadTransactions } = useConciliacao();
+  const { transactions, isLoading, loadTransactions, refreshTransactions } = useConciliacao();
 
   useEffect(() => {
     loadTransactions(selectedMonth);
   }, [selectedMonth, loadTransactions]);
+
+  // Setup real-time sync for transactions
+  useEffect(() => {
+    console.log('Setting up real-time sync for DRE...');
+    
+    const channel = supabase
+      .channel('dre-realtime-sync')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'transacoes_conciliadas'
+        },
+        (payload) => {
+          console.log('Transaction change detected, refreshing DRE data:', payload);
+          refreshTransactions(selectedMonth);
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'fluxo_caixa'
+        },
+        (payload) => {
+          console.log('Cash flow change detected, refreshing DRE data:', payload);
+          refreshTransactions(selectedMonth);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      console.log('Cleaning up real-time sync for DRE...');
+      supabase.removeChannel(channel);
+    };
+  }, [refreshTransactions, selectedMonth]);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await refreshTransactions(selectedMonth);
+    setIsRefreshing(false);
+  };
 
   const hasData = transactions.length > 0;
 
@@ -30,6 +76,16 @@ export default function DRE() {
           </p>
         </div>
         <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            Atualizar
+          </Button>
           <Input
             type="month"
             value={selectedMonth}

@@ -97,6 +97,12 @@ export function useConciliacao() {
     }
   }, [user?.id, toast]);
 
+  // Função para forçar atualização das transações (útil para DRE)
+  const refreshTransactions = useCallback(async (monthFilter?: string) => {
+    console.log('Refreshing transactions for DRE sync...');
+    await loadTransactions(monthFilter || selectedMonth);
+  }, [loadTransactions, selectedMonth]);
+
   // Carregar categorias do usuário
   const loadUserCategories = useCallback(async () => {
     if (!user?.id) return;
@@ -781,6 +787,7 @@ export function useConciliacao() {
     selectedMonth,
     setSelectedMonth,
     loadTransactions,
+    refreshTransactions,
     loadUserCategories,
     saveTransactions,
     updateTransactionCategory,
