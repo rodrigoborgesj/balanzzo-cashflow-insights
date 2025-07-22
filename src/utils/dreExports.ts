@@ -1,5 +1,5 @@
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import { Transaction } from '@/hooks/useConciliacao';
 
@@ -195,7 +195,7 @@ export const exportDREToPDF = (transactions: Transaction[], selectedMonth: strin
   );
 
   // Create table
-  (doc as any).autoTable({
+  autoTable(doc, {
     startY: 80,
     head: [['Descrição', 'Valor']],
     body: tableData,
