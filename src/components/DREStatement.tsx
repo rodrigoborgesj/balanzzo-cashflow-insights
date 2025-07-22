@@ -74,22 +74,36 @@ export function DREStatement({ transactions, selectedMonth }: DREStatementProps)
       netProfit: 0
     };
 
+    console.log('DRE calculation starting with transactions:', transactions.length);
+    let totalIncomeFromTransactions = 0;
+    let totalExpensesFromTransactions = 0;
+
     transactions.forEach(transaction => {
       const category = transaction.categoria_final || transaction.categoria_sugerida || 'Outros';
       const value = transaction.valor;
+      
+      // Debug logging
+      console.log(`Processing transaction: ${category} = R$ ${value}`);
+      
+      if (value > 0) {
+        totalIncomeFromTransactions += value;
+      } else {
+        totalExpensesFromTransactions += Math.abs(value);
+      }
       
       // Map category to DRE line item
       const mapping = DRE_CATEGORY_MAPPING[category as keyof typeof DRE_CATEGORY_MAPPING];
       
       if (value > 0) {
-        // Positive values (income)
-        if (mapping === 'grossRevenue' || !mapping) {
-          dre.grossRevenue += value;
-        } else if (mapping === 'otherIncome') {
+        // Positive values (income) - ALL positive values should be revenue unless specifically mapped otherwise
+        if (mapping === 'otherIncome') {
           dre.otherIncome += value;
+        } else {
+          // Default: all positive values are gross revenue
+          dre.grossRevenue += value;
         }
       } else {
-        // Negative values (expenses)
+        // Negative values (expenses) - categorize by type
         const absValue = Math.abs(value);
         
         switch (mapping) {
@@ -106,11 +120,8 @@ export function DREStatement({ transactions, selectedMonth }: DREStatementProps)
             dre.operatingExpenses.financial += absValue;
             break;
           default:
-            if (category.toLowerCase().includes('outros') && value < 0) {
-              dre.otherLosses += absValue;
-            } else {
-              dre.operatingExpenses.other += absValue;
-            }
+            // All unmapped negative values go to "other operating expenses"
+            dre.operatingExpenses.other += absValue;
         }
       }
     });
@@ -120,6 +131,14 @@ export function DREStatement({ transactions, selectedMonth }: DREStatementProps)
     const totalOperatingExpenses = Object.values(dre.operatingExpenses).reduce((sum, val) => sum + val, 0);
     dre.operatingResult = dre.netRevenue - totalOperatingExpenses;
     dre.netProfit = dre.operatingResult + dre.otherIncome - dre.otherLosses;
+
+    // Debug logging
+    console.log('DRE Calculation Summary:');
+    console.log('Total Income from transactions:', totalIncomeFromTransactions);
+    console.log('Total Expenses from transactions:', totalExpensesFromTransactions);
+    console.log('Net from transactions:', totalIncomeFromTransactions - totalExpensesFromTransactions);
+    console.log('DRE Gross Revenue:', dre.grossRevenue);
+    console.log('DRE Net Profit:', dre.netProfit);
 
     return dre;
   };
