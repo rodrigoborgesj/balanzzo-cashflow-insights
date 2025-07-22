@@ -47,11 +47,17 @@ export default function FluxoCaixa() {
     loadUserCategories();
   }, [selectedMonth, loadTransactions, loadUserCategories]);
 
-  // Group transactions by category
+  // Group transactions by category - only include categorized transactions
   useEffect(() => {
     const groups: { [key: string]: Transaction[] } = {};
     
-    transactions.forEach(transaction => {
+    // Filter only categorized transactions
+    const categorizedTransactions = transactions.filter(transaction => 
+      transaction.status_conciliacao === true &&
+      (transaction.categoria_final || transaction.categoria_sugerida)
+    );
+    
+    categorizedTransactions.forEach(transaction => {
       const category = transaction.categoria_final || transaction.categoria_sugerida || 'Outros';
       if (!groups[category]) {
         groups[category] = [];
@@ -90,14 +96,19 @@ export default function FluxoCaixa() {
     );
   };
 
-  // Calculate totals
-  const totalInflow = categoryGroups
-    .filter(group => group.type === 'entrada')
-    .reduce((sum, group) => sum + group.total, 0);
+  // Calculate totals from categorized transactions only
+  const categorizedTransactions = transactions.filter(t => 
+    t.status_conciliacao === true && 
+    (t.categoria_final || t.categoria_sugerida)
+  );
+
+  const totalInflow = categorizedTransactions
+    .filter(t => t.valor > 0)
+    .reduce((sum, t) => sum + t.valor, 0);
   
-  const totalOutflow = Math.abs(categoryGroups
-    .filter(group => group.type === 'saida')
-    .reduce((sum, group) => sum + group.total, 0));
+  const totalOutflow = Math.abs(categorizedTransactions
+    .filter(t => t.valor < 0)
+    .reduce((sum, t) => sum + t.valor, 0));
   
   const netResult = totalInflow - totalOutflow;
   const hasData = transactions.length > 0;
@@ -281,8 +292,8 @@ export default function FluxoCaixa() {
                     <TableHead className="w-[50px]"></TableHead>
                   </TableRow>
                 </TableHeader>
-                <TableBody>
-                  {transactions
+                 <TableBody>
+                  {categorizedTransactions
                     .filter(t => t.valor > 0)
                     .sort((a, b) => new Date(a.data_transacao).getTime() - new Date(b.data_transacao).getTime())
                     .map((transaction) => (
@@ -350,8 +361,8 @@ export default function FluxoCaixa() {
                     <TableHead className="w-[50px]"></TableHead>
                   </TableRow>
                 </TableHeader>
-                <TableBody>
-                  {transactions
+                 <TableBody>
+                  {categorizedTransactions
                     .filter(t => t.valor < 0)
                     .sort((a, b) => new Date(a.data_transacao).getTime() - new Date(b.data_transacao).getTime())
                     .map((transaction) => (
