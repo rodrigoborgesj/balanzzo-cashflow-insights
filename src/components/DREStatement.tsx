@@ -74,37 +74,36 @@ export function DREStatement({ transactions, selectedMonth }: DREStatementProps)
       netProfit: 0
     };
 
-    console.log('DRE calculation starting with transactions:', transactions.length);
-    let totalIncomeFromTransactions = 0;
-    let totalExpensesFromTransactions = 0;
+    // Filter only categorized/reconciled transactions
+    const categorizedTransactions = transactions.filter(t => 
+      t.status_conciliacao === true || t.categoria_final || t.categoria_sugerida
+    );
 
-    transactions.forEach(transaction => {
+    console.log('DRE calculation starting with categorized transactions:', categorizedTransactions.length);
+
+    categorizedTransactions.forEach(transaction => {
       const category = transaction.categoria_final || transaction.categoria_sugerida || 'Outros';
       const value = transaction.valor;
       
       // Debug logging
-      console.log(`Processing transaction: ${category} = R$ ${value}`);
+      console.log(`Processing transaction: ${transaction.descricao} - ${category} = R$ ${value} (type: ${transaction.tipo})`);
       
-      if (value > 0) {
-        totalIncomeFromTransactions += value;
-      } else {
-        totalExpensesFromTransactions += Math.abs(value);
-      }
-      
-      // Map category to DRE line item
-      const mapping = DRE_CATEGORY_MAPPING[category as keyof typeof DRE_CATEGORY_MAPPING];
-      
-      if (value > 0) {
-        // Positive values (income) - ALL positive values should be revenue unless specifically mapped otherwise
+      // Use the transaction type field to determine income vs expense
+      // This ensures we match the cash flow logic exactly
+      if (transaction.tipo === 'entrada' || value > 0) {
+        // Income transactions
+        const mapping = DRE_CATEGORY_MAPPING[category as keyof typeof DRE_CATEGORY_MAPPING];
+        
         if (mapping === 'otherIncome') {
-          dre.otherIncome += value;
+          dre.otherIncome += Math.abs(value);
         } else {
-          // Default: all positive values are gross revenue
-          dre.grossRevenue += value;
+          // Default: all income is gross revenue
+          dre.grossRevenue += Math.abs(value);
         }
       } else {
-        // Negative values (expenses) - categorize by type
+        // Expense transactions
         const absValue = Math.abs(value);
+        const mapping = DRE_CATEGORY_MAPPING[category as keyof typeof DRE_CATEGORY_MAPPING];
         
         switch (mapping) {
           case 'deductions':
@@ -134,9 +133,6 @@ export function DREStatement({ transactions, selectedMonth }: DREStatementProps)
 
     // Debug logging
     console.log('DRE Calculation Summary:');
-    console.log('Total Income from transactions:', totalIncomeFromTransactions);
-    console.log('Total Expenses from transactions:', totalExpensesFromTransactions);
-    console.log('Net from transactions:', totalIncomeFromTransactions - totalExpensesFromTransactions);
     console.log('DRE Gross Revenue:', dre.grossRevenue);
     console.log('DRE Net Profit:', dre.netProfit);
 
@@ -197,7 +193,13 @@ export function DREStatement({ transactions, selectedMonth }: DREStatementProps)
             <Button
               variant="outline"
               size="sm"
-              onClick={() => exportDREToPDF(transactions, selectedMonth)}
+              onClick={() => {
+                try {
+                  exportDREToPDF(transactions, selectedMonth);
+                } catch (error) {
+                  console.error('Error exporting to PDF:', error);
+                }
+              }}
               className="flex items-center gap-2"
             >
               <Download className="h-4 w-4" />
@@ -206,7 +208,13 @@ export function DREStatement({ transactions, selectedMonth }: DREStatementProps)
             <Button
               variant="outline"
               size="sm"
-              onClick={() => exportDREToExcel(transactions, selectedMonth)}
+              onClick={() => {
+                try {
+                  exportDREToExcel(transactions, selectedMonth);
+                } catch (error) {
+                  console.error('Error exporting to Excel:', error);
+                }
+              }}
               className="flex items-center gap-2"
             >
               <FileSpreadsheet className="h-4 w-4" />

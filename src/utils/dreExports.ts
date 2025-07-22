@@ -67,23 +67,30 @@ const calculateDRE = (transactions: Transaction[]): DREData => {
     netProfit: 0
   };
 
-  transactions.forEach(transaction => {
+  // Filter only categorized/reconciled transactions
+  const categorizedTransactions = transactions.filter(t => 
+    t.status_conciliacao === true || t.categoria_final || t.categoria_sugerida
+  );
+
+  categorizedTransactions.forEach(transaction => {
     const category = transaction.categoria_final || transaction.categoria_sugerida || 'Outros';
     const value = transaction.valor;
     
     // Map category to DRE line item
     const mapping = DRE_CATEGORY_MAPPING[category as keyof typeof DRE_CATEGORY_MAPPING];
     
-    if (value > 0) {
-      // Positive values (income) - ALL positive values should be revenue unless specifically mapped otherwise
+    // Use the transaction type field to determine income vs expense
+    // This ensures we match the cash flow logic exactly
+    if (transaction.tipo === 'entrada' || value > 0) {
+      // Income transactions
       if (mapping === 'otherIncome') {
-        dre.otherIncome += value;
+        dre.otherIncome += Math.abs(value);
       } else {
-        // Default: all positive values are gross revenue
-        dre.grossRevenue += value;
+        // Default: all income is gross revenue
+        dre.grossRevenue += Math.abs(value);
       }
     } else {
-      // Negative values (expenses) - categorize by type
+      // Expense transactions
       const absValue = Math.abs(value);
       
       switch (mapping) {
