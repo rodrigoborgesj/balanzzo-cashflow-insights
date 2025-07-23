@@ -11,6 +11,7 @@ import FluxoCaixa from "./pages/FluxoCaixa";
 import DRE from "./pages/DRE";
 import Configuracoes from "./pages/Configuracoes";
 import Login from "./pages/Login";
+import PoliticaPrivacidade from "./pages/PoliticaPrivacidade";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,6 +24,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/politica-de-privacidade" element={<PoliticaPrivacidade />} />
           <Route path="/" element={
             <ProtectedRoute>
               <AppLayout>

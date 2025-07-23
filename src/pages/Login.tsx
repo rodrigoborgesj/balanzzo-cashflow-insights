@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { useNavigate } from "react-router-dom";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useNavigate, Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Lock, Mail, Eye, EyeOff, Building2, Chrome } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -18,6 +19,7 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [mode, setMode] = useState<'login' | 'signup'>('login');
   const [isLoading, setIsLoading] = useState(false);
+  const [acceptedPrivacyPolicy, setAcceptedPrivacyPolicy] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { signIn, signInWithGoogle, isAuthenticated, user, isLoading: authLoading } = useAuth();
@@ -35,6 +37,16 @@ export default function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!acceptedPrivacyPolicy) {
+      toast({
+        title: "Política de Privacidade",
+        description: "Você deve aceitar a Política de Privacidade para continuar.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -170,7 +182,27 @@ export default function Login() {
                 </div>
               </div>
 
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="privacy-policy" 
+                  checked={acceptedPrivacyPolicy}
+                  onCheckedChange={(checked) => setAcceptedPrivacyPolicy(checked === true)}
+                />
+                <Label htmlFor="privacy-policy" className="text-sm text-muted-foreground leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  Li e aceito a{" "}
+                  <Link 
+                    to="/politica-de-privacidade" 
+                    className="text-primary hover:underline"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Política de Privacidade
+                  </Link>
+                  {" "}da Balanzzo.
+                </Label>
+              </div>
+
+              <Button type="submit" className="w-full" disabled={isLoading || !acceptedPrivacyPolicy}>
                 {isLoading ? "Carregando..." : "Entrar"}
               </Button>
             </form>

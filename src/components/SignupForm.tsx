@@ -5,6 +5,7 @@ import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -12,6 +13,7 @@ import { Eye, EyeOff, Mail, Chrome } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile, ProfileData } from "@/hooks/useProfile";
+import { Link } from "react-router-dom";
 
 const revenueRanges = [
   "Até R$ 360.000/ano (MEI)",
@@ -53,6 +55,7 @@ interface SignupFormProps {
 export function SignupForm({ onBack }: SignupFormProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [acceptedPrivacyPolicy, setAcceptedPrivacyPolicy] = useState(false);
   const { toast } = useToast();
   const { signUp, signInWithGoogle } = useAuth();
   const { createProfile } = useProfile();
@@ -79,6 +82,15 @@ export function SignupForm({ onBack }: SignupFormProps) {
   });
 
   const onSubmit = async (data: SignupFormData) => {
+    if (!acceptedPrivacyPolicy) {
+      toast({
+        title: "Política de Privacidade",
+        description: "Você deve aceitar a Política de Privacidade para continuar.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
       const { error } = await signUp(data.email, data.password);
@@ -413,11 +425,31 @@ export function SignupForm({ onBack }: SignupFormProps) {
             </div>
           </div>
 
+          <div className="flex items-center space-x-2 mb-6">
+            <Checkbox 
+              id="privacy-policy-signup" 
+              checked={acceptedPrivacyPolicy}
+              onCheckedChange={(checked) => setAcceptedPrivacyPolicy(checked === true)}
+            />
+            <Label htmlFor="privacy-policy-signup" className="text-sm text-muted-foreground leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+              Li e aceito a{" "}
+              <Link 
+                to="/politica-de-privacidade" 
+                className="text-primary hover:underline"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Política de Privacidade
+              </Link>
+              {" "}da Balanzzo.
+            </Label>
+          </div>
+
           <div className="flex gap-4">
             <Button type="button" variant="outline" onClick={onBack} className="flex-1">
               Voltar
             </Button>
-            <Button type="submit" disabled={isLoading} className="flex-1">
+            <Button type="submit" disabled={isLoading || !acceptedPrivacyPolicy} className="flex-1">
               {isLoading ? "Criando conta..." : "Criar Conta"}
             </Button>
           </div>

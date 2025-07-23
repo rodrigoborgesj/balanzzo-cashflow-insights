@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { AppSidebar } from "@/components/AppSidebar";
+import { Footer } from "@/components/Footer";
 import { LogOut, User } from "lucide-react";
 
 interface AppLayoutProps {
@@ -24,10 +25,13 @@ export function AppLayout({ children }: AppLayoutProps) {
         <AppSidebar />
         
         <div className="flex-1 flex flex-col">
-          {/* Main Content - Removendo header para usar sidebar como referência */}
+          {/* Main Content */}
           <main className="flex-1 overflow-auto">
             {children}
           </main>
+          
+          {/* Footer */}
+          <Footer />
         </div>
       </div>
     </SidebarProvider>
