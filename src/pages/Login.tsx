@@ -180,7 +180,18 @@ export default function Login() {
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </Button>
                 </div>
-              </div>
+                </div>
+                
+                <div className="flex justify-end">
+                  <Button
+                    type="button"
+                    variant="link"
+                    className="p-0 text-sm"
+                    onClick={() => navigate("/forgot-password")}
+                  >
+                    Esqueceu sua senha?
+                  </Button>
+                </div>
 
               <div className="flex items-center space-x-2">
                 <Checkbox 
