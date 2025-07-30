@@ -224,7 +224,7 @@ export default function Conciliacao() {
       <div className="border-b border-gray-200 p-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-black">Conciliação Bancária</h1>
+            <h1 className="page-title">Conciliação Bancária</h1>
             <p className="text-gray-600 mt-1">
               Faça upload e concilie suas transações bancárias
             </p>

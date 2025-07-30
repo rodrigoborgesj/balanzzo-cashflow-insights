@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { CategoryManager } from "@/components/CategoryManager";
 import { useToast } from "@/hooks/use-toast";
 import { 
@@ -28,9 +27,6 @@ export default function Configuracoes() {
     modoEscuro: false
   });
 
-  const [showCategoryManager, setShowCategoryManager] = useState(false);
-  const [categoryType, setCategoryType] = useState<'receitas' | 'despesas'>('receitas');
-
   const handleSwitchChange = (key: keyof typeof settings) => {
     setSettings(prev => ({
       ...prev,
@@ -45,17 +41,12 @@ export default function Configuracoes() {
       description: "Suas preferências foram atualizadas com sucesso.",
     });
   };
-
-  const handleManageCategories = (type: 'receitas' | 'despesas') => {
-    setCategoryType(type);
-    setShowCategoryManager(true);
-  };
   return (
     <div className="p-6 space-y-6 bg-background min-h-full">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Configurações</h1>
+          <h1 className="page-title">Configurações</h1>
           <p className="text-muted-foreground">
             Personalize as configurações do sistema e preferências
           </p>
@@ -149,31 +140,16 @@ export default function Configuracoes() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Database className="h-5 w-5" />
-              Categorias Personalizadas
+              Gerenciamento de Categorias
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <p className="font-medium">Receitas</p>
-              <p className="text-sm text-muted-foreground">Vendas, Prestação de Serviços, Recebimentos...</p>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => handleManageCategories('receitas')}
-              >
-                Gerenciar Receitas
-              </Button>
-            </div>
-            <div className="space-y-2">
-              <p className="font-medium">Despesas</p>
-              <p className="text-sm text-muted-foreground">Fornecedores, Salários, Impostos...</p>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => handleManageCategories('despesas')}
-              >
-                Gerenciar Despesas
-              </Button>
+          <CardContent>
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Gerencie todas as categorias de receitas e despesas em um local centralizado. 
+                Todas as alterações serão aplicadas automaticamente em todo o sistema.
+              </p>
+              <CategoryManager />
             </div>
           </CardContent>
         </Card>
@@ -246,17 +222,6 @@ export default function Configuracoes() {
         </CardContent>
       </Card>
 
-      {/* Dialog para Gerenciar Categorias */}
-      <Dialog open={showCategoryManager} onOpenChange={setShowCategoryManager}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>
-              Gerenciar {categoryType === 'receitas' ? 'Receitas' : 'Despesas'}
-            </DialogTitle>
-          </DialogHeader>
-          <CategoryManager />
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

@@ -1,17 +1,16 @@
-
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useNavigate, Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { Lock, Mail, Eye, EyeOff, Building2, Chrome } from "lucide-react";
+import { Lock, Mail, Eye, EyeOff, Chrome } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { SignupForm } from "@/components/SignupForm";
+import financialHero from "@/assets/financial-hero.png";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -19,7 +18,6 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [mode, setMode] = useState<'login' | 'signup'>('login');
   const [isLoading, setIsLoading] = useState(false);
-  const [acceptedPrivacyPolicy, setAcceptedPrivacyPolicy] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { signIn, signInWithGoogle, isAuthenticated, user, isLoading: authLoading } = useAuth();
@@ -37,15 +35,6 @@ export default function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!acceptedPrivacyPolicy) {
-      toast({
-        title: "Política de Privacidade",
-        description: "Você deve aceitar a Política de Privacidade para continuar.",
-        variant: "destructive",
-      });
-      return;
-    }
 
     setIsLoading(true);
 
@@ -119,67 +108,159 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5 flex items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-6">
-        {/* Header */}
-        <div className="text-center space-y-2">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <div className="p-3 bg-primary rounded-xl">
-              <Building2 className="h-8 w-8 text-primary-foreground" />
-            </div>
-            <h1 className="text-3xl font-bold text-foreground">Balanzzo</h1>
+    <div className="min-h-screen bg-background flex">
+      {/* Left side - Brand section with background rectangle */}
+      <div className="hidden lg:flex flex-col justify-between p-8 relative">
+        {/* Background rectangle */}
+        <div 
+          className="absolute inset-0 m-8 rounded-lg"
+          style={{ 
+            backgroundColor: '#A6C39E',
+            width: '542px',
+            height: '735px'
+          }}
+        >
+          {/* Hero image centered */}
+          <div className="flex items-center justify-center h-2/3">
+            <img 
+              src={financialHero} 
+              alt="Financial Management" 
+              className="max-w-md w-full h-auto object-contain"
+            />
           </div>
-          <h2 className="text-xl font-semibold text-foreground">
-            Entre na sua conta
-          </h2>
-          <p className="text-muted-foreground">
-            Gerencie suas finanças de forma inteligente
-          </p>
+          
+          {/* Text at bottom */}
+          <div className="absolute bottom-16 left-0 right-0 px-12 text-center">
+            <h2 
+              className="text-white mb-4"
+              style={{ 
+                fontFamily: 'Montserrat, sans-serif',
+                fontWeight: '600',
+                fontSize: '18px'
+              }}
+            >
+              Transformamos números em clareza
+            </h2>
+            <p 
+              className="text-white"
+              style={{ 
+                fontFamily: 'Montserrat, sans-serif',
+                fontWeight: '500',
+                fontSize: '12px'
+              }}
+            >
+              Gestão financeira sem planilhas complicadas, com simplicidade que funciona
+            </p>
+          </div>
         </div>
+        
+        {/* Balanzzo title positioned at top-left */}
+        <h1 
+          className="absolute top-8 left-8 z-10 text-foreground"
+          style={{ 
+            fontFamily: 'Montserrat, sans-serif',
+            fontWeight: '700',
+            fontSize: '22px'
+          }}
+        >
+          Balanzzo
+        </h1>
+      </div>
 
-        {/* Form */}
-        <Card className="bg-card/80 backdrop-blur-sm border-border/50 shadow-lg">
-          <CardContent className="p-6">
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="seu@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10"
-                    required
-                  />
-                </div>
-              </div>
+      {/* Right side - Login form */}
+      <div className="flex-1 flex items-center justify-center p-8">
+        <div className="w-full max-w-md space-y-6">
+          {/* Mobile header */}
+          <div className="lg:hidden text-center space-y-2">
+            <h1 
+              className="text-foreground"
+              style={{ 
+                fontFamily: 'Montserrat, sans-serif',
+                fontWeight: '700',
+                fontSize: '22px'
+              }}
+            >
+              Balanzzo
+            </h1>
+            <h2 className="text-xl font-semibold text-foreground">
+              Entre na sua conta
+            </h2>
+            <p className="text-muted-foreground">
+              Gerencie suas finanças de forma inteligente
+            </p>
+          </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="password">Senha</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 pr-10"
-                    required
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-1 top-1 h-8 w-8 p-0"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </Button>
+          {/* Desktop header */}
+          <div className="hidden lg:block text-left space-y-2">
+            <h2 className="text-xl font-semibold text-foreground">
+              Entre na sua conta
+            </h2>
+            <p className="text-muted-foreground">
+              Gerencie suas finanças de forma inteligente
+            </p>
+          </div>
+
+          {/* Form */}
+          <Card className="bg-card/80 backdrop-blur-sm border-border/50 shadow-lg">
+            <CardContent className="p-6">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email" style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: '500' }}>
+                    Email
+                  </Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="seu@email.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="pl-10"
+                      style={{ 
+                        backgroundColor: '#E9E9E9',
+                        borderRadius: '4px',
+                        fontFamily: 'Montserrat, sans-serif',
+                        fontWeight: '500',
+                        fontSize: '16px'
+                      }}
+                      required
+                    />
+                  </div>
                 </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="password" style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: '500' }}>
+                    Senha
+                  </Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="pl-10 pr-10"
+                      style={{ 
+                        backgroundColor: '#E9E9E9',
+                        borderRadius: '4px',
+                        fontFamily: 'Montserrat, sans-serif',
+                        fontWeight: '500',
+                        fontSize: '16px'
+                      }}
+                      required
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-1 top-1 h-8 w-8 p-0"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                  </div>
                 </div>
                 
                 <div className="flex justify-end">
@@ -193,81 +274,85 @@ export default function Login() {
                   </Button>
                 </div>
 
-              <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="privacy-policy" 
-                  checked={acceptedPrivacyPolicy}
-                  onCheckedChange={(checked) => setAcceptedPrivacyPolicy(checked === true)}
-                />
-                <Label htmlFor="privacy-policy" className="text-sm text-muted-foreground leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                  Li e aceito a{" "}
-                  <Link 
-                    to="/politica-de-privacidade" 
-                    className="text-primary hover:underline"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Política de Privacidade
-                  </Link>
-                  {" "}da Balanzzo.
-                </Label>
-              </div>
-
-              <Button type="submit" className="w-full" disabled={isLoading || !acceptedPrivacyPolicy}>
-                {isLoading ? "Carregando..." : "Entrar"}
-              </Button>
-            </form>
-
-            <div className="mt-6">
-              <div className="space-y-4">
                 <Button 
-                  type="button" 
-                  variant="outline" 
-                  className="w-full" 
-                  onClick={handleGoogleSignIn}
+                  type="submit" 
+                  className="w-full text-white font-medium"
+                  style={{ 
+                    background: 'linear-gradient(90deg, #A6C39E 0%, #4F5D4B 100%)',
+                    fontFamily: 'Montserrat, sans-serif'
+                  }}
                   disabled={isLoading}
                 >
-                  <Chrome className="mr-2 h-4 w-4" />
-                  Continuar com Google
+                  {isLoading ? "Carregando..." : "Entrar"}
                 </Button>
-                
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <Separator className="w-full" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-background px-2 text-muted-foreground">
-                      Ou
-                    </span>
+              </form>
+
+              <div className="mt-6">
+                <div className="space-y-4">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    className="w-full" 
+                    onClick={handleGoogleSignIn}
+                    disabled={isLoading}
+                  >
+                    <Chrome className="mr-2 h-4 w-4" />
+                    Continuar com Google
+                  </Button>
+                  
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <Separator className="w-full" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-background px-2 text-muted-foreground">
+                        Ou
+                      </span>
+                    </div>
                   </div>
                 </div>
+                
+                <div className="text-center mt-4">
+                  <p className="text-sm text-muted-foreground">
+                    Não tem uma conta?
+                    <Button
+                      type="button"
+                      variant="link"
+                      className="p-0 ml-1"
+                      onClick={() => setMode('signup')}
+                    >
+                      Criar conta
+                    </Button>
+                  </p>
+                </div>
               </div>
-              
-              <div className="text-center mt-4">
-                <p className="text-sm text-muted-foreground">
-                  Não tem uma conta?
-                  <Button
-                    type="button"
-                    variant="link"
-                    className="p-0 ml-1"
-                    onClick={() => setMode('signup')}
-                  >
-                    Criar conta
-                  </Button>
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        {/* Demo info */}
-        <Card className="bg-accent/10 border-accent/20">
-          <CardContent className="p-4">
-            <p className="text-sm text-muted-foreground text-center">
-              <strong>Demo:</strong> Use qualquer email e senha para testar a plataforma
+          {/* Privacy policy notice - below login button */}
+          <div className="text-center">
+            <p className="text-xs text-muted-foreground">
+              Ao continuar, você concorda com nossa{" "}
+              <Link 
+                to="/politica-de-privacidade" 
+                className="underline text-muted-foreground hover:text-foreground"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Política de Privacidade
+              </Link>
             </p>
-          </CardContent>
-        </Card>
+          </div>
+
+          {/* Demo info */}
+          <Card className="bg-accent/10 border-accent/20">
+            <CardContent className="p-4">
+              <p className="text-sm text-muted-foreground text-center">
+                <strong>Demo:</strong> Use qualquer email e senha para testar a plataforma
+              </p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

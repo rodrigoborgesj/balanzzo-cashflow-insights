@@ -121,7 +121,7 @@ export default function Dashboard() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Dashboard Financeiro</h1>
+          <h1 className="page-title">Dashboard Financeiro</h1>
           <p className="text-muted-foreground">
             Visão geral do desempenho financeiro - {selectedMonthName}
           </p>
