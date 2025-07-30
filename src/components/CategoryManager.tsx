@@ -3,24 +3,66 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useConciliacao } from "@/hooks/useConciliacao";
-import { Plus, Tag } from "lucide-react";
+import { Plus, Tag, Edit2, Trash2 } from "lucide-react";
 
 export function CategoryManager() {
   const [isOpen, setIsOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<any>(null);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [newCategoryColor, setNewCategoryColor] = useState("#3B82F6");
-  const { userCategories, createUserCategory, isLoading } = useConciliacao();
+  const { 
+    userCategories, 
+    createUserCategory, 
+    updateUserCategory, 
+    deleteUserCategory, 
+    checkCategoryUsage,
+    isLoading 
+  } = useConciliacao();
 
   const handleCreateCategory = async () => {
     if (!newCategoryName.trim()) return;
 
     const success = await createUserCategory(newCategoryName.trim(), newCategoryColor);
     if (success) {
-      setNewCategoryName("");
-      setNewCategoryColor("#3B82F6");
-      setIsOpen(false);
+      resetForm();
     }
+  };
+
+  const handleEditCategory = async () => {
+    if (!editingCategory || !newCategoryName.trim()) return;
+
+    const success = await updateUserCategory(editingCategory.id, newCategoryName.trim(), newCategoryColor);
+    if (success) {
+      resetForm();
+    }
+  };
+
+  const handleDeleteCategory = async (category: any) => {
+    const usage = await checkCategoryUsage(category.nome_categoria);
+    if (usage.inUse) {
+      return; // Error message is shown in the hook
+    }
+
+    const success = await deleteUserCategory(category.id, category.nome_categoria);
+    if (success) {
+      // Category deleted successfully
+    }
+  };
+
+  const openEditDialog = (category: any) => {
+    setEditingCategory(category);
+    setNewCategoryName(category.nome_categoria);
+    setNewCategoryColor(category.cor || "#3B82F6");
+    setIsOpen(true);
+  };
+
+  const resetForm = () => {
+    setNewCategoryName("");
+    setNewCategoryColor("#3B82F6");
+    setEditingCategory(null);
+    setIsOpen(false);
   };
 
   const colorOptions = [
@@ -47,7 +89,9 @@ export function CategoryManager() {
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Criar Nova Categoria</DialogTitle>
+              <DialogTitle>
+                {editingCategory ? "Editar Categoria" : "Criar Nova Categoria"}
+              </DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2">
@@ -76,13 +120,13 @@ export function CategoryManager() {
               </div>
               <div className="flex gap-2">
                 <Button 
-                  onClick={handleCreateCategory} 
+                  onClick={editingCategory ? handleEditCategory : handleCreateCategory} 
                   disabled={!newCategoryName.trim() || isLoading}
                   className="flex-1"
                 >
-                  Criar Categoria
+                  {editingCategory ? "Salvar Alterações" : "Criar Categoria"}
                 </Button>
-                <Button variant="outline" onClick={() => setIsOpen(false)}>
+                <Button variant="outline" onClick={resetForm}>
                   Cancelar
                 </Button>
               </div>
@@ -103,7 +147,48 @@ export function CategoryManager() {
                 style={{ backgroundColor: category.cor || "#3B82F6" }}
               />
               <Tag className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm">{category.nome_categoria}</span>
+              <span className="text-sm flex-1">{category.nome_categoria}</span>
+              
+              <div className="flex gap-1">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-8 w-8 p-0"
+                  onClick={() => openEditDialog(category)}
+                >
+                  <Edit2 className="h-4 w-4" />
+                </Button>
+                
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Tem certeza que deseja excluir a categoria "{category.nome_categoria}"? 
+                        Esta ação não pode ser desfeita.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => handleDeleteCategory(category)}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      >
+                        Excluir
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
             </div>
           ))}
         </div>

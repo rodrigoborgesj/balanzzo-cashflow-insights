@@ -504,6 +504,203 @@ export function useConciliacao() {
     }
   }, [user?.id, loadUserCategories, toast]);
 
+  // Editar categoria existente
+  const updateUserCategory = useCallback(async (categoryId: string, newName: string, newColor?: string) => {
+    if (!user?.id) return false;
+
+    try {
+      const normalizedName = newName.trim().toLowerCase();
+      
+      // Check if new name already exists (excluding current category)
+      const { data: existingCategories, error: fetchError } = await supabase
+        .from('categorias_usuario')
+        .select('nome_categoria, id')
+        .eq('user_id', user.id)
+        .eq('ativo', true)
+        .neq('id', categoryId);
+
+      if (fetchError) {
+        throw fetchError;
+      }
+
+      const isDuplicate = existingCategories?.some(cat => 
+        cat.nome_categoria.toLowerCase() === normalizedName
+      );
+
+      if (isDuplicate) {
+        toast({
+          title: 'Categoria já existe',
+          description: 'Uma categoria com este nome já foi criada.',
+          variant: 'destructive',
+        });
+        return false;
+      }
+
+      // Get current category name for cascading updates
+      const { data: currentCategory } = await supabase
+        .from('categorias_usuario')
+        .select('nome_categoria')
+        .eq('id', categoryId)
+        .single();
+
+      const oldName = currentCategory?.nome_categoria;
+
+      // Update category
+      const updateData: any = { nome_categoria: newName.trim() };
+      if (newColor) updateData.cor = newColor;
+
+      const { error } = await supabase
+        .from('categorias_usuario')
+        .update(updateData)
+        .eq('id', categoryId)
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('Erro ao atualizar categoria:', error);
+        toast({
+          title: 'Erro ao atualizar categoria',
+          description: error.message,
+          variant: 'destructive',
+        });
+        return false;
+      }
+
+      // Cascading update: Update all transactions using this category
+      if (oldName && oldName !== newName.trim()) {
+        await updateTransactionCategoriesCascade(oldName, newName.trim());
+      }
+
+      await loadUserCategories();
+      
+      toast({
+        title: 'Categoria atualizada',
+        description: `Categoria foi renomeada para "${newName}" e todos os dados foram atualizados`,
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Erro ao atualizar categoria:', error);
+      toast({
+        title: 'Erro ao atualizar categoria',
+        description: 'Erro desconhecido',
+        variant: 'destructive',
+      });
+      return false;
+    }
+  }, [user?.id, loadUserCategories, toast]);
+
+  // Verificar se categoria está em uso
+  const checkCategoryUsage = useCallback(async (categoryName: string) => {
+    if (!user?.id) return { inUse: false, count: 0 };
+
+    try {
+      const { data: transactions, error } = await supabase
+        .from('transacoes_conciliadas')
+        .select('id')
+        .eq('user_id', user.id)
+        .or(`categoria_final.eq.${categoryName},categoria_sugerida.eq.${categoryName}`);
+
+      if (error) {
+        console.error('Erro ao verificar uso da categoria:', error);
+        return { inUse: false, count: 0 };
+      }
+
+      return { inUse: transactions.length > 0, count: transactions.length };
+    } catch (error) {
+      console.error('Erro ao verificar uso da categoria:', error);
+      return { inUse: false, count: 0 };
+    }
+  }, [user?.id]);
+
+  // Deletar categoria com verificações
+  const deleteUserCategory = useCallback(async (categoryId: string, categoryName: string) => {
+    if (!user?.id) return false;
+
+    try {
+      // Check if category is in use
+      const usage = await checkCategoryUsage(categoryName);
+      
+      if (usage.inUse) {
+        toast({
+          title: 'Categoria em uso',
+          description: `Esta categoria está sendo usada em ${usage.count} transação(ões). Reatribua essas transações antes de deletar.`,
+          variant: 'destructive',
+        });
+        return false;
+      }
+
+      const { error } = await supabase
+        .from('categorias_usuario')
+        .update({ ativo: false })
+        .eq('id', categoryId)
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('Erro ao deletar categoria:', error);
+        toast({
+          title: 'Erro ao deletar categoria',
+          description: error.message,
+          variant: 'destructive',
+        });
+        return false;
+      }
+
+      await loadUserCategories();
+      
+      toast({
+        title: 'Categoria removida',
+        description: `Categoria "${categoryName}" foi removida com sucesso`,
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Erro ao deletar categoria:', error);
+      toast({
+        title: 'Erro ao deletar categoria',
+        description: 'Erro desconhecido',
+        variant: 'destructive',
+      });
+      return false;
+    }
+  }, [user?.id, checkCategoryUsage, loadUserCategories, toast]);
+
+  // Atualização em cascata para todas as transações
+  const updateTransactionCategoriesCascade = useCallback(async (oldCategoryName: string, newCategoryName: string) => {
+    if (!user?.id) return;
+
+    try {
+      // Update categoria_final
+      const { error: error1 } = await supabase
+        .from('transacoes_conciliadas')
+        .update({ categoria_final: newCategoryName })
+        .eq('user_id', user.id)
+        .eq('categoria_final', oldCategoryName);
+
+      // Update categoria_sugerida 
+      const { error: error2 } = await supabase
+        .from('transacoes_conciliadas')
+        .update({ categoria_sugerida: newCategoryName })
+        .eq('user_id', user.id)
+        .eq('categoria_sugerida', oldCategoryName);
+
+      // Update fluxo_caixa
+      const { error: error3 } = await supabase
+        .from('fluxo_caixa')
+        .update({ categoria: newCategoryName })
+        .eq('user_id', user.id)
+        .eq('categoria', oldCategoryName);
+
+      if (error1 || error2 || error3) {
+        console.error('Erro na atualização em cascata:', { error1, error2, error3 });
+      }
+
+      // Reload transactions to reflect changes
+      await loadTransactions(selectedMonth);
+    } catch (error) {
+      console.error('Erro na atualização em cascata:', error);
+    }
+  }, [user?.id, loadTransactions, selectedMonth]);
+
   // Função para alimentar automaticamente o fluxo de caixa
   const alimentarFluxoCaixa = useCallback(async (transacoes: any[]) => {
     if (!user?.id || !transacoes || transacoes.length === 0) return;
@@ -820,6 +1017,9 @@ export function useConciliacao() {
     saveTransactions,
     updateTransactionCategory,
     createUserCategory,
+    updateUserCategory,
+    deleteUserCategory,
+    checkCategoryUsage,
     removeTransactionsByMonth,
     removeAllImportedTransactions
   };
