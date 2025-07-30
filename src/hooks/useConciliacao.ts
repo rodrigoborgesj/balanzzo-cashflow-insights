@@ -438,11 +438,39 @@ export function useConciliacao() {
     if (!user?.id) return false;
 
     try {
+      // Check if category name already exists (case-insensitive)
+      const normalizedName = nome_categoria.trim().toLowerCase();
+      
+      // Get all existing categories for this user
+      const { data: existingCategories, error: fetchError } = await supabase
+        .from('categorias_usuario')
+        .select('nome_categoria')
+        .eq('user_id', user.id)
+        .eq('ativo', true);
+
+      if (fetchError) {
+        throw fetchError;
+      }
+
+      // Check for duplicates (case-insensitive)
+      const isDuplicate = existingCategories?.some(cat => 
+        cat.nome_categoria.toLowerCase() === normalizedName
+      );
+
+      if (isDuplicate) {
+        toast({
+          title: 'Categoria já existe',
+          description: 'Uma categoria com este nome já foi criada.',
+          variant: 'destructive',
+        });
+        return false;
+      }
+
       const { error } = await supabase
         .from('categorias_usuario')
         .insert({
           user_id: user.id,
-          nome_categoria,
+          nome_categoria: nome_categoria.trim(),
           cor,
           ativo: true,
         });

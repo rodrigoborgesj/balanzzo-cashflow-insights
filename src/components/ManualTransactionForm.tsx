@@ -268,6 +268,9 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [] 
                   ))}
                 </SelectContent>
               </Select>
+              <p className="text-xs text-muted-foreground">
+                Para criar novas categorias, acesse <strong>Configurações</strong> → <strong>Categorias Personalizadas</strong>
+              </p>
             </div>
           </div>
 
