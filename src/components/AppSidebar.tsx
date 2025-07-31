@@ -45,10 +45,10 @@ export function AppSidebar() {
   };
 
   const getNavClass = (path: string) => {
-    const baseClass = "w-full justify-start transition-colors";
+    const baseClass = "w-full justify-start transition-colors rounded";
     return isActive(path) 
-      ? `${baseClass} bg-gray-100 text-black font-medium` 
-      : `${baseClass} text-gray-600 hover:text-black hover:bg-gray-50`;
+      ? `${baseClass} bg-[#555B54] text-white font-medium` 
+      : `${baseClass} text-black hover:bg-gray-50`;
   };
 
   const handleLogout = async () => {
@@ -56,7 +56,7 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar className={`${collapsed ? "w-16" : "w-64"} border-r border-gray-200 bg-white`}>
+    <Sidebar className={`${collapsed ? "w-16" : "w-64"} border-r border-gray-200 bg-white`} style={{ fontFamily: 'Montserrat, sans-serif' }}>
       <SidebarContent className="px-3 py-6">
         {/* Main Navigation */}
         <SidebarGroup>
@@ -97,7 +97,7 @@ export function AppSidebar() {
             <SidebarMenuButton asChild>
               <button 
                 onClick={handleLogout}
-                className="w-full justify-start transition-colors text-gray-600 hover:text-black hover:bg-gray-50"
+                className="w-full justify-start transition-colors text-black hover:bg-gray-50 rounded"
               >
                 <LogOut className="h-5 w-5 flex-shrink-0" />
                 {!collapsed && <span className="ml-3">Sair</span>}

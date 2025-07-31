@@ -108,55 +108,11 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex">
-      {/* Left side - Brand section with background rectangle */}
-      <div className="hidden lg:flex flex-col justify-between p-8 relative">
-        {/* Background rectangle */}
-        <div 
-          className="absolute inset-0 m-8 rounded-lg"
-          style={{ 
-            backgroundColor: '#A6C39E',
-            width: '542px',
-            height: '735px'
-          }}
-        >
-          {/* Hero image centered */}
-          <div className="flex items-center justify-center h-2/3">
-            <img 
-              src={financialHero} 
-              alt="Financial Management" 
-              className="max-w-md w-full h-auto object-contain"
-            />
-          </div>
-          
-          {/* Text at bottom */}
-          <div className="absolute bottom-16 left-0 right-0 px-12 text-center">
-            <h2 
-              className="text-white mb-4"
-              style={{ 
-                fontFamily: 'Montserrat, sans-serif',
-                fontWeight: '600',
-                fontSize: '18px'
-              }}
-            >
-              Transformamos números em clareza
-            </h2>
-            <p 
-              className="text-white"
-              style={{ 
-                fontFamily: 'Montserrat, sans-serif',
-                fontWeight: '500',
-                fontSize: '12px'
-              }}
-            >
-              Gestão financeira sem planilhas complicadas, com simplicidade que funciona
-            </p>
-          </div>
-        </div>
-        
-        {/* Balanzzo title positioned at top-left */}
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Balanzzo title at top-left */}
+      <div className="p-8">
         <h1 
-          className="absolute top-8 left-8 z-10 text-foreground"
+          className="text-foreground"
           style={{ 
             fontFamily: 'Montserrat, sans-serif',
             fontWeight: '700',
@@ -167,38 +123,9 @@ export default function Login() {
         </h1>
       </div>
 
-      {/* Right side - Login form */}
+      {/* Centered login form */}
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-md space-y-6">
-          {/* Mobile header */}
-          <div className="lg:hidden text-center space-y-2">
-            <h1 
-              className="text-foreground"
-              style={{ 
-                fontFamily: 'Montserrat, sans-serif',
-                fontWeight: '700',
-                fontSize: '22px'
-              }}
-            >
-              Balanzzo
-            </h1>
-            <h2 className="text-xl font-semibold text-foreground">
-              Entre na sua conta
-            </h2>
-            <p className="text-muted-foreground">
-              Gerencie suas finanças de forma inteligente
-            </p>
-          </div>
-
-          {/* Desktop header */}
-          <div className="hidden lg:block text-left space-y-2">
-            <h2 className="text-xl font-semibold text-foreground">
-              Entre na sua conta
-            </h2>
-            <p className="text-muted-foreground">
-              Gerencie suas finanças de forma inteligente
-            </p>
-          </div>
 
           {/* Form */}
           <Card className="bg-card/80 backdrop-blur-sm border-border/50 shadow-lg">
