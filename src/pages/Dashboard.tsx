@@ -5,7 +5,8 @@ import {
   DollarSign, 
   TrendingUp, 
   TrendingDown, 
-  Activity
+  Activity,
+  Calendar
 } from "lucide-react";
 import { 
   ResponsiveContainer, 
@@ -16,7 +17,8 @@ import {
   Pie, 
   Cell,
   BarChart,
-  Bar
+  Bar,
+  Legend
 } from "recharts";
 
 import { useNavigate } from "react-router-dom";
@@ -90,7 +92,7 @@ export default function Dashboard() {
   // Color palette as specified
   const chartColors = {
     primary: '#1A3423',
-    secondary: '#A6C39E', 
+    secondary: '#4F5D4B', 
     neutral: '#E9E9E9'
   };
 
@@ -117,8 +119,31 @@ export default function Dashboard() {
 
   return (
     <div className="p-6 space-y-8 min-h-full" style={{ backgroundColor: '#E4F8CA', fontFamily: 'Montserrat, sans-serif' }}>
+      {/* Month Selector Button */}
+      <div className="flex justify-end mb-4">
+        <Button
+          variant="outline"
+          className="bg-transparent border border-gray-300 text-black hover:bg-gray-50"
+          style={{
+            borderRadius: '20px',
+            fontFamily: 'Montserrat, sans-serif',
+            fontWeight: '500'
+          }}
+          onClick={() => {
+            const monthInput = document.createElement('input');
+            monthInput.type = 'month';
+            monthInput.value = selectedMonth;
+            monthInput.onchange = (e) => setSelectedMonth((e.target as HTMLInputElement).value);
+            monthInput.click();
+          }}
+        >
+          <Calendar className="w-4 h-4 mr-2" />
+          {new Date(selectedMonth + '-01').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+        </Button>
+      </div>
+
       {/* Header Section with Greeting and Chart */}
-      <div className="flex flex-col lg:flex-row justify-between items-start gap-8">
+      <div className="flex flex-col lg:flex-row justify-between items-start gap-12">
         {/* Left - Greeting and Revenue Growth */}
         <div className="flex-1">
           <h1 
@@ -131,11 +156,11 @@ export default function Dashboard() {
           >
             Olá, {companyName}
           </h1>
-          <div className="flex items-baseline gap-2">
+          <div className="flex flex-col gap-1">
             <span 
               style={{ 
                 fontFamily: 'Montserrat, sans-serif',
-                fontWeight: '300',
+                fontWeight: '400',
                 fontSize: '16px',
                 color: 'black'
               }}
@@ -146,8 +171,9 @@ export default function Dashboard() {
               style={{ 
                 fontFamily: 'Montserrat, sans-serif',
                 fontWeight: '700',
-                fontSize: '24px',
-                color: 'black'
+                fontSize: '55px',
+                color: 'black',
+                lineHeight: '1'
               }}
             >
               {revenueGrowth.toFixed(1)}%
@@ -156,7 +182,7 @@ export default function Dashboard() {
               style={{ 
                 fontFamily: 'Montserrat, sans-serif',
                 fontWeight: '300',
-                fontSize: '16px',
+                fontSize: '14px',
                 color: 'black'
               }}
             >
@@ -428,26 +454,22 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={categorySummary.map((cat, index) => ({
-                    ...cat,
-                    fill: index % 2 === 0 ? chartColors.primary : chartColors.secondary
-                  }))}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
-                  paddingAngle={5}
-                  dataKey="valor"
-                >
-                  {categorySummary.map((entry, index) => (
-                    <Cell 
-                      key={`cell-${index}`} 
-                      fill={index % 2 === 0 ? chartColors.primary : chartColors.secondary} 
-                    />
-                  ))}
-                </Pie>
+              <BarChart
+                data={categorySummary.map((cat, index) => ({
+                  ...cat,
+                  fill: index % 3 === 0 ? chartColors.primary : index % 3 === 1 ? chartColors.secondary : chartColors.neutral
+                }))}
+                layout="horizontal"
+                margin={{ top: 5, right: 30, left: 80, bottom: 5 }}
+              >
+                <XAxis type="number" hide />
+                <YAxis 
+                  type="category" 
+                  dataKey="categoria" 
+                  axisLine={false}
+                  tickLine={false}
+                  style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '12px' }}
+                />
                 <Tooltip 
                   formatter={(value: number) => [formatCurrency(value), "Valor"]}
                   contentStyle={{ 
@@ -458,7 +480,18 @@ export default function Dashboard() {
                     boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
                   }}
                 />
-              </PieChart>
+                <Bar 
+                  dataKey="valor" 
+                  radius={[0, 4, 4, 0]}
+                >
+                  {categorySummary.map((entry, index) => (
+                    <Cell 
+                      key={`cell-${index}`} 
+                      fill={index % 3 === 0 ? chartColors.primary : index % 3 === 1 ? chartColors.secondary : chartColors.neutral} 
+                    />
+                  ))}
+                </Bar>
+              </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
@@ -500,6 +533,13 @@ export default function Dashboard() {
                     border: 'none',
                     borderRadius: '4px',
                     boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                  }}
+                />
+                <Legend 
+                  wrapperStyle={{ 
+                    fontFamily: 'Montserrat, sans-serif',
+                    fontSize: '12px',
+                    paddingTop: '10px'
                   }}
                 />
               </PieChart>
