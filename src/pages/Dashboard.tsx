@@ -22,37 +22,26 @@ import {
 } from "recharts";
 
 import { useNavigate } from "react-router-dom";
-import { useCashFlowIntegration } from "@/hooks/useCashFlowIntegration";
-import { useState, useEffect } from "react";
+import { useDashboard } from "@/hooks/useDashboard";
 import { useProfile } from "@/hooks/useProfile";
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const [selectedMonth, setSelectedMonth] = useState<string>(new Date().toISOString().slice(0, 7));
   const { profile } = useProfile();
   
-  // Usar dados do fluxo de caixa integrado
+  // Use the dedicated dashboard hook for comprehensive month-based data
   const { 
-    summary, 
-    categorySummary, 
-    chartData, 
+    selectedMonth,
+    setSelectedMonth,
     isLoading, 
-    hasData 
-  } = useCashFlowIntegration(selectedMonth);
-
-  // Calculate revenue growth percentage
-  const [revenueGrowth, setRevenueGrowth] = useState<number>(0);
-  
-  useEffect(() => {
-    // Calculate previous month's data for comparison
-    const currentDate = new Date();
-    const previousMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
-    const prevMonthStr = previousMonth.toISOString().slice(0, 7);
-    
-    // This would ideally come from a comparison with previous month data
-    // For now, we'll simulate a growth percentage
-    setRevenueGrowth(12.5); // This should be calculated from actual data
-  }, [selectedMonth]);
+    hasData,
+    currentMonthData,
+    expenseChartData,
+    incomeChartData,
+    monthlyChartData,
+    kpiData,
+    formatCurrency
+  } = useDashboard();
 
   if (isLoading) {
     return (
@@ -82,13 +71,6 @@ export default function Dashboard() {
     );
   }
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(value);
-  };
-
   // Color palette as specified
   const chartColors = {
     primary: '#1A3423',
@@ -108,9 +90,9 @@ export default function Dashboard() {
 
   const insights = generateInsights();
 
-  // Prepare chart data for the monthly bar chart
-  const monthlyBarData = chartData.slice(-6).map(item => ({
-    month: item.data,
+  // Prepare chart data for the monthly bar chart from useDashboard hook
+  const monthlyBarData = monthlyChartData.slice(-6).map(item => ({
+    month: item.mes,
     revenue: item.entradas
   }));
 
@@ -176,7 +158,7 @@ export default function Dashboard() {
                 lineHeight: '1'
               }}
             >
-              {revenueGrowth.toFixed(1)}%
+              {kpiData.variacaoEntradas.toFixed(1)}%
             </span>
             <span 
               style={{ 
@@ -344,7 +326,7 @@ export default function Dashboard() {
                 color: 'black'
               }}
             >
-              {formatCurrency(summary.totalEntradas)}
+              {formatCurrency(kpiData.totalEntradas)}
             </p>
           </CardContent>
         </Card>
@@ -373,7 +355,7 @@ export default function Dashboard() {
                 color: 'black'
               }}
             >
-              {formatCurrency(summary.totalSaidas)}
+              {formatCurrency(kpiData.totalSaidas)}
             </p>
           </CardContent>
         </Card>
@@ -399,10 +381,10 @@ export default function Dashboard() {
                 fontFamily: 'Montserrat, sans-serif',
                 fontWeight: '700',
                 fontSize: '24px',
-                color: summary.saldoLiquido >= 0 ? 'black' : '#dc2626'
+                color: kpiData.saldoLiquido >= 0 ? 'black' : '#dc2626'
               }}
             >
-              {formatCurrency(summary.saldoLiquido)}
+              {formatCurrency(kpiData.saldoLiquido)}
             </p>
           </CardContent>
         </Card>
@@ -431,7 +413,7 @@ export default function Dashboard() {
                 color: 'white'
               }}
             >
-              {summary.transacoesCount}
+              {('dados_brutos' in currentMonthData && currentMonthData.dados_brutos ? currentMonthData.dados_brutos.length : 0)}
             </p>
           </CardContent>
         </Card>
@@ -455,11 +437,12 @@ export default function Dashboard() {
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart
-                data={categorySummary
-                  .sort((a, b) => b.valor - a.valor)
+                data={expenseChartData
+                  .sort((a, b) => b.value - a.value)
                   .slice(0, 5)
                   .map((cat, index) => ({
-                    ...cat,
+                    categoria: cat.name,
+                    valor: cat.value,
                     fill: index % 3 === 0 ? chartColors.primary : index % 3 === 1 ? chartColors.secondary : chartColors.neutral
                   }))}
                 layout="horizontal"
@@ -487,7 +470,7 @@ export default function Dashboard() {
                   dataKey="valor" 
                   radius={[0, 4, 4, 0]}
                 >
-                  {categorySummary.slice(0, 5).map((entry, index) => (
+                  {expenseChartData.slice(0, 5).map((entry, index) => (
                     <Cell 
                       key={`cell-${index}`} 
                       fill={index % 3 === 0 ? chartColors.primary : index % 3 === 1 ? chartColors.secondary : chartColors.neutral} 
@@ -516,10 +499,10 @@ export default function Dashboard() {
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
-                  data={[
-                    { name: "Vendas de Serviços", value: summary.totalEntradas * 0.7, fill: chartColors.primary },
-                    { name: "Consultoria", value: summary.totalEntradas * 0.2, fill: chartColors.secondary },
-                    { name: "Outros", value: summary.totalEntradas * 0.1, fill: chartColors.neutral }
+                  data={incomeChartData.length > 0 ? incomeChartData : [
+                    { name: "Vendas de Serviços", value: kpiData.totalEntradas * 0.7, fill: chartColors.primary },
+                    { name: "Consultoria", value: kpiData.totalEntradas * 0.2, fill: chartColors.secondary },
+                    { name: "Outros", value: kpiData.totalEntradas * 0.1, fill: chartColors.neutral }
                   ]}
                   cx="50%"
                   cy="50%"
