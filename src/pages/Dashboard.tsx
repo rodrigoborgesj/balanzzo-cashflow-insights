@@ -439,7 +439,7 @@ export default function Dashboard() {
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Expense Breakdown */}
+        {/* Expense Breakdown - Top 5 Categories */}
         <Card className="bg-white border border-gray-200 shadow-sm">
           <CardHeader>
             <CardTitle 
@@ -449,16 +449,19 @@ export default function Dashboard() {
                 color: 'black'
               }}
             >
-              Despesas por Categoria
+              Top 5 Despesas por Categoria
             </CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart
-                data={categorySummary.map((cat, index) => ({
-                  ...cat,
-                  fill: index % 3 === 0 ? chartColors.primary : index % 3 === 1 ? chartColors.secondary : chartColors.neutral
-                }))}
+                data={categorySummary
+                  .sort((a, b) => b.valor - a.valor)
+                  .slice(0, 5)
+                  .map((cat, index) => ({
+                    ...cat,
+                    fill: index % 3 === 0 ? chartColors.primary : index % 3 === 1 ? chartColors.secondary : chartColors.neutral
+                  }))}
                 layout="horizontal"
                 margin={{ top: 5, right: 30, left: 80, bottom: 5 }}
               >
@@ -484,7 +487,7 @@ export default function Dashboard() {
                   dataKey="valor" 
                   radius={[0, 4, 4, 0]}
                 >
-                  {categorySummary.map((entry, index) => (
+                  {categorySummary.slice(0, 5).map((entry, index) => (
                     <Cell 
                       key={`cell-${index}`} 
                       fill={index % 3 === 0 ? chartColors.primary : index % 3 === 1 ? chartColors.secondary : chartColors.neutral} 
