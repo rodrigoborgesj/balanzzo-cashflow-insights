@@ -46,6 +46,29 @@ export default function Dashboard() {
   if (isLoading) {
     return (
       <div className="p-6 space-y-6 min-h-full" style={{ backgroundColor: '#E4F8CA' }}>
+        {/* Month Selector - Always visible */}
+        <div className="flex justify-end mb-4">
+          <Button
+            variant="outline"
+            className="bg-transparent border border-gray-300 text-black hover:bg-gray-50"
+            style={{
+              borderRadius: '20px',
+              fontFamily: 'Montserrat, sans-serif',
+              fontWeight: '500'
+            }}
+            onClick={() => {
+              const monthInput = document.createElement('input');
+              monthInput.type = 'month';
+              monthInput.value = selectedMonth;
+              monthInput.onchange = (e) => setSelectedMonth((e.target as HTMLInputElement).value);
+              monthInput.click();
+            }}
+          >
+            <Calendar className="w-4 h-4 mr-2" />
+            {new Date(selectedMonth + '-01').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+          </Button>
+        </div>
+        
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1A3423]"></div>
         </div>
@@ -53,9 +76,42 @@ export default function Dashboard() {
     );
   }
 
+  // Check if current selected month has data
+  const currentMonthHasData = kpiData.totalEntradas > 0 || kpiData.totalSaidas > 0;
+  
+  // Year overview data for when no month data exists
+  const yearOverviewData = monthlyChartData.map(item => ({
+    month: item.mes,
+    revenue: item.entradas,
+    expenses: item.saidas
+  }));
+
   if (!hasData) {
     return (
       <div className="p-6 space-y-6 min-h-full" style={{ backgroundColor: '#E4F8CA' }}>
+        {/* Month Selector - Always visible */}
+        <div className="flex justify-end mb-4">
+          <Button
+            variant="outline"
+            className="bg-transparent border border-gray-300 text-black hover:bg-gray-50"
+            style={{
+              borderRadius: '20px',
+              fontFamily: 'Montserrat, sans-serif',
+              fontWeight: '500'
+            }}
+            onClick={() => {
+              const monthInput = document.createElement('input');
+              monthInput.type = 'month';
+              monthInput.value = selectedMonth;
+              monthInput.onchange = (e) => setSelectedMonth((e.target as HTMLInputElement).value);
+              monthInput.click();
+            }}
+          >
+            <Calendar className="w-4 h-4 mr-2" />
+            {new Date(selectedMonth + '-01').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+          </Button>
+        </div>
+        
         <div className="text-center py-12">
           <h2 className="text-2xl font-bold text-gray-600 mb-4" style={{ fontFamily: 'Montserrat, sans-serif' }}>
             Nenhum dado financeiro encontrado
@@ -98,6 +154,204 @@ export default function Dashboard() {
 
   // Company name from profile or default  
   const companyName = profile?.full_name || "Empresa";
+
+  // If selected month has no data, show year overview
+  if (!currentMonthHasData && hasData) {
+    return (
+      <div className="p-6 space-y-8 min-h-full" style={{ backgroundColor: '#E4F8CA', fontFamily: 'Montserrat, sans-serif' }}>
+        {/* Month Selector - Always visible */}
+        <div className="flex justify-end mb-4">
+          <Button
+            variant="outline"
+            className="bg-transparent border border-gray-300 text-black hover:bg-gray-50"
+            style={{
+              borderRadius: '20px',
+              fontFamily: 'Montserrat, sans-serif',
+              fontWeight: '500'
+            }}
+            onClick={() => {
+              const monthInput = document.createElement('input');
+              monthInput.type = 'month';
+              monthInput.value = selectedMonth;
+              monthInput.onchange = (e) => setSelectedMonth((e.target as HTMLInputElement).value);
+              monthInput.click();
+            }}
+          >
+            <Calendar className="w-4 h-4 mr-2" />
+            {new Date(selectedMonth + '-01').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+          </Button>
+        </div>
+
+        {/* No Data Message */}
+        <div className="text-center mb-8">
+          <p 
+            className="text-gray-600"
+            style={{ 
+              fontFamily: 'Montserrat, sans-serif',
+              fontWeight: '500',
+              fontSize: '16px'
+            }}
+          >
+            Nenhum dado financeiro disponível para {new Date(selectedMonth + '-01').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}. Exibindo visão geral do ano para contexto.
+          </p>
+        </div>
+
+        {/* Year Overview Chart */}
+        <Card className="bg-white border border-gray-200 shadow-sm">
+          <CardHeader>
+            <CardTitle 
+              style={{ 
+                fontFamily: 'Montserrat, sans-serif',
+                fontWeight: '600',
+                color: 'black'
+              }}
+            >
+              Visão Geral do Ano - Receitas e Despesas
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={400}>
+              <BarChart data={yearOverviewData}>
+                <XAxis 
+                  dataKey="month" 
+                  axisLine={false}
+                  tickLine={false}
+                  style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '10px' }}
+                />
+                <YAxis 
+                  axisLine={false}
+                  tickLine={false}
+                  style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '10px' }}
+                />
+                <Tooltip 
+                  formatter={(value: number, name: string) => [
+                    formatCurrency(value), 
+                    name === 'revenue' ? 'Receitas' : 'Despesas'
+                  ]}
+                  contentStyle={{ 
+                    fontFamily: 'Montserrat, sans-serif',
+                    backgroundColor: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                  }}
+                />
+                <Bar 
+                  dataKey="revenue" 
+                  fill={chartColors.primary}
+                  radius={[4, 4, 0, 0]}
+                  name="revenue"
+                />
+                <Bar 
+                  dataKey="expenses" 
+                  fill={chartColors.secondary}
+                  radius={[4, 4, 0, 0]}
+                  name="expenses"
+                />
+                <Legend 
+                  wrapperStyle={{ 
+                    fontFamily: 'Montserrat, sans-serif',
+                    fontSize: '10px',
+                    paddingTop: '10px'
+                  }}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        {/* Summary Cards for Year Overview */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Card className="bg-transparent border border-gray-300" style={{ borderRadius: '20px' }}>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-2">
+                <h3 
+                  style={{ 
+                    fontFamily: 'Montserrat, sans-serif',
+                    fontWeight: '600',
+                    fontSize: '14px',
+                    color: 'black'
+                  }}
+                >
+                  Total Receitas (Ano)
+                </h3>
+                <TrendingUp className="h-5 w-5" style={{ color: chartColors.primary }} />
+              </div>
+              <p 
+                style={{ 
+                  fontFamily: 'Montserrat, sans-serif',
+                  fontWeight: '700',
+                  fontSize: '24px',
+                  color: 'black'
+                }}
+              >
+                {formatCurrency(yearOverviewData.reduce((sum, item) => sum + item.revenue, 0))}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-transparent border border-gray-300" style={{ borderRadius: '20px' }}>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-2">
+                <h3 
+                  style={{ 
+                    fontFamily: 'Montserrat, sans-serif',
+                    fontWeight: '600',
+                    fontSize: '14px',
+                    color: 'black'
+                  }}
+                >
+                  Total Despesas (Ano)
+                </h3>
+                <TrendingDown className="h-5 w-5" style={{ color: chartColors.primary }} />
+              </div>
+              <p 
+                style={{ 
+                  fontFamily: 'Montserrat, sans-serif',
+                  fontWeight: '700',
+                  fontSize: '24px',
+                  color: 'black'
+                }}
+              >
+                {formatCurrency(yearOverviewData.reduce((sum, item) => sum + item.expenses, 0))}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card style={{ backgroundColor: '#1A3423', borderRadius: '20px' }} className="border-0">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-2">
+                <h3 
+                  style={{ 
+                    fontFamily: 'Montserrat, sans-serif',
+                    fontWeight: '600',
+                    fontSize: '14px',
+                    color: 'white'
+                  }}
+                >
+                  Saldo Líquido (Ano)
+                </h3>
+                <Activity className="h-5 w-5 text-white" />
+              </div>
+              <p 
+                style={{ 
+                  fontFamily: 'Montserrat, sans-serif',
+                  fontWeight: '700',
+                  fontSize: '24px',
+                  color: 'white'
+                }}
+              >
+                {formatCurrency(
+                  yearOverviewData.reduce((sum, item) => sum + item.revenue, 0) - 
+                  yearOverviewData.reduce((sum, item) => sum + item.expenses, 0)
+                )}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-8 min-h-full" style={{ backgroundColor: '#E4F8CA', fontFamily: 'Montserrat, sans-serif' }}>
