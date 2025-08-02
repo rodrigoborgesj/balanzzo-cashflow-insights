@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
@@ -6,8 +5,15 @@ import {
   TrendingUp, 
   TrendingDown, 
   Activity,
-  Calendar
+  Calendar,
+  ChevronDown
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { 
   ResponsiveContainer, 
   XAxis, 
@@ -43,11 +49,23 @@ export default function Dashboard() {
     formatCurrency
   } = useDashboard();
 
-  if (isLoading) {
-    return (
-      <div className="p-6 space-y-6 min-h-full" style={{ backgroundColor: '#E4F8CA' }}>
-        {/* Month Selector - Always visible */}
-        <div className="flex justify-end mb-4">
+  // Generate months for dropdown
+  const currentDate = new Date();
+  const currentYear = currentDate.getFullYear();
+  const months = Array.from({ length: 12 }, (_, i) => {
+    const monthDate = new Date(currentYear, i, 1);
+    const monthValue = `${currentYear}-${String(i + 1).padStart(2, '0')}`;
+    return {
+      value: monthValue,
+      label: monthDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+    };
+  });
+
+  // Month Selector Component
+  const MonthSelector = () => (
+    <div className="flex justify-end mb-4">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
           <Button
             variant="outline"
             className="bg-transparent border border-gray-300 text-black hover:bg-gray-50"
@@ -56,18 +74,38 @@ export default function Dashboard() {
               fontFamily: 'Montserrat, sans-serif',
               fontWeight: '500'
             }}
-            onClick={() => {
-              const monthInput = document.createElement('input');
-              monthInput.type = 'month';
-              monthInput.value = selectedMonth;
-              monthInput.onchange = (e) => setSelectedMonth((e.target as HTMLInputElement).value);
-              monthInput.click();
-            }}
           >
             <Calendar className="w-4 h-4 mr-2" />
             {new Date(selectedMonth + '-01').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+            <ChevronDown className="w-4 h-4 ml-2" />
           </Button>
-        </div>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent 
+          align="end" 
+          className="w-56 bg-white border border-gray-300 shadow-lg rounded-lg z-50"
+          style={{ fontFamily: 'Montserrat, sans-serif' }}
+        >
+          {months.map((month) => (
+            <DropdownMenuItem
+              key={month.value}
+              onClick={() => setSelectedMonth(month.value)}
+              className={`px-3 py-2 text-sm cursor-pointer hover:bg-gray-50 ${
+                selectedMonth === month.value ? 'bg-gray-100 font-semibold' : ''
+              }`}
+              style={{ fontFamily: 'Montserrat, sans-serif' }}
+            >
+              {month.label}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+
+  if (isLoading) {
+    return (
+      <div className="p-6 space-y-6 min-h-full" style={{ backgroundColor: '#E4F8CA' }}>
+        <MonthSelector />
         
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1A3423]"></div>
@@ -89,28 +127,7 @@ export default function Dashboard() {
   if (!hasData) {
     return (
       <div className="p-6 space-y-6 min-h-full" style={{ backgroundColor: '#E4F8CA' }}>
-        {/* Month Selector - Always visible */}
-        <div className="flex justify-end mb-4">
-          <Button
-            variant="outline"
-            className="bg-transparent border border-gray-300 text-black hover:bg-gray-50"
-            style={{
-              borderRadius: '20px',
-              fontFamily: 'Montserrat, sans-serif',
-              fontWeight: '500'
-            }}
-            onClick={() => {
-              const monthInput = document.createElement('input');
-              monthInput.type = 'month';
-              monthInput.value = selectedMonth;
-              monthInput.onchange = (e) => setSelectedMonth((e.target as HTMLInputElement).value);
-              monthInput.click();
-            }}
-          >
-            <Calendar className="w-4 h-4 mr-2" />
-            {new Date(selectedMonth + '-01').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
-          </Button>
-        </div>
+        <MonthSelector />
         
         <div className="text-center py-12">
           <h2 className="text-2xl font-bold text-gray-600 mb-4" style={{ fontFamily: 'Montserrat, sans-serif' }}>
@@ -159,28 +176,7 @@ export default function Dashboard() {
   if (!currentMonthHasData && hasData) {
     return (
       <div className="p-6 space-y-8 min-h-full" style={{ backgroundColor: '#E4F8CA', fontFamily: 'Montserrat, sans-serif' }}>
-        {/* Month Selector - Always visible */}
-        <div className="flex justify-end mb-4">
-          <Button
-            variant="outline"
-            className="bg-transparent border border-gray-300 text-black hover:bg-gray-50"
-            style={{
-              borderRadius: '20px',
-              fontFamily: 'Montserrat, sans-serif',
-              fontWeight: '500'
-            }}
-            onClick={() => {
-              const monthInput = document.createElement('input');
-              monthInput.type = 'month';
-              monthInput.value = selectedMonth;
-              monthInput.onchange = (e) => setSelectedMonth((e.target as HTMLInputElement).value);
-              monthInput.click();
-            }}
-          >
-            <Calendar className="w-4 h-4 mr-2" />
-            {new Date(selectedMonth + '-01').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
-          </Button>
-        </div>
+        <MonthSelector />
 
         {/* No Data Message */}
         <div className="text-center mb-8">
@@ -355,28 +351,7 @@ export default function Dashboard() {
 
   return (
     <div className="p-6 space-y-8 min-h-full" style={{ backgroundColor: '#E4F8CA', fontFamily: 'Montserrat, sans-serif' }}>
-      {/* Month Selector Button */}
-      <div className="flex justify-end mb-4">
-        <Button
-          variant="outline"
-          className="bg-transparent border border-gray-300 text-black hover:bg-gray-50"
-          style={{
-            borderRadius: '20px',
-            fontFamily: 'Montserrat, sans-serif',
-            fontWeight: '500'
-          }}
-          onClick={() => {
-            const monthInput = document.createElement('input');
-            monthInput.type = 'month';
-            monthInput.value = selectedMonth;
-            monthInput.onchange = (e) => setSelectedMonth((e.target as HTMLInputElement).value);
-            monthInput.click();
-          }}
-        >
-          <Calendar className="w-4 h-4 mr-2" />
-          {new Date(selectedMonth + '-01').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
-        </Button>
-      </div>
+      <MonthSelector />
 
       {/* Header Section with Greeting and Chart */}
       <div className="flex flex-col lg:flex-row justify-between items-start gap-12">
