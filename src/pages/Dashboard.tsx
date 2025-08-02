@@ -49,9 +49,9 @@ export default function Dashboard() {
     formatCurrency
   } = useDashboard();
 
-  // Generate months for dropdown
-  const currentDate = new Date();
-  const currentYear = currentDate.getFullYear();
+  // Generate months for dropdown - avoid variable conflicts
+  const today = new Date();
+  const currentYear = today.getFullYear();
   const months = Array.from({ length: 12 }, (_, i) => {
     const monthDate = new Date(currentYear, i, 1);
     const monthValue = `${currentYear}-${String(i + 1).padStart(2, '0')}`;
