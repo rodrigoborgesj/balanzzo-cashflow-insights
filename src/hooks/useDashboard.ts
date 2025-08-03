@@ -60,12 +60,109 @@ export function useDashboard() {
     }));
   };
 
+  // Função para calcular dados do dashboard a partir das transações conciliadas
+  const calculateDashboardFromTransactions = async (monthFilter?: string): Promise<PainelMensal[]> => {
+    if (!user?.id) return [];
+
+    try {
+      let query = supabase
+        .from('transacoes_conciliadas')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('status_conciliacao', true);
+
+      // Filter by month if specified
+      if (monthFilter) {
+        const [year, month] = monthFilter.split('-').map(Number);
+        // Create date range for the specific month
+        const startDate = `${year}-${month.toString().padStart(2, '0')}-01`;
+        const endDate = `${year}-${month.toString().padStart(2, '0')}-31`;
+        query = query.gte('data_transacao', startDate).lte('data_transacao', endDate);
+      } else {
+        // Get last 12 months of data
+        const currentDate = new Date();
+        const twelveMonthsAgo = new Date(currentDate.getFullYear(), currentDate.getMonth() - 11, 1);
+        const startDate = twelveMonthsAgo.toISOString().split('T')[0];
+        query = query.gte('data_transacao', startDate);
+      }
+
+      const { data: transactions, error } = await query.order('data_transacao', { ascending: true });
+
+      if (error) {
+        console.error('Erro ao buscar transações:', error);
+        return [];
+      }
+
+      if (!transactions || transactions.length === 0) {
+        return [];
+      }
+
+      // Group transactions by month/year
+      const monthlyData = new Map<string, any>();
+
+      transactions.forEach(transaction => {
+        const transactionDate = new Date(transaction.data_transacao);
+        const year = transactionDate.getFullYear();
+        const month = transactionDate.getMonth() + 1; // JavaScript months are 0-indexed
+        const key = `${year}-${month}`;
+
+        if (!monthlyData.has(key)) {
+          monthlyData.set(key, {
+            ano: year,
+            mes: month,
+            total_entradas: 0,
+            total_saidas: 0,
+            categoria_gastos: {},
+            categoria_receitas: {},
+            dados_brutos: [],
+            insights: { insights: [], gerado_em: new Date().toISOString() }
+          });
+        }
+
+        const monthData = monthlyData.get(key);
+        const valor = Math.abs(Number(transaction.valor));
+        const categoria = transaction.categoria_final || transaction.categoria_sugerida || 'Outros';
+
+        monthData.dados_brutos.push(transaction);
+
+        if (transaction.tipo === 'entrada') {
+          monthData.total_entradas += valor;
+          monthData.categoria_receitas[categoria] = (monthData.categoria_receitas[categoria] || 0) + valor;
+        } else {
+          monthData.total_saidas += valor;
+          monthData.categoria_gastos[categoria] = (monthData.categoria_gastos[categoria] || 0) + valor;
+        }
+      });
+
+      // Convert to PainelMensal format
+      return Array.from(monthlyData.values()).map((data, index) => ({
+        id: `calculated-${data.ano}-${data.mes}`,
+        usuario_id: user.id,
+        ano: data.ano,
+        mes: data.mes,
+        total_entradas: data.total_entradas,
+        total_saidas: data.total_saidas,
+        categoria_gastos: data.categoria_gastos,
+        categoria_receitas: data.categoria_receitas,
+        dados_brutos: data.dados_brutos,
+        insights: data.insights,
+        criado_em: new Date().toISOString(),
+        atualizado_em: new Date().toISOString()
+      }));
+
+    } catch (error) {
+      console.error('Erro ao calcular dados do dashboard:', error);
+      return [];
+    }
+  };
+
   // Carregar dados do painel mensal
   const loadDashboardData = useCallback(async (monthFilter?: string) => {
     if (!user?.id) return;
 
     setIsLoading(true);
     try {
+      // First try to get data from painel_mensal
       let query = supabase
         .from('painel_mensal')
         .select('*')
@@ -92,8 +189,16 @@ export function useDashboard() {
         return;
       }
 
-      const convertedData = convertPainelData(data || []);
-      setPainelData(convertedData);
+      // If painel_mensal has data, use it
+      if (data && data.length > 0) {
+        const convertedData = convertPainelData(data);
+        setPainelData(convertedData);
+      } else {
+        // Fallback: calculate from transacoes_conciliadas
+        console.log('Painel mensal vazio, calculando a partir das transações...');
+        const calculatedData = await calculateDashboardFromTransactions(monthFilter);
+        setPainelData(calculatedData);
+      }
     } catch (error) {
       console.error('Erro ao carregar dados do dashboard:', error);
     } finally {
@@ -220,6 +325,13 @@ export function useDashboard() {
       loadDashboardData();
     }
   }, [user?.id, loadDashboardData]);
+
+  // Effect para recarregar dados quando o mês selecionado muda
+  useEffect(() => {
+    if (user?.id && selectedMonth) {
+      loadDashboardData(selectedMonth);
+    }
+  }, [selectedMonth, user?.id, loadDashboardData]);
 
   return {
     painelData,
