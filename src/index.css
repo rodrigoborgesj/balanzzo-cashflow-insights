@@ -8,55 +8,76 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Balanzzo Brand Colors - Professional Financial Theme */
-    --background: 43 37% 89%; /* #dad0bc - warm cream */
-    --foreground: 48 11% 7%; /* #100f0b - deep charcoal */
+    /* Modern Financial SaaS Theme - Enhanced Colors */
+    --background: 210 20% 98%; /* Clean light background */
+    --foreground: 222 84% 5%; /* Deep professional navy */
 
     --card: 0 0% 100%; /* Pure white for cards */
-    --card-foreground: 48 11% 7%; /* #100f0b */
+    --card-foreground: 222 84% 5%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 48 11% 7%;
+    --popover-foreground: 222 84% 5%;
 
-    --primary: 48 11% 7%; /* #100f0b - main brand dark */
-    --primary-foreground: 43 37% 89%; /* #dad0bc - cream text on dark */
+    /* Primary: Professional Navy */
+    --primary: 142 76% 12%; /* #1A3423 - Deep forest green */
+    --primary-foreground: 0 0% 100%;
+    --primary-light: 142 40% 25%; /* Lighter variant */
+    --primary-glow: 142 76% 25%; /* Glowing variant */
 
-    --secondary: 91 15% 70%; /* #a6c39e - sage green */
-    --secondary-foreground: 48 11% 7%;
+    /* Secondary: Modern Purple */
+    --secondary: 262 83% 20%; /* Deep purple */
+    --secondary-foreground: 0 0% 100%;
+    --secondary-light: 262 50% 50%;
+    --secondary-glow: 262 83% 40%;
 
-    --muted: 43 37% 89%; /* #dad0bc - cream */
-    --muted-foreground: 60 4% 37%; /* #5f5f57 - muted brown */
+    /* Success: Vibrant Green */
+    --success: 142 70% 45%; /* Vibrant green */
+    --success-foreground: 0 0% 100%;
+    --success-light: 142 50% 70%;
 
-    --accent: 91 15% 70%; /* #a6c39e - sage accent */
-    --accent-foreground: 48 11% 7%;
+    /* Accent: Sage Green */
+    --accent: 142 30% 55%; /* #4F5D4B - Sage green */
+    --accent-foreground: 0 0% 100%;
 
-    --success: 91 15% 70%; /* #a6c39e - sage for positive values */
-    --success-foreground: 48 11% 7%;
+    --muted: 210 20% 96%;
+    --muted-foreground: 215 16% 47%;
 
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 43 37% 80%; /* Lighter version of cream */
-    --input: 43 37% 85%; /* Input background */
-    --ring: 91 15% 70%; /* #a6c39e for focus rings */
+    --border: 214 32% 91%;
+    --input: 214 32% 95%;
+    --ring: 142 76% 12%;
 
-    /* Financial Dashboard Specific */
-    --revenue: 91 15% 70%; /* #a6c39e - positive green */
+    /* Dashboard Specific Colors */
+    --revenue: 142 70% 45%; /* Success green for revenue */
     --expense: 0 84% 60%; /* Red for expenses */
-    --neutral: 60 4% 37%; /* #5f5f57 - neutral brown */
+    --neutral: 220 14% 85%; /* Light neutral */
+    --chart-1: 142 76% 12%; /* Primary */
+    --chart-2: 262 83% 20%; /* Purple */
+    --chart-3: 142 30% 55%; /* Sage */
+    --chart-4: 38 92% 50%; /* Orange */
+    --chart-5: 220 14% 60%; /* Gray */
     
-    /* Gradients for modern look */
-    --gradient-primary: linear-gradient(135deg, hsl(48 11% 7%), hsl(60 4% 37%));
-    --gradient-success: linear-gradient(135deg, hsl(91 15% 70%), hsl(91 20% 80%));
-    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(43 37% 95%));
+    /* Sophisticated Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(142 76% 12%), hsl(142 76% 25%));
+    --gradient-secondary: linear-gradient(135deg, hsl(262 83% 20%), hsl(262 83% 40%));
+    --gradient-success: linear-gradient(135deg, hsl(142 70% 45%), hsl(142 50% 70%));
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(210 20% 98%));
+    --gradient-background: linear-gradient(160deg, hsl(210 20% 98%), hsl(142 20% 96%));
     
-    /* Shadows for depth */
-    --shadow-soft: 0 2px 10px hsl(48 11% 7% / 0.1);
-    --shadow-medium: 0 4px 20px hsl(48 11% 7% / 0.15);
-    --shadow-strong: 0 8px 30px hsl(48 11% 7% / 0.2);
+    /* Modern Shadows with Color */
+    --shadow-soft: 0 2px 8px hsl(142 76% 12% / 0.08);
+    --shadow-medium: 0 4px 16px hsl(142 76% 12% / 0.12);
+    --shadow-strong: 0 8px 25px hsl(142 76% 12% / 0.15);
+    --shadow-glow: 0 0 20px hsl(142 70% 45% / 0.3);
+    
+    /* Interactive Transitions */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
     --radius: 0.5rem;
 
@@ -136,6 +157,7 @@ All colors MUST be HSL.
   body {
     @apply bg-background text-foreground;
     font-family: 'Montserrat', sans-serif;
+    background: var(--gradient-background);
   }
   
   /* Page titles styling */
@@ -144,5 +166,105 @@ All colors MUST be HSL.
     font-weight: 700;
     font-size: 22px;
     text-align: left;
+  }
+}
+
+@layer components {
+  /* Dashboard Card Variants */
+  .dashboard-card {
+    @apply bg-card border border-border rounded-2xl shadow-lg;
+    background: var(--gradient-card);
+    box-shadow: var(--shadow-medium);
+    transition: var(--transition-smooth);
+  }
+  
+  .dashboard-card:hover {
+    box-shadow: var(--shadow-strong);
+    transform: translateY(-2px);
+  }
+  
+  .dashboard-card-primary {
+    background: var(--gradient-primary);
+    @apply text-primary-foreground;
+    box-shadow: var(--shadow-glow);
+  }
+  
+  .dashboard-card-secondary {
+    background: var(--gradient-secondary);
+    @apply text-secondary-foreground;
+  }
+  
+  .dashboard-card-success {
+    background: var(--gradient-success);
+    @apply text-success-foreground;
+  }
+  
+  /* Progress Ring Component */
+  .progress-ring {
+    transition: var(--transition-smooth);
+  }
+  
+  .progress-ring:hover {
+    transform: scale(1.05);
+    filter: drop-shadow(var(--shadow-glow));
+  }
+  
+  /* Modern Button Variants */
+  .btn-modern {
+    @apply px-6 py-3 rounded-2xl font-medium;
+    transition: var(--transition-bounce);
+    box-shadow: var(--shadow-soft);
+  }
+  
+  .btn-modern:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-medium);
+  }
+  
+  /* Chart Container */
+  .chart-container {
+    @apply rounded-xl overflow-hidden;
+    background: var(--gradient-card);
+    box-shadow: var(--shadow-soft);
+  }
+  
+  /* Month Selector */
+  .month-selector {
+    @apply bg-card/80 backdrop-blur-md border border-border rounded-3xl;
+    transition: var(--transition-smooth);
+    box-shadow: var(--shadow-soft);
+  }
+  
+  .month-selector:hover {
+    background: var(--gradient-card);
+    box-shadow: var(--shadow-medium);
+  }
+  
+  /* KPI Value Animation */
+  .kpi-value {
+    transition: var(--transition-smooth);
+  }
+  
+  .kpi-value:hover {
+    transform: scale(1.02);
+  }
+  
+  /* Insight Timeline */
+  .insight-step {
+    @apply relative;
+    transition: var(--transition-smooth);
+  }
+  
+  .insight-step:hover {
+    transform: translateX(4px);
+  }
+  
+  .insight-step::before {
+    content: '';
+    @apply absolute left-4 top-10 w-0.5 h-full bg-border;
+  }
+  
+  .insight-step:last-child::before {
+    display: none;
   }
 }
