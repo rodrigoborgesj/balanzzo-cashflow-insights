@@ -108,27 +108,67 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      {/* Balanzzo title at top-left */}
-      <div className="p-8">
-        <h1 
-          className="text-foreground"
-          style={{ 
-            fontFamily: 'Montserrat, sans-serif',
-            fontWeight: '700',
-            fontSize: '22px'
-          }}
-        >
-          Balanzzo
-        </h1>
+    <div className="min-h-screen bg-background flex">
+      {/* Left side - Brand section */}
+      <div className="flex-1 bg-primary p-8 text-white flex flex-col justify-between">
+        <div>
+          <h1 
+            className="text-white mb-8"
+            style={{ 
+              fontFamily: 'Montserrat, sans-serif',
+              fontWeight: '700',
+              fontSize: '22px'
+            }}
+          >
+            BALANZZO
+          </h1>
+          
+          <div className="space-y-6">
+            <div>
+              <h2 
+                className="text-2xl font-bold mb-3"
+                style={{ fontFamily: 'Montserrat, sans-serif' }}
+              >
+                Simplicidade que funciona
+              </h2>
+              <p 
+                className="text-white/90 text-sm leading-relaxed"
+                style={{ fontFamily: 'Montserrat, sans-serif' }}
+              >
+                Para nano e microempresas: gestão financeira sem planilhas complicadas, com simplicidade que funciona.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="bg-accent/20 rounded-lg p-4 text-center">
+            <span className="text-sm font-medium">DRE</span>
+          </div>
+          <div className="bg-accent/20 rounded-lg p-4 text-center">
+            <span className="text-sm font-medium">Conciliação</span>
+          </div>
+          <div className="bg-accent/20 rounded-lg p-4 text-center col-span-2">
+            <span className="text-sm font-medium">Fluxo de Caixa</span>
+          </div>
+        </div>
       </div>
 
-      {/* Centered login form */}
+      {/* Right side - Login form */}
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-md space-y-6">
 
+          <div className="text-center mb-6">
+            <h2 
+              className="text-xl font-semibold text-foreground"
+              style={{ fontFamily: 'Montserrat, sans-serif' }}
+            >
+              Entre na sua conta
+            </h2>
+          </div>
+
           {/* Form */}
-          <Card className="bg-card/80 backdrop-blur-sm border-border/50 shadow-lg">
+          <Card className="bg-card border-border shadow-lg">
             <CardContent className="p-6">
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
@@ -205,7 +245,7 @@ export default function Login() {
                   type="submit" 
                   className="w-full text-white font-medium"
                   style={{ 
-                    background: 'linear-gradient(90deg, #A6C39E 0%, #4F5D4B 100%)',
+                    backgroundColor: '#1A3423',
                     fontFamily: 'Montserrat, sans-serif'
                   }}
                   disabled={isLoading}

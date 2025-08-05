@@ -8,39 +8,34 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Modern Financial SaaS Theme - Enhanced Colors */
-    --background: 210 20% 98%; /* Clean light background */
-    --foreground: 222 84% 5%; /* Deep professional navy */
+    /* New Brand Color System - Balanzzo Colors */
+    --background: 0 0% 100%; /* #FFFFFF */
+    --foreground: 37 33% 4%; /* #100F0B */
 
-    --card: 0 0% 100%; /* Pure white for cards */
-    --card-foreground: 222 84% 5%;
+    --card: 0 0% 100%; /* #FFFFFF */
+    --card-foreground: 37 33% 4%; /* #100F0B */
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 84% 5%;
+    --popover: 0 0% 100%; /* #FFFFFF */
+    --popover-foreground: 37 33% 4%; /* #100F0B */
 
-    /* Primary: Professional Navy */
-    --primary: 142 76% 12%; /* #1A3423 - Deep forest green */
-    --primary-foreground: 0 0% 100%;
-    --primary-light: 142 40% 25%; /* Lighter variant */
-    --primary-glow: 142 76% 25%; /* Glowing variant */
+    /* Primary: Deep Forest Green */
+    --primary: 134 47% 17%; /* #1A3423 */
+    --primary-foreground: 0 0% 100%; /* #FFFFFF */
 
-    /* Secondary: Modern Purple */
-    --secondary: 262 83% 20%; /* Deep purple */
-    --secondary-foreground: 0 0% 100%;
-    --secondary-light: 262 50% 50%;
-    --secondary-glow: 262 83% 40%;
+    /* Secondary: Light Green */
+    --secondary: 81 82% 89%; /* #E4F8CA */
+    --secondary-foreground: 134 47% 17%; /* #1A3423 */
 
-    /* Success: Vibrant Green */
-    --success: 142 70% 45%; /* Vibrant green */
-    --success-foreground: 0 0% 100%;
-    --success-light: 142 50% 70%;
+    /* Success: Medium Green */
+    --success: 116 25% 66%; /* #A9C7A1 */
+    --success-foreground: 134 47% 17%; /* #1A3423 */
 
-    /* Accent: Sage Green */
-    --accent: 142 30% 55%; /* #4F5D4B - Sage green */
-    --accent-foreground: 0 0% 100%;
+    /* Accent: Medium Green variant */
+    --accent: 116 25% 66%; /* #A9C7A1 */
+    --accent-foreground: 134 47% 17%; /* #1A3423 */
 
-    --muted: 210 20% 96%;
-    --muted-foreground: 215 16% 47%;
+    --muted: 0 0% 91%; /* #E9E9E9 */
+    --muted-foreground: 0 0% 45%; /* #737373 */
 
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
@@ -48,9 +43,9 @@ All colors MUST be HSL.
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 214 32% 91%;
-    --input: 214 32% 95%;
-    --ring: 142 76% 12%;
+    --border: 0 0% 88%; /* #E0E0E0 */
+    --input: 0 0% 91%; /* #E9E9E9 */
+    --ring: 134 47% 17%; /* #1A3423 */
 
     /* Dashboard Specific Colors */
     --revenue: 142 70% 45%; /* Success green for revenue */

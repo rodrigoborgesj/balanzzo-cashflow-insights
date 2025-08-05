@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/sidebar";
 
 const mainItems = [
-  { title: "Painel", url: "/", icon: BarChart3 },
+  { title: "Dados", url: "/", icon: BarChart3 },
   { title: "Fluxo de Caixa", url: "/fluxo-caixa", icon: TrendingUp },
   { title: "DRE", url: "/dre", icon: Calculator },
   { title: "Conciliação Bancária", url: "/conciliacao", icon: CheckSquare },
@@ -45,10 +45,10 @@ export function AppSidebar() {
   };
 
   const getNavClass = (path: string) => {
-    const baseClass = "w-full justify-start transition-colors rounded";
+    const baseClass = "w-full justify-start transition-colors";
     return isActive(path) 
-      ? `${baseClass} bg-[#555B54] text-white font-medium` 
-      : `${baseClass} text-black hover:bg-gray-50`;
+      ? `${baseClass} bg-primary text-white font-medium` 
+      : `${baseClass} text-foreground hover:bg-muted`;
   };
 
   const handleLogout = async () => {
@@ -56,8 +56,20 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar className={`${collapsed ? "w-16" : "w-64"} border-r border-gray-200 bg-white`} style={{ fontFamily: 'Montserrat, sans-serif' }}>
+    <Sidebar className={`${collapsed ? "w-16" : "w-64"} border-r border-border bg-background`} style={{ fontFamily: 'Montserrat, sans-serif' }}>
       <SidebarContent className="px-3 py-6">
+        {/* Logo */}
+        <div className="mb-6">
+          <h1 
+            className="text-foreground font-bold text-lg"
+            style={{ 
+              fontFamily: 'Montserrat, sans-serif',
+              fontWeight: '700'
+            }}
+          >
+            BALANZZO
+          </h1>
+        </div>
         {/* Main Navigation */}
         <SidebarGroup>
           <SidebarGroupContent>
@@ -97,7 +109,7 @@ export function AppSidebar() {
             <SidebarMenuButton asChild>
               <button 
                 onClick={handleLogout}
-                className="w-full justify-start transition-colors text-black hover:bg-gray-50 rounded"
+                className="w-full justify-start transition-colors text-foreground hover:bg-muted"
               >
                 <LogOut className="h-5 w-5 flex-shrink-0" />
                 {!collapsed && <span className="ml-3">Sair</span>}

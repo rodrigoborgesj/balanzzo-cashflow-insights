@@ -598,45 +598,7 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* Insights Timeline */}
-      <Card className="dashboard-card animate-fade-in">
-        <CardHeader>
-          <CardTitle className="text-foreground">Insights Financeiros</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="insight-step">
-              <div className="flex items-center space-x-4 mb-3">
-                <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold">1</div>
-                <h3 className="font-semibold text-foreground">Despesas</h3>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Suas principais despesas este mês foram com pessoal e marketing. Considere revisar contratos de fornecedores para otimizar custos operacionais.
-              </p>
-            </div>
-
-            <div className="insight-step">
-              <div className="flex items-center space-x-4 mb-3">
-                <div className="w-8 h-8 rounded-full bg-success text-success-foreground flex items-center justify-center text-sm font-bold">2</div>
-                <h3 className="font-semibold text-foreground">Faturamento</h3>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                O faturamento apresentou crescimento consistente. Para o próximo mês, foque em campanhas de retenção de clientes para manter a tendência positiva.
-              </p>
-            </div>
-
-            <div className="insight-step">
-              <div className="flex items-center space-x-4 mb-3">
-                <div className="w-8 h-8 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center text-sm font-bold">3</div>
-                <h3 className="font-semibold text-foreground">Lucro Líquido</h3>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                O lucro líquido está dentro das expectativas. Continue monitorando a margem de contribuição para garantir a sustentabilidade do crescimento.
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Additional empty space for layout */}
     </div>
   );
 }

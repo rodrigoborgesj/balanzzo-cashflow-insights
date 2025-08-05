@@ -114,12 +114,12 @@ export default function FluxoCaixa() {
   const hasData = transactions.length > 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 bg-white min-h-screen" style={{ fontFamily: 'Montserrat, sans-serif' }}>
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-4">
         <div>
-          <h1 className="page-title">Fluxo de Caixa</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-3xl font-bold text-black mb-2">Fluxo de Caixa</h1>
+          <p className="text-gray-600">
             Baseado nas transações conciliadas - {selectedMonth}
           </p>
         </div>
@@ -193,69 +193,63 @@ export default function FluxoCaixa() {
       {/* Summary Cards */}
       {hasData && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
-            <CardContent className="p-4">
+          <Card className="bg-white border border-black" style={{ borderRadius: '50px' }}>
+            <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-primary">Total Transações</p>
-                  <p className="text-xl font-bold text-foreground">
+                  <p className="text-sm font-medium text-black">Total Transações</p>
+                  <p className="text-xl font-bold text-black">
                     {transactions.length}
                   </p>
                 </div>
-                <Calendar className="h-6 w-6 text-primary" />
+                <Calendar className="h-6 w-6 text-black" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-success/10 to-success/5 border-success/20">
-            <CardContent className="p-4">
+          <Card className="bg-white border border-black" style={{ borderRadius: '50px' }}>
+            <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-success">Total Entradas</p>
-                  <p className="text-xl font-bold text-foreground">
+                  <p className="text-sm font-medium text-black">Total Entradas</p>
+                  <p className="text-xl font-bold text-black">
                     R$ {totalInflow.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                   </p>
                 </div>
-                <ArrowUpCircle className="h-6 w-6 text-success" />
+                <ArrowUpCircle className="h-6 w-6 text-black" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-destructive/10 to-destructive/5 border-destructive/20">
-            <CardContent className="p-4">
+          <Card className="bg-white border border-black" style={{ borderRadius: '50px' }}>
+            <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-destructive">Total Saídas</p>
-                  <p className="text-xl font-bold text-foreground">
+                  <p className="text-sm font-medium text-black">Total Saídas</p>
+                  <p className="text-xl font-bold text-black">
                     R$ {totalOutflow.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                   </p>
                 </div>
-                <ArrowDownCircle className="h-6 w-6 text-destructive" />
+                <ArrowDownCircle className="h-6 w-6 text-black" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className={`bg-gradient-to-br border-2 ${
-            netResult >= 0 
-              ? 'from-success/10 to-success/5 border-success/20' 
-              : 'from-destructive/10 to-destructive/5 border-destructive/20'
-          }`}>
-            <CardContent className="p-4">
+          <Card style={{ backgroundColor: '#1A3423', borderRadius: '50px' }}>
+            <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className={`text-sm font-medium ${
-                    netResult >= 0 ? 'text-success' : 'text-destructive'
-                  }`}>
+                  <p className="text-sm font-medium text-white">
                     Resultado Líquido
                   </p>
-                  <p className="text-xl font-bold text-foreground">
+                  <p className="text-xl font-bold text-white">
                     R$ {netResult.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                   </p>
                 </div>
                 {netResult >= 0 ? (
-                  <TrendingUp className="h-6 w-6 text-success" />
+                  <TrendingUp className="h-6 w-6 text-white" />
                 ) : (
-                  <TrendingDown className="h-6 w-6 text-destructive" />
+                  <TrendingDown className="h-6 w-6 text-white" />
                 )}
               </div>
             </CardContent>
@@ -265,30 +259,30 @@ export default function FluxoCaixa() {
 
       {/* Cash Flow - Clean Line by Line Layout */}
       {hasData && (
-        <Card className="bg-gradient-to-br from-card to-card/80 border-border/50 shadow-soft">
+        <Card className="bg-white border border-black">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
+            <CardTitle className="flex items-center gap-2 text-black">
+              <TrendingUp className="h-5 w-5 text-black" />
               Fluxo de Caixa Detalhado
             </CardTitle>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-gray-600">
               Entradas e saídas organizadas linha por linha
             </p>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Receipts Section */}
             <div className="space-y-3">
-              <div className="flex items-center gap-2 pb-2 border-b border-success/20">
-                <ArrowUpCircle className="h-4 w-4 text-success" />
-                <h3 className="font-semibold text-success">ENTRADAS</h3>
+              <div className="flex items-center gap-2 pb-2 border-b border-black">
+                <ArrowUpCircle className="h-4 w-4 text-black" />
+                <h3 className="font-semibold text-black">ENTRADAS</h3>
               </div>
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-success/5">
-                    <TableHead className="w-[100px]">Data</TableHead>
-                    <TableHead className="w-[120px]">Categoria</TableHead>
-                    <TableHead>Descrição</TableHead>
-                    <TableHead className="text-right w-[120px]">Valor</TableHead>
+                  <TableRow className="bg-gray-50">
+                    <TableHead className="w-[100px] text-black">Data</TableHead>
+                    <TableHead className="w-[120px] text-black">Categoria</TableHead>
+                    <TableHead className="text-black">Descrição</TableHead>
+                    <TableHead className="text-right w-[120px] text-black">Valor</TableHead>
                     <TableHead className="w-[50px]"></TableHead>
                   </TableRow>
                 </TableHeader>
@@ -305,9 +299,9 @@ export default function FluxoCaixa() {
                           })}
                         </TableCell>
                         <TableCell className="text-sm">
-                          <Badge variant="outline" className="text-xs bg-success/10 text-success border-success/20">
+                          <div className="font-medium text-black text-left">
                             {transaction.categoria_final || transaction.categoria_sugerida || 'Outros'}
-                          </Badge>
+                          </div>
                         </TableCell>
                         <TableCell className="max-w-[200px]">
                           <div className="flex items-center gap-2">
@@ -332,11 +326,11 @@ export default function FluxoCaixa() {
                         </TableCell>
                       </TableRow>
                     ))}
-                  <TableRow className="bg-success/10 font-semibold">
-                    <TableCell colSpan={3} className="text-right">
+                  <TableRow className="bg-gray-100 font-semibold border-t border-black">
+                    <TableCell colSpan={3} className="text-right text-black">
                       <strong>Total de Entradas:</strong>
                     </TableCell>
-                    <TableCell className="text-right font-bold text-success">
+                    <TableCell className="text-right font-bold text-black">
                       R$ {totalInflow.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                     </TableCell>
                     <TableCell></TableCell>
@@ -347,17 +341,17 @@ export default function FluxoCaixa() {
 
             {/* Payments Section */}
             <div className="space-y-3">
-              <div className="flex items-center gap-2 pb-2 border-b border-destructive/20">
-                <ArrowDownCircle className="h-4 w-4 text-destructive" />
-                <h3 className="font-semibold text-destructive">SAÍDAS</h3>
+              <div className="flex items-center gap-2 pb-2 border-b border-black">
+                <ArrowDownCircle className="h-4 w-4 text-black" />
+                <h3 className="font-semibold text-black">SAÍDAS</h3>
               </div>
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-destructive/5">
-                    <TableHead className="w-[100px]">Data</TableHead>
-                    <TableHead className="w-[120px]">Categoria</TableHead>
-                    <TableHead>Descrição</TableHead>
-                    <TableHead className="text-right w-[120px]">Valor</TableHead>
+                  <TableRow className="bg-gray-50">
+                    <TableHead className="w-[100px] text-black">Data</TableHead>
+                    <TableHead className="w-[120px] text-black">Categoria</TableHead>
+                    <TableHead className="text-black">Descrição</TableHead>
+                    <TableHead className="text-right w-[120px] text-black">Valor</TableHead>
                     <TableHead className="w-[50px]"></TableHead>
                   </TableRow>
                 </TableHeader>
@@ -374,9 +368,9 @@ export default function FluxoCaixa() {
                           })}
                         </TableCell>
                         <TableCell className="text-sm">
-                          <Badge variant="outline" className="text-xs bg-destructive/10 text-destructive border-destructive/20">
+                          <div className="font-medium text-black text-left">
                             {transaction.categoria_final || transaction.categoria_sugerida || 'Outros'}
-                          </Badge>
+                          </div>
                         </TableCell>
                         <TableCell className="max-w-[200px]">
                           <div className="flex items-center gap-2">
@@ -401,11 +395,11 @@ export default function FluxoCaixa() {
                         </TableCell>
                       </TableRow>
                     ))}
-                  <TableRow className="bg-destructive/10 font-semibold">
-                    <TableCell colSpan={3} className="text-right">
+                  <TableRow className="bg-gray-100 font-semibold border-t border-black">
+                    <TableCell colSpan={3} className="text-right text-black">
                       <strong>Total de Saídas:</strong>
                     </TableCell>
-                    <TableCell className="text-right font-bold text-destructive">
+                    <TableCell className="text-right font-bold text-black">
                       R$ {totalOutflow.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                     </TableCell>
                     <TableCell></TableCell>
