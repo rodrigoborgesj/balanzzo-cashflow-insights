@@ -61,20 +61,20 @@ export default function TransactionRemover() {
 
   return (
     <>
-      <Card className="w-full">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Trash2 className="h-5 w-5 text-destructive" />
+      <Card className="w-full border-border/50">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-2 text-sm font-medium text-foreground">
+            <Trash2 className="h-4 w-4 text-primary" />
             Remover Transações Importadas
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-3">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Remover transações de um mês específico:</label>
+              <label className="text-xs font-medium text-muted-foreground">Remover transações de um mês específico:</label>
               <div className="flex gap-2">
                 <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                  <SelectTrigger className="flex-1">
+                  <SelectTrigger className="flex-1 h-8 text-sm">
                     <SelectValue placeholder="Selecione o mês" />
                   </SelectTrigger>
                   <SelectContent>
@@ -86,25 +86,26 @@ export default function TransactionRemover() {
                   </SelectContent>
                 </Select>
                 <Button 
-                  variant="destructive" 
+                  size="sm"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs px-3 py-1"
                   onClick={handleRemoveByMonth}
                   disabled={!selectedMonth || isLoading}
                 >
-                  Remover Mês
+                  Remover
                 </Button>
               </div>
             </div>
 
             <div className="border-t pt-3">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Remover todas as transações importadas:</label>
+                <label className="text-xs font-medium text-muted-foreground">Remover todas as transações importadas:</label>
                 <Button 
-                  variant="destructive" 
+                  size="sm"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs h-8"
                   onClick={handleRemoveAll}
                   disabled={isLoading}
-                  className="w-full"
                 >
-                  Remover Todas as Transações Importadas
+                  Remover Todas
                 </Button>
               </div>
             </div>

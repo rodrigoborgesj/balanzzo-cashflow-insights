@@ -311,15 +311,15 @@ export default function Dashboard() {
               </CardContent>
             </Card>
 
-            <Card className="dashboard-card-primary animate-scale-in" style={{ animationDelay: '0.2s' }}>
+            <Card className="bg-primary text-white animate-scale-in" style={{ animationDelay: '0.2s' }}>
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-semibold text-sm">
+                  <h3 className="font-semibold text-sm text-white">
                     Saldo Líquido (Ano)
                   </h3>
-                  <Activity className="h-5 w-5" />
+                  <Activity className="h-5 w-5 text-white" />
                 </div>
-                <p className="text-2xl font-bold kpi-value">
+                <p className="text-2xl font-bold kpi-value text-white">
                   {formatCurrency(
                     yearOverviewData.reduce((sum, item) => sum + item.revenue, 0) - 
                     yearOverviewData.reduce((sum, item) => sum + item.expenses, 0)
@@ -480,18 +480,18 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card className="dashboard-card-primary animate-slide-in" style={{ animationDelay: '0.3s' }}>
+        <Card className="bg-primary text-white animate-slide-in" style={{ animationDelay: '0.3s' }}>
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="font-semibold text-sm">
+              <h3 className="font-semibold text-sm text-white">
                 Movimentações
               </h3>
-              <Activity className="h-5 w-5" />
+              <Activity className="h-5 w-5 text-white" />
             </div>
-            <p className="text-2xl font-bold kpi-value">
+            <p className="text-2xl font-bold kpi-value text-white">
               {('dados_brutos' in currentMonthData && currentMonthData.dados_brutos ? currentMonthData.dados_brutos.length : 0)}
             </p>
-            <p className="text-xs opacity-80 mt-1">
+            <p className="text-xs text-white/80 mt-1">
               Transações registradas
             </p>
           </CardContent>
@@ -517,7 +517,7 @@ export default function Dashboard() {
                   .map((cat, index) => ({
                     categoria: cat.name,
                     valor: cat.value,
-                    fill: chartColors[index % chartColors.length]
+                    fill: '#1A3423'
                   }))}
                 layout="horizontal"
                 margin={{ top: 5, right: 30, left: 80, bottom: 5 }}
@@ -542,14 +542,8 @@ export default function Dashboard() {
                 <Bar 
                   dataKey="valor" 
                   radius={[0, 4, 4, 0]}
-                >
-                  {expenseChartData.slice(0, 5).map((entry, index) => (
-                    <Cell 
-                      key={`cell-${index}`} 
-                      fill={chartColors[index % chartColors.length]} 
-                    />
-                  ))}
-                </Bar>
+                  fill="#1A3423"
+                />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
