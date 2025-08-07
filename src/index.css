@@ -83,6 +83,11 @@ All colors MUST be HSL.
     --sidebar-primary: 240 5.9% 10%;
 
     --sidebar-primary-foreground: 0 0% 98%;
+    
+    /* Brand colors */
+    --neutral-light: 0 0% 91%; /* #E9E9E9 */
+    --brand-light: 80 50% 89%; /* #E4F8CA */
+    --brand-medium: 95 25% 69%; /* #A9C7A1 */
 
     --sidebar-accent: 240 4.8% 95.9%;
 

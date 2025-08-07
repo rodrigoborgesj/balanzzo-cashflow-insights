@@ -66,11 +66,11 @@ export default function DRE() {
   const hasData = transactions.length > 0;
 
   return (
-    <div className="space-y-6">
+    <div className="min-h-screen bg-white space-y-6 p-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="page-title">Demonstração do Resultado do Exercício</h1>
+          <h1 className="text-2xl font-bold text-foreground mb-3">Demonstração do Resultado do Exercício</h1>
           <p className="text-muted-foreground">
             Análise financeira baseada nas transações conciliadas - {selectedMonth}
           </p>
@@ -81,7 +81,7 @@ export default function DRE() {
             size="sm"
             onClick={handleRefresh}
             disabled={isRefreshing}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground"
           >
             <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
             Atualizar
@@ -90,21 +90,25 @@ export default function DRE() {
             type="month"
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
-            className="w-40"
+            className="w-40 border-primary/20 focus:border-primary"
           />
         </div>
       </div>
 
       {/* Empty State */}
       {!hasData && (
-        <Card className="bg-muted/20 border-muted/40">
+        <Card className="bg-white border border-gray-200 rounded-[50px]">
           <CardContent className="p-8 text-center">
             <AlertCircle className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Nenhuma transação encontrada</h3>
+            <h3 className="text-lg font-semibold mb-2 text-foreground">Nenhuma transação encontrada</h3>
             <p className="text-muted-foreground mb-4">
               Para visualizar a DRE, você precisa primeiro importar e conciliar transações.
             </p>
-            <Button variant="outline" onClick={() => navigate("/conciliacao")}>
+            <Button 
+              variant="outline" 
+              onClick={() => navigate("/conciliacao")}
+              className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+            >
               Ir para Conciliação
             </Button>
           </CardContent>

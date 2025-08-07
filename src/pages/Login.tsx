@@ -109,47 +109,39 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-background flex">
-      {/* Left side - Brand section */}
-      <div className="flex-1 bg-primary p-8 text-white flex flex-col justify-between">
-        <div>
-          <h1 
-            className="text-white mb-8"
-            style={{ 
-              fontFamily: 'Montserrat, sans-serif',
-              fontWeight: '700',
-              fontSize: '22px'
-            }}
-          >
-            BALANZZO
-          </h1>
-          
-          <div className="space-y-6">
-            <div>
-              <h2 
-                className="text-2xl font-bold mb-3"
-                style={{ fontFamily: 'Montserrat, sans-serif' }}
-              >
-                Simplicidade que funciona
-              </h2>
-              <p 
-                className="text-white/90 text-sm leading-relaxed"
-                style={{ fontFamily: 'Montserrat, sans-serif' }}
-              >
-                Para nano e microempresas: gestão financeira sem planilhas complicadas, com simplicidade que funciona.
-              </p>
-            </div>
+      {/* Left side - Brand section with green box and feature cards */}
+      <div className="flex-1 relative flex items-center justify-center">
+        {/* Green brand section - smaller and positioned */}
+        <div className="absolute left-20 top-1/2 transform -translate-y-1/2 w-80 h-80 bg-primary rounded flex flex-col justify-center items-center text-primary-foreground z-10">
+          <div className="text-center px-8">
+            <div className="text-2xl font-bold mb-2" style={{ fontFamily: 'Montserrat, sans-serif' }}>BALANZZO</div>
+            <h2 className="text-xl font-bold mb-3" style={{ fontFamily: 'Montserrat, sans-serif' }}>Simplicidade que funciona</h2>
+            <p className="text-sm opacity-90" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+              Para nano e microempresas: gestão financeira sem planilhas complicadas, com simplicidade que funciona.
+            </p>
           </div>
         </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div className="bg-accent/20 rounded-lg p-4 text-center">
-            <span className="text-sm font-medium">DRE</span>
+        
+        {/* Feature boxes */}
+        <div className="flex flex-col space-y-4 ml-96 mt-8">
+          {/* DRE Box */}
+          <div className="w-100 h-105 bg-neutral-light rounded-[4px] border-4 border-primary p-4 flex flex-col justify-center items-center">
+            <h3 className="text-lg font-semibold text-foreground mb-2" style={{ fontFamily: 'Montserrat, sans-serif' }}>DRE</h3>
+            <p className="text-sm text-muted-foreground text-center" style={{ fontFamily: 'Montserrat, sans-serif' }}>Demonstração do Resultado do Exercício completa</p>
           </div>
-          <div className="bg-accent/20 rounded-lg p-4 text-center">
-            <span className="text-sm font-medium">Conciliação</span>
-          </div>
-          <div className="bg-accent/20 rounded-lg p-4 text-center col-span-2">
-            <span className="text-sm font-medium">Fluxo de Caixa</span>
+          
+          <div className="flex space-x-4">
+            {/* Fluxo de Caixa Box */}
+            <div className="w-100 h-105 bg-brand-light rounded-[4px] border-4 border-primary p-4 flex flex-col justify-center items-center">
+              <h3 className="text-lg font-semibold text-foreground mb-2" style={{ fontFamily: 'Montserrat, sans-serif' }}>Fluxo de Caixa</h3>
+              <p className="text-sm text-muted-foreground text-center" style={{ fontFamily: 'Montserrat, sans-serif' }}>Controle de entradas e saídas</p>
+            </div>
+            
+            {/* Conciliação Box */}
+            <div className="w-100 h-105 bg-brand-medium rounded-[4px] border-4 border-primary p-4 flex flex-col justify-center items-center">
+              <h3 className="text-lg font-semibold text-foreground mb-2" style={{ fontFamily: 'Montserrat, sans-serif' }}>Conciliação</h3>
+              <p className="text-sm text-muted-foreground text-center" style={{ fontFamily: 'Montserrat, sans-serif' }}>Conciliação bancária automatizada</p>
+            </div>
           </div>
         </div>
       </div>
@@ -243,9 +235,8 @@ export default function Login() {
 
                 <Button 
                   type="submit" 
-                  className="w-full text-white font-medium"
+                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
                   style={{ 
-                    backgroundColor: '#1A3423',
                     fontFamily: 'Montserrat, sans-serif'
                   }}
                   disabled={isLoading}
@@ -299,12 +290,10 @@ export default function Login() {
           {/* Privacy policy notice - below login button */}
           <div className="text-center">
             <p className="text-xs text-muted-foreground">
-              Ao continuar, você concorda com nossa{" "}
               <Link 
                 to="/politica-de-privacidade" 
-                className="underline text-muted-foreground hover:text-foreground"
-                target="_blank"
-                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-primary transition-colors"
+                style={{ fontFamily: 'Montserrat, sans-serif' }}
               >
                 Política de Privacidade
               </Link>

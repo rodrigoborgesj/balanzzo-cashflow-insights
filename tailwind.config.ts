@@ -70,7 +70,14 @@ export default {
 				},
 				revenue: 'hsl(var(--revenue))',
 				expense: 'hsl(var(--expense))',
-				neutral: 'hsl(var(--neutral))',
+				neutral: {
+					DEFAULT: 'hsl(var(--neutral))',
+					light: 'hsl(var(--neutral-light))'
+				},
+				brand: {
+					light: 'hsl(var(--brand-light))',
+					medium: 'hsl(var(--brand-medium))'
+				},
 				chart: {
 					'1': 'hsl(var(--chart-1))',
 					'2': 'hsl(var(--chart-2))',

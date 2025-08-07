@@ -158,7 +158,7 @@ export default function Dashboard() {
 
   if (isLoading) {
     return (
-      <div className="p-6 space-y-6 min-h-screen bg-background">
+    <div className="p-6 space-y-6 min-h-screen bg-brand-light">
         <MonthSelector />
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
@@ -179,7 +179,7 @@ export default function Dashboard() {
 
   if (!hasData) {
     return (
-      <div className="p-6 space-y-6 min-h-screen bg-background">
+      <div className="p-6 space-y-6 min-h-screen bg-brand-light">
         <MonthSelector />
         <div className="text-center py-16 animate-fade-in">
           <div className="dashboard-card max-w-md mx-auto p-8">
@@ -210,7 +210,7 @@ export default function Dashboard() {
   // If selected month has no data, show year overview
   if (!currentMonthHasData && hasData) {
     return (
-      <div className="p-6 space-y-8 min-h-screen bg-background">
+      <div className="p-6 space-y-8 min-h-screen bg-brand-light">
         <MonthSelector />
 
         {/* No Data Message */}
@@ -340,7 +340,7 @@ export default function Dashboard() {
   }));
 
   return (
-    <div className="p-6 space-y-8 min-h-screen bg-background">
+    <div className="p-6 space-y-8 min-h-screen bg-brand-light">
       <MonthSelector />
 
       {/* Header Section with Greeting and Performance */}
