@@ -87,7 +87,8 @@ export default function TransactionRemover() {
                 </Select>
                 <Button 
                   size="sm"
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs px-3 py-1"
+                  variant="outline"
+                  className="h-8 px-3 text-xs border-accent/30 text-accent hover:bg-accent/10"
                   onClick={handleRemoveByMonth}
                   disabled={!selectedMonth || isLoading}
                 >
@@ -101,11 +102,12 @@ export default function TransactionRemover() {
                 <label className="text-xs font-medium text-muted-foreground">Remover todas as transações importadas:</label>
                 <Button 
                   size="sm"
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs h-8"
+                  variant="outline"
+                  className="h-8 px-3 text-xs border-accent/30 text-accent hover:bg-accent/10"
                   onClick={handleRemoveAll}
                   disabled={isLoading}
                 >
-                  Remover Todas
+                  Limpar Todas
                 </Button>
               </div>
             </div>

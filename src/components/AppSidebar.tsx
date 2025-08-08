@@ -5,7 +5,8 @@ import {
   Settings,
   CheckSquare,
   Calculator,
-  LogOut
+  LogOut,
+  HelpCircle
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -28,6 +29,7 @@ const mainItems = [
   { title: "Fluxo de Caixa", url: "/fluxo-caixa", icon: TrendingUp },
   { title: "DRE", url: "/dre", icon: Calculator },
   { title: "Conciliação Bancária", url: "/conciliacao", icon: CheckSquare },
+  { title: "Como Usar", url: "/como-usar", icon: HelpCircle },
 ];
 
 export function AppSidebar() {

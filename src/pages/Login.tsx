@@ -110,9 +110,16 @@ export default function Login() {
   return (
     <div className="min-h-screen bg-background flex">
       {/* Left side - Brand section with green box and feature cards */}
-      <div className="flex-1 relative flex items-center justify-center p-20">
-        {/* Green brand section - reduced size with exact margins */}
-        <div className="absolute left-20 w-80 h-[calc(100vh-10rem)] bg-primary rounded flex flex-col justify-center items-center text-primary-foreground z-10">
+      <div className="flex-1 relative flex items-center justify-center">
+        {/* Green brand section - smaller with specific margins */}
+        <div 
+          className="absolute left-20 bg-primary rounded flex flex-col justify-center items-center text-primary-foreground z-10"
+          style={{
+            width: 'calc(100vw - 40rem)', // 5cm margins from left/right
+            height: 'calc(100vh - 10rem)', // 5cm margins from top/bottom
+            maxWidth: '28rem'
+          }}
+        >
           <div className="text-center px-8">
             <div className="text-2xl font-bold mb-2" style={{ fontFamily: 'Montserrat, sans-serif' }}>BALANZZO</div>
             <h2 className="text-xl font-bold mb-3" style={{ fontFamily: 'Montserrat, sans-serif' }}>Simplicidade que funciona</h2>
@@ -120,27 +127,48 @@ export default function Login() {
               Para nano e microempresas: gestão financeira sem planilhas complicadas, com simplicidade que funciona.
             </p>
           </div>
-        </div>
-        
-        {/* Feature boxes - exactly positioned according to requirements */}
-        <div className="absolute right-20 top-1/2 transform -translate-y-1/2 flex flex-col space-y-4">
-          {/* DRE Box - inside green area, right side, 5cm margins */}
-          <div className="w-[400px] h-[420px] bg-neutral-light rounded border border-foreground/20 p-6 flex flex-col justify-center items-center text-center">
-            <h3 className="text-lg font-semibold text-foreground mb-2" style={{ fontFamily: 'Montserrat, sans-serif' }}>DRE</h3>
-            <p className="text-sm text-foreground text-center" style={{ fontFamily: 'Montserrat, sans-serif' }}>Demonstração do Resultado do Exercício completa</p>
-          </div>
           
-          <div className="flex space-x-4">
-            {/* Fluxo de Caixa Box */}
-            <div className="w-[400px] h-[420px] bg-brand-light rounded border border-foreground/20 p-6 flex flex-col justify-center items-center text-center">
-              <h3 className="text-lg font-semibold text-foreground mb-2" style={{ fontFamily: 'Montserrat, sans-serif' }}>Fluxo de Caixa</h3>
-              <p className="text-sm text-foreground text-center" style={{ fontFamily: 'Montserrat, sans-serif' }}>Controle de entradas e saídas</p>
+          {/* Feature boxes positioned inside the green area */}
+          <div className="absolute right-8 top-1/2 transform -translate-y-1/2 flex flex-col space-y-4">
+            {/* DRE Box - positioned inside green area, right side */}
+            <div 
+              className="flex flex-col justify-center items-center text-center text-black"
+              style={{
+                width: '100px',
+                height: '105px',
+                backgroundColor: '#E9E9E9',
+                borderRadius: '4px'
+              }}
+            >
+              <h3 className="text-sm font-medium" style={{ fontFamily: 'Montserrat, sans-serif' }}>DRE</h3>
             </div>
             
-            {/* Conciliação Box */}
-            <div className="w-[400px] h-[420px] bg-brand-medium rounded border border-foreground/20 p-6 flex flex-col justify-center items-center text-center">
-              <h3 className="text-lg font-semibold text-foreground mb-2" style={{ fontFamily: 'Montserrat, sans-serif' }}>Conciliação</h3>
-              <p className="text-sm text-foreground text-center" style={{ fontFamily: 'Montserrat, sans-serif' }}>Conciliação bancária automatizada</p>
+            <div className="flex space-x-4">
+              {/* Conciliação Box */}
+              <div 
+                className="flex flex-col justify-center items-center text-center text-black"
+                style={{
+                  width: '100px',
+                  height: '105px',
+                  backgroundColor: '#A9C7A1',
+                  borderRadius: '4px'
+                }}
+              >
+                <h3 className="text-sm font-medium" style={{ fontFamily: 'Montserrat, sans-serif' }}>Conciliação</h3>
+              </div>
+              
+              {/* Fluxo de Caixa Box */}
+              <div 
+                className="flex flex-col justify-center items-center text-center text-black"
+                style={{
+                  width: '100px',
+                  height: '105px',
+                  backgroundColor: '#E4F8CA',
+                  borderRadius: '4px'
+                }}
+              >
+                <h3 className="text-sm font-medium" style={{ fontFamily: 'Montserrat, sans-serif' }}>Fluxo de Caixa</h3>
+              </div>
             </div>
           </div>
         </div>

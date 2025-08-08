@@ -10,6 +10,7 @@ import Conciliacao from "./pages/Conciliacao";
 import FluxoCaixa from "./pages/FluxoCaixa";
 import DRE from "./pages/DRE";
 import Configuracoes from "./pages/Configuracoes";
+import ComoUsar from "./pages/ComoUsar";
 import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
@@ -61,6 +62,13 @@ const App = () => (
             <ProtectedRoute>
               <AppLayout>
                 <Configuracoes />
+              </AppLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/como-usar" element={
+            <ProtectedRoute>
+              <AppLayout>
+                <ComoUsar />
               </AppLayout>
             </ProtectedRoute>
           } />

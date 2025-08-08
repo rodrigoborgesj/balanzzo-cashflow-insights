@@ -25,6 +25,11 @@ export function AppLayout({ children }: AppLayoutProps) {
         <AppSidebar />
         
         <div className="flex-1 flex flex-col">
+          {/* Header with sidebar trigger */}
+          <header className="h-12 flex items-center border-b border-border bg-background px-4">
+            <SidebarTrigger className="text-foreground hover:bg-muted" />
+          </header>
+          
           {/* Main Content */}
           <main className="flex-1 overflow-auto">
             {children}
