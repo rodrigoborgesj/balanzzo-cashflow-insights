@@ -9,7 +9,8 @@ import {
   ChevronDown,
   BarChart3,
   PieChart,
-  Target
+  Target,
+  LineChart as LineChartIcon
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -35,6 +36,11 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useDashboard } from "@/hooks/useDashboard";
 import { useProfile } from "@/hooks/useProfile";
+
+// Modern Chart Components
+import { ExpenseChart } from "@/components/charts/ExpenseChart";
+import { IncomeChart } from "@/components/charts/IncomeChart";
+import { ProjectionChart } from "@/components/charts/ProjectionChart";
 
 // Modern Progress Ring Component
 const ProgressRing = ({ percentage, size = 120, strokeWidth = 8 }: { percentage: number; size?: number; strokeWidth?: number }) => {
@@ -498,98 +504,32 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Expense Breakdown */}
-        <Card className="dashboard-card animate-slide-in">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-foreground">
-              <BarChart3 className="w-5 h-5" />
-              Top 5 Despesas por Categoria
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart
-                data={expenseChartData
-                  .sort((a, b) => b.value - a.value)
-                  .slice(0, 5)
-                  .map((cat, index) => ({
-                    categoria: cat.name,
-                    valor: cat.value,
-                    fill: '#1A3423'
-                  }))}
-                layout="horizontal"
-                margin={{ top: 5, right: 30, left: 80, bottom: 5 }}
-              >
-                <XAxis type="number" hide />
-                <YAxis 
-                  type="category" 
-                  dataKey="categoria" 
-                  axisLine={false}
-                  tickLine={false}
-                  className="text-muted-foreground text-sm"
-                />
-                <Tooltip 
-                  formatter={(value: number) => [formatCurrency(value), "Valor"]}
-                  contentStyle={{ 
-                    backgroundColor: 'hsl(var(--card))',
-                    border: 'none',
-                    borderRadius: '12px',
-                    boxShadow: 'var(--shadow-medium)'
-                  }}
-                />
-                <Bar 
-                  dataKey="valor" 
-                  radius={[0, 4, 4, 0]}
-                  fill="#1A3423"
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+      {/* Modern Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Enhanced Expense Chart */}
+        <ExpenseChart data={expenseChartData} formatCurrency={formatCurrency} />
 
-        {/* Revenue by Type */}
-        <Card className="dashboard-card animate-slide-in" style={{ animationDelay: '0.1s' }}>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-foreground">
-              <PieChart className="w-5 h-5" />
-              Receitas por Tipo
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <RechartsPieChart>
-                <Pie
-                  data={incomeChartData.length > 0 ? incomeChartData.map((item, index) => ({
-                    ...item,
-                    fill: chartColors[index % chartColors.length]
-                  })) : [
-                    { name: "Vendas de Serviços", value: kpiData.totalEntradas * 0.7, fill: chartColors[0] },
-                    { name: "Consultoria", value: kpiData.totalEntradas * 0.2, fill: chartColors[1] },
-                    { name: "Outros", value: kpiData.totalEntradas * 0.1, fill: chartColors[2] }
-                  ]}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
-                  paddingAngle={5}
-                  dataKey="value"
-                />
-                <Tooltip 
-                  formatter={(value: number) => [formatCurrency(value), "Valor"]}
-                  contentStyle={{ 
-                    backgroundColor: 'hsl(var(--card))',
-                    border: 'none',
-                    borderRadius: '12px',
-                    boxShadow: 'var(--shadow-medium)'
-                  }}
-                />
-                <Legend className="text-sm" />
-              </RechartsPieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+        {/* Enhanced Income Chart */}
+        <IncomeChart data={incomeChartData} formatCurrency={formatCurrency} />
+      </div>
+
+      {/* New Projection Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Annual Projection Chart */}
+        <ProjectionChart 
+          data={[]} // Will use sample data for now
+          formatCurrency={formatCurrency}
+          title="Projeção Anual de Entradas"
+          type="annual"
+        />
+
+        {/* Monthly Projection Chart */}
+        <ProjectionChart 
+          data={[]} // Will use sample data for now
+          formatCurrency={formatCurrency}
+          title="Projeção Mensal Detalhada"
+          type="monthly"
+        />
       </div>
 
       {/* Additional empty space for layout */}
