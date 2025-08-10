@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { FileUploader } from "@/components/FileUploader";
 
 import TransactionProcessor from "@/components/TransactionProcessor";
@@ -22,9 +23,12 @@ import {
   DollarSign,
   AlertCircle,
   Loader2,
-  Plus
+  Plus,
+  Trash2
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 // Categorias para classificação
 const categoriesReceitas = [
@@ -54,6 +58,10 @@ export default function Conciliacao() {
   const [parseErrors, setParseErrors] = useState<string[]>([]);
   const [parseStats, setParseStats] = useState<{totalRows: number; validTransactions: number; skippedRows: number} | null>(null);
   
+  // Pagination state
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(25);
+  
   const {
     transactions,
     userCategories,
@@ -66,11 +74,14 @@ export default function Conciliacao() {
     updateTransactionCategory,
     createUserCategory,
   } = useConciliacao();
+  
+  const { user } = useAuth();
 
   const { toast } = useToast();
 
   // Carregar dados ao montar o componente
   useEffect(() => {
+    console.log('Loading transactions for month:', selectedMonth);
     loadTransactions(selectedMonth);
     loadUserCategories();
   }, [loadTransactions, loadUserCategories, selectedMonth]);
@@ -199,6 +210,41 @@ export default function Conciliacao() {
     await updateTransactionCategory(transactionId, category);
   };
 
+  const handleDeleteTransaction = async (transactionId: string) => {
+    if (!user?.id) return;
+    
+    try {
+      const { error } = await supabase
+        .from('transacoes_conciliadas')
+        .delete()
+        .eq('id', transactionId)
+        .eq('user_id', user.id);
+
+      if (error) {
+        toast({
+          title: 'Erro ao deletar transação',
+          description: error.message,
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      toast({
+        title: 'Transação deletada',
+        description: 'Transação removida com sucesso',
+      });
+
+      // Reload transactions
+      loadTransactions(selectedMonth);
+    } catch (error) {
+      toast({
+        title: 'Erro ao deletar transação',
+        description: 'Erro inesperado',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const filteredTransactions = transactions.filter(transaction => {
     const matchesSearch = transaction.descricao.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = filterStatus === "todos" || 
@@ -235,7 +281,11 @@ export default function Conciliacao() {
             <Input
               type="month"
               value={selectedMonth}
-              onChange={(e) => setSelectedMonth(e.target.value)}
+              onChange={(e) => {
+                console.log('Month changed to:', e.target.value);
+                setSelectedMonth(e.target.value);
+                setPage(0); // Reset pagination when month changes
+              }}
               className="w-40 border-primary/20 focus:border-primary"
             />
           </div>
@@ -290,22 +340,22 @@ export default function Conciliacao() {
           <CardHeader className="border-b border-gray-200">
             <CardTitle className="text-lg font-semibold text-foreground">Upload do Extrato</CardTitle>
           </CardHeader>
-          <CardContent className="p-6">
-            <div className="space-y-4">
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-base font-medium text-black mb-2">
+          <CardContent className="p-4">
+            <div className="space-y-3">
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                <h3 className="text-sm font-medium text-black mb-1">
                   Selecione seu arquivo CSV
                 </h3>
-                <p className="text-sm text-gray-600 mb-4">
+                <p className="text-xs text-gray-600 mb-2">
                   Formato aceito: .csv
                 </p>
                 <FileUploader onFileSelect={handleFileSelect} />
               </div>
               
               {selectedFile && (
-                <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-lg">
-                  <p className="text-sm text-black font-medium">
+                <div className="mt-2 p-2 bg-gray-50 border border-gray-200 rounded-lg">
+                  <p className="text-xs text-black font-medium">
                     📄 {selectedFile.name}
                   </p>
                 </div>
@@ -314,11 +364,12 @@ export default function Conciliacao() {
               <Button 
                 onClick={handleProcessTransactions}
                 disabled={!selectedFile || isLoading}
-                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-2"
+                size="sm"
               >
                 {isLoading ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="mr-2 h-3 w-3 animate-spin" />
                     Processando...
                   </>
                 ) : (
@@ -494,6 +545,25 @@ export default function Conciliacao() {
                         <TableHead>Valor</TableHead>
                         <TableHead>Categoria</TableHead>
                         <TableHead>Status</TableHead>
+                        <TableHead className="w-[50px]">
+                          <div className="flex items-center justify-between">
+                            <span className="sr-only">Ações</span>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-6 px-2 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                              onClick={() => {
+                                if (window.confirm('Remover todas as transações visíveis?')) {
+                                  // Remove all visible transactions
+                                  const visibleIds = filteredTransactions.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map(t => t.id);
+                                  Promise.all(visibleIds.map(id => handleDeleteTransaction(id)));
+                                }
+                              }}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -516,7 +586,10 @@ export default function Conciliacao() {
                         </TableRow>
                       )}
                       
-                      {!isLoading && filteredTransactions.map((transaction) => (
+                      {!isLoading && 
+                        filteredTransactions
+                          .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                          .map((transaction, index) => (
                         <TableRow key={transaction.id}>
                           <TableCell>
                             {new Date(transaction.data_transacao).toLocaleDateString('pt-BR')}
@@ -552,11 +625,32 @@ export default function Conciliacao() {
                               {transaction.status_conciliacao ? "Conciliado" : "Pendente"}
                             </Badge>
                           </TableCell>
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                              onClick={() => {
+                                if (window.confirm('Tem certeza que deseja deletar esta transação?')) {
+                                  handleDeleteTransaction(transaction.id);
+                                }
+                              }}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
                   </Table>
                 </div>
+                <TablePagination
+                  count={filteredTransactions.length}
+                  page={page}
+                  rowsPerPage={rowsPerPage}
+                  onPageChange={setPage}
+                  onRowsPerPageChange={setRowsPerPage}
+                />
               </CardContent>
             </Card>
           </TabsContent>

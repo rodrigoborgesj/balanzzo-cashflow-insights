@@ -302,12 +302,6 @@ export default function Login() {
               </Link>
             </div>
 
-            {/* Demo info */}
-            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-              <p className="text-sm text-blue-800 text-center" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-                <span className="font-semibold">Demo:</span> Use qualquer email e senha para testar a plataforma
-              </p>
-            </div>
           </div>
         </div>
       </div>

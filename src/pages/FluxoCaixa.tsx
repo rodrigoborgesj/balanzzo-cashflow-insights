@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -16,7 +17,8 @@ import {
   AlertCircle,
   Settings,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  Filter
 } from "lucide-react";
 import { useConciliacao, Transaction } from "@/hooks/useConciliacao";
 import { useNavigate } from "react-router-dom";
@@ -36,6 +38,7 @@ export default function FluxoCaixa() {
   const [showSettings, setShowSettings] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState<string>(new Date().toISOString().slice(0, 7));
   const [categoryGroups, setCategoryGroups] = useState<CategoryGroup[]>([]);
+  const [transactionFilter, setTransactionFilter] = useState<'todas' | 'entradas' | 'saidas'>('todas');
   const navigate = useNavigate();
 
   // Use reconciliation hook to get categorized transactions
@@ -113,8 +116,17 @@ export default function FluxoCaixa() {
   const netResult = totalInflow - totalOutflow;
   const hasData = transactions.length > 0;
 
+  // Get all transactions sorted by date for unified list
+  const allTransactionsSorted = categorizedTransactions
+    .filter(t => {
+      if (transactionFilter === 'entradas') return t.valor > 0;
+      if (transactionFilter === 'saidas') return t.valor < 0;
+      return true;
+    })
+    .sort((a, b) => new Date(a.data_transacao).getTime() - new Date(b.data_transacao).getTime());
+
   return (
-    <div className="space-y-6 bg-white min-h-screen" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+    <div className="space-y-6 bg-white min-h-screen px-6" style={{ fontFamily: 'Montserrat, sans-serif' }}>
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-4">
         <div>
@@ -257,7 +269,7 @@ export default function FluxoCaixa() {
         </div>
       )}
 
-      {/* Cash Flow - Clean Line by Line Layout */}
+      {/* Cash Flow - Unified Transaction List */}
       {hasData && (
         <Card className="bg-white border border-black">
           <CardHeader>
@@ -265,85 +277,31 @@ export default function FluxoCaixa() {
               <TrendingUp className="h-5 w-5 text-black" />
               Fluxo de Caixa Detalhado
             </CardTitle>
-            <p className="text-sm text-gray-600">
-              Entradas e saídas organizadas linha por linha
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Receipts Section */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 pb-2 border-b border-black">
-                <ArrowUpCircle className="h-4 w-4 text-black" />
-                <h3 className="font-semibold text-black">ENTRADAS</h3>
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-gray-600">
+                Todas as transações organizadas por data
+              </p>
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4 text-gray-500" />
+                <Select value={transactionFilter} onValueChange={(value: 'todas' | 'entradas' | 'saidas') => setTransactionFilter(value)}>
+                  <SelectTrigger className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todas">Todas</SelectItem>
+                    <SelectItem value="entradas">Entradas</SelectItem>
+                    <SelectItem value="saidas">Saídas</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-gray-50">
-                    <TableHead className="w-[100px] text-black">Data</TableHead>
-                    <TableHead className="w-[120px] text-black">Categoria</TableHead>
-                    <TableHead className="text-black">Descrição</TableHead>
-                    <TableHead className="text-right w-[120px] text-black">Valor</TableHead>
-                    <TableHead className="w-[50px]"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                 <TableBody>
-                  {categorizedTransactions
-                    .filter(t => t.valor > 0)
-                    .sort((a, b) => new Date(a.data_transacao).getTime() - new Date(b.data_transacao).getTime())
-                    .map((transaction) => (
-                      <TableRow key={transaction.id} className="hover:bg-success/5">
-                        <TableCell className="font-medium text-sm">
-                          {new Date(transaction.data_transacao).toLocaleDateString('pt-BR', { 
-                            day: '2-digit', 
-                            month: '2-digit' 
-                          })}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          <div className="font-medium text-black text-left">
-                            {transaction.categoria_final || transaction.categoria_sugerida || 'Outros'}
-                          </div>
-                        </TableCell>
-                        <TableCell className="max-w-[200px]">
-                          <div className="flex items-center gap-2">
-                            <div className="truncate text-sm" title={transaction.descricao}>
-                              {transaction.descricao}
-                            </div>
-                            {transaction.origem_arquivo === 'manual_entry' && (
-                              <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20">
-                                Manual
-                              </Badge>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right font-bold text-success">
-                          R$ {transaction.valor.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                        </TableCell>
-                        <TableCell>
-                          <TransactionActions 
-                            transaction={transaction}
-                            onTransactionUpdated={() => loadTransactions(selectedMonth)}
-                          />
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  <TableRow className="bg-gray-100 font-semibold border-t border-black">
-                    <TableCell colSpan={3} className="text-right text-black">
-                      <strong>Total de Entradas:</strong>
-                    </TableCell>
-                    <TableCell className="text-right font-bold text-black">
-                      R$ {totalInflow.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                    </TableCell>
-                    <TableCell></TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
             </div>
-
-            {/* Payments Section */}
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Unified Transaction List */}
             <div className="space-y-3">
               <div className="flex items-center gap-2 pb-2 border-b border-black">
-                <ArrowDownCircle className="h-4 w-4 text-black" />
-                <h3 className="font-semibold text-black">SAÍDAS</h3>
+                <Calendar className="h-4 w-4 text-black" />
+                <h3 className="font-semibold text-black">TRANSAÇÕES</h3>
               </div>
               <Table>
                 <TableHeader>
@@ -355,55 +313,43 @@ export default function FluxoCaixa() {
                     <TableHead className="w-[50px]"></TableHead>
                   </TableRow>
                 </TableHeader>
-                 <TableBody>
-                  {categorizedTransactions
-                    .filter(t => t.valor < 0)
-                    .sort((a, b) => new Date(a.data_transacao).getTime() - new Date(b.data_transacao).getTime())
-                    .map((transaction) => (
-                      <TableRow key={transaction.id} className="hover:bg-destructive/5">
-                        <TableCell className="font-medium text-sm">
-                          {new Date(transaction.data_transacao).toLocaleDateString('pt-BR', { 
-                            day: '2-digit', 
-                            month: '2-digit' 
-                          })}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          <div className="font-medium text-black text-left">
-                            {transaction.categoria_final || transaction.categoria_sugerida || 'Outros'}
+                <TableBody>
+                  {allTransactionsSorted.map((transaction) => (
+                    <TableRow key={transaction.id} className={`hover:bg-gray-50 ${transaction.valor > 0 ? 'border-l-4 border-l-green-500' : 'border-l-4 border-l-red-500'}`}>
+                      <TableCell className="font-medium text-sm">
+                        {new Date(transaction.data_transacao).toLocaleDateString('pt-BR', { 
+                          day: '2-digit', 
+                          month: '2-digit' 
+                        })}
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        <div className="font-medium text-black text-left">
+                          {transaction.categoria_final || transaction.categoria_sugerida || 'Outros'}
+                        </div>
+                      </TableCell>
+                      <TableCell className="max-w-[200px]">
+                        <div className="flex items-center gap-2">
+                          <div className="truncate text-sm" title={transaction.descricao}>
+                            {transaction.descricao}
                           </div>
-                        </TableCell>
-                        <TableCell className="max-w-[200px]">
-                          <div className="flex items-center gap-2">
-                            <div className="truncate text-sm" title={transaction.descricao}>
-                              {transaction.descricao}
-                            </div>
-                            {transaction.origem_arquivo === 'manual_entry' && (
-                              <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20">
-                                Manual
-                              </Badge>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right font-bold text-destructive">
-                          R$ {Math.abs(transaction.valor).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                        </TableCell>
-                        <TableCell>
-                          <TransactionActions 
-                            transaction={transaction}
-                            onTransactionUpdated={() => loadTransactions(selectedMonth)}
-                          />
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  <TableRow className="bg-gray-100 font-semibold border-t border-black">
-                    <TableCell colSpan={3} className="text-right text-black">
-                      <strong>Total de Saídas:</strong>
-                    </TableCell>
-                    <TableCell className="text-right font-bold text-black">
-                      R$ {totalOutflow.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                    </TableCell>
-                    <TableCell></TableCell>
-                  </TableRow>
+                          {transaction.origem_arquivo === 'manual_entry' && (
+                            <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20">
+                              Manual
+                            </Badge>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className={`text-right font-bold ${transaction.valor > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {transaction.valor > 0 ? '+' : ''}R$ {Math.abs(transaction.valor).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      </TableCell>
+                      <TableCell>
+                        <TransactionActions 
+                          transaction={transaction}
+                          onTransactionUpdated={() => loadTransactions(selectedMonth)}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))}
                 </TableBody>
               </Table>
             </div>

@@ -61,67 +61,68 @@ export default function TransactionRemover() {
 
   return (
     <>
-      <Card className="w-full border-border/50">
-        <CardHeader className="pb-4">
-          <CardTitle className="flex items-center gap-2 text-sm font-medium text-foreground">
-            <Trash2 className="h-4 w-4 text-primary" />
-            Remover Transações Importadas
-          </CardTitle>
+      <Card className="bg-white border border-gray-200 rounded-[50px]">
+        <CardHeader className="border-b border-gray-200">
+          <CardTitle className="text-lg font-semibold text-foreground">Remover Transações</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-3">
-            <div className="space-y-2">
-              <label className="text-xs font-medium text-muted-foreground">Remover transações de um mês específico:</label>
-              <div className="flex gap-2">
-                <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                  <SelectTrigger className="flex-1 h-8 text-sm">
-                    <SelectValue placeholder="Selecione o mês" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {monthOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button 
-                  size="sm"
-                  variant="outline"
-                  className="h-8 px-3 text-xs border-accent/30 text-accent hover:bg-accent/10"
-                  onClick={handleRemoveByMonth}
-                  disabled={!selectedMonth || isLoading}
-                >
-                  Remover
-                </Button>
-              </div>
+        <CardContent className="p-4 space-y-3">
+          {/* Remove by Month */}
+          <div className="flex items-center justify-between p-2 border border-border rounded-lg bg-background/50">
+            <div className="flex-1">
+              <p className="text-sm font-medium text-foreground">Remover por mês</p>
+              <p className="text-xs text-muted-foreground">Remove transações de um mês específico</p>
             </div>
-
-            <div className="border-t pt-3">
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-muted-foreground">Remover todas as transações importadas:</label>
-                <Button 
-                  size="sm"
-                  variant="outline"
-                  className="h-8 px-3 text-xs border-accent/30 text-accent hover:bg-accent/10"
-                  onClick={handleRemoveAll}
-                  disabled={isLoading}
-                >
-                  Limpar Todas
-                </Button>
-              </div>
+            <div className="flex items-center gap-1">
+              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                <SelectTrigger className="w-24 h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {monthOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleRemoveByMonth}
+                disabled={!selectedMonth}
+                className="h-8 px-2 text-xs"
+              >
+                <Trash2 className="h-3 w-3 mr-1" />
+                Remover
+              </Button>
             </div>
           </div>
 
-          <div className="bg-muted/50 p-3 rounded-lg">
-            <div className="flex items-start gap-2">
-              <AlertTriangle className="h-4 w-4 text-warning mt-0.5" />
-              <div className="text-sm text-muted-foreground">
-                <strong>Importante:</strong> Esta ação remove apenas transações originadas de extratos importados. 
-                Lançamentos manuais ou automações internas não serão afetados. 
-                Os dashboards e insights serão atualizados automaticamente após a remoção.
-              </div>
+          {/* Remove All */}
+          <div className="flex items-center justify-between p-2 border border-border rounded-lg bg-background/50">
+            <div className="flex-1">
+              <p className="text-sm font-medium text-foreground">Remover todas</p>
+              <p className="text-xs text-muted-foreground">Remove todas as transações importadas</p>
             </div>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleRemoveAll}
+              className="h-8 px-2 text-xs"
+            >
+              <Trash2 className="h-3 w-3 mr-1" />
+              Remover Todas
+            </Button>
+          </div>
+
+          {/* Warning */}
+          <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-2">
+            <p className="text-xs text-destructive font-medium mb-1">
+              ⚠️ Ação irreversível
+            </p>
+            <p className="text-xs text-destructive/80">
+              Apenas transações importadas de arquivos serão removidas.
+            </p>
           </div>
         </CardContent>
       </Card>

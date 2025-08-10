@@ -65,10 +65,16 @@ export function useConciliacao() {
         .select('*')
         .eq('user_id', user.id);
 
-      // Filtrar por mês se especificado
+      // Filtrar por mês se especificado - fix month selection bug
       if (monthFilter) {
-        const startDate = `${monthFilter}-01`;
-        const endDate = `${monthFilter}-31`;
+        console.log('Filtering by month:', monthFilter);
+        const year = monthFilter.split('-')[0];
+        const month = monthFilter.split('-')[1];
+        const startDate = `${year}-${month}-01`;
+        // Get last day of month properly
+        const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
+        const endDate = `${year}-${month}-${lastDay.toString().padStart(2, '0')}`;
+        console.log('Date range:', startDate, 'to', endDate);
         query = query.gte('data_transacao', startDate).lte('data_transacao', endDate);
       }
 
