@@ -36,6 +36,8 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useDashboard } from "@/hooks/useDashboard";
 import { useProfile } from "@/hooks/useProfile";
+import { useCashFlowIntegration } from "@/hooks/useCashFlowIntegration";
+import { useFutureCashFlow } from "@/hooks/useFutureCashFlow";
 
 // Modern Chart Components
 import { ExpenseChart } from "@/components/charts/ExpenseChart";
@@ -111,6 +113,18 @@ export default function Dashboard() {
     kpiData,
     formatCurrency
   } = useDashboard();
+
+  // Get cash flow integration data
+  const { summary, categorySummary, hasData: hasCashFlowData } = useCashFlowIntegration(selectedMonth);
+  
+  // Get future cash flow projections data - exclusively from manually entered future transactions
+  const { getIncomeProjections, getExpenseProjections, hasData: hasFutureData } = useFutureCashFlow();
+  
+  // Generate projection data based exclusively on future transactions from Cash Flow
+  const incomeProjectionsAnnual = getIncomeProjections('annual');
+  const incomeProjectionsMonthly = getIncomeProjections('monthly');
+  const expenseProjectionsAnnual = getExpenseProjections('annual');
+  const expenseProjectionsMonthly = getExpenseProjections('monthly');
 
   // Generate months for dropdown - single declaration to avoid conflicts
   const currentDate = new Date();
@@ -517,11 +531,11 @@ export default function Dashboard() {
         <IncomeChart data={incomeChartData} formatCurrency={formatCurrency} />
       </div>
 
-      {/* New Projection Charts Section */}
+      {/* Future Cash Flow Projection Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Annual Revenue Projection Chart */}
         <ProjectionChart 
-          data={[]} // Will be populated with future income transactions from Cash Flow
+          data={incomeProjectionsAnnual}
           formatCurrency={formatCurrency}
           title="Projeção de Entradas Futuras - Anual"
           type="annual"
@@ -529,14 +543,31 @@ export default function Dashboard() {
 
         {/* Annual Expense Projection Chart */}
         <ExpenseProjectionChart 
-          data={[]} // Will be populated with future expense transactions from Cash Flow
+          data={expenseProjectionsAnnual}
           formatCurrency={formatCurrency}
           title="Projeção de Despesas Futuras - Anual"
           type="annual"
         />
       </div>
 
-      {/* Additional empty space for layout */}
+      {/* Monthly Projection Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Monthly Revenue Projection Chart */}
+        <ProjectionChart 
+          data={incomeProjectionsMonthly}
+          formatCurrency={formatCurrency}
+          title="Projeção de Entradas Futuras - Mensal"
+          type="monthly"
+        />
+
+        {/* Monthly Expense Projection Chart */}
+        <ExpenseProjectionChart 
+          data={expenseProjectionsMonthly}
+          formatCurrency={formatCurrency}
+          title="Projeção de Despesas Futuras - Mensal"
+          type="monthly"
+        />
+      </div>
     </div>
   );
 }

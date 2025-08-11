@@ -62,11 +62,11 @@ export const CustomTooltip = ({ active, payload, label, chartType }: CustomToolt
         return {
           title: `Projeção: ${label}`,
           value: formatCurrency(value),
-          description: `Projeção baseada em dados inseridos manualmente no fluxo de caixa. Esta estimativa considera entradas/saídas futuras programadas.`,
+          description: `Projeção baseada EXCLUSIVAMENTE em transações futuras registradas no Fluxo de Caixa através do botão "Adicionar Transação". Não inclui dados históricos.`,
           details: [
             `Valor projetado: ${formatCurrency(value)}`,
             `Período: ${label}`,
-            'Fonte: Planejamento manual'
+            'Fonte: Transações futuras manuais'
           ]
         };
       
@@ -74,11 +74,11 @@ export const CustomTooltip = ({ active, payload, label, chartType }: CustomToolt
         return {
           title: `Projeção de Despesas: ${label}`,
           value: formatCurrency(value),
-          description: `Projeção de gastos baseada em despesas futuras registradas no fluxo de caixa. Esta estimativa considera saídas programadas.`,
+          description: `Projeção de gastos baseada EXCLUSIVAMENTE em despesas futuras registradas no Fluxo de Caixa através do botão "Adicionar Transação". Não inclui dados históricos.`,
           details: [
             `Valor projetado: ${formatCurrency(value)}`,
             `Período: ${label}`,
-            'Fonte: Despesas futuras planejadas'
+            'Fonte: Despesas futuras manuais'
           ]
         };
       

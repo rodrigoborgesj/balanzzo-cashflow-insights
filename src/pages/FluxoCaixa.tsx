@@ -330,21 +330,21 @@ export default function FluxoCaixa() {
                           {transaction.categoria_final || transaction.categoria_sugerida || 'Outros'}
                         </div>
                       </TableCell>
-                      <TableCell className="max-w-[200px]">
-                        <div className="flex items-center gap-2">
-                          <div className="truncate text-sm" title={transaction.descricao}>
-                            {transaction.descricao}
-                          </div>
-                          {transaction.origem_arquivo === 'manual_entry' && (
-                            <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20">
-                              Manual
-                            </Badge>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell className={`text-right font-bold ${transaction.valor > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        {transaction.valor > 0 ? '+' : ''}R$ {Math.abs(transaction.valor).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                      </TableCell>
+                       <TableCell className="max-w-[200px]">
+                         <div className="flex items-center gap-2 w-full">
+                           <div className="flex-1 text-sm whitespace-nowrap overflow-hidden text-ellipsis" title={transaction.descricao}>
+                             {transaction.descricao}
+                           </div>
+                           {transaction.origem_arquivo === 'manual_entry' && (
+                             <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20 flex-shrink-0">
+                               Manual
+                             </Badge>
+                           )}
+                         </div>
+                       </TableCell>
+                       <TableCell className={`text-right font-bold whitespace-nowrap ${transaction.valor > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                         {transaction.valor > 0 ? '+' : ''}R$ {Math.abs(transaction.valor).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                       </TableCell>
                       <TableCell>
                         <TransactionActions 
                           transaction={transaction}
@@ -376,11 +376,11 @@ export default function FluxoCaixa() {
                     Resultado Líquido do Período
                   </h3>
                 </div>
-                <div className={`text-xl font-bold ${
-                  netResult >= 0 ? 'text-success' : 'text-destructive'
-                }`}>
-                  R$ {netResult.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                </div>
+                 <div className={`text-xl font-bold whitespace-nowrap ${
+                   netResult >= 0 ? 'text-success' : 'text-destructive'
+                 }`}>
+                   R$ {netResult.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                 </div>
               </div>
             </div>
           </CardContent>
