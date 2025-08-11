@@ -41,6 +41,7 @@ import { useProfile } from "@/hooks/useProfile";
 import { ExpenseChart } from "@/components/charts/ExpenseChart";
 import { IncomeChart } from "@/components/charts/IncomeChart";
 import { ProjectionChart } from "@/components/charts/ProjectionChart";
+import { ExpenseProjectionChart } from "@/components/charts/ExpenseProjectionChart";
 
 // Modern Progress Ring Component
 const ProgressRing = ({ percentage, size = 120, strokeWidth = 8 }: { percentage: number; size?: number; strokeWidth?: number }) => {
@@ -147,7 +148,10 @@ export default function Dashboard() {
           {months.map((month) => (
             <DropdownMenuItem
               key={month.value}
-              onClick={() => setSelectedMonth(month.value)}
+            onClick={() => {
+              console.log('Dashboard month changed from', selectedMonth, 'to', month.value);
+              setSelectedMonth(month.value);
+            }}
               className={`px-4 py-3 cursor-pointer transition-all duration-200 ${
                 selectedMonth === month.value 
                   ? 'bg-primary text-primary-foreground font-semibold' 
@@ -515,20 +519,20 @@ export default function Dashboard() {
 
       {/* New Projection Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Annual Projection Chart */}
+        {/* Annual Revenue Projection Chart */}
         <ProjectionChart 
-          data={[]} // Will use sample data for now
+          data={[]} // Will be populated with future income transactions from Cash Flow
           formatCurrency={formatCurrency}
-          title="Projeção Anual de Entradas"
+          title="Projeção de Entradas Futuras - Anual"
           type="annual"
         />
 
-        {/* Monthly Projection Chart */}
-        <ProjectionChart 
-          data={[]} // Will use sample data for now
+        {/* Annual Expense Projection Chart */}
+        <ExpenseProjectionChart 
+          data={[]} // Will be populated with future expense transactions from Cash Flow
           formatCurrency={formatCurrency}
-          title="Projeção Mensal Detalhada"
-          type="monthly"
+          title="Projeção de Despesas Futuras - Anual"
+          type="annual"
         />
       </div>
 

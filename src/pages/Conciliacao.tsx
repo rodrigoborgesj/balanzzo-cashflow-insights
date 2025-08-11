@@ -335,22 +335,24 @@ export default function Conciliacao() {
 
       {/* Upload Section */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-        {/* Upload Area */}
+        {/* Upload Area - Compact Version */}
         <Card className="bg-white border border-gray-200 rounded-[50px]">
-          <CardHeader className="border-b border-gray-200">
+          <CardHeader className="border-b border-gray-200 pb-2">
             <CardTitle className="text-lg font-semibold text-foreground">Upload do Extrato</CardTitle>
           </CardHeader>
-          <CardContent className="p-4">
-            <div className="space-y-3">
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
-                <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+          <CardContent className="p-3">
+            <div className="space-y-2">
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-3 text-center">
+                <Upload className="h-6 w-6 text-gray-400 mx-auto mb-1" />
                 <h3 className="text-sm font-medium text-black mb-1">
                   Selecione seu arquivo CSV
                 </h3>
                 <p className="text-xs text-gray-600 mb-2">
                   Formato aceito: .csv
                 </p>
-                <FileUploader onFileSelect={handleFileSelect} />
+                <div className="mt-2">
+                  <FileUploader onFileSelect={handleFileSelect} />
+                </div>
               </div>
               
               {selectedFile && (
@@ -364,7 +366,7 @@ export default function Conciliacao() {
               <Button 
                 onClick={handleProcessTransactions}
                 disabled={!selectedFile || isLoading}
-                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-2"
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-1 text-sm h-8"
                 size="sm"
               >
                 {isLoading ? (
@@ -381,9 +383,9 @@ export default function Conciliacao() {
         </Card>
 
 
-        {/* Transaction Remover */}
+        {/* Empty space - Transaction Remover moved to Settings */}
         <div className="xl:col-span-1">
-          <TransactionRemover />
+          {/* Transaction removal functions now in Settings page */}
         </div>
       </div>
 

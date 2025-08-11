@@ -89,7 +89,10 @@ export default function DRE() {
           <Input
             type="month"
             value={selectedMonth}
-            onChange={(e) => setSelectedMonth(e.target.value)}
+            onChange={(e) => {
+              console.log('DRE month changed from', selectedMonth, 'to', e.target.value);
+              setSelectedMonth(e.target.value);
+            }}
             className="w-40 border-primary/20 focus:border-primary"
           />
         </div>

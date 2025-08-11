@@ -99,47 +99,43 @@ export function FileUploader({
         onDragOver={handleDrag}
         onDrop={handleDrop}
       >
-        <CardContent className="p-8">
+        <CardContent className="p-4">
           {selectedFile ? (
-            <div className="text-center space-y-4">
+            <div className="text-center space-y-2">
               <div className="flex items-center justify-center">
-                <CheckCircle className="h-12 w-12 text-success" />
+                <CheckCircle className="h-8 w-8 text-success" />
               </div>
-              <div className="space-y-2">
-                <h3 className="font-semibold text-foreground">Arquivo selecionado</h3>
-                <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                  <FileText className="h-4 w-4" />
+              <div className="space-y-1">
+                <h3 className="font-medium text-foreground text-sm">Arquivo selecionado</h3>
+                <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                  <FileText className="h-3 w-3" />
                   <span>{selectedFile.name}</span>
-                  <span>({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)</span>
                 </div>
               </div>
-              <div className="flex gap-2 justify-center">
-                <Button variant="outline" size="sm" onClick={removeFile}>
-                  <X className="h-4 w-4 mr-2" />
+              <div className="flex gap-1 justify-center">
+                <Button variant="outline" size="sm" onClick={removeFile} className="h-7 px-2 text-xs">
+                  <X className="h-3 w-3 mr-1" />
                   Remover
                 </Button>
-                <Button size="sm" onClick={() => inputRef.current?.click()}>
-                  <Upload className="h-4 w-4 mr-2" />
-                  Escolher outro
+                <Button size="sm" onClick={() => inputRef.current?.click()} className="h-7 px-2 text-xs">
+                  <Upload className="h-3 w-3 mr-1" />
+                  Outro
                 </Button>
               </div>
             </div>
           ) : (
-            <div className="text-center space-y-4">
+            <div className="text-center space-y-2">
               <div className="flex items-center justify-center">
-                <Upload className="h-12 w-12 text-muted-foreground" />
+                <Upload className="h-8 w-8 text-muted-foreground" />
               </div>
-              <div className="space-y-2">
-                <h3 className="font-semibold text-foreground">
-                  Arraste seu extrato aqui ou clique para selecionar
+              <div className="space-y-1">
+                <h3 className="font-medium text-foreground text-sm">
+                  Clique para selecionar
                 </h3>
-                <p className="text-sm text-muted-foreground">
-                  Formatos aceitos: {acceptedFormats.join(', ')} (máx. {maxSize}MB)
-                </p>
               </div>
-              <Button onClick={() => inputRef.current?.click()}>
-                <Upload className="h-4 w-4 mr-2" />
-                Selecionar arquivo
+              <Button onClick={() => inputRef.current?.click()} size="sm" className="h-7 px-3 text-xs">
+                <Upload className="h-3 w-3 mr-1" />
+                Selecionar
               </Button>
             </div>
           )}

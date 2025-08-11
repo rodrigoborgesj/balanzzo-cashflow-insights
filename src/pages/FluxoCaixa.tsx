@@ -143,7 +143,10 @@ export default function FluxoCaixa() {
           <Input
             type="month"
             value={selectedMonth}
-            onChange={(e) => setSelectedMonth(e.target.value)}
+            onChange={(e) => {
+              console.log('Month changed from', selectedMonth, 'to', e.target.value);
+              setSelectedMonth(e.target.value);
+            }}
             className="w-40"
           />
           <Button 

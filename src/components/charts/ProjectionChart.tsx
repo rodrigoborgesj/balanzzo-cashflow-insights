@@ -22,29 +22,8 @@ interface ProjectionChartProps {
 export const ProjectionChart = ({ data, formatCurrency, title, type }: ProjectionChartProps) => {
   const [viewType, setViewType] = useState<'line' | 'area'>('area');
 
-  // Generate sample projection data if none provided
-  const sampleData = data.length > 0 ? data : generateSampleProjectionData(type);
-
-  function generateSampleProjectionData(type: 'annual' | 'monthly'): ProjectionData[] {
-    if (type === 'annual') {
-      return Array.from({ length: 12 }, (_, i) => {
-        const month = new Date(2024, i, 1).toLocaleDateString('pt-BR', { month: 'short' });
-        return {
-          period: month,
-          projected: Math.random() * 50000 + 20000,
-          category: 'Projeção de Receita',
-          description: `Estimativa baseada em tendências históricas para ${month}/2024`
-        };
-      });
-    } else {
-      return Array.from({ length: 30 }, (_, i) => ({
-        period: `${i + 1}`,
-        projected: Math.random() * 5000 + 1000,
-        category: 'Entrada Diária',
-        description: `Projeção para o dia ${i + 1} do mês`
-      }));
-    }
-  }
+  // Use provided data only - no sample data generation
+  const sampleData = data;
 
   const maxValue = Math.max(...sampleData.map(item => item.projected));
   const avgValue = sampleData.reduce((sum, item) => sum + item.projected, 0) / sampleData.length;
@@ -80,30 +59,35 @@ export const ProjectionChart = ({ data, formatCurrency, title, type }: Projectio
       <CardContent>
         {/* Summary Stats */}
         <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="text-center p-3 bg-muted/20 rounded-lg">
-            <div className="text-xs text-muted-foreground">Total Projetado</div>
-            <div className="text-lg font-bold text-primary">
-              {formatCurrency(sampleData.reduce((sum, item) => sum + item.projected, 0))}
-            </div>
-          </div>
-          <div className="text-center p-3 bg-muted/20 rounded-lg">
-            <div className="text-xs text-muted-foreground">Média {type === 'annual' ? 'Mensal' : 'Diária'}</div>
-            <div className="text-lg font-bold text-foreground">
-              {formatCurrency(avgValue)}
-            </div>
-          </div>
-          <div className="text-center p-3 bg-muted/20 rounded-lg">
-            <div className="text-xs text-muted-foreground">Pico Máximo</div>
-            <div className="text-lg font-bold text-success">
-              {formatCurrency(maxValue)}
-            </div>
-          </div>
+          {sampleData.length > 0 && (
+            <>
+              <div className="text-center p-3 bg-muted/20 rounded-lg">
+                <div className="text-xs text-muted-foreground">Total Projetado</div>
+                <div className="text-lg font-bold text-primary">
+                  {formatCurrency(sampleData.reduce((sum, item) => sum + item.projected, 0))}
+                </div>
+              </div>
+              <div className="text-center p-3 bg-muted/20 rounded-lg">
+                <div className="text-xs text-muted-foreground">Média {type === 'annual' ? 'Mensal' : 'Diária'}</div>
+                <div className="text-lg font-bold text-foreground">
+                  {formatCurrency(avgValue)}
+                </div>
+              </div>
+              <div className="text-center p-3 bg-muted/20 rounded-lg">
+                <div className="text-xs text-muted-foreground">Pico Máximo</div>
+                <div className="text-lg font-bold text-success">
+                  {formatCurrency(maxValue)}
+                </div>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Chart */}
         <div className="h-80">
-          <ResponsiveContainer width="100%" height="100%">
-            {viewType === 'area' ? (
+          {sampleData.length > 0 ? (
+            <ResponsiveContainer width="100%" height="100%">
+              {viewType === 'area' ? (
               <AreaChart data={sampleData}>
                 <defs>
                   <linearGradient id="projectionGradient" x1="0" y1="0" x2="0" y2="1">
@@ -158,8 +142,16 @@ export const ProjectionChart = ({ data, formatCurrency, title, type }: Projectio
                 />
                 <CustomTooltip chartType="projection" />
               </LineChart>
-            )}
-          </ResponsiveContainer>
+              )}
+            </ResponsiveContainer>
+          ) : (
+            <div className="h-full flex items-center justify-center text-muted-foreground">
+              <div className="text-center">
+                <p className="text-sm mb-2">Nenhuma projeção disponível</p>
+                <p className="text-xs">Adicione transações futuras no Fluxo de Caixa</p>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Projection Info */}
@@ -172,8 +164,8 @@ export const ProjectionChart = ({ data, formatCurrency, title, type }: Projectio
           </div>
           <p className="text-xs text-muted-foreground">
             {type === 'annual' 
-              ? 'Projeção baseada em dados inseridos no fluxo de caixa para os próximos 12 meses. Valores podem variar conforme novas entradas forem adicionadas.'
-              : 'Detalhamento mensal das entradas futuras. Utilize o botão "Adicionar despesas/entradas futuras" no Fluxo de Caixa para personalizar estas projeções.'
+              ? 'Projeção baseada APENAS em transações futuras registradas no Fluxo de Caixa. Utilize o botão "Adicionar Transação" para incluir projeções.'
+              : 'Detalhamento mensal das transações futuras registradas. Utilize o botão "Adicionar Transação" no Fluxo de Caixa para personalizar estas projeções.'
             }
           </p>
         </div>

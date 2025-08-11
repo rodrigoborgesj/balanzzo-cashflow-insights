@@ -10,7 +10,7 @@ interface CustomTooltipProps {
   active?: boolean;
   payload?: any[];
   label?: string;
-  chartType?: 'expense' | 'income' | 'monthly' | 'projection';
+  chartType?: 'expense' | 'income' | 'monthly' | 'projection' | 'expense_projection';
 }
 
 export const CustomTooltip = ({ active, payload, label, chartType }: CustomTooltipProps) => {
@@ -67,6 +67,18 @@ export const CustomTooltip = ({ active, payload, label, chartType }: CustomToolt
             `Valor projetado: ${formatCurrency(value)}`,
             `Período: ${label}`,
             'Fonte: Planejamento manual'
+          ]
+        };
+      
+      case 'expense_projection':
+        return {
+          title: `Projeção de Despesas: ${label}`,
+          value: formatCurrency(value),
+          description: `Projeção de gastos baseada em despesas futuras registradas no fluxo de caixa. Esta estimativa considera saídas programadas.`,
+          details: [
+            `Valor projetado: ${formatCurrency(value)}`,
+            `Período: ${label}`,
+            'Fonte: Despesas futuras planejadas'
           ]
         };
       

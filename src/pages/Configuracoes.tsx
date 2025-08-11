@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { CategoryManager } from "@/components/CategoryManager";
+import TransactionRemover from "@/components/TransactionRemover";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Settings, 
@@ -11,7 +12,8 @@ import {
   Database,
   Palette,
   Globe,
-  Save
+  Save,
+  Trash2
 } from "lucide-react";
 
 export default function Configuracoes() {
@@ -150,6 +152,24 @@ export default function Configuracoes() {
                 Todas as alterações serão aplicadas automaticamente em todo o sistema.
               </p>
               <CategoryManager />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Remoção de Transações */}
+        <Card className="bg-gradient-to-br from-card to-card/80 border-border/50 shadow-soft">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Trash2 className="h-5 w-5" />
+              Gerenciamento de Dados
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Remova transações importadas quando necessário. Esta funcionalidade foi movida para as configurações por motivos de segurança.
+              </p>
+              <TransactionRemover />
             </div>
           </CardContent>
         </Card>
