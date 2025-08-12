@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import bcrypt from "bcryptjs";
 
 export interface PasswordValidationRule {
   isValid: boolean;
@@ -62,8 +63,6 @@ export function validatePassword(password: string, userProfile?: UserProfile): P
 
 export async function checkPasswordHistory(password: string, userId: string): Promise<boolean> {
   try {
-    // This is a simplified check - in a real implementation, you'd hash the password
-    // and compare against stored hashes
     const { data, error } = await supabase
       .from('password_history')
       .select('password_hash')
@@ -76,13 +75,18 @@ export async function checkPasswordHistory(password: string, userId: string): Pr
       return true; // Allow if we can't check
     }
 
-    // For now, we'll do a simple string comparison
-    // In production, you'd hash the password and compare hashes
-    const passwordUsedBefore = data?.some(record => 
-      record.password_hash === password
+    // Compare hashed password with stored hashes
+    const passwordUsedBefore = await Promise.all(
+      (data || []).map(async (record) => {
+        try {
+          return await bcrypt.compare(password, record.password_hash);
+        } catch {
+          return false;
+        }
+      })
     );
 
-    return !passwordUsedBefore;
+    return !passwordUsedBefore.some(Boolean);
   } catch (error) {
     console.error('Error checking password history:', error);
     return true; // Allow if we can't check
@@ -91,12 +95,15 @@ export async function checkPasswordHistory(password: string, userId: string): Pr
 
 export async function savePasswordToHistory(password: string, userId: string): Promise<void> {
   try {
-    // In production, you'd hash the password before storing
+    // Hash the password before storing
+    const saltRounds = 12;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    
     await supabase
       .from('password_history')
       .insert({
         user_id: userId,
-        password_hash: password // In production, this should be hashed
+        password_hash: hashedPassword
       });
   } catch (error) {
     console.error('Error saving password to history:', error);

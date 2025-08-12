@@ -20,21 +20,21 @@ export type Database = {
           cor: string | null
           id: string
           nome_categoria: string
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           ativo?: boolean | null
           cor?: string | null
           id?: string
           nome_categoria: string
-          user_id?: string | null
+          user_id: string
         }
         Update: {
           ativo?: boolean | null
           cor?: string | null
           id?: string
           nome_categoria?: string
-          user_id?: string | null
+          user_id?: string
         }
         Relationships: []
       }
