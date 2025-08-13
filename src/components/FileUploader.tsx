@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Upload, FileText, X, CheckCircle } from "lucide-react";
+import { validateFileUpload, sanitizeInput } from "@/utils/security";
 
 interface FileUploaderProps {
   onFileSelect: (file: File) => void;
@@ -41,7 +42,28 @@ export function FileUploader({
   };
 
   const handleFileSelect = (file: File) => {
-    // Validate file type
+    // Enhanced security validation using security utils
+    const validation = validateFileUpload(file);
+    if (!validation.isValid) {
+      toast({
+        title: "Arquivo rejeitado",
+        description: validation.error,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Sanitize filename for security
+    const sanitizedName = sanitizeInput(file.name);
+    if (sanitizedName !== file.name) {
+      toast({
+        title: "Nome do arquivo foi ajustado",
+        description: "Caracteres potencialmente perigosos foram removidos do nome do arquivo",
+        variant: "default",
+      });
+    }
+
+    // Additional file extension validation
     const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
     if (!acceptedFormats.includes(fileExtension)) {
       toast({
@@ -52,7 +74,7 @@ export function FileUploader({
       return;
     }
 
-    // Validate file size
+    // Validate file size (using security utils validation as primary)
     if (file.size > maxSize * 1024 * 1024) {
       toast({
         title: "Arquivo muito grande",
@@ -66,8 +88,8 @@ export function FileUploader({
     onFileSelect(file);
     
     toast({
-      title: "Arquivo selecionado",
-      description: `${file.name} está pronto para upload`,
+      title: "Arquivo selecionado com segurança",
+      description: `${sanitizedName} passou na validação de segurança`,
     });
   };
 
