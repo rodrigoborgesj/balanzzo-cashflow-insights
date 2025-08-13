@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { CategoryManager } from "@/components/CategoryManager";
 import TransactionRemover from "@/components/TransactionRemover";
+import { SecurityMonitoringDashboard } from "@/components/SecurityMonitoringDashboard";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Settings, 
@@ -134,6 +135,19 @@ export default function Configuracoes() {
             <Button variant="outline" className="w-full">
               Alterar Senha
             </Button>
+          </CardContent>
+        </Card>
+
+        {/* Security Monitoring */}
+        <Card className="bg-gradient-to-br from-card to-card/80 border-border/50 shadow-soft lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5" />
+              Monitoramento de Segurança
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <SecurityMonitoringDashboard />
           </CardContent>
         </Card>
 
