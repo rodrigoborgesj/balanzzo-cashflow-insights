@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Lock, Eye, EyeOff, Building2, CheckCircle, XCircle } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
+import { useSecureAuth } from "@/hooks/useSecureAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { validatePassword, checkPasswordHistory, savePasswordToHistory, PasswordValidationResult } from "@/utils/passwordValidation";
 
@@ -20,7 +20,7 @@ export default function ResetPassword() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { updatePassword, user, isAuthenticated } = useAuth();
+  const { updatePassword, user, isAuthenticated } = useSecureAuth();
   const { profile } = useProfile();
 
   useEffect(() => {

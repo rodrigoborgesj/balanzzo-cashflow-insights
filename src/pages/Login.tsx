@@ -7,7 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { useNavigate, Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Lock, Mail, Eye, EyeOff, Chrome } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
+import { useSecureAuth } from "@/hooks/useSecureAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { SignupForm } from "@/components/SignupForm";
 import financialHero from "@/assets/financial-hero.png";
@@ -20,7 +20,7 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { signIn, signInWithGoogle, isAuthenticated, user, isLoading: authLoading } = useAuth();
+  const { signIn, signInWithGoogle, isAuthenticated, user, isLoading: authLoading } = useSecureAuth();
   const { hasProfile, isLoading: profileLoading } = useProfile();
 
   useEffect(() => {

@@ -11,8 +11,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator";
 import { Eye, EyeOff, Mail, Chrome } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
+import { useSecureAuth } from "@/hooks/useSecureAuth";
 import { useProfile, ProfileData } from "@/hooks/useProfile";
+import { secureStorage } from "@/utils/secureStorage";
 import { Link } from "react-router-dom";
 
 const revenueRanges = [
@@ -57,7 +58,7 @@ export function SignupForm({ onBack }: SignupFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [acceptedPrivacyPolicy, setAcceptedPrivacyPolicy] = useState(false);
   const { toast } = useToast();
-  const { signUp, signInWithGoogle } = useAuth();
+  const { signUp, signInWithGoogle } = useSecureAuth();
   const { createProfile } = useProfile();
 
   const form = useForm<SignupFormData>({
@@ -104,7 +105,7 @@ export function SignupForm({ onBack }: SignupFormProps) {
         return;
       }
 
-      // Store profile data in localStorage to be used after email confirmation
+      // Store profile data in secure storage to be used after email confirmation
       const profileData: ProfileData = {
         full_name: data.full_name,
         phone: data.phone,
@@ -121,7 +122,8 @@ export function SignupForm({ onBack }: SignupFormProps) {
         address_zip_code: data.address_zip_code,
       };
       
-      localStorage.setItem('pendingProfileData', JSON.stringify(profileData));
+      // Store with 24 hour expiry for temporary signup data
+      secureStorage.setItem('pendingProfileData', profileData, 24 * 60 * 60 * 1000);
 
       toast({
         title: "Conta criada com sucesso!",
