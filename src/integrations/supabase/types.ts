@@ -256,7 +256,7 @@ export type Database = {
           origem_arquivo: string | null
           status_conciliacao: boolean | null
           tipo: string | null
-          user_id: string | null
+          user_id: string
           valor: number
         }
         Insert: {
@@ -272,7 +272,7 @@ export type Database = {
           origem_arquivo?: string | null
           status_conciliacao?: boolean | null
           tipo?: string | null
-          user_id?: string | null
+          user_id: string
           valor: number
         }
         Update: {
@@ -288,7 +288,7 @@ export type Database = {
           origem_arquivo?: string | null
           status_conciliacao?: boolean | null
           tipo?: string | null
-          user_id?: string | null
+          user_id?: string
           valor?: number
         }
         Relationships: [

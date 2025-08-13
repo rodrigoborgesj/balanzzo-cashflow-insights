@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
+import { secureStorage } from "@/utils/secureStorage";
 
 export interface Profile {
   id: string;
@@ -50,20 +51,14 @@ export function useProfile() {
   useEffect(() => {
     if (user) {
       loadProfile();
-      // Check for pending profile data from signup
-      const pendingData = localStorage.getItem('pendingProfileData');
-      if (pendingData) {
-        try {
-          const profileData: ProfileData = JSON.parse(pendingData);
-          setTimeout(() => {
-            updateProfile(profileData).then(() => {
-              localStorage.removeItem('pendingProfileData');
-            }).catch(console.error);
-          }, 1000);
-        } catch (error) {
-          console.error('Error processing pending profile data:', error);
-          localStorage.removeItem('pendingProfileData');
-        }
+      // Check for pending profile data from signup (using secure storage)
+      const profileData = secureStorage.getItem<ProfileData>('pendingProfileData');
+      if (profileData) {
+        setTimeout(() => {
+          updateProfile(profileData).then(() => {
+            secureStorage.removeItem('pendingProfileData');
+          }).catch(console.error);
+        }, 1000);
       }
     } else {
       setProfile(null);
