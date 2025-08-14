@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -15,6 +15,9 @@ import { useSecureAuth } from "@/hooks/useSecureAuth";
 import { useProfile, ProfileData } from "@/hooks/useProfile";
 import { secureStorage } from "@/utils/secureStorage";
 import { Link } from "react-router-dom";
+import { validatePasswordAsync } from "@/utils/passwordValidationAsync";
+import { PasswordValidationDisplay } from "@/components/PasswordValidationDisplay";
+import { PasswordValidationResult } from "@/utils/passwordValidation";
 
 const revenueRanges = [
   "Até R$ 360.000/ano (MEI)",
@@ -57,6 +60,7 @@ export function SignupForm({ onBack }: SignupFormProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [acceptedPrivacyPolicy, setAcceptedPrivacyPolicy] = useState(false);
+  const [passwordValidation, setPasswordValidation] = useState<PasswordValidationResult | null>(null);
   const { toast } = useToast();
   const { signUp, signInWithGoogle } = useSecureAuth();
   const { createProfile } = useProfile();
@@ -81,6 +85,28 @@ export function SignupForm({ onBack }: SignupFormProps) {
       address_zip_code: "",
     },
   });
+
+  // Watch password field for real-time validation
+  const password = form.watch("password");
+  const fullName = form.watch("full_name");
+
+  // Validate password in real-time with breach check
+  useEffect(() => {
+    if (password) {
+      const timeoutId = setTimeout(async () => {
+        try {
+          const result = await validatePasswordAsync(password, { full_name: fullName });
+          setPasswordValidation(result);
+        } catch (error) {
+          console.error('Error validating password:', error);
+        }
+      }, 500); // Debounce
+
+      return () => clearTimeout(timeoutId);
+    } else {
+      setPasswordValidation(null);
+    }
+  }, [password, fullName]);
 
   const onSubmit = async (data: SignupFormData) => {
     if (!acceptedPrivacyPolicy) {
@@ -240,6 +266,12 @@ export function SignupForm({ onBack }: SignupFormProps) {
                 </div>
                 {form.formState.errors.password && (
                   <p className="text-destructive text-sm">{form.formState.errors.password.message}</p>
+                )}
+                
+                {passwordValidation && (
+                  <div className="mt-3">
+                    <PasswordValidationDisplay rules={passwordValidation.rules} />
+                  </div>
                 )}
               </div>
             </div>
@@ -451,7 +483,7 @@ export function SignupForm({ onBack }: SignupFormProps) {
             <Button type="button" variant="outline" onClick={onBack} className="flex-1">
               Voltar
             </Button>
-            <Button type="submit" disabled={isLoading || !acceptedPrivacyPolicy} className="flex-1">
+            <Button type="submit" disabled={isLoading || !acceptedPrivacyPolicy || (passwordValidation && !passwordValidation.isValid)} className="flex-1">
               {isLoading ? "Criando conta..." : "Criar Conta"}
             </Button>
           </div>

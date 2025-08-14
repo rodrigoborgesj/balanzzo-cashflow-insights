@@ -1,14 +1,19 @@
 import { supabase } from "@/integrations/supabase/client";
 import bcrypt from "bcryptjs";
+import { checkBreachedPassword, formatBreachCount, getBreachSeverity } from "./breachedPasswordCheck";
 
 export interface PasswordValidationRule {
   isValid: boolean;
   message: string;
+  severity?: 'low' | 'medium' | 'high' | 'critical';
+  isAsync?: boolean;
+  isLoading?: boolean;
 }
 
 export interface PasswordValidationResult {
   isValid: boolean;
   rules: PasswordValidationRule[];
+  hasAsyncRules?: boolean;
 }
 
 export interface UserProfile {
@@ -53,11 +58,21 @@ export function validatePassword(password: string, userProfile?: UserProfile): P
     });
   }
 
-  const isValid = rules.every(rule => rule.isValid);
+  // Add breach check rule (async)
+  rules.push({
+    isValid: true, // Will be updated by async check
+    message: "Verificando se a senha foi comprometida...",
+    isAsync: true,
+    isLoading: true,
+    severity: 'medium'
+  });
+
+  const isValid = rules.filter(rule => !rule.isAsync).every(rule => rule.isValid);
 
   return {
     isValid,
-    rules
+    rules,
+    hasAsyncRules: true
   };
 }
 

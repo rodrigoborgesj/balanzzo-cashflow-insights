@@ -5,10 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { Lock, Eye, EyeOff, Building2, CheckCircle, XCircle } from "lucide-react";
+import { Lock, Eye, EyeOff, Building2 } from "lucide-react";
 import { useSecureAuth } from "@/hooks/useSecureAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { validatePassword, checkPasswordHistory, savePasswordToHistory, PasswordValidationResult } from "@/utils/passwordValidation";
+import { validatePasswordAsync } from "@/utils/passwordValidationAsync";
+import { PasswordValidationDisplay } from "@/components/PasswordValidationDisplay";
 
 export default function ResetPassword() {
   const [password, setPassword] = useState("");
@@ -35,10 +37,24 @@ export default function ResetPassword() {
     }
   }, [isAuthenticated, navigate, toast]);
 
+  // Validate password as user types (with async breach check)
   useEffect(() => {
     if (password) {
-      const result = validatePassword(password, profile || undefined);
-      setValidation(result);
+      // Start with basic validation
+      const basicResult = validatePassword(password, profile || undefined);
+      setValidation(basicResult);
+      
+      // Then perform async validation with debounce
+      const timeoutId = setTimeout(async () => {
+        try {
+          const asyncResult = await validatePasswordAsync(password, profile || undefined);
+          setValidation(asyncResult);
+        } catch (error) {
+          console.error('Error in async password validation:', error);
+        }
+      }, 500); // Debounce async check
+
+      return () => clearTimeout(timeoutId);
     } else {
       setValidation(null);
     }
@@ -209,27 +225,16 @@ export default function ResetPassword() {
 
               {validation && (
                 <div className="space-y-3">
-                  <Label className="text-sm font-medium">Requisitos da Senha:</Label>
-                  <div className="space-y-2">
-                    {validation.rules.map((rule, index) => (
-                      <div key={index} className="flex items-center gap-2">
-                        {rule.isValid ? (
-                          <CheckCircle className="h-4 w-4 text-green-500" />
-                        ) : (
-                          <XCircle className="h-4 w-4 text-red-500" />
-                        )}
-                        <span className={`text-sm ${rule.isValid ? 'text-green-600' : 'text-red-600'}`}>
-                          {rule.message}
-                        </span>
-                      </div>
-                    ))}
-                    <div className="flex items-center gap-2">
-                      <XCircle className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm text-muted-foreground">
-                        Não pode ser uma senha já utilizada anteriormente
-                      </span>
-                    </div>
-                  </div>
+                  <PasswordValidationDisplay 
+                    rules={[
+                      ...validation.rules,
+                      {
+                        isValid: true, // Will be checked during submission
+                        message: "Não pode ser uma senha já utilizada anteriormente",
+                        severity: 'medium' as const
+                      }
+                    ]} 
+                  />
                 </div>
               )}
 
