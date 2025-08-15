@@ -106,71 +106,117 @@ export function FileUploader({
     }
   };
 
+  const openFileDialog = () => {
+    inputRef.current?.click();
+  };
+
   return (
-    <div className="space-y-4">
-      <Card 
-        className={`relative border-2 border-dashed transition-all duration-200 ${
-          dragActive 
-            ? "border-primary bg-primary/5" 
-            : selectedFile 
-              ? "border-success bg-success/5"
-              : "border-border hover:border-primary/50"
-        }`}
-        onDragEnter={handleDrag}
-        onDragLeave={handleDrag}
-        onDragOver={handleDrag}
-        onDrop={handleDrop}
-      >
-        <CardContent className="p-4">
-          {selectedFile ? (
-            <div className="text-center space-y-2">
-              <div className="flex items-center justify-center">
+    <Card 
+      className={`relative border-2 border-dashed transition-all duration-300 cursor-pointer rounded-xl overflow-hidden ${
+        dragActive 
+          ? 'border-primary bg-gradient-to-br from-primary/5 to-primary/10 scale-[1.02] shadow-lg' 
+          : 'border-border hover:border-primary/50 hover:shadow-md'
+      }`}
+      onDragEnter={handleDrag}
+      onDragLeave={handleDrag}
+      onDragOver={handleDrag}
+      onDrop={handleDrop}
+      onClick={openFileDialog}
+    >
+      <CardContent className="p-6 text-center">
+        {selectedFile ? (
+          <div className="space-y-4">
+            <div className="flex items-center justify-center space-x-3">
+              <div className="p-2 bg-success/10 rounded-full">
                 <CheckCircle className="h-8 w-8 text-success" />
               </div>
-              <div className="space-y-1">
-                <h3 className="font-medium text-foreground text-sm">Arquivo selecionado</h3>
-                <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-                  <FileText className="h-3 w-3" />
-                  <span>{selectedFile.name}</span>
+              <div className="text-left">
+                <p className="font-semibold text-success">Arquivo carregado</p>
+                <p className="text-sm text-muted-foreground">Pronto para processar</p>
+              </div>
+            </div>
+            <div className="bg-gradient-to-r from-muted/50 to-muted p-4 rounded-xl border">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <Upload className="h-5 w-5 text-primary" />
+                </div>
+                <div className="flex-1 text-left">
+                  <p className="font-medium text-foreground">{selectedFile.name}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {(selectedFile.size / 1024).toFixed(1)} KB • CSV
+                  </p>
                 </div>
               </div>
-              <div className="flex gap-1 justify-center">
-                <Button variant="outline" size="sm" onClick={removeFile} className="h-7 px-2 text-xs">
-                  <X className="h-3 w-3 mr-1" />
-                  Remover
-                </Button>
-                <Button size="sm" onClick={() => inputRef.current?.click()} className="h-7 px-2 text-xs">
-                  <Upload className="h-3 w-3 mr-1" />
-                  Outro
-                </Button>
-              </div>
             </div>
-          ) : (
-            <div className="text-center space-y-2">
-              <div className="flex items-center justify-center">
-                <Upload className="h-8 w-8 text-muted-foreground" />
-              </div>
-              <div className="space-y-1">
-                <h3 className="font-medium text-foreground text-sm">
-                  Clique para selecionar
-                </h3>
-              </div>
-              <Button onClick={() => inputRef.current?.click()} size="sm" className="h-7 px-3 text-xs">
-                <Upload className="h-3 w-3 mr-1" />
-                Selecionar
+            <div className="flex space-x-3">
+              <Button 
+                variant="outline" 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  removeFile();
+                }} 
+                className="flex-1 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/20"
+              >
+                Remover
+              </Button>
+              <Button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openFileDialog();
+                }} 
+                className="flex-1 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80"
+              >
+                Escolher outro
               </Button>
             </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <input
-        ref={inputRef}
-        type="file"
-        accept={acceptedFormats.join(',')}
-        onChange={handleInputChange}
-        className="hidden"
-      />
-    </div>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            <div className="flex flex-col items-center space-y-4">
+              <div className={`p-4 rounded-full transition-all duration-300 ${
+                dragActive 
+                  ? 'bg-gradient-to-br from-primary to-primary/80 text-white scale-110' 
+                  : 'bg-gradient-to-br from-muted to-muted/50 text-muted-foreground'
+              }`}>
+                <Upload className="h-12 w-12" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="font-semibold text-xl text-foreground">
+                  {dragActive ? 'Solte seu arquivo aqui' : 'Upload do Extrato'}
+                </h3>
+                <p className="text-muted-foreground max-w-sm">
+                  Arraste e solte seu arquivo CSV ou clique para selecionar
+                </p>
+              </div>
+              <div className="bg-muted/30 backdrop-blur-sm p-4 rounded-lg border border-border/50">
+                <div className="flex items-center gap-4 text-sm">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-success rounded-full"></div>
+                    <span>Formatos: {acceptedFormats.join(', ')}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-primary rounded-full"></div>
+                    <span>Máx: {maxSize}MB</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <Button 
+              className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 text-white font-medium px-8 py-2 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
+            >
+              Escolher arquivo
+            </Button>
+          </div>
+        )}
+        
+        <input
+          ref={inputRef}
+          type="file"
+          className="hidden"
+          accept={acceptedFormats.join(',')}
+          onChange={handleInputChange}
+        />
+      </CardContent>
+    </Card>
   );
 }

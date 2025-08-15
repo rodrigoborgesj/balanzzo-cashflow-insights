@@ -265,18 +265,18 @@ export default function Conciliacao() {
   ];
 
   return (
-    <div className="min-h-screen bg-white p-6">
+    <div className="min-h-screen bg-white p-3 md:p-6">
       {/* Header */}
-      <div className="mb-8">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="mb-6 md:mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 md:gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-foreground mb-3">Conciliação Bancária</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-xl md:text-2xl font-bold text-foreground mb-2 md:mb-3">Conciliação Bancária</h1>
+            <p className="text-sm md:text-base text-muted-foreground">
               Faça upload e concilie suas transações bancárias
             </p>
           </div>
           
-          <div className="space-y-2">
+          <div className="space-y-2 w-full sm:w-auto">
             <label className="text-sm font-medium text-foreground">Mês de Referência</label>
             <Input
               type="month"
@@ -286,14 +286,14 @@ export default function Conciliacao() {
                 setSelectedMonth(e.target.value);
                 setPage(0); // Reset pagination when month changes
               }}
-              className="w-40 border-primary/20 focus:border-primary"
+              className="w-full sm:w-40 border-primary/20 focus:border-primary"
             />
           </div>
         </div>
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
         <Card className="bg-white border border-gray-200 rounded-[50px]">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -334,48 +334,59 @@ export default function Conciliacao() {
       </div>
 
       {/* Upload Section */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-        {/* Upload Area - Compact Version */}
-        <Card className="bg-white border border-gray-200 rounded-[50px]">
-          <CardHeader className="border-b border-gray-200 pb-2">
-            <CardTitle className="text-lg font-semibold text-foreground">Upload do Extrato</CardTitle>
-          </CardHeader>
-          <CardContent className="p-3">
-            <div className="space-y-2">
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-3 text-center">
-                <Upload className="h-6 w-6 text-gray-400 mx-auto mb-1" />
-                <h3 className="text-sm font-medium text-black mb-1">
-                  Selecione seu arquivo CSV
-                </h3>
-                <p className="text-xs text-gray-600 mb-2">
-                  Formato aceito: .csv
-                </p>
-                <div className="mt-2">
-                  <FileUploader onFileSelect={handleFileSelect} />
-                </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8">
+        {/* Upload Area - Modern Design */}
+        <Card className="bg-gradient-to-br from-card via-card to-card/95 border border-border/50 rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300">
+          <CardHeader className="border-b border-border/30 pb-4">
+            <CardTitle className="text-xl font-bold text-foreground flex items-center gap-3">
+              <div className="p-2 bg-gradient-to-br from-primary to-primary/80 rounded-xl text-white">
+                <Upload className="h-5 w-5" />
               </div>
+              Upload do Extrato
+            </CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">
+              Envie seu extrato bancário em formato CSV
+            </p>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="space-y-4">
+              <FileUploader onFileSelect={handleFileSelect} acceptedFormats={['.csv']} maxSize={5 * 1024 * 1024} />
               
               {selectedFile && (
-                <div className="mt-2 p-2 bg-gray-50 border border-gray-200 rounded-lg">
-                  <p className="text-xs text-black font-medium">
-                    📄 {selectedFile.name}
-                  </p>
+                <div className="animate-fade-in">
+                  <div className="p-4 bg-gradient-to-r from-success/10 to-success/5 border border-success/20 rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-success/10 rounded-lg">
+                        <Upload className="h-4 w-4 text-success" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-foreground">
+                          {selectedFile.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {(selectedFile.size / 1024).toFixed(1)} KB • Pronto para processar
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
               
               <Button 
                 onClick={handleProcessTransactions}
                 disabled={!selectedFile || isLoading}
-                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-1 text-sm h-8"
-                size="sm"
+                className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 text-white font-semibold py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
               >
                 {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-3 w-3 animate-spin" />
-                    Processando...
-                  </>
+                  <div className="flex items-center justify-center">
+                    <Loader2 className="mr-3 h-5 w-5 animate-spin" />
+                    Processando extrato...
+                  </div>
                 ) : (
-                  'Processar Transações'
+                  <div className="flex items-center justify-center">
+                    <Upload className="mr-3 h-5 w-5" />
+                    Processar Transações
+                  </div>
                 )}
               </Button>
             </div>
@@ -503,14 +514,24 @@ export default function Conciliacao() {
       {/* Tabs para transações */}
       <div className="mt-8">
         <Tabs defaultValue="conciliacao" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="conciliacao">Conciliar Transações</TabsTrigger>
-            <TabsTrigger value="processamento">Processamento Automático</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 bg-gradient-to-r from-muted to-muted/50 p-1 rounded-xl">
+            <TabsTrigger 
+              value="conciliacao"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/90 data-[state=active]:text-white data-[state=active]:shadow-lg font-medium"
+            >
+              Conciliar Transações
+            </TabsTrigger>
+            <TabsTrigger 
+              value="processamento"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-secondary data-[state=active]:to-secondary/90 data-[state=active]:text-white data-[state=active]:shadow-lg font-medium"
+            >
+              Processamento Automático
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="conciliacao" className="space-y-4">
             {/* Controles de filtro */}
-            <div className="flex flex-col md:flex-row gap-4 items-center">
+            <div className="flex flex-col sm:flex-row gap-3 md:gap-4 items-stretch sm:items-center">
               <div className="flex-1">
                 <div className="relative">
                   <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
@@ -524,7 +545,7 @@ export default function Conciliacao() {
               </div>
               
               <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger className="w-48">
+                <SelectTrigger className="w-full sm:w-48">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -538,7 +559,7 @@ export default function Conciliacao() {
             {/* Tabela de Transações */}
             <Card>
               <CardContent className="p-0">
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto mobile-scroll">
                   <Table>
                     <TableHeader>
                       <TableRow>

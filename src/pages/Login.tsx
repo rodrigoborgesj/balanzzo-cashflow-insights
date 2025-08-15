@@ -132,23 +132,53 @@ export default function Login() {
             </p>
           </div>
           
-          {/* Modern feature preview */}
+          {/* Modern workflow showcase */}
           <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
-            <h3 className="text-lg font-semibold mb-4" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-              Principais funcionalidades
+            <h3 className="text-lg font-semibold mb-6" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+              Como funciona no seu dia a dia
             </h3>
-            <div className="grid grid-cols-1 gap-3">
-              <div className="flex items-center space-x-3 p-3 bg-white/10 rounded-lg">
-                <div className="w-3 h-3 bg-white rounded-full"></div>
-                <span className="text-sm font-medium">DRE Automatizada</span>
+            <div className="space-y-4">
+              {/* Step 1 */}
+              <div className="flex items-start gap-4 p-4 bg-white/5 rounded-xl border border-white/10">
+                <div className="flex-shrink-0 w-8 h-8 bg-white/20 rounded-full flex items-center justify-center text-sm font-bold">
+                  1
+                </div>
+                <div>
+                  <h4 className="font-medium mb-1">Upload do Extrato</h4>
+                  <p className="text-sm opacity-90">Envie seu CSV bancário em segundos</p>
+                </div>
               </div>
-              <div className="flex items-center space-x-3 p-3 bg-white/10 rounded-lg">
-                <div className="w-3 h-3 bg-white rounded-full"></div>
-                <span className="text-sm font-medium">Fluxo de Caixa</span>
+              
+              {/* Arrow */}
+              <div className="flex justify-center">
+                <div className="w-px h-4 bg-white/30"></div>
               </div>
-              <div className="flex items-center space-x-3 p-3 bg-white/10 rounded-lg">
-                <div className="w-3 h-3 bg-white rounded-full"></div>
-                <span className="text-sm font-medium">Conciliação Bancária</span>
+              
+              {/* Step 2 */}
+              <div className="flex items-start gap-4 p-4 bg-white/5 rounded-xl border border-white/10">
+                <div className="flex-shrink-0 w-8 h-8 bg-white/20 rounded-full flex items-center justify-center text-sm font-bold">
+                  2
+                </div>
+                <div>
+                  <h4 className="font-medium mb-1">Conciliação Automática</h4>
+                  <p className="text-sm opacity-90">IA categoriza suas transações</p>
+                </div>
+              </div>
+              
+              {/* Arrow */}
+              <div className="flex justify-center">
+                <div className="w-px h-4 bg-white/30"></div>
+              </div>
+              
+              {/* Step 3 */}
+              <div className="flex items-start gap-4 p-4 bg-white/5 rounded-xl border border-white/10">
+                <div className="flex-shrink-0 w-8 h-8 bg-white/20 rounded-full flex items-center justify-center text-sm font-bold">
+                  3
+                </div>
+                <div>
+                  <h4 className="font-medium mb-1">Relatórios Prontos</h4>
+                  <p className="text-sm opacity-90">DRE e fluxo de caixa gerados</p>
+                </div>
               </div>
             </div>
           </div>

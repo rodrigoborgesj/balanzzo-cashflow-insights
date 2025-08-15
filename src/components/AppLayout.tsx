@@ -26,12 +26,12 @@ export function AppLayout({ children }: AppLayoutProps) {
         
         <div className="flex-1 flex flex-col">
           {/* Header with sidebar trigger */}
-          <header className="h-12 flex items-center border-b border-border bg-background px-4">
-            <SidebarTrigger className="text-foreground hover:bg-muted" />
+          <header className="h-12 md:h-14 flex items-center border-b border-border bg-background px-3 md:px-4">
+            <SidebarTrigger className="text-foreground hover:bg-muted mr-2 md:mr-0" />
           </header>
           
           {/* Main Content */}
-          <main className="flex-1 overflow-auto">
+          <main className="flex-1 overflow-auto px-3 md:px-0">
             {children}
           </main>
           

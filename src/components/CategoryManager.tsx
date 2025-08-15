@@ -12,6 +12,7 @@ export function CategoryManager() {
   const [editingCategory, setEditingCategory] = useState<any>(null);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [newCategoryColor, setNewCategoryColor] = useState("#3B82F6");
+  const [duplicateError, setDuplicateError] = useState<string>("");
   const { 
     userCategories, 
     createUserCategory, 
@@ -24,6 +25,16 @@ export function CategoryManager() {
   const handleCreateCategory = async () => {
     if (!newCategoryName.trim()) return;
 
+    // Check for duplicates
+    const isDuplicate = userCategories.some(cat => 
+      cat.nome_categoria.toLowerCase() === newCategoryName.trim().toLowerCase()
+    );
+    
+    if (isDuplicate) {
+      setDuplicateError("Esta categoria já existe!");
+      return;
+    }
+
     const success = await createUserCategory(newCategoryName.trim(), newCategoryColor);
     if (success) {
       resetForm();
@@ -32,6 +43,17 @@ export function CategoryManager() {
 
   const handleEditCategory = async () => {
     if (!editingCategory || !newCategoryName.trim()) return;
+
+    // Check for duplicates (excluding current category)
+    const isDuplicate = userCategories.some(cat => 
+      cat.id !== editingCategory.id && 
+      cat.nome_categoria.toLowerCase() === newCategoryName.trim().toLowerCase()
+    );
+    
+    if (isDuplicate) {
+      setDuplicateError("Esta categoria já existe!");
+      return;
+    }
 
     const success = await updateUserCategory(editingCategory.id, newCategoryName.trim(), newCategoryColor);
     if (success) {
@@ -62,6 +84,7 @@ export function CategoryManager() {
     setNewCategoryName("");
     setNewCategoryColor("#3B82F6");
     setEditingCategory(null);
+    setDuplicateError("");
     setIsOpen(false);
   };
 
@@ -100,8 +123,14 @@ export function CategoryManager() {
                   id="categoryName"
                   placeholder="Ex: Marketing Digital"
                   value={newCategoryName}
-                  onChange={(e) => setNewCategoryName(e.target.value)}
+                  onChange={(e) => {
+                    setNewCategoryName(e.target.value);
+                    setDuplicateError("");
+                  }}
                 />
+                {duplicateError && (
+                  <p className="text-sm text-destructive">{duplicateError}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label>Cor da Categoria</Label>
@@ -135,64 +164,77 @@ export function CategoryManager() {
         </Dialog>
       </div>
       
-      {userCategories.length > 0 && (
-        <div className="space-y-2">
-          {userCategories.map((category) => (
-            <div 
-              key={category.id} 
-              className="flex items-center gap-2 p-2 bg-card rounded-lg border"
-            >
-              <div 
-                className="w-3 h-3 rounded-full"
-                style={{ backgroundColor: category.cor || "#3B82F6" }}
-              />
-              <Tag className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm flex-1">{category.nome_categoria}</span>
-              
-              <div className="flex gap-1">
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="h-8 w-8 p-0"
-                  onClick={() => openEditDialog(category)}
-                >
-                  <Edit2 className="h-4 w-4" />
-                </Button>
-                
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Tem certeza que deseja excluir a categoria "{category.nome_categoria}"? 
-                        Esta ação não pode ser desfeita.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={() => handleDeleteCategory(category)}
-                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                      >
-                        Excluir
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
-            </div>
-          ))}
+      <div className="space-y-3">
+        <div className="text-sm font-medium text-muted-foreground mb-2">
+          Categorias Existentes ({userCategories.length})
         </div>
-      )}
+        {userCategories.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            <Tag className="h-8 w-8 mx-auto mb-2 opacity-50" />
+            <p className="text-sm">Nenhuma categoria personalizada criada</p>
+            <p className="text-xs mt-1">Crie sua primeira categoria acima</p>
+          </div>
+        ) : (
+          <div className="space-y-2 max-h-64 overflow-y-auto">
+            {userCategories.map((category) => (
+              <div 
+                key={category.id} 
+                className="flex items-center gap-3 p-3 bg-card rounded-lg border hover:border-primary/20 transition-colors group"
+              >
+                <div 
+                  className="w-3 h-3 rounded-full shadow-sm"
+                  style={{ backgroundColor: category.cor || "#3B82F6" }}
+                />
+                <Tag className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                <span className="text-sm flex-1 font-medium">{category.nome_categoria}</span>
+                
+                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-8 w-8 p-0 hover:bg-primary/10 hover:text-primary"
+                    onClick={() => openEditDialog(category)}
+                    title="Editar categoria"
+                  >
+                    <Edit2 className="h-4 w-4" />
+                  </Button>
+                  
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                        title="Excluir categoria"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Tem certeza que deseja excluir a categoria "<strong>{category.nome_categoria}</strong>"? 
+                          <br />Esta ação não pode ser desfeita.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => handleDeleteCategory(category)}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          Excluir
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
