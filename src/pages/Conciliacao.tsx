@@ -292,50 +292,10 @@ export default function Conciliacao() {
         </div>
       </div>
 
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
-        <Card className="bg-white border border-gray-200 rounded-[50px]">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Pendentes</p>
-                <p className="text-3xl font-bold text-foreground">{pendingCount}</p>
-              </div>
-              <Clock className="h-8 w-8 text-muted-foreground" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white border border-gray-200 rounded-[50px]">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Conciliadas</p>
-                <p className="text-3xl font-bold text-foreground">{reconciledCount}</p>
-              </div>
-              <CheckCircle className="h-8 w-8 text-muted-foreground" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-primary rounded-[50px] text-primary-foreground">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm opacity-90 mb-1">Saldo Total</p>
-                <p className="text-3xl font-bold">
-                  R$ {totalAmount?.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) || '0,00'}
-                </p>
-              </div>
-              <DollarSign className="h-8 w-8 opacity-90" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
 
       {/* Upload Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8">
-        {/* Upload Area - Modern Design */}
+      <div className="mb-6 md:mb-8">
+        {/* Upload Area - Rectangular Modern Design */}
         <Card className="bg-gradient-to-br from-card via-card to-card/95 border border-border/50 rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300">
           <CardHeader className="border-b border-border/30 pb-4">
             <CardTitle className="text-xl font-bold text-foreground flex items-center gap-3">
@@ -392,12 +352,6 @@ export default function Conciliacao() {
             </div>
           </CardContent>
         </Card>
-
-
-        {/* Empty space - Transaction Remover moved to Settings */}
-        <div className="xl:col-span-1">
-          {/* Transaction removal functions now in Settings page */}
-        </div>
       </div>
 
       {/* Status Messages */}
@@ -523,13 +477,59 @@ export default function Conciliacao() {
             </TabsTrigger>
             <TabsTrigger 
               value="processamento"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-secondary data-[state=active]:to-secondary/90 data-[state=active]:text-white data-[state=active]:shadow-lg font-medium"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/90 data-[state=active]:text-white data-[state=active]:shadow-lg font-medium"
             >
               Processamento Automático
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="conciliacao" className="space-y-4">
+            {/* Balance Details for Manual Tab */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <Card className="bg-gradient-to-br from-success/10 to-success/5 border-success/20">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-success">Entradas</p>
+                      <p className="text-xl font-bold">R$ {transactions.filter(t => t.tipo === 'entrada').reduce((sum, t) => sum + t.valor, 0).toLocaleString("pt-BR")}</p>
+                      <p className="text-xs text-muted-foreground">{transactions.filter(t => t.tipo === 'entrada').length} transações</p>
+                    </div>
+                    <TrendingUp className="h-6 w-6 text-success" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-br from-destructive/10 to-destructive/5 border-destructive/20">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-destructive">Saídas</p>
+                      <p className="text-xl font-bold">R$ {Math.abs(transactions.filter(t => t.tipo === 'saida').reduce((sum, t) => sum + t.valor, 0)).toLocaleString("pt-BR")}</p>
+                      <p className="text-xs text-muted-foreground">{transactions.filter(t => t.tipo === 'saida').length} transações</p>
+                    </div>
+                    <TrendingDown className="h-6 w-6 text-destructive" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className={`bg-gradient-to-br ${
+                totalAmount >= 0 
+                  ? 'from-primary/10 to-primary/5 border-primary/20' 
+                  : 'from-warning/10 to-warning/5 border-warning/20'
+              }`}>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium">Saldo Líquido</p>
+                      <p className="text-xl font-bold">R$ {totalAmount.toLocaleString("pt-BR")}</p>
+                      <p className="text-xs text-muted-foreground">{transactions.length} total</p>
+                    </div>
+                    <DollarSign className="h-6 w-6" />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
             {/* Controles de filtro */}
             <div className="flex flex-col sm:flex-row gap-3 md:gap-4 items-stretch sm:items-center">
               <div className="flex-1">

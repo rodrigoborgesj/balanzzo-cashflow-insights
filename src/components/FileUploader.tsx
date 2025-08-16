@@ -123,7 +123,7 @@ export function FileUploader({
       onDrop={handleDrop}
       onClick={openFileDialog}
     >
-      <CardContent className="p-6 text-center">
+      <CardContent className="p-8 text-center">
         {selectedFile ? (
           <div className="space-y-4">
             <div className="flex items-center justify-center space-x-3">
@@ -172,40 +172,42 @@ export function FileUploader({
           </div>
         ) : (
           <div className="space-y-6">
-            <div className="flex flex-col items-center space-y-4">
-              <div className={`p-4 rounded-full transition-all duration-300 ${
-                dragActive 
-                  ? 'bg-gradient-to-br from-primary to-primary/80 text-white scale-110' 
-                  : 'bg-gradient-to-br from-muted to-muted/50 text-muted-foreground'
-              }`}>
-                <Upload className="h-12 w-12" />
-              </div>
-              <div className="space-y-2">
-                <h3 className="font-semibold text-xl text-foreground">
-                  {dragActive ? 'Solte seu arquivo aqui' : 'Upload do Extrato'}
-                </h3>
-                <p className="text-muted-foreground max-w-sm">
-                  Arraste e solte seu arquivo CSV ou clique para selecionar
-                </p>
-              </div>
-              <div className="bg-muted/30 backdrop-blur-sm p-4 rounded-lg border border-border/50">
-                <div className="flex items-center gap-4 text-sm">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-success rounded-full"></div>
-                    <span>Formatos: {acceptedFormats.join(', ')}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-primary rounded-full"></div>
-                    <span>Máx: {maxSize}MB</span>
+            <div className="flex flex-col lg:flex-row items-center justify-between space-y-4 lg:space-y-0 lg:space-x-8">
+              <div className="flex items-center space-x-6">
+                <div className={`p-4 rounded-full transition-all duration-300 ${
+                  dragActive 
+                    ? 'bg-gradient-to-br from-primary to-primary/80 text-white scale-110' 
+                    : 'bg-gradient-to-br from-muted to-muted/50 text-muted-foreground'
+                }`}>
+                  <Upload className="h-12 w-12" />
+                </div>
+                <div className="space-y-2 text-left">
+                  <h3 className="font-semibold text-xl text-foreground">
+                    {dragActive ? 'Solte seu arquivo aqui' : 'Upload do Extrato'}
+                  </h3>
+                  <p className="text-muted-foreground">
+                    Arraste e solte seu arquivo CSV ou clique para selecionar
+                  </p>
+                  <div className="flex items-center gap-6 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-success rounded-full"></div>
+                      <span>{acceptedFormats.join(', ')}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-primary rounded-full"></div>
+                      <span>Máx: {maxSize}MB</span>
+                    </div>
                   </div>
                 </div>
               </div>
+              <div className="flex-shrink-0">
+                <Button 
+                  className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 text-white font-medium px-8 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
+                >
+                  Escolher arquivo
+                </Button>
+              </div>
             </div>
-            <Button 
-              className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 text-white font-medium px-8 py-2 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
-            >
-              Escolher arquivo
-            </Button>
           </div>
         )}
         
