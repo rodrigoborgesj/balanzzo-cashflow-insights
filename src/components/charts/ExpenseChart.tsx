@@ -1,26 +1,63 @@
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Cell } from 'recharts';
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Cell, Tooltip } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart3 } from 'lucide-react';
-import { CustomTooltip } from '@/components/CustomTooltip';
+import { getTop5ExpensesByCategory, formatBRL, type Transaction } from '@/utils/expenseAnalytics';
+import { useMemo } from 'react';
 
 interface ExpenseChartProps {
-  data: Array<{ name: string; value: number; color?: string }>;
+  transactions: Transaction[];
+  selectedMonth: string;
   formatCurrency: (value: number) => string;
 }
 
-export const ExpenseChart = ({ data, formatCurrency }: ExpenseChartProps) => {
-  // Strictly limit to maximum 5 categories only
-  const top5Data = data.slice(0, 5).map((item, index) => ({
-    ...item,
-    color: index === 0 ? '#1A3423' : '#A9C7A1' // Primary green for top, medium green for others
-  }));
+export const ExpenseChart = ({ transactions, selectedMonth, formatCurrency }: ExpenseChartProps) => {
+  // Process data using the pure function with strict 5-category limit
+  const expenseData = useMemo(() => {
+    const categories = getTop5ExpensesByCategory(transactions, selectedMonth);
+    
+    return categories.map((item, index) => ({
+      name: item.category.charAt(0).toUpperCase() + item.category.slice(1), // Capitalize first letter
+      value: item.amount,
+      percent: item.percent,
+      color: index === 0 ? '#1A3423' : '#A9C7A1' // Primary green for top, medium green for others
+    }));
+  }, [transactions, selectedMonth]);
 
-  // Ensure we never show more than 5 categories
-  if (top5Data.length > 5) {
-    console.warn('ExpenseChart: Data exceeds 5 categories, truncating to 5');
+  // Early return for empty state
+  if (expenseData.length === 0) {
+    return (
+      <Card className="dashboard-card animate-slide-in">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-2 text-foreground">
+            <BarChart3 className="w-5 h-5 text-primary" />
+            Top 5 Despesas por Categoria
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex items-center justify-center py-8">
+          <p className="text-muted-foreground text-center">
+            Sem despesas registradas neste mês.
+          </p>
+        </CardContent>
+      </Card>
+    );
   }
 
-  const maxValue = Math.max(...top5Data.map(item => item.value));
+  const maxValue = Math.max(...expenseData.map(item => item.value));
+
+  // Custom tooltip component
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload;
+      return (
+        <div className="bg-popover border border-border rounded-lg p-3 shadow-lg">
+          <p className="font-semibold text-foreground">{data.name}</p>
+          <p className="text-primary font-bold">{formatBRL(data.value)}</p>
+          <p className="text-muted-foreground text-sm">{data.percent}% do total mensal</p>
+        </div>
+      );
+    }
+    return null;
+  };
 
   return (
     <Card className="dashboard-card animate-slide-in">
@@ -33,11 +70,11 @@ export const ExpenseChart = ({ data, formatCurrency }: ExpenseChartProps) => {
       <CardContent className="space-y-4">
         {/* Custom horizontal bars */}
         <div className="space-y-3">
-          {top5Data.map((item, index) => (
+          {expenseData.map((item, index) => (
             <div key={item.name} className="group">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-sm font-medium text-foreground">{item.name}</span>
-                <span className="text-sm font-bold text-primary">{formatCurrency(item.value)}</span>
+                <span className="text-sm font-bold text-primary">{formatBRL(item.value)}</span>
               </div>
               <div className="relative">
                 <div className="h-3 bg-muted rounded-full overflow-hidden">
@@ -55,7 +92,7 @@ export const ExpenseChart = ({ data, formatCurrency }: ExpenseChartProps) => {
                 </div>
               </div>
               <div className="text-xs text-muted-foreground mt-1">
-                {((item.value / top5Data.reduce((sum, d) => sum + d.value, 0)) * 100).toFixed(1)}% do total
+                {item.percent}% do total mensal
               </div>
             </div>
           ))}
@@ -64,7 +101,7 @@ export const ExpenseChart = ({ data, formatCurrency }: ExpenseChartProps) => {
         {/* Recharts version for tooltip interaction */}
         <div className="h-64 mt-6">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={top5Data} layout="horizontal">
+            <BarChart data={expenseData} layout="horizontal">
               <XAxis type="number" hide />
               <YAxis 
                 type="category" 
@@ -79,11 +116,11 @@ export const ExpenseChart = ({ data, formatCurrency }: ExpenseChartProps) => {
                 radius={[0, 4, 4, 0]}
                 cursor="pointer"
               >
-                {top5Data.map((entry, index) => (
+                {expenseData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
               </Bar>
-              <CustomTooltip chartType="expense" />
+              <Tooltip content={<CustomTooltip />} />
             </BarChart>
           </ResponsiveContainer>
         </div>

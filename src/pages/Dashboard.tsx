@@ -101,13 +101,13 @@ export default function Dashboard() {
   const { profile } = useProfile();
   
   // Use the dedicated dashboard hook for comprehensive month-based data
-  const { 
+  const {
     selectedMonth,
     setSelectedMonth,
-    isLoading, 
+    isLoading,
     hasData,
     currentMonthData,
-    expenseChartData,
+    transactionsForSelectedMonth,
     incomeChartData,
     monthlyChartData,
     kpiData,
@@ -533,7 +533,11 @@ export default function Dashboard() {
       {/* Modern Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Enhanced Expense Chart */}
-        <ExpenseChart data={expenseChartData} formatCurrency={formatCurrency} />
+        <ExpenseChart 
+          transactions={transactionsForSelectedMonth}
+          selectedMonth={selectedMonth}
+          formatCurrency={formatCurrency}
+        />
 
         {/* Enhanced Income Chart */}
         <IncomeChart data={incomeChartData} formatCurrency={formatCurrency} />

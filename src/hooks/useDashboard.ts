@@ -222,18 +222,10 @@ export function useDashboard() {
     };
   }, [painelData, selectedMonth]);
 
-  // Preparar dados para gráfico de pizza (gastos por categoria)
-  const expenseChartData = useCallback((): ChartData[] => {
+  // Get raw transactions data for the ExpenseChart component
+  const getTransactionsForSelectedMonth = useCallback(() => {
     const current = currentMonthData();
-    const data = Object.entries(current.categoria_gastos || {})
-      .map(([categoria, valor]) => ({
-        name: categoria,
-        value: Number(valor),
-        color: `hsl(${Math.floor(Math.random() * 360)}, 70%, 50%)`
-      }))
-      .sort((a, b) => b.value - a.value);
-    
-    return data;
+    return ('dados_brutos' in current && current.dados_brutos) ? current.dados_brutos : [];
   }, [currentMonthData]);
 
   // Preparar dados para gráfico de pizza (receitas por categoria)
@@ -342,7 +334,7 @@ export function useDashboard() {
     isLoading,
     hasData,
     currentMonthData: currentMonthData(),
-    expenseChartData: expenseChartData(),
+    transactionsForSelectedMonth: getTransactionsForSelectedMonth(),
     incomeChartData: incomeChartData(),
     monthlyChartData: monthlyChartData(),
     kpiData: kpiData(),
