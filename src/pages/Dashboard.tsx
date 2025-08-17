@@ -441,9 +441,17 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <ProgressRing percentage={Math.round(profitMargin)} />
-              <p className="text-sm text-muted-foreground mt-4">
-                Baseado no saldo líquido atual
-              </p>
+              <div className="mt-4 space-y-2">
+                <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg text-left">
+                  <strong className="text-foreground">Como calculamos:</strong><br />
+                  A margem de lucro mostra quanto da sua receita se torna lucro após cobrir todos os custos e despesas. 
+                  É calculada dividindo o lucro pelas vendas totais, expressa em porcentagem. 
+                  Quanto maior a margem, mais eficientemente seu dinheiro está sendo usado.
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Baseado no saldo líquido atual
+                </p>
+              </div>
             </CardContent>
           </Card>
         </div>

@@ -77,6 +77,7 @@ export function useDashboard() {
         // Create date range for the specific month
         const startDate = `${year}-${month.toString().padStart(2, '0')}-01`;
         const endDate = `${year}-${month.toString().padStart(2, '0')}-31`;
+        console.log('Filtering transactions by date range:', { startDate, endDate, monthFilter });
         query = query.gte('data_transacao', startDate).lte('data_transacao', endDate);
       } else {
         // Get last 12 months of data
@@ -171,6 +172,7 @@ export function useDashboard() {
       // Se especificado um mês, filtrar por ele, senão buscar últimos 12 meses
       if (monthFilter) {
         const [ano, mes] = monthFilter.split('-').map(Number);
+        console.log('Loading dashboard data for:', { ano, mes, monthFilter });
         query = query.eq('ano', ano).eq('mes', mes);
       } else {
         // Buscar últimos 12 meses

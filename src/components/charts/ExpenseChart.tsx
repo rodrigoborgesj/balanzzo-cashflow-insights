@@ -9,11 +9,16 @@ interface ExpenseChartProps {
 }
 
 export const ExpenseChart = ({ data, formatCurrency }: ExpenseChartProps) => {
-  // Take top 5 and prepare with brand colors
+  // Strictly limit to maximum 5 categories only
   const top5Data = data.slice(0, 5).map((item, index) => ({
     ...item,
     color: index === 0 ? '#1A3423' : '#A9C7A1' // Primary green for top, medium green for others
   }));
+
+  // Ensure we never show more than 5 categories
+  if (top5Data.length > 5) {
+    console.warn('ExpenseChart: Data exceeds 5 categories, truncating to 5');
+  }
 
   const maxValue = Math.max(...top5Data.map(item => item.value));
 
