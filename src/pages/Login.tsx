@@ -110,11 +110,11 @@ export default function Login() {
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Left side - Dashboard Preview */}
-      <div className="flex-1 relative p-8" style={{ backgroundColor: '#DED5C2' }}>
-        {/* Company Name Positioned */}
-        <div className="absolute" style={{ top: '264px', left: '227px' }}>
+      <div className="flex-1 relative p-8 bg-white">
+        {/* Company Name - Top Left */}
+        <div className="absolute top-8 left-8">
           <h1 className="text-4xl font-bold" style={{ color: '#1A3423', fontFamily: 'Montserrat, sans-serif' }}>
-            FinanceFlow
+            Balanzzo
           </h1>
         </div>
 
@@ -178,13 +178,6 @@ export default function Login() {
                   ></div>
                 ))}
               </div>
-            </div>
-
-            {/* New Tagline */}
-            <div className="text-center mt-8">
-              <p className="text-sm font-medium" style={{ color: '#1A3423', fontFamily: 'Montserrat, sans-serif' }}>
-                Para nano e microempresas: gestão financeira sem planilhas complicadas, com simplicidade que funciona
-              </p>
             </div>
           </div>
         </div>
