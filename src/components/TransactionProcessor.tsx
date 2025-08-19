@@ -122,6 +122,25 @@ export default function TransactionProcessor({ onDataChange }: TransactionProces
     }
   };
 
+  const filteredTransactions = transactions.filter(transaction => {
+    const matchesSearch = transaction.descricao.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesType = filterType === "todos" || transaction.tipo === filterType;
+    const matchesCategory = filterCategory === "todos" || 
+      (transaction.categoria_final || transaction.categoria_sugerida) === filterCategory;
+    const matchesDate = !dateFilter || transaction.data_transacao.includes(dateFilter);
+    
+    return matchesSearch && matchesType && matchesCategory && matchesDate;
+  });
+
+  const stats = {
+    total: transactions.length,
+    entradas: transactions.filter(t => t.tipo === 'entrada').length,
+    saidas: transactions.filter(t => t.tipo === 'saida').length,
+    valorTotal: transactions.reduce((sum, t) => sum + t.valor, 0),
+    valorEntradas: transactions.filter(t => t.tipo === 'entrada').reduce((sum, t) => sum + t.valor, 0),
+    valorSaidas: Math.abs(transactions.filter(t => t.tipo === 'saida').reduce((sum, t) => sum + t.valor, 0))
+  };
+
   const exportToCSV = () => {
     const csvContent = [
       "Data,Descrição,Valor,Tipo,Categoria",
@@ -141,25 +160,6 @@ export default function TransactionProcessor({ onDataChange }: TransactionProces
       link.click();
       document.body.removeChild(link);
     }
-  };
-
-  const filteredTransactions = transactions.filter(transaction => {
-    const matchesSearch = transaction.descricao.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesType = filterType === "todos" || transaction.tipo === filterType;
-    const matchesCategory = filterCategory === "todos" || 
-      (transaction.categoria_final || transaction.categoria_sugerida) === filterCategory;
-    const matchesDate = !dateFilter || transaction.data_transacao.includes(dateFilter);
-    
-    return matchesSearch && matchesType && matchesCategory && matchesDate;
-  });
-
-  const stats = {
-    total: transactions.length,
-    entradas: transactions.filter(t => t.tipo === 'entrada').length,
-    saidas: transactions.filter(t => t.tipo === 'saida').length,
-    valorTotal: transactions.reduce((sum, t) => sum + t.valor, 0),
-    valorEntradas: transactions.filter(t => t.tipo === 'entrada').reduce((sum, t) => sum + t.valor, 0),
-    valorSaidas: Math.abs(transactions.filter(t => t.tipo === 'saida').reduce((sum, t) => sum + t.valor, 0))
   };
 
   return (
