@@ -20,6 +20,12 @@ export function Footer({ className = "" }: FooterProps) {
             >
               Política de Privacidade
             </Link>
+            <Link 
+              to="/politica-de-cancelamento" 
+              className="text-muted-foreground hover:text-primary transition-colors"
+            >
+              Política de Cancelamento
+            </Link>
           </div>
         </div>
       </div>
