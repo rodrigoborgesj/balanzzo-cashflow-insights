@@ -109,75 +109,80 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      {/* Left side - Modern brand section with gradient */}
-      <div className="flex-1 relative bg-gradient-to-br from-primary via-primary to-secondary flex flex-col justify-center items-center text-white p-12 overflow-hidden">
-        {/* Background pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-20 left-20 w-32 h-32 bg-white rounded-full blur-3xl"></div>
-          <div className="absolute bottom-32 right-16 w-48 h-48 bg-white rounded-full blur-3xl"></div>
-          <div className="absolute top-1/2 left-1/3 w-24 h-24 bg-white rounded-full blur-2xl"></div>
+      {/* Left side - Clean brand section with Balanzzo colors */}
+      <div className="flex-1 relative flex flex-col justify-center items-center p-12 overflow-hidden" style={{ backgroundColor: '#1A3423' }}>
+        {/* Decorative elements */}
+        <div className="absolute inset-0">
+          <div className="absolute top-16 right-16 w-24 h-24 rounded-2xl opacity-20" style={{ backgroundColor: '#A9C7A1' }}></div>
+          <div className="absolute bottom-20 left-20 w-16 h-16 rounded-full opacity-15" style={{ backgroundColor: '#E4F8CA' }}></div>
+          <div className="absolute top-1/3 left-8 w-32 h-32 rounded-3xl opacity-10" style={{ backgroundColor: '#DED5C2' }}></div>
         </div>
         
-        {/* Brand content */}
-        <div className="relative z-10 text-center max-w-md">
-          <div className="mb-8">
-            <h1 className="text-4xl font-bold mb-4" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-              BALANZZO
+        {/* Main content */}
+        <div className="relative z-10 text-center max-w-lg">
+          <div className="mb-12">
+            <h1 className="text-5xl font-bold mb-6 text-white" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+              Balanzzo
             </h1>
-            <h2 className="text-2xl font-semibold mb-6" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-              Simplicidade que funciona
-            </h2>
-            <p className="text-lg opacity-90 leading-relaxed" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-              Para nano e microempresas: gestão financeira sem planilhas complicadas, com simplicidade que funciona.
-            </p>
+            <div className="mb-8 p-8 rounded-2xl" style={{ backgroundColor: 'rgba(222, 213, 194, 0.1)' }}>
+              <h2 className="text-3xl font-bold mb-4 text-white" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+                Gestão financeira sem planilhas complicadas, com simplicidade que funciona
+              </h2>
+              <p className="text-lg leading-relaxed" style={{ fontFamily: 'Montserrat, sans-serif', color: '#DED5C2' }}>
+                Para nano e microempresas: gestão financeira sem planilhas complicadas, com 
+                <span className="font-semibold text-white"> simplicidade que funciona</span>.
+              </p>
+            </div>
           </div>
           
-          {/* Modern workflow showcase */}
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
-            <h3 className="text-lg font-semibold mb-6" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+          {/* Process showcase */}
+          <div className="rounded-2xl p-8 border-2" style={{ backgroundColor: '#DED5C2', borderColor: '#A9C7A1' }}>
+            <h3 className="text-xl font-bold mb-8" style={{ fontFamily: 'Montserrat, sans-serif', color: '#1A3423' }}>
               Como funciona no seu dia a dia
             </h3>
-            <div className="space-y-4">
+            <div className="space-y-6">
               {/* Step 1 */}
-              <div className="flex items-start gap-4 p-4 bg-white/5 rounded-xl border border-white/10">
-                <div className="flex-shrink-0 w-8 h-8 bg-white/20 rounded-full flex items-center justify-center text-sm font-bold">
+              <div className="flex items-start gap-4 p-5 rounded-xl border-2" style={{ backgroundColor: '#E4F8CA', borderColor: '#A9C7A1' }}>
+                <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white" style={{ backgroundColor: '#1A3423' }}>
                   1
                 </div>
-                <div>
-                  <h4 className="font-medium mb-1">Upload do Extrato</h4>
-                  <p className="text-sm opacity-90">Envie seu CSV bancário em segundos</p>
+                <div className="text-left">
+                  <h4 className="font-semibold mb-2" style={{ fontFamily: 'Montserrat, sans-serif', color: '#1A3423' }}>
+                    Upload do Extrato
+                  </h4>
+                  <p className="text-sm" style={{ fontFamily: 'Montserrat, sans-serif', color: '#1A3423' }}>
+                    Envie seu CSV bancário em segundos
+                  </p>
                 </div>
-              </div>
-              
-              {/* Arrow */}
-              <div className="flex justify-center">
-                <div className="w-px h-4 bg-white/30"></div>
               </div>
               
               {/* Step 2 */}
-              <div className="flex items-start gap-4 p-4 bg-white/5 rounded-xl border border-white/10">
-                <div className="flex-shrink-0 w-8 h-8 bg-white/20 rounded-full flex items-center justify-center text-sm font-bold">
+              <div className="flex items-start gap-4 p-5 rounded-xl border-2" style={{ backgroundColor: '#E4F8CA', borderColor: '#A9C7A1' }}>
+                <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white" style={{ backgroundColor: '#1A3423' }}>
                   2
                 </div>
-                <div>
-                  <h4 className="font-medium mb-1">Conciliação Automática</h4>
-                  <p className="text-sm opacity-90">IA categoriza suas transações</p>
+                <div className="text-left">
+                  <h4 className="font-semibold mb-2" style={{ fontFamily: 'Montserrat, sans-serif', color: '#1A3423' }}>
+                    Conciliação Automática
+                  </h4>
+                  <p className="text-sm" style={{ fontFamily: 'Montserrat, sans-serif', color: '#1A3423' }}>
+                    IA categoriza suas transações
+                  </p>
                 </div>
-              </div>
-              
-              {/* Arrow */}
-              <div className="flex justify-center">
-                <div className="w-px h-4 bg-white/30"></div>
               </div>
               
               {/* Step 3 */}
-              <div className="flex items-start gap-4 p-4 bg-white/5 rounded-xl border border-white/10">
-                <div className="flex-shrink-0 w-8 h-8 bg-white/20 rounded-full flex items-center justify-center text-sm font-bold">
+              <div className="flex items-start gap-4 p-5 rounded-xl border-2" style={{ backgroundColor: '#E4F8CA', borderColor: '#A9C7A1' }}>
+                <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white" style={{ backgroundColor: '#1A3423' }}>
                   3
                 </div>
-                <div>
-                  <h4 className="font-medium mb-1">Relatórios Prontos</h4>
-                  <p className="text-sm opacity-90">DRE e fluxo de caixa gerados</p>
+                <div className="text-left">
+                  <h4 className="font-semibold mb-2" style={{ fontFamily: 'Montserrat, sans-serif', color: '#1A3423' }}>
+                    Relatórios Prontos
+                  </h4>
+                  <p className="text-sm" style={{ fontFamily: 'Montserrat, sans-serif', color: '#1A3423' }}>
+                    DRE e fluxo de caixa gerados
+                  </p>
                 </div>
               </div>
             </div>
