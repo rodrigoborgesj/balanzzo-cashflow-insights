@@ -110,70 +110,82 @@ export default function Login() {
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Left side - Dashboard Preview */}
-      <div className="flex-1 relative flex flex-col justify-center items-center p-8 bg-gradient-to-br from-gray-50 to-gray-100">
-        {/* Dashboard Preview Container */}
-        <div className="w-full max-w-lg">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
-                <div className="w-6 h-6 bg-gray-400 rounded"></div>
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-gray-900">Dashboard Financeiro</h2>
-                <p className="text-sm text-gray-600">Rodrigo Alessandro B. Junior</p>
-              </div>
-            </div>
-            <div className="text-2xl font-bold text-green-600">138.4%</div>
-          </div>
+      <div className="flex-1 relative p-8" style={{ backgroundColor: '#DED5C2' }}>
+        {/* Company Name Positioned */}
+        <div className="absolute" style={{ top: '264px', left: '227px' }}>
+          <h1 className="text-4xl font-bold" style={{ color: '#1A3423', fontFamily: 'Montserrat, sans-serif' }}>
+            FinanceFlow
+          </h1>
+        </div>
 
-          {/* Financial Cards */}
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            <div className="bg-green-50 p-4 rounded-2xl border border-green-100">
-              <p className="text-xs text-gray-600 mb-1">Faturamento Mensal</p>
-              <p className="text-lg font-bold text-gray-900">R$ 17.550,00</p>
-            </div>
-            <div className="bg-yellow-50 p-4 rounded-2xl border border-yellow-100">
-              <p className="text-xs text-gray-600 mb-1">Saldo Líquido</p>
-              <p className="text-lg font-bold text-gray-900">R$ 6.050,00</p>
-            </div>
-          </div>
-
-          {/* Cash Flow Chart */}
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
-                  <span className="text-green-600 text-sm font-bold">$</span>
+        {/* Dashboard Preview Container - Centered */}
+        <div className="flex flex-col justify-center items-center h-full">
+          <div className="w-full max-w-lg">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: '#A9C7A1' }}>
+                  <div className="w-6 h-6 rounded" style={{ backgroundColor: '#1A3423' }}></div>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-900">Fluxo de Caixa</p>
-                  <p className="text-xs text-gray-500">Receitas por Tipo</p>
+                  <h2 className="text-xl font-bold" style={{ color: '#1A3423' }}>Dashboard Financeiro</h2>
+                  <p className="text-sm" style={{ color: '#1A3423' }}>Rodrigo Alessandro B. Junior</p>
                 </div>
               </div>
-              <div className="text-right">
-                <p className="text-sm text-green-600 font-medium">+18% este mês</p>
-                <p className="text-xs text-gray-500">Margem de Lucro: 65%</p>
+              <div className="text-2xl font-bold" style={{ color: '#1A3423' }}>138.4%</div>
+            </div>
+
+            {/* Financial Cards */}
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              <div className="p-4 rounded-2xl border-2" style={{ backgroundColor: '#E4F8CA', borderColor: '#A9C7A1' }}>
+                <p className="text-xs mb-1" style={{ color: '#1A3423' }}>Faturamento Mensal</p>
+                <p className="text-lg font-bold" style={{ color: '#1A3423' }}>R$ 17.550,00</p>
+              </div>
+              <div className="p-4 rounded-2xl border-2" style={{ backgroundColor: '#A9C7A1', borderColor: '#1A3423' }}>
+                <p className="text-xs mb-1 text-white">Saldo Líquido</p>
+                <p className="text-lg font-bold text-white">R$ 6.050,00</p>
               </div>
             </div>
-            
-            {/* Mock Chart Bars */}
-            <div className="flex items-end justify-between gap-2 h-20">
-              {[60, 70, 85, 75, 90, 80, 85].map((height, index) => (
-                <div
-                  key={index}
-                  className="bg-gradient-to-t from-green-600 to-green-400 rounded-t-lg flex-1"
-                  style={{ height: `${height}%` }}
-                ></div>
-              ))}
-            </div>
-          </div>
 
-          {/* Bottom Text */}
-          <div className="text-center mt-8">
-            <p className="text-gray-600 text-sm">
-              Visualize seus dados financeiros de forma clara e intuitiva
-            </p>
+            {/* Cash Flow Chart */}
+            <div className="bg-white p-6 rounded-2xl shadow-sm border-2" style={{ borderColor: '#A9C7A1' }}>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: '#E4F8CA' }}>
+                    <span className="text-sm font-bold" style={{ color: '#1A3423' }}>$</span>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium" style={{ color: '#1A3423' }}>Fluxo de Caixa</p>
+                    <p className="text-xs" style={{ color: '#1A3423' }}>Receitas por Tipo</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-medium" style={{ color: '#1A3423' }}>+18% este mês</p>
+                  <p className="text-xs" style={{ color: '#1A3423' }}>Margem de Lucro: 65%</p>
+                </div>
+              </div>
+              
+              {/* Mock Chart Bars */}
+              <div className="flex items-end justify-between gap-2 h-20">
+                {[60, 70, 85, 75, 90, 80, 85].map((height, index) => (
+                  <div
+                    key={index}
+                    className="rounded-t-lg flex-1"
+                    style={{ 
+                      height: `${height}%`,
+                      backgroundColor: index % 2 === 0 ? '#1A3423' : '#A9C7A1'
+                    }}
+                  ></div>
+                ))}
+              </div>
+            </div>
+
+            {/* New Tagline */}
+            <div className="text-center mt-8">
+              <p className="text-sm font-medium" style={{ color: '#1A3423', fontFamily: 'Montserrat, sans-serif' }}>
+                Para nano e microempresas: gestão financeira sem planilhas complicadas, com simplicidade que funciona
+              </p>
+            </div>
           </div>
         </div>
       </div>
