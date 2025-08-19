@@ -50,6 +50,8 @@ const categoriesDespesas = [
 ];
 
 export default function Conciliacao() {
+  console.log('🔄 Conciliacao component is rendering...');
+  
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [filterStatus, setFilterStatus] = useState("todos");
   const [searchTerm, setSearchTerm] = useState("");
@@ -76,15 +78,28 @@ export default function Conciliacao() {
   } = useConciliacao();
   
   const { user } = useAuth();
+  console.log('👤 User in Conciliacao:', user?.id, user?.email);
 
   const { toast } = useToast();
+  
+  console.log('📊 Conciliacao state:', { 
+    transactionsCount: transactions.length, 
+    isLoading, 
+    selectedMonth,
+    userCategoriesCount: userCategories.length
+  });
 
   // Carregar dados ao montar o componente
   useEffect(() => {
-    console.log('Loading transactions for month:', selectedMonth);
-    loadTransactions(selectedMonth);
-    loadUserCategories();
-  }, [loadTransactions, loadUserCategories, selectedMonth]);
+    console.log('🚀 Conciliacao useEffect - Loading data for month:', selectedMonth);
+    console.log('🚀 User available:', !!user?.id);
+    if (user?.id) {
+      loadTransactions(selectedMonth);
+      loadUserCategories();
+    } else {
+      console.log('⚠️ No user available, skipping data load');
+    }
+  }, [loadTransactions, loadUserCategories, selectedMonth, user?.id]);
 
   const handleFileSelect = async (file: File) => {
     console.log('🚀 INÍCIO DO PROCESSO DE UPLOAD ROBUSTO');
@@ -264,6 +279,21 @@ export default function Conciliacao() {
     ...userCategories.map(cat => cat.nome_categoria)
   ];
 
+  console.log('🎨 Conciliacao render - about to return JSX');
+  
+  // Simple fallback check
+  if (!user) {
+    console.log('❌ No user found, rendering loading state');
+    return (
+      <div className="min-h-screen bg-white p-6 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Carregando usuário...</p>
+        </div>
+      </div>
+    );
+  }
+  
   return (
     <div className="min-h-screen bg-white p-3 md:p-6">
       {/* Header */}
@@ -274,6 +304,10 @@ export default function Conciliacao() {
             <p className="text-sm md:text-base text-muted-foreground">
               Faça upload e concilie suas transações bancárias
             </p>
+            {/* Debug info */}
+            <div className="text-xs text-gray-500 mt-2">
+              Debug: User: {user?.email} | Transactions: {transactions.length} | Loading: {isLoading ? 'Yes' : 'No'}
+            </div>
           </div>
           
           <div className="space-y-2 w-full sm:w-auto">

@@ -27,6 +27,8 @@ interface TransactionProcessorProps {
 }
 
 export default function TransactionProcessor({ onDataChange }: TransactionProcessorProps) {
+  console.log('🔄 TransactionProcessor component rendering...');
+  
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValues, setEditValues] = useState<Partial<Transaction>>({});
   const [filterType, setFilterType] = useState<string>("todos");
@@ -50,6 +52,12 @@ export default function TransactionProcessor({ onDataChange }: TransactionProces
   } = useConciliacao();
 
   const { toast } = useToast();
+  
+  console.log('🔄 TransactionProcessor state:', { 
+    transactionsCount: transactions.length, 
+    isLoading, 
+    selectedMonth 
+  });
 
   useEffect(() => {
     loadTransactions(selectedMonth);

@@ -29,12 +29,21 @@ export interface UserCategory {
 }
 
 export function useConciliacao() {
+  console.log('🔧 useConciliacao hook initialized');
+  
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [userCategories, setUserCategories] = useState<UserCategory[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState<string>(new Date().toISOString().slice(0, 7));
   const { user } = useAuth();
   const { toast } = useToast();
+  
+  console.log('🔧 useConciliacao state:', { 
+    transactionsCount: transactions.length, 
+    isLoading, 
+    selectedMonth,
+    userId: user?.id 
+  });
 
   // Função para sugerir categoria baseada na descrição (mantido para compatibilidade)
   const suggestCategory = useCallback(async (descricao: string): Promise<string> => {
@@ -56,9 +65,17 @@ export function useConciliacao() {
 
   // Carregar transações do usuário com filtros de mês e empresa
   const loadTransactions = useCallback(async (monthFilter?: string) => {
-    if (!user?.id) return;
+    console.log('🔄 loadTransactions called with monthFilter:', monthFilter);
+    console.log('🔄 Current user:', user?.id);
+    
+    if (!user?.id) {
+      console.log('⚠️ No user ID available, skipping loadTransactions');
+      return;
+    }
 
     setIsLoading(true);
+    console.log('🔄 Loading transactions - isLoading set to true');
+    
     try {
       let query = supabase
         .from('transacoes_conciliadas')
@@ -79,6 +96,8 @@ export function useConciliacao() {
       }
 
       const { data, error } = await query.order('data_transacao', { ascending: false });
+      
+      console.log('🔄 Query result:', { data: data?.length || 0, error });
 
       if (error) {
         console.error('Erro ao carregar transações:', error);
@@ -90,6 +109,7 @@ export function useConciliacao() {
         return;
       }
 
+      console.log('✅ Transactions loaded successfully:', data?.length || 0);
       setTransactions((data || []) as Transaction[]);
     } catch (error) {
       console.error('Erro ao carregar transações:', error);
@@ -100,6 +120,7 @@ export function useConciliacao() {
       });
     } finally {
       setIsLoading(false);
+      console.log('🔄 Loading transactions - isLoading set to false');
     }
   }, [user?.id, toast]);
 
