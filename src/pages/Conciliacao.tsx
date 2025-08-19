@@ -226,9 +226,15 @@ export default function Conciliacao() {
     return matchesSearch && matchesStatus;
   });
 
+  // Calculate balances reactively
+  const entradas = transactions.filter(t => t.tipo === 'entrada');
+  const saidas = transactions.filter(t => t.tipo === 'saida');
+  const totalEntradas = entradas.reduce((sum, t) => sum + t.valor, 0);
+  const totalSaidas = Math.abs(saidas.reduce((sum, t) => sum + t.valor, 0));
+  const saldoLiquido = totalEntradas - totalSaidas;
+  
   const pendingCount = transactions.filter(t => !t.status_conciliacao).length;
   const reconciledCount = transactions.filter(t => t.status_conciliacao).length;
-  const totalAmount = transactions.reduce((sum, t) => sum + t.valor, 0);
 
   // Combinar categorias padrão com categorias do usuário
   const allCategories = [
@@ -475,8 +481,8 @@ export default function Conciliacao() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-success">Entradas</p>
-                      <p className="text-xl font-bold">R$ {transactions.filter(t => t.tipo === 'entrada').reduce((sum, t) => sum + t.valor, 0).toLocaleString("pt-BR")}</p>
-                      <p className="text-xs text-muted-foreground">{transactions.filter(t => t.tipo === 'entrada').length} transações</p>
+                      <p className="text-xl font-bold">R$ {totalEntradas.toLocaleString("pt-BR")}</p>
+                      <p className="text-xs text-muted-foreground">{entradas.length} transações</p>
                     </div>
                     <TrendingUp className="h-6 w-6 text-success" />
                   </div>
@@ -488,8 +494,8 @@ export default function Conciliacao() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-destructive">Saídas</p>
-                      <p className="text-xl font-bold">R$ {Math.abs(transactions.filter(t => t.tipo === 'saida').reduce((sum, t) => sum + t.valor, 0)).toLocaleString("pt-BR")}</p>
-                      <p className="text-xs text-muted-foreground">{transactions.filter(t => t.tipo === 'saida').length} transações</p>
+                      <p className="text-xl font-bold">R$ {totalSaidas.toLocaleString("pt-BR")}</p>
+                      <p className="text-xs text-muted-foreground">{saidas.length} transações</p>
                     </div>
                     <TrendingDown className="h-6 w-6 text-destructive" />
                   </div>
@@ -497,7 +503,7 @@ export default function Conciliacao() {
               </Card>
 
               <Card className={`bg-gradient-to-br ${
-                totalAmount >= 0 
+                saldoLiquido >= 0 
                   ? 'from-primary/10 to-primary/5 border-primary/20' 
                   : 'from-warning/10 to-warning/5 border-warning/20'
               }`}>
@@ -505,7 +511,7 @@ export default function Conciliacao() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium">Saldo Líquido</p>
-                      <p className="text-xl font-bold">R$ {totalAmount.toLocaleString("pt-BR")}</p>
+                      <p className="text-xl font-bold">R$ {saldoLiquido.toLocaleString("pt-BR")}</p>
                       <p className="text-xs text-muted-foreground">{transactions.length} total</p>
                     </div>
                     <DollarSign className="h-6 w-6" />

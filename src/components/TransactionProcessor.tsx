@@ -116,11 +116,11 @@ export default function TransactionProcessor({ onDataChange }: TransactionProces
   };
 
   const filteredTransactions = transactions.filter(transaction => {
-    const matchesSearch = transaction.descricao.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = transaction.descricao?.toLowerCase().includes(searchTerm.toLowerCase()) || false;
     const matchesType = filterType === "todos" || transaction.tipo === filterType;
     const matchesCategory = filterCategory === "todos" || 
       (transaction.categoria_final || transaction.categoria_sugerida) === filterCategory;
-    const matchesDate = !dateFilter || transaction.data_transacao.includes(dateFilter);
+    const matchesDate = !dateFilter || transaction.data_transacao?.includes(dateFilter);
     
     return matchesSearch && matchesType && matchesCategory && matchesDate;
   });
@@ -298,9 +298,25 @@ export default function TransactionProcessor({ onDataChange }: TransactionProces
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredTransactions
-                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                  .map((transaction) => (
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-8">
+                      <div className="flex items-center justify-center">
+                        <RefreshCw className="h-4 w-4 animate-spin mr-2" />
+                        Carregando transações...
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : filteredTransactions.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                      Nenhuma transação encontrada
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredTransactions
+                    .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                    .map((transaction) => (
                   <TableRow key={transaction.id}>
                     <TableCell>
                       {new Date(transaction.data_transacao).toLocaleDateString('pt-BR')}
@@ -409,8 +425,9 @@ export default function TransactionProcessor({ onDataChange }: TransactionProces
                         </Button>
                       )}
                     </TableCell>
-                  </TableRow>
-                ))}
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
             <TablePagination

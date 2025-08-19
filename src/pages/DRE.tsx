@@ -17,11 +17,13 @@ export default function DRE() {
   const { transactions, isLoading, loadTransactions, refreshTransactions } = useConciliacao();
 
   useEffect(() => {
-    try {
-      loadTransactions(selectedMonth);
-    } catch (err) {
-      console.error('Error loading transactions in DRE:', err);
-      setError('Erro ao carregar transações: ' + String(err));
+    if (selectedMonth && loadTransactions) {
+      try {
+        loadTransactions(selectedMonth);
+      } catch (err) {
+        console.error('Error loading transactions in DRE:', err);
+        setError('Erro ao carregar transações: ' + String(err));
+      }
     }
   }, [selectedMonth, loadTransactions]);
 
