@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { Badge } from "@/components/ui/badge";
 import { 
   Edit2, 
@@ -32,6 +33,10 @@ export default function TransactionProcessor({ onDataChange }: TransactionProces
   const [filterCategory, setFilterCategory] = useState<string>("todos");
   const [searchTerm, setSearchTerm] = useState("");
   const [dateFilter, setDateFilter] = useState("");
+  
+  // Pagination state
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(25);
 
   const {
     transactions,
@@ -292,7 +297,9 @@ export default function TransactionProcessor({ onDataChange }: TransactionProces
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredTransactions.map((transaction) => (
+                {filteredTransactions
+                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                  .map((transaction) => (
                   <TableRow key={transaction.id}>
                     <TableCell>
                       {new Date(transaction.data_transacao).toLocaleDateString('pt-BR')}
@@ -405,6 +412,13 @@ export default function TransactionProcessor({ onDataChange }: TransactionProces
                 ))}
               </TableBody>
             </Table>
+            <TablePagination
+              count={filteredTransactions.length}
+              page={page}
+              rowsPerPage={rowsPerPage}
+              onPageChange={setPage}
+              onRowsPerPageChange={setRowsPerPage}
+            />
           </div>
 
           {filteredTransactions.length === 0 && (

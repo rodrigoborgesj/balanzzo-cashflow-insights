@@ -1,5 +1,4 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Building2 } from "lucide-react";
 
 export default function PoliticaPrivacidade() {
   return (
@@ -7,12 +6,7 @@ export default function PoliticaPrivacidade() {
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="text-center space-y-4 pt-8">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <div className="p-3 bg-primary rounded-xl">
-              <Building2 className="h-8 w-8 text-primary-foreground" />
-            </div>
-            <h1 className="text-3xl font-bold text-foreground">Balanzzo</h1>
-          </div>
+          <h1 className="text-3xl font-bold text-foreground mb-4">Balanzzo</h1>
           <h2 className="text-2xl font-semibold text-foreground">
             Política de Privacidade
           </h2>
