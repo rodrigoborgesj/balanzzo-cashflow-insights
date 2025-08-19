@@ -14,22 +14,13 @@ export default function DRE() {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   
-  console.log('🔄 DRE component rendering...');
-  
   const { transactions, isLoading, loadTransactions, refreshTransactions } = useConciliacao();
-  
-  console.log('🔄 DRE state:', { 
-    transactionsCount: transactions.length, 
-    isLoading, 
-    selectedMonth 
-  });
 
   useEffect(() => {
     try {
-      console.log('🔄 DRE loading transactions for month:', selectedMonth);
       loadTransactions(selectedMonth);
     } catch (err) {
-      console.error('❌ Error loading transactions in DRE:', err);
+      console.error('Error loading transactions in DRE:', err);
       setError('Erro ao carregar transações: ' + String(err));
     }
   }, [selectedMonth, loadTransactions]);
@@ -37,8 +28,6 @@ export default function DRE() {
   // Setup real-time sync for transactions
   useEffect(() => {
     try {
-      console.log('Setting up real-time sync for DRE...');
-      
       const channel = supabase
         .channel('dre-realtime-sync')
         .on(
@@ -48,8 +37,7 @@ export default function DRE() {
             schema: 'public',
             table: 'transacoes_conciliadas'
           },
-          (payload) => {
-            console.log('Transaction change detected, refreshing DRE data:', payload);
+          () => {
             refreshTransactions(selectedMonth);
           }
         )
@@ -60,19 +48,17 @@ export default function DRE() {
             schema: 'public',
             table: 'fluxo_caixa'
           },
-          (payload) => {
-            console.log('Cash flow change detected, refreshing DRE data:', payload);
+          () => {
             refreshTransactions(selectedMonth);
           }
         )
         .subscribe();
 
       return () => {
-        console.log('Cleaning up real-time sync for DRE...');
         supabase.removeChannel(channel);
       };
     } catch (err) {
-      console.error('❌ Error setting up real-time sync:', err);
+      console.error('Error setting up real-time sync:', err);
       setError('Erro na sincronização: ' + String(err));
     }
   }, [refreshTransactions, selectedMonth]);
@@ -82,7 +68,7 @@ export default function DRE() {
       setIsRefreshing(true);
       await refreshTransactions(selectedMonth);
     } catch (err) {
-      console.error('❌ Error refreshing transactions:', err);
+      console.error('Error refreshing transactions:', err);
       setError('Erro ao atualizar: ' + String(err));
     } finally {
       setIsRefreshing(false);
@@ -136,10 +122,7 @@ export default function DRE() {
           <Input
             type="month"
             value={selectedMonth}
-            onChange={(e) => {
-              console.log('DRE month changed from', selectedMonth, 'to', e.target.value);
-              setSelectedMonth(e.target.value);
-            }}
+            onChange={(e) => setSelectedMonth(e.target.value)}
             className="w-40 border-primary/20 focus:border-primary"
           />
         </div>

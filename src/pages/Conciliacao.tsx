@@ -50,7 +50,6 @@ const categoriesDespesas = [
 ];
 
 export default function Conciliacao() {
-  console.log('🔄 Conciliacao component is rendering...');
   
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [filterStatus, setFilterStatus] = useState("todos");
@@ -78,33 +77,17 @@ export default function Conciliacao() {
   } = useConciliacao();
   
   const { user } = useAuth();
-  console.log('👤 User in Conciliacao:', user?.id, user?.email);
-
   const { toast } = useToast();
-  
-  console.log('📊 Conciliacao state:', { 
-    transactionsCount: transactions.length, 
-    isLoading, 
-    selectedMonth,
-    userCategoriesCount: userCategories.length
-  });
 
   // Carregar dados ao montar o componente
   useEffect(() => {
-    console.log('🚀 Conciliacao useEffect - Loading data for month:', selectedMonth);
-    console.log('🚀 User available:', !!user?.id);
     if (user?.id) {
       loadTransactions(selectedMonth);
       loadUserCategories();
-    } else {
-      console.log('⚠️ No user available, skipping data load');
     }
   }, [loadTransactions, loadUserCategories, selectedMonth, user?.id]);
 
   const handleFileSelect = async (file: File) => {
-    console.log('🚀 INÍCIO DO PROCESSO DE UPLOAD ROBUSTO');
-    console.log('Arquivo selecionado:', file.name, 'Tamanho:', file.size, 'Tipo:', file.type);
-    
     setSelectedFile(file);
     setParsedTransactions([]);
     setParseErrors([]);
@@ -112,10 +95,7 @@ export default function Conciliacao() {
     setIsProcessing(true);
     
     try {
-      console.log('Iniciando parsing robusto do arquivo:', file.name);
       const result = await RobustCSVParser.parseCSV(file);
-      
-      console.log('📊 Resultado do parsing robusto:', result);
       
       setParseStats({
         totalRows: result.processedRows,
@@ -125,7 +105,6 @@ export default function Conciliacao() {
       setParseErrors(result.errors);
       
       if (result.transactions.length === 0) {
-        console.error('❌ Nenhuma transação encontrada no arquivo');
         toast({
           title: 'Arquivo não processado',
           description: result.errors.length > 0 
@@ -142,10 +121,7 @@ export default function Conciliacao() {
         title: 'Arquivo processado com sucesso!',
         description: `${result.transactions.length} transação(ões) encontrada(s) de ${result.processedRows} linha(s)`,
       });
-      
-      console.log('✅ Estado atualizado com transações parseadas');
     } catch (error) {
-      console.error('❌ Erro crítico no parsing:', error);
       toast({
         title: 'Erro no parsing',
         description: error instanceof Error ? error.message : 'Erro ao processar arquivo',
@@ -158,44 +134,27 @@ export default function Conciliacao() {
   };
 
   const handleProcessTransactions = async () => {
-    console.log('=== INÍCIO DO PROCESSAMENTO ===');
-    console.log('Arquivo selecionado:', selectedFile?.name);
-    console.log('Transações parseadas:', parsedTransactions.length);
-    
     if (!selectedFile || parsedTransactions.length === 0) {
-      console.error('Condições não atendidas para processamento');
       return;
     }
     
     setIsProcessing(true);
     try {
-      console.log('Processando', parsedTransactions.length, 'transações com categorização inteligente...');
-      
       // Filtrar transações válidas antes de processar
       const validTransactions = parsedTransactions.filter(t => {
-        const isValid = t.data_transacao && 
-                        t.data_transacao !== '' && 
-                        !isNaN(t.valor) && 
-                        t.valor !== 0;
-        if (!isValid) {
-          console.log('Transação inválida filtrada:', t);
-        }
-        return isValid;
+        return t.data_transacao && 
+               t.data_transacao !== '' && 
+               !isNaN(t.valor) && 
+               t.valor !== 0;
       });
-
-      console.log('Transações válidas encontradas:', validTransactions.length);
-      console.log('Exemplo de transação válida:', validTransactions[0]);
 
       if (validTransactions.length === 0) {
         throw new Error('Nenhuma transação válida encontrada no arquivo. Verifique o formato dos dados.');
       }
 
-      console.log('Chamando saveTransactions...');
       const success = await saveTransactions(validTransactions);
-      console.log('Resultado do saveTransactions:', success);
       
       if (success) {
-        console.log('Processamento concluído com sucesso');
         // Limpar dados da sessão após sucesso
         setSelectedFile(null);
         setParsedTransactions([]);
@@ -210,7 +169,6 @@ export default function Conciliacao() {
         throw new Error('Falha ao salvar transações no banco de dados');
       }
     } catch (error) {
-      console.error('Erro completo no processamento:', error);
       toast({
         title: 'Erro no processamento',
         description: error instanceof Error ? error.message : 'Erro desconhecido',
@@ -278,12 +236,9 @@ export default function Conciliacao() {
     ...categoriesDespesas,
     ...userCategories.map(cat => cat.nome_categoria)
   ];
-
-  console.log('🎨 Conciliacao render - about to return JSX');
   
   // Simple fallback check
   if (!user) {
-    console.log('❌ No user found, rendering loading state');
     return (
       <div className="min-h-screen bg-white p-6 flex items-center justify-center">
         <div className="text-center">
@@ -304,25 +259,20 @@ export default function Conciliacao() {
             <p className="text-sm md:text-base text-muted-foreground">
               Faça upload e concilie suas transações bancárias
             </p>
-            {/* Debug info */}
-            <div className="text-xs text-gray-500 mt-2">
-              Debug: User: {user?.email} | Transactions: {transactions.length} | Loading: {isLoading ? 'Yes' : 'No'}
-            </div>
           </div>
           
-          <div className="space-y-2 w-full sm:w-auto">
-            <label className="text-sm font-medium text-foreground">Mês de Referência</label>
-            <Input
-              type="month"
-              value={selectedMonth}
-              onChange={(e) => {
-                console.log('Month changed to:', e.target.value);
-                setSelectedMonth(e.target.value);
-                setPage(0); // Reset pagination when month changes
-              }}
-              className="w-full sm:w-40 border-primary/20 focus:border-primary"
-            />
-          </div>
+            <div className="space-y-2 w-full sm:w-auto">
+              <label className="text-sm font-medium text-foreground">Mês de Referência</label>
+              <Input
+                type="month"
+                value={selectedMonth}
+                onChange={(e) => {
+                  setSelectedMonth(e.target.value);
+                  setPage(0); // Reset pagination when month changes
+                }}
+                className="w-full sm:w-40 border-primary/20 focus:border-primary"
+              />
+            </div>
         </div>
       </div>
 

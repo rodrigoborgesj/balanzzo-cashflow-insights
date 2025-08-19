@@ -79,14 +79,9 @@ export function DREStatement({ transactions, selectedMonth }: DREStatementProps)
       t.status_conciliacao === true || t.categoria_final || t.categoria_sugerida
     );
 
-    console.log('DRE calculation starting with categorized transactions:', categorizedTransactions.length);
-
     categorizedTransactions.forEach(transaction => {
       const category = transaction.categoria_final || transaction.categoria_sugerida || 'Outros';
       const value = transaction.valor;
-      
-      // Debug logging
-      console.log(`Processing transaction: ${transaction.descricao} - ${category} = R$ ${value} (type: ${transaction.tipo})`);
       
       // Use the transaction type field to determine income vs expense
       // This ensures we match the cash flow logic exactly
@@ -130,11 +125,6 @@ export function DREStatement({ transactions, selectedMonth }: DREStatementProps)
     const totalOperatingExpenses = Object.values(dre.operatingExpenses).reduce((sum, val) => sum + val, 0);
     dre.operatingResult = dre.netRevenue - totalOperatingExpenses;
     dre.netProfit = dre.operatingResult + dre.otherIncome - dre.otherLosses;
-
-    // Debug logging
-    console.log('DRE Calculation Summary:');
-    console.log('DRE Gross Revenue:', dre.grossRevenue);
-    console.log('DRE Net Profit:', dre.netProfit);
 
     return dre;
   };

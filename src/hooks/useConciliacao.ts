@@ -29,21 +29,12 @@ export interface UserCategory {
 }
 
 export function useConciliacao() {
-  console.log('🔧 useConciliacao hook initialized');
-  
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [userCategories, setUserCategories] = useState<UserCategory[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState<string>(new Date().toISOString().slice(0, 7));
   const { user } = useAuth();
   const { toast } = useToast();
-  
-  console.log('🔧 useConciliacao state:', { 
-    transactionsCount: transactions.length, 
-    isLoading, 
-    selectedMonth,
-    userId: user?.id 
-  });
 
   // Função para sugerir categoria baseada na descrição (mantido para compatibilidade)
   const suggestCategory = useCallback(async (descricao: string): Promise<string> => {
@@ -65,16 +56,11 @@ export function useConciliacao() {
 
   // Carregar transações do usuário com filtros de mês e empresa
   const loadTransactions = useCallback(async (monthFilter?: string) => {
-    console.log('🔄 loadTransactions called with monthFilter:', monthFilter);
-    console.log('🔄 Current user:', user?.id);
-    
     if (!user?.id) {
-      console.log('⚠️ No user ID available, skipping loadTransactions');
       return;
     }
 
     setIsLoading(true);
-    console.log('🔄 Loading transactions - isLoading set to true');
     
     try {
       let query = supabase
@@ -84,20 +70,16 @@ export function useConciliacao() {
 
       // Filtrar por mês se especificado - fix month selection bug
       if (monthFilter) {
-        console.log('Filtering by month:', monthFilter);
         const year = monthFilter.split('-')[0];
         const month = monthFilter.split('-')[1];
         const startDate = `${year}-${month}-01`;
         // Get last day of month properly
         const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
         const endDate = `${year}-${month}-${lastDay.toString().padStart(2, '0')}`;
-        console.log('Date range:', startDate, 'to', endDate);
         query = query.gte('data_transacao', startDate).lte('data_transacao', endDate);
       }
 
       const { data, error } = await query.order('data_transacao', { ascending: false });
-      
-      console.log('🔄 Query result:', { data: data?.length || 0, error });
 
       if (error) {
         console.error('Erro ao carregar transações:', error);
@@ -109,7 +91,6 @@ export function useConciliacao() {
         return;
       }
 
-      console.log('✅ Transactions loaded successfully:', data?.length || 0);
       setTransactions((data || []) as Transaction[]);
     } catch (error) {
       console.error('Erro ao carregar transações:', error);
@@ -120,13 +101,11 @@ export function useConciliacao() {
       });
     } finally {
       setIsLoading(false);
-      console.log('🔄 Loading transactions - isLoading set to false');
     }
   }, [user?.id, toast]);
 
   // Função para forçar atualização das transações (útil para DRE)
   const refreshTransactions = useCallback(async (monthFilter?: string) => {
-    console.log('Refreshing transactions for DRE sync...');
     await loadTransactions(monthFilter || selectedMonth);
   }, [loadTransactions, selectedMonth]);
 
@@ -234,10 +213,6 @@ export function useConciliacao() {
 
   // Salvar transações no banco com processamento otimizado e validações robustas
   const saveTransactions = useCallback(async (newTransactions: Omit<Transaction, 'user_id' | 'categoria_sugerida' | 'hash_transacao'>[]) => {
-    console.log('=== INÍCIO DO PROCESSAMENTO OTIMIZADO ===');
-    console.log('User ID:', user?.id);
-    console.log('Número de transações recebidas:', newTransactions.length);
-    
     if (!user?.id) {
       console.error('Usuário não autenticado');
       toast({
@@ -250,18 +225,12 @@ export function useConciliacao() {
 
     setIsLoading(true);
     try {
-      console.log('Iniciando processamento rápido de', newTransactions.length, 'transações');
-      
       if (!newTransactions || newTransactions.length === 0) {
         throw new Error('Nenhuma transação para salvar');
       }
       
-      console.log('Aplicando validação e normalização...');
-      
       // Validar e normalizar transações
       const transactionsToSave = newTransactions.map((transaction, index) => {
-        console.log(`Processando transação ${index + 1}:`, transaction);
-
         // Normalizar e validar data
         const normalizedDate = normalizeDate(transaction.data_transacao);
         if (!normalizedDate) {
@@ -340,14 +309,11 @@ export function useConciliacao() {
         };
       }).filter(Boolean); // Remove transações nulas
 
-      console.log('Transações válidas preparadas para salvamento:', transactionsToSave.length);
-
       if (transactionsToSave.length === 0) {
         throw new Error('Nenhuma transação válida foi encontrada após o processamento. Verifique o formato do arquivo.');
       }
 
       // Inserir no banco (com tratamento de duplicatas)
-      console.log('Salvando no banco de dados...');
       const { data, error } = await supabase
         .from('transacoes_conciliadas')
         .upsert(transactionsToSave, { 
@@ -367,7 +333,6 @@ export function useConciliacao() {
       }
 
       const savedCount = data?.length || 0;
-      console.log('Transações salvas no banco com sucesso:', savedCount);
 
       // Alimentar automaticamente o fluxo de caixa
       if (data && data.length > 0) {
@@ -381,7 +346,6 @@ export function useConciliacao() {
       
       // Se há transações de um mês específico, ajustar o filtro para esse mês
       if (transactionMonths.length === 1 && transactionMonths[0] !== selectedMonth) {
-        console.log('Ajustando filtro de mês para:', transactionMonths[0]);
         setSelectedMonth(transactionMonths[0]);
         await loadTransactions(transactionMonths[0]);
       } else {
@@ -733,8 +697,6 @@ export function useConciliacao() {
     if (!user?.id || !transacoes || transacoes.length === 0) return;
 
     try {
-      console.log('Alimentando fluxo de caixa com', transacoes.length, 'transações');
-
       // Obter company_id do usuário (se existe)
       const { data: companies } = await supabase
         .from('companies')
@@ -756,8 +718,6 @@ export function useConciliacao() {
         transacao_origem_id: transacao.id
       }));
 
-      console.log('Dados preparados para fluxo de caixa:', fluxoCaixaData);
-
       // Inserir no fluxo de caixa (usando upsert para evitar duplicatas)
       const { error: fluxoError } = await supabase
         .from('fluxo_caixa')
@@ -770,7 +730,6 @@ export function useConciliacao() {
         console.error('Erro ao alimentar fluxo de caixa:', fluxoError);
         // Não bloqueia o processo principal, apenas registra o erro
       } else {
-        console.log('Fluxo de caixa alimentado com sucesso');
         // Após alimentar o fluxo de caixa, alimentar o painel mensal
         await alimentarPainelMensal(transacoes);
       }
@@ -785,8 +744,6 @@ export function useConciliacao() {
     if (!user?.id || !transacoes || transacoes.length === 0) return;
 
     try {
-      console.log('Alimentando painel mensal com', transacoes.length, 'transações');
-
       // Agrupar transações por mês/ano
       const dadosPorMes = new Map();
 
@@ -849,8 +806,6 @@ export function useConciliacao() {
 
         if (error) {
           console.error('Erro ao alimentar painel mensal:', error);
-        } else {
-          console.log(`Painel mensal atualizado para ${dados.mes}/${dados.ano}`);
         }
       }
     } catch (error) {
