@@ -109,83 +109,71 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      {/* Left side - Clean brand section with Balanzzo colors */}
-      <div className="flex-1 relative flex flex-col justify-center items-center p-12 overflow-hidden" style={{ backgroundColor: '#1A3423' }}>
-        {/* Decorative elements */}
-        <div className="absolute inset-0">
-          <div className="absolute top-16 right-16 w-24 h-24 rounded-2xl opacity-20" style={{ backgroundColor: '#A9C7A1' }}></div>
-          <div className="absolute bottom-20 left-20 w-16 h-16 rounded-full opacity-15" style={{ backgroundColor: '#E4F8CA' }}></div>
-          <div className="absolute top-1/3 left-8 w-32 h-32 rounded-3xl opacity-10" style={{ backgroundColor: '#DED5C2' }}></div>
-        </div>
-        
-        {/* Main content */}
-        <div className="relative z-10 text-center max-w-lg">
-          <div className="mb-12">
-            <h1 className="text-5xl font-bold mb-6 text-white" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-              Balanzzo
-            </h1>
-            <div className="mb-8 p-8 rounded-2xl" style={{ backgroundColor: 'rgba(222, 213, 194, 0.1)' }}>
-              <h2 className="text-3xl font-bold mb-4 text-white" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-                Gestão financeira sem planilhas complicadas, com simplicidade que funciona
-              </h2>
-              <p className="text-lg leading-relaxed" style={{ fontFamily: 'Montserrat, sans-serif', color: '#DED5C2' }}>
-                Para nano e microempresas: gestão financeira sem planilhas complicadas, com 
-                <span className="font-semibold text-white"> simplicidade que funciona</span>.
-              </p>
+      {/* Left side - Dashboard Preview */}
+      <div className="flex-1 relative flex flex-col justify-center items-center p-8 bg-gradient-to-br from-gray-50 to-gray-100">
+        {/* Dashboard Preview Container */}
+        <div className="w-full max-w-lg">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
+                <div className="w-6 h-6 bg-gray-400 rounded"></div>
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">Dashboard Financeiro</h2>
+                <p className="text-sm text-gray-600">Rodrigo Alessandro B. Junior</p>
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-green-600">138.4%</div>
+          </div>
+
+          {/* Financial Cards */}
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            <div className="bg-green-50 p-4 rounded-2xl border border-green-100">
+              <p className="text-xs text-gray-600 mb-1">Faturamento Mensal</p>
+              <p className="text-lg font-bold text-gray-900">R$ 17.550,00</p>
+            </div>
+            <div className="bg-yellow-50 p-4 rounded-2xl border border-yellow-100">
+              <p className="text-xs text-gray-600 mb-1">Saldo Líquido</p>
+              <p className="text-lg font-bold text-gray-900">R$ 6.050,00</p>
             </div>
           </div>
-          
-          {/* Process showcase */}
-          <div className="rounded-2xl p-8 border-2" style={{ backgroundColor: '#DED5C2', borderColor: '#A9C7A1' }}>
-            <h3 className="text-xl font-bold mb-8" style={{ fontFamily: 'Montserrat, sans-serif', color: '#1A3423' }}>
-              Como funciona no seu dia a dia
-            </h3>
-            <div className="space-y-6">
-              {/* Step 1 */}
-              <div className="flex items-start gap-4 p-5 rounded-xl border-2" style={{ backgroundColor: '#E4F8CA', borderColor: '#A9C7A1' }}>
-                <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white" style={{ backgroundColor: '#1A3423' }}>
-                  1
+
+          {/* Cash Flow Chart */}
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                  <span className="text-green-600 text-sm font-bold">$</span>
                 </div>
-                <div className="text-left">
-                  <h4 className="font-semibold mb-2" style={{ fontFamily: 'Montserrat, sans-serif', color: '#1A3423' }}>
-                    Upload do Extrato
-                  </h4>
-                  <p className="text-sm" style={{ fontFamily: 'Montserrat, sans-serif', color: '#1A3423' }}>
-                    Envie seu CSV bancário em segundos
-                  </p>
+                <div>
+                  <p className="text-sm font-medium text-gray-900">Fluxo de Caixa</p>
+                  <p className="text-xs text-gray-500">Receitas por Tipo</p>
                 </div>
               </div>
-              
-              {/* Step 2 */}
-              <div className="flex items-start gap-4 p-5 rounded-xl border-2" style={{ backgroundColor: '#E4F8CA', borderColor: '#A9C7A1' }}>
-                <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white" style={{ backgroundColor: '#1A3423' }}>
-                  2
-                </div>
-                <div className="text-left">
-                  <h4 className="font-semibold mb-2" style={{ fontFamily: 'Montserrat, sans-serif', color: '#1A3423' }}>
-                    Conciliação Automática
-                  </h4>
-                  <p className="text-sm" style={{ fontFamily: 'Montserrat, sans-serif', color: '#1A3423' }}>
-                    IA categoriza suas transações
-                  </p>
-                </div>
-              </div>
-              
-              {/* Step 3 */}
-              <div className="flex items-start gap-4 p-5 rounded-xl border-2" style={{ backgroundColor: '#E4F8CA', borderColor: '#A9C7A1' }}>
-                <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white" style={{ backgroundColor: '#1A3423' }}>
-                  3
-                </div>
-                <div className="text-left">
-                  <h4 className="font-semibold mb-2" style={{ fontFamily: 'Montserrat, sans-serif', color: '#1A3423' }}>
-                    Relatórios Prontos
-                  </h4>
-                  <p className="text-sm" style={{ fontFamily: 'Montserrat, sans-serif', color: '#1A3423' }}>
-                    DRE e fluxo de caixa gerados
-                  </p>
-                </div>
+              <div className="text-right">
+                <p className="text-sm text-green-600 font-medium">+18% este mês</p>
+                <p className="text-xs text-gray-500">Margem de Lucro: 65%</p>
               </div>
             </div>
+            
+            {/* Mock Chart Bars */}
+            <div className="flex items-end justify-between gap-2 h-20">
+              {[60, 70, 85, 75, 90, 80, 85].map((height, index) => (
+                <div
+                  key={index}
+                  className="bg-gradient-to-t from-green-600 to-green-400 rounded-t-lg flex-1"
+                  style={{ height: `${height}%` }}
+                ></div>
+              ))}
+            </div>
+          </div>
+
+          {/* Bottom Text */}
+          <div className="text-center mt-8">
+            <p className="text-gray-600 text-sm">
+              Visualize seus dados financeiros de forma clara e intuitiva
+            </p>
           </div>
         </div>
       </div>
@@ -293,8 +281,8 @@ export default function Login() {
 
             <Button 
               type="submit" 
-              className="w-full py-3 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white font-semibold rounded-xl shadow-lg transition-all duration-200 hover:shadow-xl"
-              style={{ fontFamily: 'Montserrat, sans-serif' }}
+              className="w-full py-3 text-white font-semibold rounded-xl shadow-lg transition-all duration-200 hover:shadow-xl"
+              style={{ fontFamily: 'Montserrat, sans-serif', backgroundColor: '#1A3423' }}
               disabled={isLoading}
             >
               {isLoading ? (
