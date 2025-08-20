@@ -471,9 +471,9 @@ export class RobustCSVParser {
             break;
           case 'DD/MM/YY':
             [, day, month, year] = match;
-            // Converter ano de 2 dígitos
+            // Converter ano de 2 dígitos - assumir 20XX para transações modernas
             const yearNum = parseInt(year);
-            year = yearNum <= 30 ? `20${year}` : `19${year}`;
+            year = `20${year.padStart(2, '0')}`;
             break;
           case 'DDMMYYYY':
             [, day, month, year] = match;

@@ -228,9 +228,8 @@ export class FileParser {
           day = match[1];
           month = match[2];
           year = match[3];
-          // Convert 2-digit year to 4-digit
-          const yearNum = parseInt(year);
-          year = yearNum <= 30 ? `20${year}` : `19${year}`;
+          // Convert 2-digit year to 4-digit - assume 20XX for modern transactions
+          year = `20${year.padStart(2, '0')}`;
           console.log(`Ano convertido de ${match[3]} para ${year}`);
         } else {
           // DD/MM/YYYY or DD-MM-YYYY format
