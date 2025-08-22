@@ -436,6 +436,32 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_subscription_plans: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          active: boolean
+          billing_cycle: string
+          features: Json
+          id: string
+          name: string
+          price_cents: number
+        }[]
+      }
+      get_user_subscription: {
+        Args: { p_user_id: string }
+        Returns: {
+          cancel_at_period_end: boolean
+          created_at: string
+          current_period_end: string
+          current_period_start: string
+          id: string
+          pagarme_subscription_id: string
+          plan_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }[]
+      }
       sugerir_categoria: {
         Args: { descricao_input: string }
         Returns: string
