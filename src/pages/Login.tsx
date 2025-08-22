@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Lock, Mail, Eye, EyeOff, Chrome } from "lucide-react";
 import { useSecureAuth } from "@/hooks/useSecureAuth";
 import { useProfile } from "@/hooks/useProfile";
+import { useSubscription } from "@/hooks/useSubscription";
 import { SignupForm } from "@/components/SignupForm";
 import financialHero from "@/assets/financial-hero.png";
 
@@ -22,16 +23,38 @@ export default function Login() {
   const { toast } = useToast();
   const { signIn, signInWithGoogle, isAuthenticated, user, isLoading: authLoading } = useSecureAuth();
   const { hasProfile, isLoading: profileLoading } = useProfile();
+  const { hasAccess, loadSubscriptionData } = useSubscription();
 
   useEffect(() => {
     console.log('Login useEffect - isAuthenticated:', isAuthenticated, 'hasProfile:', hasProfile, 'authLoading:', authLoading, 'profileLoading:', profileLoading);
     
-    // Redirect authenticated users to dashboard, regardless of profile completion
-    if (!authLoading && isAuthenticated) {
-      console.log('User is authenticated, redirecting to dashboard');
+    // Check for payment success/failure in URL params
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('payment_success') === 'true') {
+      toast({
+        title: "Pagamento realizado com sucesso!",
+        description: "Sua assinatura foi ativada. Faça login para acessar a plataforma.",
+      });
+      // Reload subscription data after successful payment
+      loadSubscriptionData();
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (urlParams.get('payment_cancelled') === 'true') {
+      toast({
+        title: "Pagamento cancelado",
+        description: "O pagamento foi cancelado. Você pode tentar novamente.",
+        variant: "destructive",
+      });
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+    
+    // Redirect authenticated users with active subscription to dashboard
+    if (!authLoading && isAuthenticated && hasAccess()) {
+      console.log('User is authenticated with active subscription, redirecting to dashboard');
       navigate("/", { replace: true });
     }
-  }, [isAuthenticated, authLoading, navigate]);
+  }, [isAuthenticated, authLoading, hasAccess, navigate, toast, loadSubscriptionData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
