@@ -46,26 +46,21 @@ export function useSubscription() {
     try {
       setIsLoading(true);
 
-      // Load user's current subscription
-      const { data: subscriptionData, error: subError } = await supabase
-        .from('subscriptions')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('status', 'active')
-        .single();
+      // Load user's current subscription using raw SQL
+      const { data: subscriptionData, error: subError } = await supabase.rpc('get_user_subscription', {
+        p_user_id: user.id
+      });
 
-      if (subError && subError.code !== 'PGRST116') {
+      if (subError) {
         console.error('Error loading subscription:', subError);
       }
 
-      setSubscription(subscriptionData);
-      setHasActiveSubscription(!!subscriptionData && subscriptionData.status === 'active');
+      const activeSubscription = subscriptionData?.find((sub: any) => sub.status === 'active');
+      setSubscription(activeSubscription || null);
+      setHasActiveSubscription(!!activeSubscription);
 
-      // Load available plans
-      const { data: plansData, error: plansError } = await supabase
-        .from('subscription_plans')
-        .select('*')
-        .eq('active', true);
+      // Load available plans using raw SQL
+      const { data: plansData, error: plansError } = await supabase.rpc('get_subscription_plans');
 
       if (plansError) {
         console.error('Error loading plans:', plansError);
