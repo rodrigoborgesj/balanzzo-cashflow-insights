@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from './useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Subscription {
   id: string;
@@ -75,15 +76,12 @@ export function useSubscription() {
     try {
       setIsLoading(true);
       
-      // For now, we'll use a simple check based on user metadata or a direct database query
-      // In a real implementation, this would check the subscription tables
-      
-      // Check URL params for payment success
+      // Check URL params for payment success first
       const urlParams = new URLSearchParams(window.location.search);
       const paymentSuccess = urlParams.get('payment_success') === 'true';
       
-      // Mock subscription data - in production this would come from database
-      if (paymentSuccess || user.user_metadata?.has_active_subscription) {
+      if (paymentSuccess) {
+        // If payment was successful, create active subscription
         const mockSubscription: Subscription = {
           id: '1',
           user_id: user.id,
@@ -98,9 +96,65 @@ export function useSubscription() {
         
         setSubscription(mockSubscription);
         setHasActiveSubscription(true);
-      } else {
-        setSubscription(null);
+        
+        // Clear URL params
+        window.history.replaceState({}, document.title, window.location.pathname);
+        return;
+      }
+
+      // Check real database for existing subscription
+      const { data: subscriptions, error } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (error) {
+        console.error('Error fetching subscription:', error);
         setHasActiveSubscription(false);
+        return;
+      }
+
+      if (subscriptions && subscriptions.length > 0) {
+        const sub = subscriptions[0];
+        setSubscription(sub);
+        setHasActiveSubscription(true);
+      } else {
+        // Check payments table for successful payments (semiannual plans)
+        const { data: payments, error: paymentError } = await supabase
+          .from('payments')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('status', 'paid')
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        if (paymentError) {
+          console.error('Error fetching payments:', paymentError);
+        }
+
+        if (payments && payments.length > 0) {
+          // Create mock subscription for semiannual payment
+          const mockSubscription: Subscription = {
+            id: payments[0].id,
+            user_id: user.id,
+            plan_id: 'semiannual',
+            status: 'active',
+            current_period_start: payments[0].paid_at || payments[0].created_at,
+            current_period_end: new Date(Date.now() + 6 * 30 * 24 * 60 * 60 * 1000).toISOString(),
+            cancel_at_period_end: false,
+            created_at: payments[0].created_at,
+            updated_at: payments[0].updated_at
+          };
+          
+          setSubscription(mockSubscription);
+          setHasActiveSubscription(true);
+        } else {
+          setSubscription(null);
+          setHasActiveSubscription(false);
+        }
       }
     } catch (error) {
       console.error('Error in loadSubscriptionData:', error);

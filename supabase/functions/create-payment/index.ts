@@ -14,34 +14,60 @@ interface PaymentRequest {
 }
 
 serve(async (req) => {
+  console.log('=== CREATE PAYMENT FUNCTION CALLED ===');
+  console.log('Method:', req.method);
+  console.log('Headers:', Object.fromEntries(req.headers.entries()));
+
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
+    console.log('Handling CORS preflight request');
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    console.log('Starting payment creation process...');
+    
     // Get authenticated user
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? ''
     );
 
-    const authHeader = req.headers.get('Authorization')!;
+    const authHeader = req.headers.get('Authorization');
+    console.log('Auth header present:', !!authHeader);
+    
+    if (!authHeader) {
+      throw new Error('Authorization header missing');
+    }
+
     const token = authHeader.replace('Bearer ', '');
-    const { data } = await supabaseClient.auth.getUser(token);
+    const { data, error: authError } = await supabaseClient.auth.getUser(token);
+    
+    if (authError) {
+      console.error('Auth error:', authError);
+      throw new Error(`Authentication failed: ${authError.message}`);
+    }
+    
     const user = data.user;
+    console.log('Authenticated user:', user?.email);
 
     if (!user?.email) {
       throw new Error('User not authenticated');
     }
 
-    const { plan_id, payment_method, amount, type }: PaymentRequest = await req.json();
+    const requestBody = await req.json();
+    console.log('Request body:', requestBody);
+    
+    const { plan_id, payment_method, amount, type }: PaymentRequest = requestBody;
 
-    console.log('Creating payment for user:', user.email, 'plan:', plan_id, 'amount:', amount);
+    console.log('Creating payment for user:', user.email, 'plan:', plan_id, 'amount:', amount, 'type:', type);
 
     // Pagar.me API configuration
     const pagarmeApiKey = Deno.env.get('PAGARME_SECRET_KEY');
+    console.log('Pagar.me API key configured:', !!pagarmeApiKey);
+    
     if (!pagarmeApiKey) {
+      console.error('PAGARME_SECRET_KEY environment variable is not set');
       throw new Error('Pagar.me API key not configured');
     }
 
@@ -99,8 +125,8 @@ serve(async (req) => {
             },
           },
           payment_method,
-          success_url: `https://balanzzo.com.br/login?payment_success=true`,
-          cancel_url: `https://balanzzo.com.br/login?payment_cancelled=true`,
+          success_url: `${new URL(req.url).origin}/login?payment_success=true`,
+          cancel_url: `${new URL(req.url).origin}/login?payment_cancelled=true`,
         }),
       });
 
@@ -152,8 +178,8 @@ serve(async (req) => {
               },
             }),
           }],
-          success_url: `https://balanzzo.com.br/login?payment_success=true`,
-          cancel_url: `https://balanzzo.com.br/login?payment_cancelled=true`,
+          success_url: `${new URL(req.url).origin}/login?payment_success=true`,
+          cancel_url: `${new URL(req.url).origin}/login?payment_cancelled=true`,
         }),
       });
 
