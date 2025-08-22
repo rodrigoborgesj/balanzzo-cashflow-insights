@@ -215,6 +215,53 @@ export type Database = {
         }
         Relationships: []
       }
+      payments: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          id: string
+          pagarme_transaction_id: string | null
+          paid_at: string | null
+          payment_method: string | null
+          status: string
+          subscription_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          id?: string
+          pagarme_transaction_id?: string | null
+          paid_at?: string | null
+          payment_method?: string | null
+          status?: string
+          subscription_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          id?: string
+          pagarme_transaction_id?: string | null
+          paid_at?: string | null
+          payment_method?: string | null
+          status?: string
+          subscription_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string | null
@@ -241,6 +288,89 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      subscription_plans: {
+        Row: {
+          active: boolean
+          billing_cycle: string
+          created_at: string
+          features: Json
+          id: string
+          name: string
+          price_cents: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          billing_cycle: string
+          created_at?: string
+          features?: Json
+          id?: string
+          name: string
+          price_cents: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          billing_cycle?: string
+          created_at?: string
+          features?: Json
+          id?: string
+          name?: string
+          price_cents?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          cancel_at_period_end: boolean
+          canceled_at: string | null
+          created_at: string
+          current_period_end: string | null
+          current_period_start: string | null
+          id: string
+          pagarme_subscription_id: string | null
+          plan_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cancel_at_period_end?: boolean
+          canceled_at?: string | null
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          pagarme_subscription_id?: string | null
+          plan_id: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cancel_at_period_end?: boolean
+          canceled_at?: string | null
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          pagarme_subscription_id?: string | null
+          plan_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       transacoes_conciliadas: {
         Row: {
