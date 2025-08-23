@@ -7,7 +7,7 @@ verify_jwt = false
 verify_jwt = true
 
 [functions.create-pagarme-plans]
-verify_jwt = true
+verify_jwt = false
 
 [functions.pagarme-webhook]
 verify_jwt = false
