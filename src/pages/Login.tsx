@@ -132,76 +132,147 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      {/* Left side - Dashboard Preview */}
-      <div className="flex-1 relative p-8 bg-white">
-        {/* Company Name - Top Left */}
-        <div className="absolute top-8 left-8">
-          <h1 className="text-4xl font-bold" style={{ color: '#1A3423', fontFamily: 'Montserrat, sans-serif' }}>
-            Balanzzo
-          </h1>
+      {/* Left side - Modern Financial Preview */}
+      <div className="flex-1 relative overflow-hidden" style={{ backgroundColor: '#1A3423' }}>
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-5">
+          <div className="grid grid-cols-8 h-full">
+            {Array.from({ length: 64 }).map((_, i) => (
+              <div key={i} className="border-r border-b border-white/10"></div>
+            ))}
+          </div>
         </div>
 
-        {/* Dashboard Preview Container - Centered */}
-        <div className="flex flex-col justify-center items-center h-full">
-          <div className="w-full max-w-lg">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: '#A9C7A1' }}>
-                  <div className="w-6 h-6 rounded" style={{ backgroundColor: '#1A3423' }}></div>
+        {/* Company Branding - Top Left */}
+        <div className="absolute top-12 left-12 z-10">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#A9C7A1' }}>
+              <div className="w-6 h-6 rounded-md bg-white"></div>
+            </div>
+            <h1 className="text-3xl font-bold text-white tracking-tight">
+              Balanzzo
+            </h1>
+          </div>
+        </div>
+
+        {/* Main Content - Centered */}
+        <div className="flex items-center justify-center h-full p-12">
+          <div className="w-full max-w-2xl space-y-8">
+            
+            {/* Top Stats Cards */}
+            <div className="grid grid-cols-3 gap-6">
+              {/* Revenue Card */}
+              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#A9C7A1' }}>
+                    <div className="w-4 h-4 bg-white rounded-sm"></div>
+                  </div>
+                  <div className="h-8 w-20 rounded-lg" style={{ backgroundColor: '#A9C7A1' }}></div>
                 </div>
-                <div>
-                  <h2 className="text-xl font-bold" style={{ color: '#1A3423' }}>Dashboard Financeiro</h2>
-                  <p className="text-sm" style={{ color: '#1A3423' }}>Rodrigo Alessandro B. Junior</p>
+                <div className="space-y-2">
+                  <div className="h-6 w-24 bg-white/30 rounded-lg"></div>
+                  <div className="h-4 w-16 bg-white/20 rounded-md"></div>
                 </div>
               </div>
-              <div className="text-2xl font-bold" style={{ color: '#1A3423' }}>138.4%</div>
+
+              {/* Cash Flow Card */}
+              <div className="bg-white rounded-2xl p-6 shadow-xl">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#1A3423' }}>
+                    <div className="w-4 h-4 rounded-sm" style={{ backgroundColor: '#A9C7A1' }}></div>
+                  </div>
+                  <div className="h-8 w-20 rounded-lg" style={{ backgroundColor: '#1A3423' }}></div>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-6 w-24 rounded-lg" style={{ backgroundColor: '#A9C7A1' }}></div>
+                  <div className="h-4 w-16 rounded-md" style={{ backgroundColor: '#A9C7A1', opacity: 0.6 }}></div>
+                </div>
+              </div>
+
+              {/* DRE Card */}
+              <div className="rounded-2xl p-6 border-2 border-white/30" style={{ backgroundColor: '#A9C7A1' }}>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#1A3423' }}>
+                    <div className="w-4 h-4 bg-white rounded-sm"></div>
+                  </div>
+                  <div className="h-8 w-20 bg-white/80 rounded-lg"></div>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-6 w-24 bg-white/90 rounded-lg"></div>
+                  <div className="h-4 w-16 bg-white/70 rounded-md"></div>
+                </div>
+              </div>
             </div>
 
-            {/* Financial Cards */}
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <div className="p-4 rounded-2xl border-2" style={{ backgroundColor: '#E4F8CA', borderColor: '#A9C7A1' }}>
-                <p className="text-xs mb-1" style={{ color: '#1A3423' }}>Faturamento Mensal</p>
-                <p className="text-lg font-bold" style={{ color: '#1A3423' }}>R$ 17.550,00</p>
-              </div>
-              <div className="p-4 rounded-2xl border-2" style={{ backgroundColor: '#A9C7A1', borderColor: '#1A3423' }}>
-                <p className="text-xs mb-1 text-white">Saldo Líquido</p>
-                <p className="text-lg font-bold text-white">R$ 6.050,00</p>
-              </div>
-            </div>
-
-            {/* Cash Flow Chart */}
-            <div className="bg-white p-6 rounded-2xl shadow-sm border-2" style={{ borderColor: '#A9C7A1' }}>
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: '#E4F8CA' }}>
-                    <span className="text-sm font-bold" style={{ color: '#1A3423' }}>$</span>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium" style={{ color: '#1A3423' }}>Fluxo de Caixa</p>
-                    <p className="text-xs" style={{ color: '#1A3423' }}>Receitas por Tipo</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-medium" style={{ color: '#1A3423' }}>+18% este mês</p>
-                  <p className="text-xs" style={{ color: '#1A3423' }}>Margem de Lucro: 65%</p>
-                </div>
-              </div>
+            {/* Main Dashboard Preview */}
+            <div className="bg-white/95 backdrop-blur-sm rounded-3xl p-8 shadow-2xl border border-white/30">
               
-              {/* Mock Chart Bars */}
-              <div className="flex items-end justify-between gap-2 h-20">
-                {[60, 70, 85, 75, 90, 80, 85].map((height, index) => (
-                  <div
-                    key={index}
-                    className="rounded-t-lg flex-1"
-                    style={{ 
-                      height: `${height}%`,
-                      backgroundColor: index % 2 === 0 ? '#1A3423' : '#A9C7A1'
-                    }}
-                  ></div>
-                ))}
+              {/* Chart Header */}
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#A9C7A1' }}>
+                    <div className="grid grid-cols-2 gap-1">
+                      {Array.from({ length: 4 }).map((_, i) => (
+                        <div key={i} className="w-1.5 h-1.5 rounded-sm" style={{ backgroundColor: '#1A3423' }}></div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="h-5 w-32 rounded-md" style={{ backgroundColor: '#1A3423' }}></div>
+                    <div className="h-3 w-24 rounded-md" style={{ backgroundColor: '#A9C7A1' }}></div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-3">
+                  <div className="h-8 w-16 rounded-lg" style={{ backgroundColor: '#A9C7A1' }}></div>
+                  <div className="h-8 w-8 rounded-lg" style={{ backgroundColor: '#1A3423' }}></div>
+                </div>
+              </div>
+
+              {/* Financial Chart Visualization */}
+              <div className="space-y-6">
+                
+                {/* Chart Area */}
+                <div className="h-40 flex items-end justify-between gap-3 px-4">
+                  {[85, 65, 75, 90, 70, 80, 95, 60, 85, 75, 90, 85].map((height, index) => (
+                    <div
+                      key={index}
+                      className="flex-1 rounded-t-xl transition-all duration-300 hover:opacity-80"
+                      style={{ 
+                        height: `${height}%`,
+                        backgroundColor: index % 3 === 0 ? '#1A3423' : index % 3 === 1 ? '#A9C7A1' : '#000000',
+                        maxWidth: '24px'
+                      }}
+                    ></div>
+                  ))}
+                </div>
+
+                {/* Bottom Metrics */}
+                <div className="grid grid-cols-4 gap-6 pt-6 border-t border-gray-200">
+                  {Array.from({ length: 4 }).map((_, index) => (
+                    <div key={index} className="text-center space-y-2">
+                      <div className={`h-3 rounded-full mx-auto ${index % 2 === 0 ? 'w-16' : 'w-12'}`} 
+                           style={{ backgroundColor: index % 2 === 0 ? '#1A3423' : '#A9C7A1' }}></div>
+                      <div className="h-2 w-8 bg-gray-300 rounded-full mx-auto"></div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
+
+            {/* Bottom Feature Icons */}
+            <div className="flex items-center justify-center gap-8">
+              {Array.from({ length: 5 }).map((_, index) => (
+                <div key={index} className="group">
+                  <div className={`w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-300 group-hover:scale-105`}
+                       style={{ backgroundColor: index % 2 === 0 ? '#A9C7A1' : 'white' }}>
+                    <div className={`w-8 h-8 rounded-lg`}
+                         style={{ backgroundColor: index % 2 === 0 ? '#1A3423' : '#A9C7A1' }}></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
           </div>
         </div>
       </div>
