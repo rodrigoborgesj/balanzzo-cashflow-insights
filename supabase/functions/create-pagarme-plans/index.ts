@@ -55,7 +55,7 @@ serve(async (req) => {
     console.log("🌐 Making request to:", url);
     
     // Pagar.me uses Basic Auth: encode API key + ":" in base64
-    const basicAuthCredentials = Buffer.from(`${pagarmeApiKey}:`).toString('base64');
+    const basicAuthCredentials = btoa(`${pagarmeApiKey}:`);
     console.log("🔑 Using Basic Auth with key:", `${pagarmeApiKey.substring(0, 20)}...`);
 
     // Create the actual Balanzzo subscription plans
