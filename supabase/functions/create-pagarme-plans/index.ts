@@ -68,6 +68,7 @@ serve(async (req) => {
         billing_type: 'prepaid',
         currency: 'BRL',
         payment_methods: ['credit_card'],
+        quantity: 1,
         pricing_scheme: {
           scheme_type: 'unit',
           price: 2990 // R$ 29,90
@@ -81,6 +82,7 @@ serve(async (req) => {
         billing_type: 'prepaid',
         currency: 'BRL',
         payment_methods: ['credit_card'],
+        quantity: 1,
         pricing_scheme: {
           scheme_type: 'unit',
           price: 4990 // R$ 49,90
@@ -94,6 +96,7 @@ serve(async (req) => {
         billing_type: 'prepaid',
         currency: 'BRL',
         payment_methods: ['credit_card'],
+        quantity: 1,
         pricing_scheme: {
           scheme_type: 'unit',
           price: 14990 // R$ 149,90 (desconto de ~50%)
