@@ -32,10 +32,17 @@ serve(async (req) => {
     }
     console.log("✅ API key found, prefix:", pagarmeApiKey.substring(0, 8) + "...");
 
+    // Verificar se é chave de sandbox ou produção
+    const isSandbox = pagarmeApiKey.startsWith('sk_test_');
+    const baseUrl = isSandbox ? 'https://api.pagar.me/core/v5' : 'https://api.pagar.me/core/v5';
+    
+    console.log("🔧 Using sandbox:", isSandbox);
+    console.log("🌐 Base URL:", baseUrl);
+
     // Test with a simple plan first
     const testPlan = {
-      name: 'Plano Teste Balanzzo',
-      description: 'Plano teste do Balanzzo',
+      name: 'Plano Teste Balanzzo Basic',
+      description: 'Plano teste básico do Balanzzo',
       interval: 'month',
       interval_count: 1,
       billing_type: 'prepaid',
@@ -43,20 +50,23 @@ serve(async (req) => {
       payment_methods: ['credit_card'],
       pricing_scheme: {
         scheme_type: 'unit',
-        price: 19700
+        price: 2990 // R$ 29,90
       }
     };
 
     console.log("📋 Test plan payload:", JSON.stringify(testPlan, null, 2));
 
-    const url = 'https://api.pagar.me/core/v5/plans';
+    const url = `${baseUrl}/plans`;
     console.log("🌐 Making request to:", url);
+    console.log("🔑 Authorization header:", `Bearer ${pagarmeApiKey.substring(0, 20)}...`);
 
     const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${pagarmeApiKey}`,
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'User-Agent': 'Balanzzo-App/1.0'
       },
       body: JSON.stringify(testPlan)
     });
