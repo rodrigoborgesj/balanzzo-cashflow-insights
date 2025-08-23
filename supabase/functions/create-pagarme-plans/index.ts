@@ -30,15 +30,18 @@ serve(async (req) => {
 
     // Plano Mensal
     const monthlyPlan = {
-      id: 'monthly',
       name: 'Plano Mensal Balanzzo',
-      amount: 19700, // R$ 197,00 em centavos
+      description: 'Plano mensal do Balanzzo',
       currency: 'BRL',
       interval: 'month',
       interval_count: 1,
       billing_type: 'prepaid',
       payment_methods: ['credit_card', 'pix'],
       installments: [1],
+      pricing_scheme: {
+        scheme_type: 'unit',
+        price: 19700 // R$ 197,00 em centavos
+      },
       metadata: {
         description: 'Plano mensal do Balanzzo'
       }
@@ -46,15 +49,18 @@ serve(async (req) => {
 
     // Plano Semestral
     const semiannualPlan = {
-      id: 'semiannual',
       name: 'Plano Semestral Balanzzo',
-      amount: 98500, // R$ 985,00 em centavos
+      description: 'Plano semestral do Balanzzo',
       currency: 'BRL',
       interval: 'month',
       interval_count: 6,
       billing_type: 'prepaid',
       payment_methods: ['credit_card', 'pix'],
       installments: [1, 2, 3],
+      pricing_scheme: {
+        scheme_type: 'unit',
+        price: 98500 // R$ 985,00 em centavos
+      },
       metadata: {
         description: 'Plano semestral do Balanzzo'
       }
