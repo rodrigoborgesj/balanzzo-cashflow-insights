@@ -51,74 +51,129 @@ serve(async (req) => {
     console.log("🔧 Using sandbox:", isSandbox);
     console.log("🌐 Base URL:", baseUrl);
 
-    // Test with a simple plan first
-    const testPlan = {
-      name: 'Plano Teste Balanzzo Basic',
-      description: 'Plano teste básico do Balanzzo',
-      interval: 'month',
-      interval_count: 1,
-      billing_type: 'prepaid',
-      currency: 'BRL',
-      payment_methods: ['credit_card'],
-      pricing_scheme: {
-        scheme_type: 'unit',
-        price: 2990 // R$ 29,90
-      }
-    };
-
-    console.log("📋 Test plan payload:", JSON.stringify(testPlan, null, 2));
-
     const url = `${baseUrl}/plans`;
     console.log("🌐 Making request to:", url);
-    console.log("🔑 Authorization header:", `Bearer ${pagarmeApiKey.substring(0, 20)}...`);
+    
+    // Pagar.me uses Basic Auth: encode API key + ":" in base64
+    const basicAuthCredentials = Buffer.from(`${pagarmeApiKey}:`).toString('base64');
+    console.log("🔑 Using Basic Auth with key:", `${pagarmeApiKey.substring(0, 20)}...`);
 
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${pagarmeApiKey}`,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'User-Agent': 'Balanzzo-App/1.0'
+    // Create the actual Balanzzo subscription plans
+    const plans = [
+      {
+        name: 'Balanzzo Basic',
+        description: 'Plano básico do Balanzzo - Gestão financeira simplificada',
+        interval: 'month',
+        interval_count: 1,
+        billing_type: 'prepaid',
+        currency: 'BRL',
+        payment_methods: ['credit_card'],
+        pricing_scheme: {
+          scheme_type: 'unit',
+          price: 2990 // R$ 29,90
+        }
       },
-      body: JSON.stringify(testPlan)
+      {
+        name: 'Balanzzo Premium',
+        description: 'Plano premium do Balanzzo - Gestão financeira avançada',
+        interval: 'month',
+        interval_count: 1,
+        billing_type: 'prepaid',
+        currency: 'BRL',
+        payment_methods: ['credit_card'],
+        pricing_scheme: {
+          scheme_type: 'unit',
+          price: 4990 // R$ 49,90
+        }
+      },
+      {
+        name: 'Balanzzo Semestral',
+        description: 'Plano semestral do Balanzzo - 6 meses com desconto',
+        interval: 'month',
+        interval_count: 6,
+        billing_type: 'prepaid',
+        currency: 'BRL',
+        payment_methods: ['credit_card'],
+        pricing_scheme: {
+          scheme_type: 'unit',
+          price: 14990 // R$ 149,90 (desconto de ~50%)
+        }
+      }
+    ];
+
+    console.log("📋 Creating Balanzzo plans:", plans.length);
+
+    const results = [];
+    
+    for (let i = 0; i < plans.length; i++) {
+      const plan = plans[i];
+      console.log(`\n🔄 Creating plan ${i + 1}/${plans.length}: ${plan.name}`);
+      
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Basic ${basicAuthCredentials}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'User-Agent': 'Balanzzo-App/1.0'
+          },
+          body: JSON.stringify(plan)
+        });
+
+        console.log(`📊 Plan ${plan.name} response status:`, response.status);
+
+        const responseText = await response.text();
+        let result;
+        try {
+          result = JSON.parse(responseText);
+        } catch (e) {
+          result = { raw: responseText };
+        }
+
+        if (response.ok) {
+          console.log(`✅ Plan ${plan.name} created successfully! ID:`, result.id);
+          results.push({
+            plan_name: plan.name,
+            success: true,
+            plan_id: result.id,
+            data: result
+          });
+        } else {
+          console.log(`❌ Plan ${plan.name} failed:`, result);
+          results.push({
+            plan_name: plan.name,
+            success: false,
+            error: result,
+            status: response.status
+          });
+        }
+      } catch (error) {
+        console.log(`💥 Exception creating plan ${plan.name}:`, error.message);
+        results.push({
+          plan_name: plan.name,
+          success: false,
+          error: error.message
+        });
+      }
+    }
+
+    const successCount = results.filter(r => r.success).length;
+    console.log(`\n📊 Final results: ${successCount}/${results.length} plans created successfully`);
+
+    return new Response(JSON.stringify({
+      success: successCount > 0,
+      message: `${successCount}/${results.length} planos criados com sucesso`,
+      plans: results,
+      summary: {
+        total: results.length,
+        success: successCount,
+        failed: results.length - successCount
+      }
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 200,
     });
-
-    console.log("📊 Response status:", response.status);
-    console.log("📊 Response headers:", Object.fromEntries(response.headers.entries()));
-
-    const responseText = await response.text();
-    console.log("📄 Raw response:", responseText);
-
-    let result;
-    try {
-      result = JSON.parse(responseText);
-    } catch (e) {
-      console.log("❌ Failed to parse JSON response");
-      result = { raw: responseText };
-    }
-
-    if (response.ok) {
-      console.log("✅ Plan created successfully!");
-      return new Response(JSON.stringify({
-        success: true,
-        message: "Plano teste criado com sucesso",
-        data: result
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
-      });
-    } else {
-      console.log("❌ API returned error:", result);
-      return new Response(JSON.stringify({
-        success: false,
-        message: "Erro na API do Pagar.me",
-        error: result,
-        status: response.status
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200, // Return 200 but with error in body
-      });
-    }
 
   } catch (error) {
     console.log("💥 Exception caught:", error);
