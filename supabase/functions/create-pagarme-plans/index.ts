@@ -16,10 +16,19 @@ serve(async (req) => {
 
   try {
     console.log("🔑 Checking API key...");
-    const pagarmeApiKey = Deno.env.get("PAGARME_SECRET_KEY");
+    
+    // Try different possible secret names
+    let pagarmeApiKey = Deno.env.get("PAGARME_SECRET_KEY");
     if (!pagarmeApiKey) {
-      console.log("❌ PAGARME_SECRET_KEY not found");
-      throw new Error("PAGARME_SECRET_KEY is not configured");
+      pagarmeApiKey = Deno.env.get("PAGARME_API_KEY");
+    }
+    
+    console.log("🔍 Available env vars:", Object.keys(Deno.env.toObject()));
+    
+    if (!pagarmeApiKey) {
+      console.log("❌ Neither PAGARME_SECRET_KEY nor PAGARME_API_KEY found");
+      console.log("📋 Available secrets:", Object.keys(Deno.env.toObject()).filter(key => key.includes('PAGARME')));
+      throw new Error("Pagar.me API key is not configured in secrets");
     }
     console.log("✅ API key found, prefix:", pagarmeApiKey.substring(0, 8) + "...");
 
