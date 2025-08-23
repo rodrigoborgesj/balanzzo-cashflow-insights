@@ -297,6 +297,7 @@ export type Database = {
           features: Json
           id: string
           name: string
+          pagarme_plan_id: string | null
           price_cents: number
           updated_at: string
         }
@@ -307,6 +308,7 @@ export type Database = {
           features?: Json
           id?: string
           name: string
+          pagarme_plan_id?: string | null
           price_cents: number
           updated_at?: string
         }
@@ -317,6 +319,7 @@ export type Database = {
           features?: Json
           id?: string
           name?: string
+          pagarme_plan_id?: string | null
           price_cents?: number
           updated_at?: string
         }
