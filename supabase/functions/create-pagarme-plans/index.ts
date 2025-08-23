@@ -30,7 +30,19 @@ serve(async (req) => {
       console.log("📋 Available secrets:", Object.keys(Deno.env.toObject()).filter(key => key.includes('PAGARME')));
       throw new Error("Pagar.me API key is not configured in secrets");
     }
-    console.log("✅ API key found, prefix:", pagarmeApiKey.substring(0, 8) + "...");
+
+    // Validate key format
+    console.log("✅ API key found, length:", pagarmeApiKey.length);
+    console.log("🔑 API key prefix:", pagarmeApiKey.substring(0, 10) + "...");
+    console.log("🔑 API key suffix:", "..." + pagarmeApiKey.substring(pagarmeApiKey.length - 4));
+    
+    if (!pagarmeApiKey.startsWith('sk_')) {
+      console.log("⚠️ Warning: API key does not start with 'sk_'");
+    }
+    
+    if (pagarmeApiKey.length < 20) {
+      console.log("⚠️ Warning: API key seems too short (length:", pagarmeApiKey.length + ")");
+    }
 
     // Verificar se é chave de sandbox ou produção
     const isSandbox = pagarmeApiKey.startsWith('sk_test_');
