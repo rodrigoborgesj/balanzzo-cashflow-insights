@@ -23,9 +23,10 @@ serve(async (req) => {
     if (!pagarmeApiKey) {
       throw new Error("PAGARME_SECRET_KEY is not configured");
     }
-    logStep("Pagar.me API key verified");
+    logStep("Pagar.me API key verified", { keyPrefix: pagarmeApiKey.substring(0, 8) + "..." });
 
     const pagarmeBaseUrl = 'https://api.pagar.me/core/v5';
+    logStep("Using Pagar.me base URL", { url: pagarmeBaseUrl });
 
     // Plano Mensal
     const monthlyPlan = {
@@ -73,7 +74,9 @@ serve(async (req) => {
         body: JSON.stringify(monthlyPlan)
       });
 
+      logStep("Monthly plan API response", { status: monthlyResponse.status, statusText: monthlyResponse.statusText });
       const monthlyResult = await monthlyResponse.json();
+      logStep("Monthly plan response body", monthlyResult);
       
       if (monthlyResponse.ok) {
         logStep("Monthly plan created successfully", { id: monthlyResult.id, name: monthlyResult.name });
@@ -114,7 +117,9 @@ serve(async (req) => {
         body: JSON.stringify(semiannualPlan)
       });
 
+      logStep("Semiannual plan API response", { status: semiannualResponse.status, statusText: semiannualResponse.statusText });
       const semiannualResult = await semiannualResponse.json();
+      logStep("Semiannual plan response body", semiannualResult);
       
       if (semiannualResponse.ok) {
         logStep("Semiannual plan created successfully", { id: semiannualResult.id, name: semiannualResult.name });
