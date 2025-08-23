@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -19,8 +19,14 @@ export function CategoryManager() {
     updateUserCategory, 
     deleteUserCategory, 
     checkCategoryUsage,
-    isLoading 
+    isLoading,
+    loadUserCategories
   } = useConciliacao();
+
+  // Load categories when component mounts
+  useEffect(() => {
+    loadUserCategories();
+  }, [loadUserCategories]);
 
   const handleCreateCategory = async () => {
     if (!newCategoryName.trim()) return;

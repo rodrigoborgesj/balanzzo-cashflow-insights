@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { CategoryManager } from "@/components/CategoryManager";
 import TransactionRemover from "@/components/TransactionRemover";
 import { SecurityMonitoringDashboard } from "@/components/SecurityMonitoringDashboard";
+import { ProfilePhotoUpload } from "@/components/ProfilePhotoUpload";
 import { useToast } from "@/hooks/use-toast";
+import { useProfile } from "@/hooks/useProfile";
 import { 
   Settings, 
   Bell, 
@@ -14,11 +16,13 @@ import {
   Palette,
   Globe,
   Save,
-  Trash2
+  Trash2,
+  User
 } from "lucide-react";
 
 export default function Configuracoes() {
   const { toast } = useToast();
+  const { profile, updateProfilePhoto } = useProfile();
   
   // Estados das configurações
   const [settings, setSettings] = useState({
@@ -61,6 +65,22 @@ export default function Configuracoes() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Profile Photo */}
+        <Card className="bg-gradient-to-br from-card to-card/80 border-border/50 shadow-soft">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <User className="h-5 w-5" />
+              Perfil
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ProfilePhotoUpload 
+              currentPhotoUrl={profile?.profile_photo_url}
+              onPhotoUpdate={updateProfilePhoto}
+            />
+          </CardContent>
+        </Card>
+
         {/* Notificações */}
         <Card className="bg-gradient-to-br from-card to-card/80 border-border/50 shadow-soft">
           <CardHeader>
@@ -152,7 +172,7 @@ export default function Configuracoes() {
         </Card>
 
         {/* Categorias */}
-        <Card className="bg-gradient-to-br from-card to-card/80 border-border/50 shadow-soft">
+        <Card className="bg-gradient-to-br from-card to-card/80 border-border/50 shadow-soft lg:col-span-2">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Database className="h-5 w-5" />

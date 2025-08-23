@@ -269,6 +269,7 @@ export type Database = {
           id: string
           phone: string
           position: string
+          profile_photo_url: string | null
           updated_at: string | null
         }
         Insert: {
@@ -277,6 +278,7 @@ export type Database = {
           id: string
           phone: string
           position: string
+          profile_photo_url?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -285,6 +287,7 @@ export type Database = {
           id?: string
           phone?: string
           position?: string
+          profile_photo_url?: string | null
           updated_at?: string | null
         }
         Relationships: []

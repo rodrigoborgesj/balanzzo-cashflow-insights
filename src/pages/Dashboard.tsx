@@ -377,7 +377,7 @@ export default function Dashboard() {
             </h1>
             <div className="flex flex-col space-y-1">
               <span className="text-muted-foreground">
-                Faturamento cresceu
+                {kpiData.variacaoEntradas >= 0 ? "Faturamento cresceu" : "Faturamento caiu"}
               </span>
               <div className="flex items-baseline space-x-2">
                 <span className="text-5xl font-bold text-foreground">

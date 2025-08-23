@@ -8,6 +8,7 @@ export interface Profile {
   full_name: string;
   phone: string;
   position: string;
+  profile_photo_url?: string | null;
 }
 
 export interface Company {
@@ -208,6 +209,19 @@ export function useProfile() {
     await loadProfile();
   };
 
+  const updateProfilePhoto = async (photoUrl: string | null) => {
+    if (!user) throw new Error('User not authenticated');
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({ profile_photo_url: photoUrl })
+      .eq('id', user.id);
+
+    if (error) throw error;
+
+    await loadProfile();
+  };
+
   return {
     profile,
     company,
@@ -215,6 +229,7 @@ export function useProfile() {
     hasProfile: !!profile, // User has profile if profile exists (company is optional)
     createProfile,
     updateProfile,
+    updateProfilePhoto,
     loadProfile,
   };
 }

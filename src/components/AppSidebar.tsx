@@ -6,10 +6,13 @@ import {
   CheckSquare,
   Calculator,
   LogOut,
-  HelpCircle
+  HelpCircle,
+  User
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useProfile } from "@/hooks/useProfile";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 import {
   Sidebar,
@@ -38,6 +41,7 @@ export function AppSidebar() {
   const location = useLocation();
   const currentPath = location.pathname;
   const { logout } = useAuth();
+  const { profile } = useProfile();
 
   const isActive = (path: string) => {
     if (path === "/") {
@@ -101,8 +105,19 @@ export function AppSidebar() {
                 to="/configuracoes" 
                 className={getNavClass("/configuracoes")}
               >
-                <Settings className="h-5 w-5 flex-shrink-0" />
-                {!collapsed && <span className="ml-3">Configurações</span>}
+                <div className="flex items-center">
+                  {profile?.profile_photo_url && !collapsed ? (
+                    <Avatar className="h-5 w-5 flex-shrink-0 mr-1">
+                      <AvatarImage src={profile.profile_photo_url} />
+                      <AvatarFallback>
+                        <Settings className="h-3 w-3" />
+                      </AvatarFallback>
+                    </Avatar>
+                  ) : (
+                    <Settings className="h-5 w-5 flex-shrink-0" />
+                  )}
+                </div>
+                {!collapsed && <span className="ml-2">Configurações</span>}
               </NavLink>
             </SidebarMenuButton>
           </SidebarMenuItem>
