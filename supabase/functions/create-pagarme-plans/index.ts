@@ -5,176 +5,101 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const logStep = (step: string, details?: any) => {
-  const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
-  console.log(`[CREATE-PAGARME-PLANS] ${step}${detailsStr}`);
-};
-
 serve(async (req) => {
+  console.log("🚀 Function started - Method:", req.method);
+
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
+    console.log("📝 Handling CORS preflight");
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    logStep("Function started");
-
+    console.log("🔑 Checking API key...");
     const pagarmeApiKey = Deno.env.get("PAGARME_SECRET_KEY");
     if (!pagarmeApiKey) {
+      console.log("❌ PAGARME_SECRET_KEY not found");
       throw new Error("PAGARME_SECRET_KEY is not configured");
     }
-    logStep("Pagar.me API key verified", { keyPrefix: pagarmeApiKey.substring(0, 8) + "..." });
+    console.log("✅ API key found, prefix:", pagarmeApiKey.substring(0, 8) + "...");
 
-    const pagarmeBaseUrl = 'https://api.pagar.me/core/v5';
-    logStep("Using Pagar.me base URL", { url: pagarmeBaseUrl });
-
-    // Plano Mensal
-    const monthlyPlan = {
-      name: 'Plano Mensal Balanzzo',
-      description: 'Plano mensal do Balanzzo',
-      currency: 'BRL',
+    // Test with a simple plan first
+    const testPlan = {
+      name: 'Plano Teste Balanzzo',
+      description: 'Plano teste do Balanzzo',
       interval: 'month',
       interval_count: 1,
       billing_type: 'prepaid',
-      payment_methods: ['credit_card', 'pix'],
-      installments: [1],
-      pricing_scheme: {
-        scheme_type: 'unit',
-        price: 19700 // R$ 197,00 em centavos
-      },
-      metadata: {
-        description: 'Plano mensal do Balanzzo'
-      }
-    };
-
-    // Plano Semestral
-    const semiannualPlan = {
-      name: 'Plano Semestral Balanzzo',
-      description: 'Plano semestral do Balanzzo',
       currency: 'BRL',
-      interval: 'month',
-      interval_count: 6,
-      billing_type: 'prepaid',
-      payment_methods: ['credit_card', 'pix'],
-      installments: [1, 2, 3],
+      payment_methods: ['credit_card'],
       pricing_scheme: {
         scheme_type: 'unit',
-        price: 98500 // R$ 985,00 em centavos
-      },
-      metadata: {
-        description: 'Plano semestral do Balanzzo'
+        price: 19700
       }
     };
 
-    const results = [];
+    console.log("📋 Test plan payload:", JSON.stringify(testPlan, null, 2));
 
-    // Criar plano mensal
-    try {
-      logStep("Creating monthly plan", monthlyPlan);
-      const monthlyResponse = await fetch(`${pagarmeBaseUrl}/plans`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${pagarmeApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(monthlyPlan)
-      });
+    const url = 'https://api.pagar.me/core/v5/plans';
+    console.log("🌐 Making request to:", url);
 
-      logStep("Monthly plan API response", { status: monthlyResponse.status, statusText: monthlyResponse.statusText });
-      const monthlyResult = await monthlyResponse.json();
-      logStep("Monthly plan response body", monthlyResult);
-      
-      if (monthlyResponse.ok) {
-        logStep("Monthly plan created successfully", { id: monthlyResult.id, name: monthlyResult.name });
-        results.push({ 
-          plan: 'monthly', 
-          success: true, 
-          data: monthlyResult 
-        });
-      } else {
-        logStep("Error creating monthly plan", monthlyResult);
-        results.push({ 
-          plan: 'monthly', 
-          success: false, 
-          error: monthlyResult 
-        });
-      }
-    } catch (error) {
-      logStep("Exception creating monthly plan", error);
-      results.push({ 
-        plan: 'monthly', 
-        success: false, 
-        error: error.message 
-      });
-    }
-
-    // Aguardar um pouco entre as criações
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    // Criar plano semestral
-    try {
-      logStep("Creating semiannual plan", semiannualPlan);
-      const semiannualResponse = await fetch(`${pagarmeBaseUrl}/plans`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${pagarmeApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(semiannualPlan)
-      });
-
-      logStep("Semiannual plan API response", { status: semiannualResponse.status, statusText: semiannualResponse.statusText });
-      const semiannualResult = await semiannualResponse.json();
-      logStep("Semiannual plan response body", semiannualResult);
-      
-      if (semiannualResponse.ok) {
-        logStep("Semiannual plan created successfully", { id: semiannualResult.id, name: semiannualResult.name });
-        results.push({ 
-          plan: 'semiannual', 
-          success: true, 
-          data: semiannualResult 
-        });
-      } else {
-        logStep("Error creating semiannual plan", semiannualResult);
-        results.push({ 
-          plan: 'semiannual', 
-          success: false, 
-          error: semiannualResult 
-        });
-      }
-    } catch (error) {
-      logStep("Exception creating semiannual plan", error);
-      results.push({ 
-        plan: 'semiannual', 
-        success: false, 
-        error: error.message 
-      });
-    }
-
-    const successCount = results.filter(r => r.success).length;
-    const totalCount = results.length;
-
-    logStep(`Plans creation completed: ${successCount}/${totalCount} successful`);
-
-    return new Response(JSON.stringify({
-      success: successCount === totalCount,
-      message: `${successCount}/${totalCount} planos criados com sucesso`,
-      results: results
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200,
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${pagarmeApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(testPlan)
     });
 
+    console.log("📊 Response status:", response.status);
+    console.log("📊 Response headers:", Object.fromEntries(response.headers.entries()));
+
+    const responseText = await response.text();
+    console.log("📄 Raw response:", responseText);
+
+    let result;
+    try {
+      result = JSON.parse(responseText);
+    } catch (e) {
+      console.log("❌ Failed to parse JSON response");
+      result = { raw: responseText };
+    }
+
+    if (response.ok) {
+      console.log("✅ Plan created successfully!");
+      return new Response(JSON.stringify({
+        success: true,
+        message: "Plano teste criado com sucesso",
+        data: result
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      });
+    } else {
+      console.log("❌ API returned error:", result);
+      return new Response(JSON.stringify({
+        success: false,
+        message: "Erro na API do Pagar.me",
+        error: result,
+        status: response.status
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200, // Return 200 but with error in body
+      });
+    }
+
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    logStep("ERROR in create-pagarme-plans", { message: errorMessage });
+    console.log("💥 Exception caught:", error);
+    console.log("💥 Error stack:", error.stack);
     
     return new Response(JSON.stringify({ 
       success: false,
-      error: errorMessage 
+      error: error.message,
+      stack: error.stack
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 500,
+      status: 200, // Return 200 to see the error details
     });
   }
 });

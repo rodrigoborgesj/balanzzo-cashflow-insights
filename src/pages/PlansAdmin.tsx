@@ -27,23 +27,25 @@ export default function PlansAdmin() {
 
   return (
     <div style={{ padding: 24 }}>
-      <h1>Criar Planos via API (Pagar.me Sandbox)</h1>
-      <p>Use apenas em desenvolvimento. Remova esta página após criar os planos.</p>
+      <h1>Teste API Pagar.me</h1>
+      <p>Testando criação de plano básico primeiro.</p>
 
       <button onClick={handleCreate} disabled={status === "loading"}>
-        {status === "loading" ? "Criando planos..." : "Criar Planos via API"}
+        {status === "loading" ? "Testando..." : "Testar Criação de Plano"}
       </button>
 
       {status === "done" && (
-        <div style={{ marginTop: 16 }}>
-          <h3>Planos criados com sucesso</h3>
-          <pre>{JSON.stringify(result, null, 2)}</pre>
-          <p>
-            Anote os IDs retornados (ex.: <code>monthly</code> e <code>semiannual</code>).
-          </p>
+        <div style={{ marginTop: 16, backgroundColor: '#f0f8f0', padding: 16, borderRadius: 8 }}>
+          <h3>✅ Resposta recebida</h3>
+          <pre style={{ fontSize: '12px', overflow: 'auto' }}>{JSON.stringify(result, null, 2)}</pre>
         </div>
       )}
-      {status === "error" && <p style={{ color: "red" }}>Erro: {err}</p>}
+      {status === "error" && (
+        <div style={{ marginTop: 16, backgroundColor: '#fff0f0', padding: 16, borderRadius: 8 }}>
+          <h3>❌ Erro encontrado</h3>
+          <p style={{ color: "red" }}>{err}</p>
+        </div>
+      )}
     </div>
   );
 }
