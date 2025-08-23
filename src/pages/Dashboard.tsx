@@ -132,9 +132,13 @@ export default function Dashboard() {
   const months = Array.from({ length: 12 }, (_, i) => {
     const monthDate = new Date(currentYear, i, 1);
     const monthValue = `${currentYear}-${String(i + 1).padStart(2, '0')}`;
+    const monthNames = [
+      "janeiro", "fevereiro", "março", "abril", "maio", "junho",
+      "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"
+    ];
     return {
       value: monthValue,
-      label: monthDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+      label: `${monthNames[i]} de ${currentYear}`
     };
   });
 
@@ -151,7 +155,11 @@ export default function Dashboard() {
             className="month-selector px-6 py-3 font-medium text-foreground hover:bg-card/90"
           >
             <Calendar className="w-4 h-4 mr-2" />
-            {new Date(selectedMonth + '-01').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+            {new Date(selectedMonth + '-01').toLocaleDateString('pt-BR', { 
+              month: 'long', 
+              year: 'numeric',
+              timeZone: 'America/Sao_Paulo'
+            }).replace(/^./, str => str.toUpperCase())}
             <ChevronDown className="w-4 h-4 ml-2" />
           </Button>
         </DropdownMenuTrigger>
@@ -243,7 +251,11 @@ export default function Dashboard() {
             <p className="text-muted-foreground text-lg">
               Nenhum dado financeiro disponível para{' '}
               <span className="font-semibold text-foreground">
-                {new Date(selectedMonth + '-01').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+                {new Date(selectedMonth + '-01').toLocaleDateString('pt-BR', { 
+                  month: 'long', 
+                  year: 'numeric',
+                  timeZone: 'America/Sao_Paulo'
+                }).replace(/^./, str => str.toUpperCase())}
               </span>
               . Exibindo visão geral do ano para contexto.
             </p>

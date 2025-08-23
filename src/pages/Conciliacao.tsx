@@ -26,6 +26,7 @@ import {
   Plus,
   Trash2
 } from "lucide-react";
+import { MonthSelector } from "@/components/MonthSelector";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -269,14 +270,12 @@ export default function Conciliacao() {
           
             <div className="space-y-2 w-full sm:w-auto">
               <label className="text-sm font-medium text-foreground">Mês de Referência</label>
-              <Input
-                type="month"
+              <MonthSelector
                 value={selectedMonth}
-                onChange={(e) => {
-                  setSelectedMonth(e.target.value);
+                onChange={(value) => {
+                  setSelectedMonth(value);
                   setPage(0); // Reset pagination when month changes
                 }}
-                className="w-full sm:w-40 border-primary/20 focus:border-primary"
               />
             </div>
         </div>

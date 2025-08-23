@@ -20,6 +20,7 @@ import {
   ChevronRight,
   Filter
 } from "lucide-react";
+import { MonthSelector } from "@/components/MonthSelector";
 import { useConciliacao, Transaction } from "@/hooks/useConciliacao";
 import { useNavigate } from "react-router-dom";
 import { ManualTransactionForm } from "@/components/ManualTransactionForm";
@@ -140,14 +141,12 @@ export default function FluxoCaixa() {
             onTransactionAdded={() => loadTransactions(selectedMonth)}
             userCategories={userCategories}
           />
-          <Input
-            type="month"
+          <MonthSelector
             value={selectedMonth}
-            onChange={(e) => {
-              console.log('Month changed from', selectedMonth, 'to', e.target.value);
-              setSelectedMonth(e.target.value);
+            onChange={(value) => {
+              console.log('Month changed from', selectedMonth, 'to', value);
+              setSelectedMonth(value);
             }}
-            className="w-40"
           />
           <Button 
             variant="outline" 
@@ -319,12 +318,12 @@ export default function FluxoCaixa() {
                 <TableBody>
                   {allTransactionsSorted.map((transaction) => (
                     <TableRow key={transaction.id} className={`hover:bg-gray-50 ${transaction.valor > 0 ? 'border-l-4 border-l-green-500' : 'border-l-4 border-l-red-500'}`}>
-                      <TableCell className="font-medium text-sm">
-                        {new Date(transaction.data_transacao).toLocaleDateString('pt-BR', { 
-                          day: '2-digit', 
-                          month: '2-digit' 
-                        })}
-                      </TableCell>
+                       <TableCell className="font-medium text-sm">
+                         {new Date(transaction.data_transacao).toLocaleDateString('pt-BR', { 
+                           day: '2-digit', 
+                           month: '2-digit'
+                         })}
+                       </TableCell>
                       <TableCell className="text-sm">
                         <div className="font-medium text-black text-left">
                           {transaction.categoria_final || transaction.categoria_sugerida || 'Outros'}

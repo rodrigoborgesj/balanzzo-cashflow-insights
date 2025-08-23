@@ -23,10 +23,17 @@ export function CategoryManager() {
     loadUserCategories
   } = useConciliacao();
 
-  // Load categories when component mounts
+  // Load categories when component mounts and ensure they're always visible
   useEffect(() => {
     loadUserCategories();
   }, [loadUserCategories]);
+
+  // Ensure categories are loaded on component mount
+  useEffect(() => {
+    if (userCategories.length === 0) {
+      loadUserCategories();
+    }
+  }, [userCategories.length, loadUserCategories]);
 
   const handleCreateCategory = async () => {
     if (!newCategoryName.trim()) return;
@@ -75,7 +82,8 @@ export function CategoryManager() {
 
     const success = await deleteUserCategory(category.id, category.nome_categoria);
     if (success) {
-      // Category deleted successfully
+      // Reload categories to update UI immediately
+      await loadUserCategories();
     }
   };
 

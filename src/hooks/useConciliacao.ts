@@ -613,8 +613,8 @@ export function useConciliacao() {
       
       if (usage.inUse) {
         toast({
-          title: 'Categoria em uso',
-          description: `Esta categoria está sendo usada em ${usage.count} transação(ões). Reatribua essas transações antes de deletar.`,
+          title: 'Não é possível excluir categoria',
+          description: `Esta categoria está vinculada a ${usage.count} transação(ões). Para excluir, primeiro reatribua essas transações para outra categoria na área de Conciliação.`,
           variant: 'destructive',
         });
         return false;

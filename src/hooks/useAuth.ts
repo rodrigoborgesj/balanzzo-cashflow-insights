@@ -89,8 +89,28 @@ export function useAuth() {
   };
 
   const logout = async () => {
-    const { error } = await supabase.auth.signOut();
-    return { error };
+    try {
+      // Clear local storage and session data
+      localStorage.clear();
+      sessionStorage.clear();
+      
+      // Sign out from Supabase
+      const { error } = await supabase.auth.signOut();
+      
+      // Force clear auth state
+      setUser(null);
+      setSession(null);
+      
+      // Redirect to login
+      window.location.href = '/login';
+      
+      return { error };
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Force redirect even if there's an error
+      window.location.href = '/login';
+      return { error: error as any };
+    }
   };
 
   return {

@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { DREStatement } from "@/components/DREStatement";
 import { useConciliacao } from "@/hooks/useConciliacao";
 import { supabase } from "@/integrations/supabase/client";
+import { MonthSelector } from "@/components/MonthSelector";
 
 export default function DRE() {
   const [selectedMonth, setSelectedMonth] = useState<string>(new Date().toISOString().slice(0, 7));
@@ -121,11 +122,9 @@ export default function DRE() {
             <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
             Atualizar
           </Button>
-          <Input
-            type="month"
+          <MonthSelector
             value={selectedMonth}
-            onChange={(e) => setSelectedMonth(e.target.value)}
-            className="w-40 border-primary/20 focus:border-primary"
+            onChange={setSelectedMonth}
           />
         </div>
       </div>
