@@ -134,7 +134,7 @@ export default function Login() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex">
       
       {/* Left side - Hero Dashboard Preview */}
-      <div className="hidden lg:flex flex-1 relative overflow-hidden bg-gradient-to-br from-primary to-primary/90 p-12">
+      <div className="hidden lg:flex flex-1 relative overflow-hidden p-12" style={{ backgroundColor: '#1a3423' }}>
         
         {/* Background pattern */}
         <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent"></div>
@@ -233,12 +233,6 @@ export default function Login() {
             </div>
           </div>
 
-          {/* Bottom tagline */}
-          <div className="text-center">
-            <p className="text-white/80 text-lg font-medium">
-              DRE automático, conciliação bancária e relatórios completos
-            </p>
-          </div>
         </div>
       </div>
 
@@ -400,13 +394,6 @@ export default function Login() {
               className="hover:text-primary transition-colors"
             >
               Política de Cancelamento
-            </Link>
-            <span className="hidden sm:inline">•</span>
-            <Link 
-              to="/como-usar" 
-              className="hover:text-primary transition-colors"
-            >
-              Como Usar
             </Link>
           </div>
         </div>
