@@ -147,15 +147,13 @@ export default function Login() {
         
         {/* Company branding */}
         <div className="relative z-10 flex flex-col justify-between w-full">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
-              <img 
-                src="/lovable-uploads/6335b26d-ecb0-4039-ad1c-b4fd6bed66f1.png" 
-                alt="Balanzzo" 
-                className="w-6 h-6"
-              />
-            </div>
-            <h1 className="text-2xl font-bold text-white tracking-tight">
+          <div className="flex items-center gap-4">
+            <img 
+              src="/lovable-uploads/6335b26d-ecb0-4039-ad1c-b4fd6bed66f1.png" 
+              alt="Balanzzo" 
+              className="w-12 h-12"
+            />
+            <h1 className="text-3xl font-bold text-white tracking-tight">
               Balanzzo
             </h1>
           </div>
@@ -238,9 +236,6 @@ export default function Login() {
           {/* Bottom tagline */}
           <div className="text-center">
             <p className="text-white/80 text-lg font-medium">
-              Gerencie suas finanças com inteligência
-            </p>
-            <p className="text-white/60 text-sm mt-2">
               DRE automático, conciliação bancária e relatórios completos
             </p>
           </div>
@@ -252,14 +247,12 @@ export default function Login() {
         <div className="w-full max-w-md">
           
           {/* Logo for mobile */}
-          <div className="lg:hidden flex items-center justify-center gap-3 mb-8">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-              <img 
-                src="/lovable-uploads/6335b26d-ecb0-4039-ad1c-b4fd6bed66f1.png" 
-                alt="Balanzzo" 
-                className="w-6 h-6"
-              />
-            </div>
+          <div className="lg:hidden flex items-center justify-center gap-4 mb-8">
+            <img 
+              src="/lovable-uploads/6335b26d-ecb0-4039-ad1c-b4fd6bed66f1.png" 
+              alt="Balanzzo" 
+              className="w-10 h-10"
+            />
             <h1 className="text-2xl font-bold text-primary">Balanzzo</h1>
           </div>
 
