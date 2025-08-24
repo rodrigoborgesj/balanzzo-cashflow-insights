@@ -131,299 +131,290 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Left side - Modern Financial Preview */}
-      <div className="flex-1 relative overflow-hidden" style={{ backgroundColor: '#1A3423' }}>
-        {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-5">
-          <div className="grid grid-cols-8 h-full">
-            {Array.from({ length: 64 }).map((_, i) => (
-              <div key={i} className="border-r border-b border-white/10"></div>
-            ))}
-          </div>
-        </div>
-
-        {/* Company Branding - Top Left */}
-        <div className="absolute top-12 left-12 z-10">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex">
+      
+      {/* Left side - Hero Dashboard Preview */}
+      <div className="hidden lg:flex flex-1 relative overflow-hidden bg-gradient-to-br from-primary to-primary/90 p-12">
+        
+        {/* Background pattern */}
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent"></div>
+        <div 
+          className="absolute inset-0 opacity-30"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+          }}
+        ></div>
+        
+        {/* Company branding */}
+        <div className="relative z-10 flex flex-col justify-between w-full">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#A9C7A1' }}>
-              <div className="w-6 h-6 rounded-md bg-white"></div>
+            <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+              <img 
+                src="/lovable-uploads/6335b26d-ecb0-4039-ad1c-b4fd6bed66f1.png" 
+                alt="Balanzzo" 
+                className="w-6 h-6"
+              />
             </div>
-            <h1 className="text-3xl font-bold text-white tracking-tight">
+            <h1 className="text-2xl font-bold text-white tracking-tight">
               Balanzzo
             </h1>
           </div>
-        </div>
 
-        {/* Main Content - Centered */}
-        <div className="flex items-center justify-center h-full p-12">
-          <div className="w-full max-w-2xl space-y-8">
-            
-            {/* Top Stats Cards */}
-            <div className="grid grid-cols-3 gap-6">
-              {/* Revenue Card */}
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#A9C7A1' }}>
-                    <div className="w-4 h-4 bg-white rounded-sm"></div>
-                  </div>
-                  <div className="h-8 w-20 rounded-lg" style={{ backgroundColor: '#A9C7A1' }}></div>
-                </div>
-                <div className="space-y-2">
-                  <div className="h-6 w-24 bg-white/30 rounded-lg"></div>
-                  <div className="h-4 w-16 bg-white/20 rounded-md"></div>
-                </div>
-              </div>
-
-              {/* Cash Flow Card */}
-              <div className="bg-white rounded-2xl p-6 shadow-xl">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#1A3423' }}>
-                    <div className="w-4 h-4 rounded-sm" style={{ backgroundColor: '#A9C7A1' }}></div>
-                  </div>
-                  <div className="h-8 w-20 rounded-lg" style={{ backgroundColor: '#1A3423' }}></div>
-                </div>
-                <div className="space-y-2">
-                  <div className="h-6 w-24 rounded-lg" style={{ backgroundColor: '#A9C7A1' }}></div>
-                  <div className="h-4 w-16 rounded-md" style={{ backgroundColor: '#A9C7A1', opacity: 0.6 }}></div>
-                </div>
-              </div>
-
-              {/* DRE Card */}
-              <div className="rounded-2xl p-6 border-2 border-white/30" style={{ backgroundColor: '#A9C7A1' }}>
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#1A3423' }}>
-                    <div className="w-4 h-4 bg-white rounded-sm"></div>
-                  </div>
-                  <div className="h-8 w-20 bg-white/80 rounded-lg"></div>
-                </div>
-                <div className="space-y-2">
-                  <div className="h-6 w-24 bg-white/90 rounded-lg"></div>
-                  <div className="h-4 w-16 bg-white/70 rounded-md"></div>
-                </div>
-              </div>
-            </div>
-
-            {/* Main Dashboard Preview */}
-            <div className="bg-white/95 backdrop-blur-sm rounded-3xl p-8 shadow-2xl border border-white/30">
+          {/* Main dashboard preview */}
+          <div className="flex-1 flex items-center justify-center">
+            <div className="w-full max-w-md">
               
-              {/* Chart Header */}
-              <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#A9C7A1' }}>
-                    <div className="grid grid-cols-2 gap-1">
-                      {Array.from({ length: 4 }).map((_, i) => (
-                        <div key={i} className="w-1.5 h-1.5 rounded-sm" style={{ backgroundColor: '#1A3423' }}></div>
+              {/* Mock dashboard window */}
+              <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
+                
+                {/* Header with navigation */}
+                <div className="bg-primary p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
+                        <div className="w-4 h-4 bg-white rounded-sm"></div>
+                      </div>
+                      <span className="text-white font-medium text-sm">Dashboard</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <div className="w-2 h-2 rounded-full bg-white/30"></div>
+                      <div className="w-2 h-2 rounded-full bg-white/30"></div>
+                      <div className="w-2 h-2 rounded-full bg-white/30"></div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Content area */}
+                <div className="p-6">
+                  
+                  {/* Stats cards */}
+                  <div className="grid grid-cols-2 gap-3 mb-6">
+                    <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg p-3">
+                      <div className="text-xs text-gray-600 mb-1">Receita</div>
+                      <div className="text-lg font-bold text-primary">R$ 12.480</div>
+                      <div className="text-xs text-green-600">+8.2%</div>
+                    </div>
+                    <div className="bg-gradient-to-r from-accent/20 to-accent/10 rounded-lg p-3">
+                      <div className="text-xs text-gray-600 mb-1">Despesas</div>
+                      <div className="text-lg font-bold text-gray-800">R$ 8.320</div>
+                      <div className="text-xs text-red-600">-2.1%</div>
+                    </div>
+                  </div>
+
+                  {/* Chart area */}
+                  <div className="space-y-3">
+                    <div className="text-sm font-medium text-gray-700">Fluxo de Caixa</div>
+                    <div className="h-24 flex items-end justify-between gap-1">
+                      {[0.6, 0.8, 0.4, 0.9, 0.7, 0.5, 0.8, 0.6, 0.9, 0.7, 0.8, 0.9].map((height, index) => (
+                        <div
+                          key={index}
+                          className="flex-1 rounded-t-sm bg-gradient-to-t from-primary to-primary/60"
+                          style={{ height: `${height * 100}%` }}
+                        />
                       ))}
                     </div>
-                  </div>
-                  <div className="space-y-1">
-                    <div className="h-5 w-32 rounded-md" style={{ backgroundColor: '#1A3423' }}></div>
-                    <div className="h-3 w-24 rounded-md" style={{ backgroundColor: '#A9C7A1' }}></div>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-3">
-                  <div className="h-8 w-16 rounded-lg" style={{ backgroundColor: '#A9C7A1' }}></div>
-                  <div className="h-8 w-8 rounded-lg" style={{ backgroundColor: '#1A3423' }}></div>
-                </div>
-              </div>
-
-              {/* Financial Chart Visualization */}
-              <div className="space-y-6">
-                
-                {/* Chart Area */}
-                <div className="h-40 flex items-end justify-between gap-3 px-4">
-                  {[85, 65, 75, 90, 70, 80, 95, 60, 85, 75, 90, 85].map((height, index) => (
-                    <div
-                      key={index}
-                      className="flex-1 rounded-t-xl transition-all duration-300 hover:opacity-80"
-                      style={{ 
-                        height: `${height}%`,
-                        backgroundColor: index % 3 === 0 ? '#1A3423' : index % 3 === 1 ? '#A9C7A1' : '#000000',
-                        maxWidth: '24px'
-                      }}
-                    ></div>
-                  ))}
-                </div>
-
-                {/* Bottom Metrics */}
-                <div className="grid grid-cols-4 gap-6 pt-6 border-t border-gray-200">
-                  {Array.from({ length: 4 }).map((_, index) => (
-                    <div key={index} className="text-center space-y-2">
-                      <div className={`h-3 rounded-full mx-auto ${index % 2 === 0 ? 'w-16' : 'w-12'}`} 
-                           style={{ backgroundColor: index % 2 === 0 ? '#1A3423' : '#A9C7A1' }}></div>
-                      <div className="h-2 w-8 bg-gray-300 rounded-full mx-auto"></div>
+                    <div className="flex justify-between text-xs text-gray-500">
+                      <span>Jan</span>
+                      <span>Fev</span>
+                      <span>Mar</span>
+                      <span>Abr</span>
+                      <span>Mai</span>
+                      <span>Jun</span>
                     </div>
-                  ))}
+                  </div>
+
+                  {/* Bottom indicators */}
+                  <div className="flex justify-center gap-2 mt-6">
+                    <div className="w-16 h-2 bg-primary rounded-full"></div>
+                    <div className="w-8 h-2 bg-gray-200 rounded-full"></div>
+                    <div className="w-8 h-2 bg-gray-200 rounded-full"></div>
+                  </div>
+                  
                 </div>
               </div>
             </div>
+          </div>
 
-            {/* Bottom Feature Icons */}
-            <div className="flex items-center justify-center gap-8">
-              {Array.from({ length: 5 }).map((_, index) => (
-                <div key={index} className="group">
-                  <div className={`w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-300 group-hover:scale-105`}
-                       style={{ backgroundColor: index % 2 === 0 ? '#A9C7A1' : 'white' }}>
-                    <div className={`w-8 h-8 rounded-lg`}
-                         style={{ backgroundColor: index % 2 === 0 ? '#1A3423' : '#A9C7A1' }}></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
+          {/* Bottom tagline */}
+          <div className="text-center">
+            <p className="text-white/80 text-lg font-medium">
+              Gerencie suas finanças com inteligência
+            </p>
+            <p className="text-white/60 text-sm mt-2">
+              DRE automático, conciliação bancária e relatórios completos
+            </p>
           </div>
         </div>
       </div>
 
-      {/* Right side - Modern login form */}
-      <div className="flex-1 flex items-center justify-center p-8 bg-white">
+      {/* Right side - Login form */}
+      <div className="flex-1 flex items-center justify-center p-8 lg:p-12">
         <div className="w-full max-w-md">
+          
+          {/* Logo for mobile */}
+          <div className="lg:hidden flex items-center justify-center gap-3 mb-8">
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+              <img 
+                src="/lovable-uploads/6335b26d-ecb0-4039-ad1c-b4fd6bed66f1.png" 
+                alt="Balanzzo" 
+                className="w-6 h-6"
+              />
+            </div>
+            <h1 className="text-2xl font-bold text-primary">Balanzzo</h1>
+          </div>
+
           {/* Header */}
           <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-              Entre na sua conta
+            <h2 className="text-3xl font-bold text-gray-900 mb-3">
+              Entrar na sua conta
             </h2>
-            <p className="text-gray-600" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-              Bem-vindo de volta! Faça login para continuar.
+            <p className="text-gray-600">
+              Bem-vindo de volta! Entre para continuar.
             </p>
           </div>
 
-          {/* Social login */}
-          <div className="mb-6">
-            <Button 
-              type="button" 
-              variant="outline" 
-              className="w-full py-3 border-2 hover:bg-gray-50 transition-colors" 
-              onClick={handleGoogleSignIn}
-              disabled={isLoading}
-              style={{ fontFamily: 'Montserrat, sans-serif' }}
-            >
-              <Chrome className="mr-3 h-5 w-5" />
-              Continuar com Google
-            </Button>
-          </div>
-
-          {/* Divider */}
-          <div className="relative mb-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-white text-gray-500" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-                Ou continue com email
-              </span>
-            </div>
-          </div>
-
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div>
-              <Label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-                Email
-              </Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="seu@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="pl-11 py-3 border-2 border-gray-200 rounded-xl focus:border-primary focus:ring-0 bg-gray-50 transition-colors"
-                  style={{ fontFamily: 'Montserrat, sans-serif' }}
-                  required
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-                Senha
-              </Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="pl-11 pr-11 py-3 border-2 border-gray-200 rounded-xl focus:border-primary focus:ring-0 bg-gray-50 transition-colors"
-                  style={{ fontFamily: 'Montserrat, sans-serif' }}
-                  required
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 hover:bg-transparent"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4 text-gray-400" /> : <Eye className="h-4 w-4 text-gray-400" />}
-                </Button>
-              </div>
-            </div>
-            
-            <div className="flex justify-end">
-              <Button
-                type="button"
-                variant="link"
-                className="p-0 text-sm text-primary hover:text-primary/80"
-                onClick={() => navigate("/forgot-password")}
-                style={{ fontFamily: 'Montserrat, sans-serif' }}
+          {/* Form card */}
+          <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+            <CardContent className="p-8">
+              
+              {/* Google login */}
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="w-full mb-6 py-3 border-2 hover:bg-gray-50 transition-all duration-200" 
+                onClick={handleGoogleSignIn}
+                disabled={isLoading}
               >
-                Esqueceu sua senha?
+                <Chrome className="mr-3 h-5 w-5" />
+                Entrar com Google
               </Button>
-            </div>
 
-            <Button 
-              type="submit" 
-              className="w-full py-3 text-white font-semibold rounded-xl shadow-lg transition-all duration-200 hover:shadow-xl"
-              style={{ fontFamily: 'Montserrat, sans-serif', backgroundColor: '#1A3423' }}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <div className="flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                  Carregando...
+              {/* Divider */}
+              <div className="relative mb-6">
+                <div className="absolute inset-0 flex items-center">
+                  <Separator className="w-full" />
                 </div>
-              ) : (
-                "Entrar"
-              )}
-            </Button>
-          </form>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-4 bg-white text-gray-500">
+                    ou continue com email
+                  </span>
+                </div>
+              </div>
 
-          {/* Signup link */}
-          <div className="text-center mt-6">
-            <p className="text-sm text-gray-600" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-              Não tem uma conta?{' '}
-              <Button
-                type="button"
-                variant="link"
-                className="p-0 text-primary hover:text-primary/80 font-semibold"
-                onClick={() => setMode('signup')}
-                style={{ fontFamily: 'Montserrat, sans-serif' }}
-              >
-                Criar conta
-              </Button>
-            </p>
-          </div>
+              {/* Form */}
+              <form onSubmit={handleSubmit} className="space-y-6">
+                
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-sm font-medium text-gray-700">
+                    Email
+                  </Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="seu@email.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="pl-11 py-3 border-0 bg-gray-50 rounded-lg focus:ring-2 focus:ring-primary/20 focus:bg-white transition-all duration-200"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="password" className="text-sm font-medium text-gray-700">
+                    Senha
+                  </Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="pl-11 pr-11 py-3 border-0 bg-gray-50 rounded-lg focus:ring-2 focus:ring-primary/20 focus:bg-white transition-all duration-200"
+                      required
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 hover:bg-transparent"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4 text-gray-400" /> : <Eye className="h-4 w-4 text-gray-400" />}
+                    </Button>
+                  </div>
+                </div>
+                
+                <div className="flex justify-end">
+                  <Button
+                    type="button"
+                    variant="link"
+                    className="p-0 text-sm text-primary hover:text-primary/80 font-medium"
+                    onClick={() => navigate("/forgot-password")}
+                  >
+                    Esqueceu sua senha?
+                  </Button>
+                </div>
+
+                <Button 
+                  type="submit" 
+                  className="w-full py-3 bg-primary hover:bg-primary/90 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <div className="flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                      Entrando...
+                    </div>
+                  ) : (
+                    "Entrar"
+                  )}
+                </Button>
+              </form>
+
+              {/* Signup link */}
+              <div className="text-center mt-6">
+                <p className="text-sm text-gray-600">
+                  Não tem uma conta?{' '}
+                  <Button
+                    type="button"
+                    variant="link"
+                    className="p-0 text-primary hover:text-primary/80 font-medium"
+                    onClick={() => setMode('signup')}
+                  >
+                    Criar conta
+                  </Button>
+                </p>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Footer links */}
-          <div className="mt-8 space-y-4">
-            {/* Privacy policy */}
-            <div className="text-center">
-              <Link 
-                to="/politica-de-privacidade" 
-                className="text-xs text-gray-500 hover:text-primary transition-colors"
-                style={{ fontFamily: 'Montserrat, sans-serif' }}
-              >
-                Política de Privacidade
-              </Link>
-            </div>
-
+          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4 text-sm text-gray-500">
+            <Link 
+              to="/politica-de-privacidade" 
+              className="hover:text-primary transition-colors"
+            >
+              Política de Privacidade
+            </Link>
+            <span className="hidden sm:inline">•</span>
+            <Link 
+              to="/politica-de-cancelamento" 
+              className="hover:text-primary transition-colors"
+            >
+              Política de Cancelamento
+            </Link>
+            <span className="hidden sm:inline">•</span>
+            <Link 
+              to="/como-usar" 
+              className="hover:text-primary transition-colors"
+            >
+              Como Usar
+            </Link>
           </div>
         </div>
       </div>
