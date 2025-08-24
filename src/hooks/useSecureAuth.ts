@@ -66,6 +66,7 @@ export function useSecureAuth() {
     ...auth,
     signIn: secureSignIn,
     signUp: secureSignUp,
+    signInWithGoogle: auth.signInWithGoogle, // Add Google sign-in function
     securityEvents: security.securityEvents,
     loginAttempts: security.loginAttempts,
     isRateLimited: security.isRateLimited,

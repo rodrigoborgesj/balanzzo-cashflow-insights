@@ -61,7 +61,9 @@ export function useAuth() {
   };
 
   const signInWithGoogle = async () => {
+    console.log('Attempting Google sign-in...');
     const redirectUrl = `${window.location.origin}/`;
+    console.log('Redirect URL:', redirectUrl);
     
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -69,6 +71,13 @@ export function useAuth() {
         redirectTo: redirectUrl
       }
     });
+    
+    if (error) {
+      console.error('Google sign-in error:', error);
+    } else {
+      console.log('Google sign-in initiated successfully');
+    }
+    
     return { error };
   };
 
