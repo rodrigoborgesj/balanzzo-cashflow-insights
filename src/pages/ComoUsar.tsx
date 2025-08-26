@@ -12,37 +12,23 @@ export default function ComoUsar() {
     },
     {
       id: 2,
-      title: "Importando Extratos Bancários",
-      description: "Como importar e categorizar suas transações bancárias automaticamente.",
-      duration: "8:15",
-      thumbnail: "/placeholder.svg"
-    },
-    {
-      id: 3,
-      title: "Gerenciando Fluxo de Caixa",
-      description: "Monitore entradas e saídas, e mantenha um controle financeiro eficiente.",
-      duration: "6:45",
-      thumbnail: "/placeholder.svg"
-    },
-    {
-      id: 4,
-      title: "Criando Relatórios DRE",
-      description: "Gere demonstrações de resultado completas para sua empresa.",
-      duration: "7:20",
-      thumbnail: "/placeholder.svg"
-    },
-    {
-      id: 5,
       title: "Conciliação Bancária",
       description: "Automatize a conciliação entre suas transações e extratos bancários.",
       duration: "9:10",
       thumbnail: "/placeholder.svg"
     },
     {
-      id: 6,
-      title: "Configurações e Personalizações",
-      description: "Personalize categorias, notificações e preferências do sistema.",
-      duration: "4:50",
+      id: 3,
+      title: "Fluxo de Caixa",
+      description: "Monitore entradas e saídas, e mantenha um controle financeiro eficiente.",
+      duration: "6:45",
+      thumbnail: "/placeholder.svg"
+    },
+    {
+      id: 4,
+      title: "Relatórios DRE",
+      description: "Gere demonstrações de resultado completas para sua empresa.",
+      duration: "7:20",
       thumbnail: "/placeholder.svg"
     }
   ];
