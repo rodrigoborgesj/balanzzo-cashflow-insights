@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Play, BookOpen, Video } from "lucide-react";
-import thumbnailIntroducao from "@/assets/thumbnail-introducao-final.jpg";
+const thumbnailIntroducao = "/lovable-uploads/fb8d5619-310b-4c9a-b7a2-f7d184edec1d.png";
 import thumbnailConciliacao from "@/assets/thumbnail-conciliacao-correto.jpg";
 import thumbnailFluxoCaixa from "@/assets/thumbnail-fluxo-correto.jpg";
 import thumbnailDRE from "@/assets/thumbnail-dre-final.jpg";
