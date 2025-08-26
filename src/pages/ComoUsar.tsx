@@ -1,9 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Play, BookOpen, Video } from "lucide-react";
-import thumbnailIntroducao from "@/assets/thumbnail-introducao.jpg";
-import thumbnailConciliacao from "@/assets/thumbnail-conciliacao.jpg";
-import thumbnailFluxoCaixa from "@/assets/thumbnail-fluxo-caixa.jpg";
-import thumbnailDRE from "@/assets/thumbnail-dre.jpg";
+import thumbnailIntroducao from "@/assets/thumbnail-introducao-brand.jpg";
+import thumbnailConciliacao from "@/assets/thumbnail-conciliacao-brand.jpg";
+import thumbnailFluxoCaixa from "@/assets/thumbnail-fluxo-brand.jpg";
+import thumbnailDRE from "@/assets/thumbnail-dre-brand.jpg";
 
 export default function ComoUsar() {
   const tutorialVideos: Array<{
