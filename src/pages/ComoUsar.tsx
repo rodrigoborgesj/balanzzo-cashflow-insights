@@ -38,7 +38,8 @@ export default function ComoUsar() {
       title: "Relatórios DRE",
       description: "Gere demonstrações de resultado completas para sua empresa.",
       duration: "7:20",
-      thumbnail: "/placeholder.svg"
+      thumbnail: "/placeholder.svg",
+      videoUrl: "https://youtu.be/0lMcte2TY0g?si=jGyxKDGtl1ayoWlX"
     }
   ];
 
