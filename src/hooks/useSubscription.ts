@@ -60,6 +60,8 @@ export function useSubscription() {
   ]);
   const [isLoading, setIsLoading] = useState(true);
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
+  const [trialStartDate, setTrialStartDate] = useState<string | null>(null);
+  const [trialUsed, setTrialUsed] = useState(false);
 
   // Load subscription data
   useEffect(() => {
@@ -117,10 +119,13 @@ export function useSubscription() {
         return;
       }
 
+      let hasActiveSub = false;
+
       if (subscriptions && subscriptions.length > 0) {
         const sub = subscriptions[0];
         setSubscription(sub);
         setHasActiveSubscription(true);
+        hasActiveSub = true;
       } else {
         // Check payments table for successful payments (semiannual plans)
         const { data: payments, error: paymentError } = await supabase
@@ -151,10 +156,30 @@ export function useSubscription() {
           
           setSubscription(mockSubscription);
           setHasActiveSubscription(true);
+          hasActiveSub = true;
         } else {
           setSubscription(null);
           setHasActiveSubscription(false);
         }
+      }
+
+      // Load trial data from profiles
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('trial_start_date, trial_used')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (profileError) {
+        console.error('Error fetching profile trial data:', profileError);
+      } else if (profile) {
+        setTrialStartDate(profile.trial_start_date);
+        setTrialUsed(profile.trial_used);
+      }
+
+      // If no subscription and no trial started, start trial for new users
+      if (!hasActiveSub && profile && !profile.trial_used && !profile.trial_start_date) {
+        await startTrial();
       }
     } catch (error) {
       console.error('Error in loadSubscriptionData:', error);
@@ -164,9 +189,65 @@ export function useSubscription() {
     }
   };
 
-  // Check if user has access to the platform
+  // Check if user is currently in trial period
+  const isInTrial = () => {
+    if (!trialStartDate || trialUsed) return false;
+    
+    const trialStart = new Date(trialStartDate);
+    const now = new Date();
+    const trialEnd = new Date(trialStart.getTime() + 10 * 24 * 60 * 60 * 1000); // 10 days
+    
+    return now < trialEnd;
+  };
+
+  // Start trial for new user
+  const startTrial = async () => {
+    if (!user) return;
+
+    try {
+      const trialStartDate = new Date().toISOString();
+      
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          trial_start_date: trialStartDate,
+          trial_used: false
+        })
+        .eq('id', user.id);
+
+      if (error) {
+        console.error('Error starting trial:', error);
+      } else {
+        setTrialStartDate(trialStartDate);
+        setTrialUsed(false);
+      }
+    } catch (error) {
+      console.error('Error in startTrial:', error);
+    }
+  };
+
+  // Get days remaining in trial
+  const getTrialDaysRemaining = () => {
+    if (!trialStartDate || trialUsed) return 0;
+    
+    const trialStart = new Date(trialStartDate);
+    const now = new Date();
+    const trialEnd = new Date(trialStart.getTime() + 10 * 24 * 60 * 60 * 1000);
+    
+    if (now >= trialEnd) return 0;
+    
+    return Math.ceil((trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  };
+
+  // Check if user has access to the platform (including trial)
   const hasAccess = () => {
-    return hasActiveSubscription && subscription?.status === 'active';
+    // Check if user has active subscription
+    if (hasActiveSubscription && subscription?.status === 'active') {
+      return true;
+    }
+    
+    // Check if user is in trial period
+    return isInTrial();
   };
 
   // Get subscription status details
@@ -211,5 +292,10 @@ export function useSubscription() {
     getCurrentPlan,
     formatPrice,
     loadSubscriptionData,
+    // Trial-related functions
+    isInTrial,
+    getTrialDaysRemaining,
+    trialStartDate,
+    trialUsed,
   };
 }

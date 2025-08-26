@@ -12,9 +12,9 @@ interface ProtectedRouteProps {
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const { hasProfile, isLoading: profileLoading } = useProfile();
-  const { hasAccess, isLoading: subscriptionLoading } = useSubscription();
+  const { hasAccess, isLoading: subscriptionLoading, isInTrial, getTrialDaysRemaining } = useSubscription();
 
-  console.log('ProtectedRoute - isAuthenticated:', isAuthenticated, 'hasProfile:', hasProfile, 'hasAccess:', hasAccess, 'authLoading:', authLoading, 'profileLoading:', profileLoading, 'subscriptionLoading:', subscriptionLoading);
+  console.log('ProtectedRoute - isAuthenticated:', isAuthenticated, 'hasProfile:', hasProfile, 'hasAccess:', hasAccess(), 'isInTrial:', isInTrial(), 'trialDays:', getTrialDaysRemaining(), 'authLoading:', authLoading, 'profileLoading:', profileLoading, 'subscriptionLoading:', subscriptionLoading);
 
   // Show loading while checking auth, profile, or subscription
   if (authLoading || profileLoading || subscriptionLoading) {
