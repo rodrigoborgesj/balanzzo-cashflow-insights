@@ -233,57 +233,84 @@ export class RobustCSVParser {
     
     const firstRow = sampleRows[0];
     
+    console.log('🔍 DEBUG: Primeira linha (possível cabeçalho):', firstRow);
+    
     // Primeira tentativa: detectar por cabeçalhos
     firstRow.forEach((header, index) => {
       const normalizedHeader = header.toLowerCase().trim().replace(/[^a-z0-9\s]/g, '');
+      console.log(`🔍 DEBUG: Analisando coluna ${index}: "${header}" -> normalizado: "${normalizedHeader}"`);
       
       // Detectar colunas baseado em palavras-chave
       for (const [type, keywords] of Object.entries(this.HEADER_KEYWORDS)) {
-        if (keywords.some(keyword => normalizedHeader.includes(keyword.toLowerCase()))) {
+        const matchedKeyword = keywords.find(keyword => normalizedHeader.includes(keyword.toLowerCase()));
+        if (matchedKeyword) {
           if (!mapping[type]) { // Usar a primeira correspondência
             mapping[type] = index;
-            console.log(`📍 Coluna '${type}' detectada no índice ${index}: "${header}"`);
+            console.log(`✅ Coluna '${type}' detectada no índice ${index}: "${header}" (palavra-chave: "${matchedKeyword}")`);
+          } else {
+            console.log(`⚠️ Coluna '${type}' já mapeada no índice ${mapping[type]}, ignorando índice ${index}`);
           }
         }
       }
     });
 
+    console.log('🔍 DEBUG: Mapeamento após detecção por headers:', mapping);
+
     // Segunda tentativa: análise heurística com dados das primeiras linhas
-    if (Object.keys(mapping).length < 2) {
+    if (Object.keys(mapping).length < 2 || !mapping.descricao) {
       console.log('🔄 Usando análise heurística com dados amostrais');
+      console.log('🔍 DEBUG: Linhas de amostra para heurística:', sampleRows);
       
-      const intelligentMapping: Record<string, number> = {};
+      const intelligentMapping: Record<string, number> = { ...mapping };
       
       for (let colIndex = 0; colIndex < firstRow.length; colIndex++) {
         let dateScore = 0;
         let valueScore = 0;
         let textScore = 0;
         
+        console.log(`🔍 DEBUG: Analisando coluna ${colIndex} heuristicamente`);
+        
         // Analisar cada linha de amostra para esta coluna
-        for (const row of sampleRows) {
+        for (let rowIndex = 0; rowIndex < sampleRows.length; rowIndex++) {
+          const row = sampleRows[rowIndex];
           if (row[colIndex]) {
             const cell = row[colIndex].trim();
+            console.log(`🔍 DEBUG: Linha ${rowIndex}, Coluna ${colIndex}: "${cell}"`);
             
             // Pontuação para data
             if (this.parseDate(cell)) {
               dateScore += 10;
+              console.log(`📅 Data válida encontrada: "${cell}" (+10 pontos)`);
             } else if (/\d{1,4}[\/\-]\d{1,2}[\/\-]\d{2,4}/.test(cell)) {
               dateScore += 5;
+              console.log(`📅 Possível data encontrada: "${cell}" (+5 pontos)`);
             }
             
             // Pontuação para valor
-            if (!isNaN(this.parseAmount(cell)) && this.parseAmount(cell) !== 0) {
+            const parsedAmount = this.parseAmount(cell);
+            if (!isNaN(parsedAmount) && parsedAmount !== 0) {
               valueScore += 10;
+              console.log(`💰 Valor válido encontrado: "${cell}" = ${parsedAmount} (+10 pontos)`);
             } else if (/[\d,\.]+/.test(cell)) {
               valueScore += 3;
+              console.log(`💰 Possível valor encontrado: "${cell}" (+3 pontos)`);
             }
             
-            // Pontuação para texto descritivo
-            if (cell.length > 5 && /[a-zA-Z]/.test(cell) && !/^\d+[,.\d]*$/.test(cell)) {
+            // Pontuação para texto descritivo - critério mais rigoroso
+            if (cell.length > 10 && 
+                /[a-zA-Z]/.test(cell) && 
+                !/^[\d\s,.\-\+R$€£¥₹₽()'"]*$/.test(cell) &&
+                !this.parseDate(cell)) {
+              textScore += 10;
+              console.log(`📝 Texto descritivo encontrado: "${cell}" (+10 pontos)`);
+            } else if (cell.length > 5 && /[a-zA-Z]/.test(cell) && !/^\d+[,.\d]*$/.test(cell)) {
               textScore += 5;
+              console.log(`📝 Possível texto descritivo: "${cell}" (+5 pontos)`);
             }
           }
         }
+        
+        console.log(`🔍 DEBUG: Coluna ${colIndex} - Data: ${dateScore}, Valor: ${valueScore}, Texto: ${textScore}`);
         
         // Definir colunas baseado nas pontuações
         if (dateScore >= 5 && !intelligentMapping.data) {
@@ -296,23 +323,27 @@ export class RobustCSVParser {
           console.log(`💰 Coluna de valor detectada por heurística na posição ${colIndex} (score: ${valueScore})`);
         }
         
-        if (textScore >= 15 && !intelligentMapping.descricao && 
+        if (textScore >= 10 && !intelligentMapping.descricao && 
             colIndex !== intelligentMapping.data && colIndex !== intelligentMapping.valor) {
           intelligentMapping.descricao = colIndex;
           console.log(`📝 Coluna de descrição detectada por heurística na posição ${colIndex} (score: ${textScore})`);
         }
       }
       
+      console.log('🔍 DEBUG: Mapeamento inteligente final:', intelligentMapping);
+      
       // Aplicar mapeamento inteligente se não temos mapeamento suficiente
-      if (Object.keys(mapping).length < 2) {
-        return {
-          data: intelligentMapping.data ?? 0,
-          descricao: intelligentMapping.descricao ?? 1,
-          valor: intelligentMapping.valor ?? 2,
-          debito: firstRow.length >= 4 ? 3 : -1,
-          credito: firstRow.length >= 5 ? 4 : -1,
-          categoria: firstRow.length >= 6 ? 5 : -1
+      if (!mapping.data || !mapping.descricao || (!mapping.valor && !mapping.debito && !mapping.credito)) {
+        const finalMapping = {
+          data: intelligentMapping.data ?? mapping.data ?? 0,
+          descricao: intelligentMapping.descricao ?? mapping.descricao ?? 1, 
+          valor: intelligentMapping.valor ?? mapping.valor ?? 2,
+          debito: mapping.debito ?? (firstRow.length >= 4 ? 3 : -1),
+          credito: mapping.credito ?? (firstRow.length >= 5 ? 4 : -1),
+          categoria: mapping.categoria ?? (firstRow.length >= 6 ? 5 : -1)
         };
+        console.log('🔍 DEBUG: Usando mapeamento inteligente:', finalMapping);
+        return finalMapping;
       }
     }
 
