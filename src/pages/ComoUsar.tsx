@@ -1,9 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Play, BookOpen, Video } from "lucide-react";
-import thumbnailIntroducao from "@/assets/thumbnail-introducao-correto.jpg";
+import thumbnailIntroducao from "@/assets/thumbnail-introducao-final.jpg";
 import thumbnailConciliacao from "@/assets/thumbnail-conciliacao-correto.jpg";
 import thumbnailFluxoCaixa from "@/assets/thumbnail-fluxo-correto.jpg";
-import thumbnailDRE from "@/assets/thumbnail-dre-correto.jpg";
+import thumbnailDRE from "@/assets/thumbnail-dre-final.jpg";
 
 export default function ComoUsar() {
   const tutorialVideos: Array<{
@@ -16,7 +16,7 @@ export default function ComoUsar() {
   }> = [
     {
       id: 1,
-      title: "Introdução ao BALANZZO",
+      title: "Introdução Balanzzo",
       description: "Aprenda os conceitos básicos da plataforma e como navegar pela interface.",
       duration: "5:30",
       thumbnail: thumbnailIntroducao
@@ -39,7 +39,7 @@ export default function ComoUsar() {
     },
     {
       id: 4,
-      title: "Relatórios DRE",
+      title: "DRE",
       description: "Gere demonstrações de resultado completas para sua empresa.",
       duration: "7:20",
       thumbnail: thumbnailDRE,

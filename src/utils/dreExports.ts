@@ -132,7 +132,7 @@ export const exportDREToPDF = (transactions: Transaction[], selectedMonth: strin
 
   // Header
   doc.setFontSize(20);
-  doc.text('BALANZZO', 20, 30);
+  doc.text('Balanzzo', 20, 30);
   doc.setFontSize(16);
   doc.text('Demonstração do Resultado do Exercício (DRE)', 20, 45);
   doc.setFontSize(12);
@@ -230,7 +230,7 @@ export const exportDREToPDF = (transactions: Transaction[], selectedMonth: strin
   });
 
   // Save the PDF
-  doc.save(`DRE_${selectedMonth}_BALANZZO.pdf`);
+  doc.save(`DRE_${selectedMonth}_Balanzzo.pdf`);
 };
 
 export const exportDREToExcel = (transactions: Transaction[], selectedMonth: string) => {
@@ -238,7 +238,7 @@ export const exportDREToExcel = (transactions: Transaction[], selectedMonth: str
 
   // Create worksheet data
   const wsData = [
-    ['BALANZZO'],
+    ['Balanzzo'],
     ['Demonstração do Resultado do Exercício (DRE)'],
     [`Período: ${selectedMonth}`],
     [`Gerado em: ${new Date().toLocaleDateString('pt-BR')}`],
@@ -303,5 +303,5 @@ export const exportDREToExcel = (transactions: Transaction[], selectedMonth: str
   XLSX.utils.book_append_sheet(wb, ws, 'DRE');
 
   // Save the file
-  XLSX.writeFile(wb, `DRE_${selectedMonth}_BALANZZO.xlsx`);
+  XLSX.writeFile(wb, `DRE_${selectedMonth}_Balanzzo.xlsx`);
 };

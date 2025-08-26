@@ -150,11 +150,11 @@ export default function Login() {
           <div className="flex items-center gap-4">
             <img 
               src="/lovable-uploads/6335b26d-ecb0-4039-ad1c-b4fd6bed66f1.png" 
-              alt="BALANZZO"
+              alt="Balanzzo"
               className="w-12 h-12"
             />
             <h1 className="text-3xl font-bold text-white tracking-tight">
-              BALANZZO
+              Balanzzo
             </h1>
           </div>
 
@@ -244,10 +244,10 @@ export default function Login() {
           <div className="lg:hidden flex items-center justify-center gap-4 mb-8">
             <img 
               src="/lovable-uploads/6335b26d-ecb0-4039-ad1c-b4fd6bed66f1.png" 
-              alt="BALANZZO" 
+              alt="Balanzzo" 
               className="w-10 h-10"
             />
-            <h1 className="text-2xl font-bold text-primary">BALANZZO</h1>
+            <h1 className="text-2xl font-bold text-primary">Balanzzo</h1>
           </div>
 
           {/* Header */}

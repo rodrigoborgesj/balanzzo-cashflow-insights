@@ -10,7 +10,7 @@ export function Footer({ className = "" }: FooterProps) {
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
           <div className="text-sm text-muted-foreground">
-            © 2025 BALANZZO. Todos os direitos reservados.
+            © 2025 Balanzzo. Todos os direitos reservados.
           </div>
           
           <div className="flex space-x-4 text-sm">
