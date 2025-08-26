@@ -30,7 +30,8 @@ export default function ComoUsar() {
       title: "Fluxo de Caixa",
       description: "Monitore entradas e saídas, e mantenha um controle financeiro eficiente.",
       duration: "6:45",
-      thumbnail: "/placeholder.svg"
+      thumbnail: "/placeholder.svg",
+      videoUrl: "https://youtu.be/PV3HH9pO9zc?si=8UPl_ZH-4HKRGCmd"
     },
     {
       id: 4,
