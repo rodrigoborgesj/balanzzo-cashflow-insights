@@ -213,8 +213,13 @@ export function useConciliacao() {
 
   // Salvar transações no banco com processamento otimizado e validações robustas
   const saveTransactions = useCallback(async (newTransactions: Omit<Transaction, 'user_id' | 'categoria_sugerida' | 'hash_transacao'>[]) => {
+    console.log('🔄 Iniciando saveTransactions com:', { 
+      transactionCount: newTransactions?.length || 0,
+      userAuthenticated: !!user?.id 
+    });
+    
     if (!user?.id) {
-      console.error('Usuário não autenticado');
+      console.error('❌ Usuário não autenticado');
       toast({
         title: 'Erro de autenticação',
         description: 'Você precisa estar logado para importar transações',
@@ -226,8 +231,11 @@ export function useConciliacao() {
     setIsLoading(true);
     try {
       if (!newTransactions || newTransactions.length === 0) {
+        console.error('❌ Nenhuma transação para salvar');
         throw new Error('Nenhuma transação para salvar');
       }
+      
+      console.log('📊 Processando transações...', { count: newTransactions.length });
       
       // Validar e normalizar transações
       const transactionsToSave = newTransactions.map((transaction, index) => {
@@ -311,11 +319,18 @@ export function useConciliacao() {
       }).filter(Boolean); // Remove transações nulas
 
       if (transactionsToSave.length === 0) {
+        console.error('❌ Nenhuma transação válida após processamento');
         throw new Error('Nenhuma transação válida foi encontrada após o processamento. Verifique o formato do arquivo.');
       }
 
+      console.log('✅ Transações processadas:', { 
+        totalOriginal: newTransactions.length,
+        totalValidas: transactionsToSave.length,
+        amostra: transactionsToSave.slice(0, 1)
+      });
+
       // Log das transações que serão salvas para debug
-      console.log('Transações processadas para salvamento:', {
+      console.log('💾 Iniciando salvamento no banco...', {
         total: transactionsToSave.length,
         sample: transactionsToSave.slice(0, 2),
         allKeys: transactionsToSave.length > 0 ? Object.keys(transactionsToSave[0]) : []
