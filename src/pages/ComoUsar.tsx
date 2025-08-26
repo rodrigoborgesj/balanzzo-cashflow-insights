@@ -1,9 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Play, BookOpen, Video } from "lucide-react";
-import thumbnailIntroducao from "@/assets/thumbnail-introducao-brand.jpg";
-import thumbnailConciliacao from "@/assets/thumbnail-conciliacao-brand.jpg";
-import thumbnailFluxoCaixa from "@/assets/thumbnail-fluxo-brand.jpg";
-import thumbnailDRE from "@/assets/thumbnail-dre-brand.jpg";
+import thumbnailIntroducao from "@/assets/thumbnail-introducao-correto.jpg";
+import thumbnailConciliacao from "@/assets/thumbnail-conciliacao-correto.jpg";
+import thumbnailFluxoCaixa from "@/assets/thumbnail-fluxo-correto.jpg";
+import thumbnailDRE from "@/assets/thumbnail-dre-correto.jpg";
 
 export default function ComoUsar() {
   const tutorialVideos: Array<{
@@ -16,7 +16,7 @@ export default function ComoUsar() {
   }> = [
     {
       id: 1,
-      title: "Introdução ao Balanzzo",
+      title: "Introdução ao BALANZZO",
       description: "Aprenda os conceitos básicos da plataforma e como navegar pela interface.",
       duration: "5:30",
       thumbnail: thumbnailIntroducao

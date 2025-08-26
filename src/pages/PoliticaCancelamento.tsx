@@ -5,21 +5,21 @@ export default function PoliticaCancelamento() {
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-background/80 py-8 px-4">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2">Balanzzo</h1>
+          <h1 className="text-4xl font-bold text-foreground mb-2">BALANZZO</h1>
           <p className="text-xl text-muted-foreground">Política de Cancelamento e Reembolso</p>
         </div>
 
         <Card className="p-8 shadow-lg">
           <div className="prose prose-gray dark:prose-invert max-w-none">
             <div className="policy">
-              <h1 className="text-3xl font-bold text-foreground mb-4">Política de Cancelamento e Reembolso – Balanzzo</h1>
+              <h1 className="text-3xl font-bold text-foreground mb-4">Política de Cancelamento e Reembolso – BALANZZO</h1>
               <p className="text-sm text-muted-foreground mb-6"><strong>Última atualização: 15 de agosto de 2025</strong></p>
               
-              <p className="mb-6 text-foreground">A Balanzzo valoriza a transparência e a liberdade de escolha de seus clientes. Esta Política regula as condições de cancelamento e reembolso dos planos contratados em nossa plataforma.</p>
+              <p className="mb-6 text-foreground">A BALANZZO valoriza a transparência e a liberdade de escolha de seus clientes. Esta Política regula as condições de cancelamento e reembolso dos planos contratados em nossa plataforma.</p>
 
               <h2 className="text-2xl font-semibold text-foreground mt-8 mb-4">1. Cancelamento pelo Cliente</h2>
               <ul className="list-disc pl-6 mb-6 space-y-2 text-foreground">
-                <li>O cancelamento pode ser solicitado <strong>exclusivamente pelos canais oficiais de atendimento da Balanzzo</strong>, através do e-mail <a href="mailto:contato@balanzzo.com.br" className="text-primary hover:text-primary/80 underline">contato@balanzzo.com.br</a> ou pelo suporte ao cliente.</li>
+                <li>O cancelamento pode ser solicitado <strong>exclusivamente pelos canais oficiais de atendimento da BALANZZO</strong>, através do e-mail <a href="mailto:contato@balanzzo.com.br" className="text-primary hover:text-primary/80 underline">contato@balanzzo.com.br</a> ou pelo suporte ao cliente.</li>
                 <li>O cancelamento terá efeito <strong>a partir do próximo ciclo de cobrança</strong>.</li>
                 <li>O cliente manterá acesso à plataforma até o término do período já pago.</li>
               </ul>
@@ -45,8 +45,8 @@ export default function PoliticaCancelamento() {
                 <li>O reembolso será realizado em até <strong>7 dias úteis</strong>, conforme previsto pelo CDC.</li>
               </ul>
 
-              <h2 className="text-2xl font-semibold text-foreground mt-8 mb-4">5. Cancelamento pela Balanzzo</h2>
-              <p className="mb-4 text-foreground">A Balanzzo poderá encerrar a assinatura, mediante aviso prévio, nas seguintes situações:</p>
+              <h2 className="text-2xl font-semibold text-foreground mt-8 mb-4">5. Cancelamento pela BALANZZO</h2>
+              <p className="mb-4 text-foreground">A BALANZZO poderá encerrar a assinatura, mediante aviso prévio, nas seguintes situações:</p>
               <ul className="list-disc pl-6 mb-6 space-y-2 text-foreground">
                 <li>Uso indevido ou ilegal da plataforma.</li>
                 <li>Inadimplência superior a <strong>15 dias</strong>.</li>

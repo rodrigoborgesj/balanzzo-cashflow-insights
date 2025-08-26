@@ -68,8 +68,8 @@ export function CreatePlansButton() {
       <div className="text-xs text-muted-foreground">
         <p><strong>Planos que serão criados:</strong></p>
         <ul className="list-disc list-inside mt-1">
-          <li>ID: "monthly" - Plano Mensal Balanzzo (R$ 197,00)</li>
-          <li>ID: "semiannual" - Plano Semestral Balanzzo (R$ 985,00)</li>
+          <li>ID: "monthly" - Plano Mensal BALANZZO (R$ 197,00)</li>
+          <li>ID: "semiannual" - Plano Semestral BALANZZO (R$ 985,00)</li>
         </ul>
       </div>
     </div>

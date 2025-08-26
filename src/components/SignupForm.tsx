@@ -475,7 +475,7 @@ export function SignupForm({ onBack }: SignupFormProps) {
               >
                 Política de Privacidade
               </Link>
-              {" "}da Balanzzo.
+              {" "}da BALANZZO.
             </Label>
           </div>
 

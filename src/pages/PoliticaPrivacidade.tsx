@@ -6,7 +6,7 @@ export default function PoliticaPrivacidade() {
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="text-center space-y-4 pt-8">
-          <h1 className="text-3xl font-bold text-foreground mb-4">Balanzzo</h1>
+          <h1 className="text-3xl font-bold text-foreground mb-4">BALANZZO</h1>
           <h2 className="text-2xl font-semibold text-foreground">
             Política de Privacidade
           </h2>
@@ -29,7 +29,7 @@ export default function PoliticaPrivacidade() {
               <section>
                 <h3 className="text-xl font-semibold mb-3">1. Quem Somos</h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  A Balanzzo é uma plataforma digital de organização financeira empresarial, comprometida com a transparência, privacidade e segurança dos dados dos seus usuários.
+                  A BALANZZO é uma plataforma digital de organização financeira empresarial, comprometida com a transparência, privacidade e segurança dos dados dos seus usuários.
                 </p>
               </section>
 
@@ -68,7 +68,7 @@ export default function PoliticaPrivacidade() {
               <section>
                 <h3 className="text-xl font-semibold mb-3">4. Base Legal para o Tratamento de Dados</h3>
                 <p className="text-muted-foreground leading-relaxed mb-3">
-                  O tratamento dos dados pela Balanzzo é realizado com base nas seguintes hipóteses legais da LGPD:
+                  O tratamento dos dados pela BALANZZO é realizado com base nas seguintes hipóteses legais da LGPD:
                 </p>
                 <ul className="list-disc pl-6 text-muted-foreground space-y-1">
                   <li><strong>Execução de contrato:</strong> para fornecer os serviços contratados na plataforma;</li>
@@ -95,7 +95,7 @@ export default function PoliticaPrivacidade() {
               <section>
                 <h3 className="text-xl font-semibold mb-3">6. Transferência Internacional de Dados</h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  A Balanzzo utiliza provedores de infraestrutura tecnológica localizados fora do Brasil, como o Supabase, que pode armazenar dados em servidores internacionais.
+                  A BALANZZO utiliza provedores de infraestrutura tecnológica localizados fora do Brasil, como o Supabase, que pode armazenar dados em servidores internacionais.
                 </p>
                 <p className="text-muted-foreground leading-relaxed mt-3">
                   Nos comprometemos a garantir que tais transferências ocorram com mecanismos de proteção compatíveis com a LGPD, por meio de cláusulas contratuais e medidas técnicas adequadas.
@@ -179,7 +179,7 @@ export default function PoliticaPrivacidade() {
 
               <div className="border-t pt-6 mt-8 text-center">
                 <p className="text-sm text-muted-foreground">
-                  © 2025 Balanzzo. Todos os direitos reservados.
+                  © 2025 BALANZZO. Todos os direitos reservados.
                 </p>
               </div>
             </div>

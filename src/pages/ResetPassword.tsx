@@ -159,7 +159,7 @@ export default function ResetPassword() {
             <div className="p-3 bg-primary rounded-xl">
               <Building2 className="h-8 w-8 text-primary-foreground" />
             </div>
-            <h1 className="text-3xl font-bold text-foreground">Balanzzo</h1>
+            <h1 className="text-3xl font-bold text-foreground">BALANZZO</h1>
           </div>
           <h2 className="text-xl font-semibold text-foreground">
             Redefinir Senha
