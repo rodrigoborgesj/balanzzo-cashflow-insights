@@ -2,7 +2,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Play, BookOpen, Video } from "lucide-react";
 
 export default function ComoUsar() {
-  const tutorialVideos = [
+  const tutorialVideos: Array<{
+    id: number;
+    title: string;
+    description: string;
+    duration: string;
+    thumbnail: string;
+    videoUrl?: string;
+  }> = [
     {
       id: 1,
       title: "Introdução ao Balanzzo",
@@ -15,7 +22,8 @@ export default function ComoUsar() {
       title: "Conciliação Bancária",
       description: "Automatize a conciliação entre suas transações e extratos bancários.",
       duration: "9:10",
-      thumbnail: "/placeholder.svg"
+      thumbnail: "/placeholder.svg",
+      videoUrl: "https://youtu.be/JoI9jR2kek0?si=1W_Jd1sx5XXRBtCp"
     },
     {
       id: 3,
@@ -96,7 +104,11 @@ export default function ComoUsar() {
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {tutorialVideos.map((video) => (
-            <Card key={video.id} className="bg-white border-border/50 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
+            <Card 
+              key={video.id} 
+              className="bg-white border-border/50 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+              onClick={() => video.videoUrl && window.open(video.videoUrl, '_blank')}
+            >
               <div className="relative">
                 <div className="aspect-video bg-gray-100 rounded-t-lg flex items-center justify-center">
                   <Play className="h-12 w-12 text-gray-400" />
