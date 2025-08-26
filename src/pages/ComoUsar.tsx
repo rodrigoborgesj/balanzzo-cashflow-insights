@@ -1,5 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Play, BookOpen, Video } from "lucide-react";
+import thumbnailIntroducao from "@/assets/thumbnail-introducao.jpg";
+import thumbnailConciliacao from "@/assets/thumbnail-conciliacao.jpg";
+import thumbnailFluxoCaixa from "@/assets/thumbnail-fluxo-caixa.jpg";
+import thumbnailDRE from "@/assets/thumbnail-dre.jpg";
 
 export default function ComoUsar() {
   const tutorialVideos: Array<{
@@ -15,14 +19,14 @@ export default function ComoUsar() {
       title: "Introdução ao Balanzzo",
       description: "Aprenda os conceitos básicos da plataforma e como navegar pela interface.",
       duration: "5:30",
-      thumbnail: "/placeholder.svg"
+      thumbnail: thumbnailIntroducao
     },
     {
       id: 2,
       title: "Conciliação Bancária",
       description: "Automatize a conciliação entre suas transações e extratos bancários.",
       duration: "9:10",
-      thumbnail: "/placeholder.svg",
+      thumbnail: thumbnailConciliacao,
       videoUrl: "https://youtu.be/JoI9jR2kek0?si=1W_Jd1sx5XXRBtCp"
     },
     {
@@ -30,7 +34,7 @@ export default function ComoUsar() {
       title: "Fluxo de Caixa",
       description: "Monitore entradas e saídas, e mantenha um controle financeiro eficiente.",
       duration: "6:45",
-      thumbnail: "/placeholder.svg",
+      thumbnail: thumbnailFluxoCaixa,
       videoUrl: "https://youtu.be/PV3HH9pO9zc?si=8UPl_ZH-4HKRGCmd"
     },
     {
@@ -38,7 +42,7 @@ export default function ComoUsar() {
       title: "Relatórios DRE",
       description: "Gere demonstrações de resultado completas para sua empresa.",
       duration: "7:20",
-      thumbnail: "/placeholder.svg",
+      thumbnail: thumbnailDRE,
       videoUrl: "https://youtu.be/0lMcte2TY0g?si=jGyxKDGtl1ayoWlX"
     }
   ];
@@ -112,8 +116,13 @@ export default function ComoUsar() {
               onClick={() => video.videoUrl && window.open(video.videoUrl, '_blank')}
             >
               <div className="relative">
-                <div className="aspect-video bg-gray-100 rounded-t-lg flex items-center justify-center">
-                  <Play className="h-12 w-12 text-gray-400" />
+                <img 
+                  src={video.thumbnail} 
+                  alt={video.title}
+                  className="aspect-video w-full object-cover rounded-t-lg"
+                />
+                <div className="absolute inset-0 bg-black/20 rounded-t-lg flex items-center justify-center">
+                  <Play className="h-12 w-12 text-white drop-shadow-lg" />
                 </div>
                 <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
                   {video.duration}
