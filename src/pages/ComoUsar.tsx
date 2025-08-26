@@ -3,7 +3,7 @@ import { Play, BookOpen, Video } from "lucide-react";
 const thumbnailIntroducao = "/lovable-uploads/fb8d5619-310b-4c9a-b7a2-f7d184edec1d.png";
 const thumbnailConciliacao = "/lovable-uploads/aea8f5cc-296c-4392-82e7-c4281bfce367.png";
 const thumbnailFluxoCaixa = "/lovable-uploads/b0f8aa50-d452-4c21-b604-42c21d185045.png";
-import thumbnailDRE from "@/assets/thumbnail-dre-final.jpg";
+const thumbnailDRE = "/lovable-uploads/278e6dae-5630-4077-8f91-51a7876d7beb.png";
 
 export default function ComoUsar() {
   const tutorialVideos: Array<{
