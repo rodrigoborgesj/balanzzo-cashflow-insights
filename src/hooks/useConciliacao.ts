@@ -299,6 +299,7 @@ export function useConciliacao() {
           valor: normalizedValue,
           descricao: description,
           user_id: user.id,
+          company_id: null, // Campo obrigatório mesmo que nullable para satisfazer RLS
           hash_transacao,
           categoria_sugerida,
           status_conciliacao: false,
