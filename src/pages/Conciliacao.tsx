@@ -135,25 +135,50 @@ export default function Conciliacao() {
   };
 
   const handleProcessTransactions = async () => {
+    console.log('🔄 handleProcessTransactions iniciado');
+    console.log('📊 Estado atual:', {
+      selectedFile: !!selectedFile,
+      parsedTransactionsCount: parsedTransactions.length,
+      user: !!user?.id
+    });
+    
     if (!selectedFile || parsedTransactions.length === 0) {
+      console.error('❌ Condições não atendidas:', {
+        selectedFile: !!selectedFile,
+        parsedTransactionsCount: parsedTransactions.length
+      });
       return;
     }
     
     setIsProcessing(true);
     try {
+      console.log('🔍 Filtrando transações válidas...');
       // Filtrar transações válidas antes de processar
       const validTransactions = parsedTransactions.filter(t => {
-        return t.data_transacao && 
+        const isValid = t.data_transacao && 
                t.data_transacao !== '' && 
                !isNaN(t.valor) && 
                t.valor !== 0;
+        if (!isValid) {
+          console.log('❌ Transação inválida:', t);
+        }
+        return isValid;
+      });
+
+      console.log('✅ Transações filtradas:', {
+        original: parsedTransactions.length,
+        validas: validTransactions.length,
+        amostra: validTransactions.slice(0, 2)
       });
 
       if (validTransactions.length === 0) {
+        console.error('❌ Nenhuma transação válida após filtro');
         throw new Error('Nenhuma transação válida encontrada no arquivo. Verifique o formato dos dados.');
       }
 
+      console.log('💾 Chamando saveTransactions...');
       const success = await saveTransactions(validTransactions);
+      console.log('✅ saveTransactions resultado:', success);
       
       if (success) {
         // Limpar dados da sessão após sucesso
@@ -167,15 +192,18 @@ export default function Conciliacao() {
           description: `${validTransactions.length} transações foram importadas e estão prontas para revisão na aba "Conciliar Transações".`,
         });
       } else {
+        console.error('❌ saveTransactions retornou false');
         throw new Error('Falha ao salvar transações no banco de dados');
       }
     } catch (error) {
+      console.error('❌ Erro em handleProcessTransactions:', error);
       toast({
         title: 'Erro no processamento',
         description: error instanceof Error ? error.message : 'Erro desconhecido',
         variant: 'destructive',
       });
     } finally {
+      console.log('🏁 handleProcessTransactions finalizado');
       setIsProcessing(false);
     }
   };
