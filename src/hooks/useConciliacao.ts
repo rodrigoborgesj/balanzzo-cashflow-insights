@@ -313,6 +313,13 @@ export function useConciliacao() {
         throw new Error('Nenhuma transação válida foi encontrada após o processamento. Verifique o formato do arquivo.');
       }
 
+      // Log das transações que serão salvas para debug
+      console.log('Transações processadas para salvamento:', {
+        total: transactionsToSave.length,
+        sample: transactionsToSave.slice(0, 2),
+        allKeys: transactionsToSave.length > 0 ? Object.keys(transactionsToSave[0]) : []
+      });
+
       // Inserir no banco (com tratamento de duplicatas)
       const { data, error } = await supabase
         .from('transacoes_conciliadas')
@@ -323,10 +330,17 @@ export function useConciliacao() {
         .select();
 
       if (error) {
-        console.error('Erro detalhado ao salvar transações:', error);
+        console.error('Erro detalhado ao salvar transações:', {
+          error,
+          errorMessage: error.message,
+          errorDetails: error.details,
+          errorHint: error.hint,
+          errorCode: error.code,
+          transactionsSample: transactionsToSave.slice(0, 2)
+        });
         toast({
           title: 'Erro ao salvar transações',
-          description: `Erro no banco de dados: ${error.message}`,
+          description: `Erro no banco de dados: ${error.message}. Verifique o console para mais detalhes.`,
           variant: 'destructive',
         });
         return false;
