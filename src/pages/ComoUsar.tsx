@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Play, BookOpen, Video } from "lucide-react";
 const thumbnailIntroducao = "/lovable-uploads/fb8d5619-310b-4c9a-b7a2-f7d184edec1d.png";
 const thumbnailConciliacao = "/lovable-uploads/aea8f5cc-296c-4392-82e7-c4281bfce367.png";
-import thumbnailFluxoCaixa from "@/assets/thumbnail-fluxo-correto.jpg";
+const thumbnailFluxoCaixa = "/lovable-uploads/b0f8aa50-d452-4c21-b604-42c21d185045.png";
 import thumbnailDRE from "@/assets/thumbnail-dre-final.jpg";
 
 export default function ComoUsar() {
