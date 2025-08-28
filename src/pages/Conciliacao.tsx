@@ -116,25 +116,15 @@ export default function Conciliacao() {
         return;
       }
       
-      // Mapear para formato esperado pela aplicação
+      // Mapear para formato esperado pela aplicação (sem ID temporário)
       const mappedTransactions = result.transactions.map((transaction, index) => ({
-        id: `temp-${Date.now()}-${index}`,
-        data_transacao: transaction.date, // Standardized format uses 'date'
-        descricao: transaction.description, // Standardized format uses 'description'
-        valor: transaction.value, // Standardized format uses 'value'
+        // Remove temporary ID - database will auto-generate
+        data_transacao: transaction.date,
+        descricao: transaction.description,
+        valor: transaction.value,
         tipo: (transaction.value > 0 ? 'entrada' : 'saida') as 'entrada' | 'saida',
-        categoria: 'outros',
-        categoria_final: '',
+        categoria_final: null,
         status_conciliacao: false,
-        conciliado: false,
-        observacoes: '',
-        conta_origem: 'importacao',
-        conta_destino: '',
-        metodo_pagamento: '',
-        tags: [],
-        anexos: [],
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
         company_id: null,
         origem_arquivo: 'CSV',
         mes_referencia: transaction.date.substring(0, 7) + '-01'
