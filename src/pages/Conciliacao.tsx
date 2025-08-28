@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useCallback, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,7 +12,7 @@ import { FileUploader } from "@/components/FileUploader";
 import TransactionProcessor from "@/components/TransactionProcessor";
 import TransactionRemover from "@/components/TransactionRemover";
 import { StandardizedBankStatementParser } from "@/utils/standardizedBankStatementParser";
-import { useConciliacao, Transaction } from "@/hooks/useConciliacao";
+import { useConciliacao, ParsedTransaction } from '@/hooks/useConciliacao';
 import { 
   Upload, 
   Search, 
@@ -53,12 +53,14 @@ const categoriesDespesas = [
 export default function Conciliacao() {
   
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [parsedTransactions, setParsedTransactions] = useState<ParsedTransaction[]>([]);
+  const [parseStats, setParseStats] = useState({ totalRows: 0, validTransactions: 0, skippedRows: 0 });
+  const [parseErrors, setParseErrors] = useState<string[]>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
+  
+  // Filter and search state
   const [filterStatus, setFilterStatus] = useState("todos");
   const [searchTerm, setSearchTerm] = useState("");
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [parsedTransactions, setParsedTransactions] = useState<Transaction[]>([]);
-  const [parseErrors, setParseErrors] = useState<string[]>([]);
-  const [parseStats, setParseStats] = useState<{totalRows: number; validTransactions: number; skippedRows: number} | null>(null);
   
   // Pagination state
   const [page, setPage] = useState(0);
@@ -116,21 +118,8 @@ export default function Conciliacao() {
         return;
       }
       
-      // Mapear para formato esperado pela aplicação (sem ID temporário)
-      const mappedTransactions = result.transactions.map((transaction, index) => ({
-        // Remove temporary ID - database will auto-generate
-        data_transacao: transaction.date,
-        descricao: transaction.description,
-        valor: transaction.value,
-        tipo: (transaction.value > 0 ? 'entrada' : 'saida') as 'entrada' | 'saida',
-        categoria_final: null,
-        status_conciliacao: false,
-        company_id: null,
-        origem_arquivo: 'CSV',
-        mes_referencia: transaction.date.substring(0, 7) + '-01'
-      }));
-
-      setParsedTransactions(mappedTransactions);
+      // Mapear para formato esperado pela aplicação
+      setParsedTransactions(result.transactions);
       
       toast({
         title: 'Arquivo processado com sucesso!',
@@ -156,23 +145,32 @@ export default function Conciliacao() {
       user: !!user?.id
     });
     
-    if (!selectedFile || parsedTransactions.length === 0) {
-      console.error('❌ Condições não atendidas:', {
-        selectedFile: !!selectedFile,
-        parsedTransactionsCount: parsedTransactions.length
-      });
-      return;
-    }
+      if (!selectedFile || parsedTransactions.length === 0) {
+        console.error('❌ Condições não atendidas:', {
+          selectedFile: !!selectedFile,
+          parsedTransactionsCount: parsedTransactions.length
+        });
+        toast({ title: 'Erro', description: 'Nenhuma transação válida para processar', variant: 'destructive' });
+        return;
+      }
+      
+      if (!user?.id) {
+        console.error('❌ Usuário não autenticado');
+        toast({ title: 'Erro', description: 'Você precisa estar logado para salvar transações', variant: 'destructive' });
+        return;
+      }
     
     setIsProcessing(true);
     try {
       console.log('🔍 Filtrando transações válidas...');
       // Filtrar transações válidas antes de processar
       const validTransactions = parsedTransactions.filter(t => {
-        const isValid = t.data_transacao && 
-               t.data_transacao !== '' && 
-               !isNaN(t.valor) && 
-               t.valor !== 0;
+        const isValid = t.date && 
+               t.date !== '' && 
+               !isNaN(t.value) && 
+               t.value !== 0 &&
+               t.description && 
+               t.description.trim() !== '';
         if (!isValid) {
           console.log('❌ Transação inválida:', t);
         }
@@ -187,7 +185,8 @@ export default function Conciliacao() {
 
       if (validTransactions.length === 0) {
         console.error('❌ Nenhuma transação válida após filtro');
-        throw new Error('Nenhuma transação válida encontrada no arquivo. Verifique o formato dos dados.');
+        toast({ title: 'Erro', description: 'Nenhuma transação válida encontrada no arquivo. Verifique o formato dos dados.', variant: 'destructive' });
+        return;
       }
 
       console.log('💾 Chamando saveTransactions...');
@@ -447,35 +446,35 @@ export default function Conciliacao() {
         {parsedTransactions.length > 0 && !isProcessing && !isLoading && (
           <Card className="bg-gray-50 border-gray-200">
             <CardContent className="p-4 space-y-4">
-              <div className="flex items-center gap-2 text-black">
-                <CheckCircle className="h-5 w-5" />
-                <span className="font-medium">
-                  {parsedTransactions.length} transações encontradas e prontas para processamento
-                </span>
-              </div>
-              
-              {/* Preview das primeiras transações */}
-              <div className="bg-white rounded-lg p-3 border border-gray-200">
-                <h4 className="text-sm font-medium mb-2 text-black">Preview das transações:</h4>
-                <div className="space-y-1 max-h-32 overflow-y-auto">
-                  {parsedTransactions.slice(0, 5).map((transaction, index) => (
-                    <div key={index} className="text-xs flex justify-between items-center p-1 border-b last:border-b-0">
-                      <div className="flex-1 truncate max-w-[200px]">
-                        <div className="text-black">{transaction.descricao}</div>
-                        <div className="text-gray-600">{new Date(transaction.data_transacao).toLocaleDateString('pt-BR')}</div>
+                      <div className="flex items-center gap-2 text-black">
+                        <CheckCircle className="h-5 w-5" />
+                        <span className="font-medium">
+                          {parsedTransactions.length} transações encontradas e prontas para processamento
+                        </span>
                       </div>
-                      <span className={transaction.valor >= 0 ? "text-black font-medium" : "text-black font-medium"}>
-                        {transaction.valor >= 0 ? '+' : ''}R$ {transaction.valor.toFixed(2)}
-                      </span>
-                    </div>
-                  ))}
-                  {parsedTransactions.length > 5 && (
-                    <div className="text-xs text-gray-600 text-center pt-2">
-                      ... e mais {parsedTransactions.length - 5} transações
-                    </div>
-                  )}
-                </div>
-              </div>
+                      
+                      {/* Preview das primeiras transações */}
+                      <div className="bg-white rounded-lg p-3 border border-gray-200">
+                        <h4 className="text-sm font-medium mb-2 text-black">Preview das transações:</h4>
+                        <div className="space-y-1 max-h-32 overflow-y-auto">
+                          {parsedTransactions.slice(0, 5).map((transaction, index) => (
+                            <div key={index} className="text-xs flex justify-between items-center p-1 border-b last:border-b-0">
+                              <div className="flex-1 truncate max-w-[200px]">
+                                <div className="text-black">{transaction.description}</div>
+                                <div className="text-gray-600">{new Date(transaction.date).toLocaleDateString('pt-BR')}</div>
+                              </div>
+                              <span className={transaction.value >= 0 ? "text-black font-medium" : "text-black font-medium"}>
+                                {transaction.value >= 0 ? '+' : ''}R$ {transaction.value.toFixed(2)}
+                              </span>
+                            </div>
+                          ))}
+                          {parsedTransactions.length > 5 && (
+                            <div className="text-xs text-gray-600 text-center pt-2">
+                              ... e mais {parsedTransactions.length - 5} transações
+                            </div>
+                          )}
+                        </div>
+                      </div>
               
               <Button 
                 onClick={handleProcessTransactions}
