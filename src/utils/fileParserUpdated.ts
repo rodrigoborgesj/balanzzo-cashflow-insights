@@ -370,30 +370,47 @@ export class FileParser {
 
   static async parseFile(file: File): Promise<Omit<Transaction, 'user_id' | 'categoria_sugerida' | 'hash_transacao'>[]> {
     try {
-      console.log('🔄 Delegando para RobustCSVParser:', file.name);
+      console.log('🔄 Delegando para StandardizedBankStatementParser:', file.name);
       
-      // Usar o parser robusto para todos os arquivos CSV
+      // Usar o parser padronizado para todos os arquivos CSV
       if (file.name.toLowerCase().endsWith('.csv') || file.type === 'text/csv') {
-        const { RobustCSVParser } = await import('./robustCSVParser');
-        const result = await RobustCSVParser.parseCSV(file);
+        const { StandardizedBankStatementParser } = await import('./standardizedBankStatementParser');
+        const result = await StandardizedBankStatementParser.parseFile(file);
         
         if (result.errors.length > 0) {
-          console.warn('⚠️ Parser robusto encontrou erros:', result.errors);
+          console.warn('⚠️ Parser padronizado encontrou erros:', result.errors);
         }
         
         if (result.warnings.length > 0) {
-          console.warn('⚠️ Parser robusto encontrou avisos:', result.warnings);
+          console.warn('⚠️ Parser padronizado encontrou avisos:', result.warnings);
         }
         
-        console.log('✅ Parser robusto concluído:', {
+        console.log('✅ Parser padronizado concluído:', {
           transações: result.transactions.length,
           processedRows: result.processedRows,
-          validRows: result.validRows,
-          encoding: result.encoding,
-          delimiter: result.delimiter
+          validRows: result.validRows
         });
         
-        return result.transactions;
+        // Map standardized format to application format
+        return result.transactions.map((transaction, index) => ({
+          id: `import_${Date.now()}_${index}`,
+          data_transacao: transaction.date,
+          descricao: transaction.description,
+          valor: transaction.value,
+          tipo: transaction.value > 0 ? 'entrada' : 'saida',
+          categoria: 'outros',
+          categoria_final: '',
+          status_conciliacao: false,
+          conciliado: false,
+          observacoes: '',
+          conta_origem: 'importacao',
+          conta_destino: '',
+          metodo_pagamento: '',
+          tags: [],
+          anexos: [],
+          origem_arquivo: 'CSV',
+          mes_referencia: transaction.date.substring(0, 7) + '-01'
+        }));
       } else if (file.name.toLowerCase().endsWith('.ofx')) {
         // Manter OFX parsing original
         const content = await this.readFileContent(file);

@@ -11,7 +11,7 @@ import { FileUploader } from "@/components/FileUploader";
 
 import TransactionProcessor from "@/components/TransactionProcessor";
 import TransactionRemover from "@/components/TransactionRemover";
-import { RobustCSVParser } from "@/utils/robustCSVParser";
+import { StandardizedBankStatementParser } from "@/utils/standardizedBankStatementParser";
 import { useConciliacao, Transaction } from "@/hooks/useConciliacao";
 import { 
   Upload, 
@@ -96,7 +96,7 @@ export default function Conciliacao() {
     setIsProcessing(true);
     
     try {
-      const result = await RobustCSVParser.parseCSV(file);
+      const result = await StandardizedBankStatementParser.parseFile(file);
       
       setParseStats({
         totalRows: result.processedRows,
@@ -116,7 +116,31 @@ export default function Conciliacao() {
         return;
       }
       
-      setParsedTransactions(result.transactions);
+      // Mapear para formato esperado pela aplicação
+      const mappedTransactions = result.transactions.map((transaction, index) => ({
+        id: `temp-${Date.now()}-${index}`,
+        data_transacao: transaction.date, // Standardized format uses 'date'
+        descricao: transaction.description, // Standardized format uses 'description'
+        valor: transaction.value, // Standardized format uses 'value'
+        tipo: (transaction.value > 0 ? 'entrada' : 'saida') as 'entrada' | 'saida',
+        categoria: 'outros',
+        categoria_final: '',
+        status_conciliacao: false,
+        conciliado: false,
+        observacoes: '',
+        conta_origem: 'importacao',
+        conta_destino: '',
+        metodo_pagamento: '',
+        tags: [],
+        anexos: [],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        company_id: null,
+        origem_arquivo: 'CSV',
+        mes_referencia: transaction.date.substring(0, 7) + '-01'
+      }));
+
+      setParsedTransactions(mappedTransactions);
       
       toast({
         title: 'Arquivo processado com sucesso!',
