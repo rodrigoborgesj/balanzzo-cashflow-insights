@@ -209,27 +209,7 @@ export default function Dashboard() {
     expenses: item.saidas
   }));
 
-  if (!hasData) {
-    return (
-      <div className="p-6 space-y-6 min-h-screen bg-brand-light">
-        <MonthSelector />
-        <div className="text-center py-16 animate-fade-in">
-          <div className="dashboard-card max-w-md mx-auto p-8">
-            <Target className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-            <h2 className="text-2xl font-bold text-foreground mb-4">
-              Nenhum dado financeiro encontrado
-            </h2>
-            <p className="text-muted-foreground mb-6">
-              Adicione dados financeiros para visualizar seu dashboard
-            </p>
-            <Button onClick={() => navigate("/fluxo-caixa")} className="btn-modern">
-              Adicionar Dados
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Removed the no data screen that was causing oscillation
 
   // Company name from profile or default  
   const companyName = profile?.full_name || "Empresa";
