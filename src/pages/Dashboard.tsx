@@ -239,6 +239,69 @@ export default function Dashboard() {
     ? Math.max(0, Math.min(100, ((kpiData.saldoLiquido / kpiData.totalEntradas) * 100)))
     : 0;
 
+  // Prepare chart data for the monthly bar chart
+  const monthlyBarData = monthlyChartData.slice(-6).map(item => ({
+    month: item.mes,
+    revenue: item.entradas
+  }));
+
+  // Prepare expense chart data
+  const monthlyExpenseData = monthlyChartData.slice(-6).map(item => ({
+    month: item.mes,
+    expenses: item.saidas
+  }));
+
+  // Generate expense chart data for year overview
+  const expenseYearOverviewData = monthlyChartData.slice(-6).map(item => ({
+    month: item.mes,
+    expenses: item.saidas
+  }));
+
+  // Generate written summary in Portuguese
+  const generateWrittenSummary = () => {
+    const totalRevenue = yearOverviewData.reduce((sum, item) => sum + item.revenue, 0);
+    const totalExpenses = yearOverviewData.reduce((sum, item) => sum + item.expenses, 0);
+    const netResult = totalRevenue - totalExpenses;
+    
+    // Get previous period data for comparison
+    const currentPeriodRevenue = kpiData.totalEntradas;
+    const currentPeriodExpenses = kpiData.totalSaidas;
+    const revenueVariation = kpiData.variacaoEntradas;
+    const expenseVariation = kpiData.variacaoSaidas;
+    
+    const insights = [
+      `**Resumo Financeiro - ${companyName}**`,
+      "",
+      `Durante o período analisado, sua empresa apresentou um faturamento total de ${formatCurrency(totalRevenue)} e despesas de ${formatCurrency(totalExpenses)}.`,
+      "",
+      `**Análise de Receitas:**`,
+      revenueVariation >= 0 
+        ? `✅ Suas receitas cresceram ${Math.abs(revenueVariation).toFixed(1)}% em relação ao mês anterior, demonstrando um crescimento positivo no faturamento.`
+        : `⚠️ Suas receitas diminuíram ${Math.abs(revenueVariation).toFixed(1)}% em relação ao mês anterior. É importante revisar as estratégias de vendas e marketing.`,
+      "",
+      `**Análise de Despesas:**`,
+      expenseVariation >= 0
+        ? `⚠️ Suas despesas aumentaram ${Math.abs(expenseVariation).toFixed(1)}% em relação ao mês anterior. Recomenda-se revisar os custos e identificar oportunidades de otimização.`
+        : `✅ Suas despesas diminuíram ${Math.abs(expenseVariation).toFixed(1)}% em relação ao mês anterior, demonstrando um bom controle de custos.`,
+      "",
+      `**Saúde Financeira:**`,
+      netResult > 0 
+        ? `✅ Sua empresa apresenta um resultado líquido positivo de ${formatCurrency(netResult)}, indicando uma boa saúde financeira.`
+        : `⚠️ Sua empresa apresenta um resultado líquido negativo de ${formatCurrency(Math.abs(netResult))}. É importante revisar custos e aumentar receitas.`,
+      "",
+      `**Margem de Lucro:**`,
+      `A margem de lucro atual é de ${Math.round(profitMargin)}%. ${profitMargin > 20 ? 'Excelente margem!' : profitMargin > 10 ? 'Margem saudável.' : 'Margem baixa - considere otimizar custos.'}`,
+      "",
+      `**Recomendações:**`,
+      revenueVariation < 0 ? `• Foque em estratégias para aumentar o faturamento` : `• Mantenha as estratégias de crescimento atuais`,
+      expenseVariation > 10 ? `• Revise e otimize os custos operacionais` : `• Continue o bom controle de despesas`,
+      `• Monitore regularmente os indicadores financeiros`,
+      `• ${profitMargin < 10 ? 'Busque melhorar a margem de lucro' : 'Mantenha a margem de lucro atual'}`
+    ];
+    
+    return insights.join('\n');
+  };
+
   // If selected month has no data, show year overview
   if (!currentMonthHasData && hasData) {
     return (
@@ -262,62 +325,94 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Year Overview Chart */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
-            <Card className="dashboard-card animate-slide-in">
-              <CardHeader className="pb-4">
-                <CardTitle className="flex items-center gap-2 text-foreground">
-                  <BarChart3 className="w-5 h-5" />
-                  Visão Geral do Ano - Receitas e Despesas
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={400}>
-                  <BarChart data={yearOverviewData}>
-                    <XAxis 
-                      dataKey="month" 
-                      axisLine={false}
-                      tickLine={false}
-                      className="text-muted-foreground text-sm"
-                    />
-                    <YAxis 
-                      axisLine={false}
-                      tickLine={false}
-                      className="text-muted-foreground text-sm"
-                    />
-                    <Tooltip 
-                      formatter={(value: number, name: string) => [
-                        formatCurrency(value), 
-                        name === 'revenue' ? 'Receitas' : 'Despesas'
-                      ]}
-                      contentStyle={{ 
-                        backgroundColor: 'hsl(var(--card))',
-                        border: 'none',
-                        borderRadius: '12px',
-                        boxShadow: 'var(--shadow-medium)'
-                      }}
-                    />
-                    <Bar 
-                      dataKey="revenue" 
-                      fill="hsl(var(--chart-1))"
-                      radius={[4, 4, 0, 0]}
-                      name="revenue"
-                    />
-                    <Bar 
-                      dataKey="expenses" 
-                      fill="hsl(var(--chart-2))"
-                      radius={[4, 4, 0, 0]}
-                      name="expenses"
-                    />
-                    <Legend className="text-sm" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </div>
+        {/* Year Overview Charts */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Revenue Chart */}
+          <Card className="dashboard-card animate-slide-in">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-2 text-foreground">
+                <BarChart3 className="w-5 h-5" />
+                Receitas Mensais (Últimos 6 Meses)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={monthlyBarData}>
+                  <XAxis 
+                    dataKey="month" 
+                    axisLine={false}
+                    tickLine={false}
+                    className="text-muted-foreground text-sm"
+                  />
+                  <YAxis 
+                    axisLine={false}
+                    tickLine={false}
+                    className="text-muted-foreground text-sm"
+                  />
+                  <Tooltip 
+                    formatter={(value: number) => [formatCurrency(value), 'Receitas']}
+                    contentStyle={{ 
+                      backgroundColor: 'hsl(var(--card))',
+                      border: 'none',
+                      borderRadius: '12px',
+                      boxShadow: 'var(--shadow-medium)'
+                    }}
+                  />
+                  <Bar 
+                    dataKey="revenue" 
+                    fill="hsl(var(--chart-1))"
+                    radius={[4, 4, 0, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
 
-          {/* Summary Cards for Year Overview */}
+          {/* Expense Chart */}
+          <Card className="dashboard-card animate-slide-in" style={{ animationDelay: '0.1s' }}>
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-2 text-foreground">
+                <BarChart3 className="w-5 h-5" />
+                Despesas Mensais (Últimos 6 Meses)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={expenseYearOverviewData}>
+                  <XAxis 
+                    dataKey="month" 
+                    axisLine={false}
+                    tickLine={false}
+                    className="text-muted-foreground text-sm"
+                  />
+                  <YAxis 
+                    axisLine={false}
+                    tickLine={false}
+                    className="text-muted-foreground text-sm"
+                  />
+                  <Tooltip 
+                    formatter={(value: number) => [formatCurrency(value), 'Despesas']}
+                    contentStyle={{ 
+                      backgroundColor: 'hsl(var(--card))',
+                      border: 'none',
+                      borderRadius: '12px',
+                      boxShadow: 'var(--shadow-medium)'
+                    }}
+                  />
+                  <Bar 
+                    dataKey="expenses" 
+                    fill="hsl(var(--chart-2))"
+                    radius={[4, 4, 0, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Summary Cards and Written Summary */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Summary Cards */}
           <div className="space-y-4">
             <Card className="dashboard-card animate-scale-in">
               <CardContent className="p-6">
@@ -364,16 +459,30 @@ export default function Dashboard() {
               </CardContent>
             </Card>
           </div>
+
+          {/* Written Summary */}
+          <div className="lg:col-span-2">
+            <Card className="dashboard-card animate-slide-in" style={{ animationDelay: '0.3s' }}>
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-foreground">
+                  <LineChartIcon className="w-5 h-5" />
+                  Relatório Analítico
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="prose prose-sm max-w-none text-foreground">
+                  <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed">
+                    {generateWrittenSummary()}
+                  </pre>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     );
   }
 
-  // Prepare chart data for the monthly bar chart
-  const monthlyBarData = monthlyChartData.slice(-6).map(item => ({
-    month: item.mes,
-    revenue: item.entradas
-  }));
 
   return (
     <div className="p-6 space-y-8 min-h-screen bg-brand-light">
@@ -407,42 +516,82 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Revenue Chart */}
-          <Card className="dashboard-card">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Faturamento Mensal</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={200}>
-                <LineChart data={monthlyBarData}>
-                  <XAxis 
-                    dataKey="month" 
-                    axisLine={false}
-                    tickLine={false}
-                    className="text-muted-foreground text-sm"
-                  />
-                  <YAxis hide />
-                  <Tooltip 
-                    formatter={(value: number) => [formatCurrency(value), "Faturamento"]}
-                    contentStyle={{ 
-                      backgroundColor: 'hsl(var(--card))',
-                      border: 'none',
-                      borderRadius: '12px',
-                      boxShadow: 'var(--shadow-medium)'
-                    }}
-                  />
-                  <Line 
-                    type="monotone"
-                    dataKey="revenue" 
-                    stroke="hsl(var(--chart-1))"
-                    strokeWidth={3}
-                    dot={{ fill: 'hsl(var(--chart-1))', strokeWidth: 2, r: 6 }}
-                    activeDot={{ r: 8, strokeWidth: 0, fill: 'hsl(var(--chart-1))' }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
+          {/* Revenue and Expense Charts */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Revenue Chart */}
+            <Card className="dashboard-card">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg">Faturamento Mensal</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={180}>
+                  <LineChart data={monthlyBarData}>
+                    <XAxis 
+                      dataKey="month" 
+                      axisLine={false}
+                      tickLine={false}
+                      className="text-muted-foreground text-sm"
+                    />
+                    <YAxis hide />
+                    <Tooltip 
+                      formatter={(value: number) => [formatCurrency(value), "Faturamento"]}
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--card))',
+                        border: 'none',
+                        borderRadius: '12px',
+                        boxShadow: 'var(--shadow-medium)'
+                      }}
+                    />
+                    <Line 
+                      type="monotone"
+                      dataKey="revenue" 
+                      stroke="hsl(var(--chart-1))"
+                      strokeWidth={3}
+                      dot={{ fill: 'hsl(var(--chart-1))', strokeWidth: 2, r: 6 }}
+                      activeDot={{ r: 8, strokeWidth: 0, fill: 'hsl(var(--chart-1))' }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            {/* Expense Chart */}
+            <Card className="dashboard-card">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg">Despesas Mensais</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={180}>
+                  <LineChart data={monthlyExpenseData}>
+                    <XAxis 
+                      dataKey="month" 
+                      axisLine={false}
+                      tickLine={false}
+                      className="text-muted-foreground text-sm"
+                    />
+                    <YAxis hide />
+                    <Tooltip 
+                      formatter={(value: number) => [formatCurrency(value), "Despesas"]}
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--card))',
+                        border: 'none',
+                        borderRadius: '12px',
+                        boxShadow: 'var(--shadow-medium)'
+                      }}
+                    />
+                    <Line 
+                      type="monotone"
+                      dataKey="expenses" 
+                      stroke="hsl(var(--chart-2))"
+                      strokeWidth={3}
+                      dot={{ fill: 'hsl(var(--chart-2))', strokeWidth: 2, r: 6 }}
+                      activeDot={{ r: 8, strokeWidth: 0, fill: 'hsl(var(--chart-2))' }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
         {/* Right - Progress Ring */}
@@ -554,6 +703,27 @@ export default function Dashboard() {
         {/* Enhanced Income Chart */}
         <IncomeChart data={incomeChartData} formatCurrency={formatCurrency} />
       </div>
+
+      {/* Written Summary - Always Available */}
+      <Card className="dashboard-card animate-slide-in">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-2 text-foreground">
+            <LineChartIcon className="w-5 h-5" />
+            Relatório Analítico - {new Date(selectedMonth + '-01').toLocaleDateString('pt-BR', { 
+              month: 'long', 
+              year: 'numeric',
+              timeZone: 'America/Sao_Paulo'
+            }).replace(/^./, str => str.toUpperCase())}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="prose prose-sm max-w-none text-foreground">
+            <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed">
+              {generateWrittenSummary()}
+            </pre>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Future Cash Flow Projection Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
