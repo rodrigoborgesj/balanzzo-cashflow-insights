@@ -76,13 +76,8 @@ export default function LandingPage() {
       <header className="bg-brand-white border-b border-brand-dark-green/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 md:h-20">
-            {/* Logo */}
-            <div className="flex items-center gap-3">
-              <img 
-                src="/lovable-uploads/6335b26d-ecb0-4039-ad1c-b4fd6bed66f1.png" 
-                alt="Balanzzo"
-                className="w-8 h-8 md:w-10 md:h-10"
-              />
+            {/* Brand */}
+            <div className="flex items-center">
               <span className="text-2xl md:text-3xl font-bold text-brand-dark-green">
                 Balanzzo
               </span>
@@ -280,20 +275,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Social Proof Section */}
-      <section className="py-16 bg-brand-white border-t border-brand-dark-green/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center space-y-8">
-            <p className="text-brand-dark-green/60 font-medium">Empresas que já transformaram suas finanças</p>
-            <div className="flex flex-wrap justify-center items-center gap-8 opacity-60">
-              <div className="text-2xl font-bold text-brand-dark-green">TechStart</div>
-              <div className="text-2xl font-bold text-brand-dark-green">InovaPlus</div>
-              <div className="text-2xl font-bold text-brand-dark-green">FastGrow</div>
-              <div className="text-2xl font-bold text-brand-dark-green">SmartBiz</div>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* Features Section */}
       <section id="recursos" className="py-24 bg-gradient-to-b from-brand-white to-brand-cream/30">
@@ -370,17 +351,17 @@ export default function LandingPage() {
           </div>
           
           <div className="max-w-lg mx-auto">
-            <Card className="bg-gradient-to-br from-brand-white to-brand-cream/50 border-2 border-brand-dark-green/20 shadow-xl relative overflow-hidden">
+            <Card className="bg-gradient-to-br from-brand-white to-brand-cream/50 border-2 border-brand-dark-green/20 shadow-xl relative overflow-hidden h-fit">
               {/* Popular Badge */}
-              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                <div className="bg-gradient-to-r from-brand-dark-green to-brand-light-green text-brand-white px-6 py-2 rounded-full text-sm font-semibold">
+              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
+                <div className="bg-gradient-to-r from-brand-dark-green to-brand-light-green text-brand-white px-6 py-2 rounded-full text-sm font-semibold shadow-lg">
                   Mais Popular
                 </div>
               </div>
 
-              <CardContent className="p-10 pt-12">
+              <CardContent className="p-8 pt-16">
                 <div className="text-center mb-8">
-                  <div className="text-6xl font-bold text-brand-dark-green mb-2">
+                  <div className="text-5xl md:text-6xl font-bold text-brand-dark-green mb-2">
                     R$ 78
                   </div>
                   <div className="text-lg text-brand-dark-green/70">
@@ -390,10 +371,10 @@ export default function LandingPage() {
 
                 {/* Trial Highlight */}
                 <div className="bg-gradient-to-r from-brand-light-green to-brand-light-green/80 rounded-2xl p-6 mb-8 text-center">
-                  <div className="text-2xl font-bold text-brand-dark-green mb-2">
+                  <div className="text-xl md:text-2xl font-bold text-brand-dark-green mb-2">
                     🚀 Experimente 10 dias grátis
                   </div>
-                  <div className="text-brand-dark-green/80">
+                  <div className="text-brand-dark-green/80 text-sm md:text-base">
                     Sem cartão de crédito • Cancele quando quiser
                   </div>
                 </div>
@@ -409,9 +390,9 @@ export default function LandingPage() {
                     "Atualizações automáticas",
                     "Backup seguro na nuvem"
                   ].map((feature, index) => (
-                    <div key={index} className="flex items-center gap-3">
-                      <CheckCircle className="w-5 h-5 text-brand-dark-green flex-shrink-0" />
-                      <span className="text-brand-dark-green">{feature}</span>
+                    <div key={index} className="flex items-start gap-3">
+                      <CheckCircle className="w-5 h-5 text-brand-dark-green flex-shrink-0 mt-0.5" />
+                      <span className="text-brand-dark-green text-sm md:text-base">{feature}</span>
                     </div>
                   ))}
                 </div>
@@ -600,12 +581,7 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             {/* Brand */}
             <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <img 
-                  src="/lovable-uploads/6335b26d-ecb0-4039-ad1c-b4fd6bed66f1.png" 
-                  alt="Balanzzo"
-                  className="w-8 h-8"
-                />
+              <div className="flex items-center">
                 <span className="text-xl font-bold text-brand-white">Balanzzo</span>
               </div>
               <p className="text-brand-white/70 text-sm leading-relaxed">
