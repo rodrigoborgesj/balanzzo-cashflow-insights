@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AppLayout } from "./components/AppLayout";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import LandingPage from "./pages/LandingPage";
 import Dashboard from "./pages/Dashboard";
 import Conciliacao from "./pages/Conciliacao";
 import FluxoCaixa from "./pages/FluxoCaixa";
@@ -54,12 +55,20 @@ const App = () => {
         <Sonner />
         <BrowserRouter>
           <Routes>
+          {/* Public landing page */}
+          <Route path="/" element={<LandingPage />} />
+          
+          {/* Auth routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+          
+          {/* Policy pages */}
           <Route path="/politica-de-privacidade" element={<PoliticaPrivacidade />} />
           <Route path="/politica-de-cancelamento" element={<PoliticaCancelamento />} />
-          <Route path="/" element={
+          
+          {/* Protected app routes */}
+          <Route path="/dashboard" element={
             <ProtectedRoute>
               <AppLayout>
                 <Dashboard />
@@ -101,7 +110,9 @@ const App = () => {
               </AppLayout>
             </ProtectedRoute>
           } />
-            <Route path="/admin/create-plans" element={<PlansAdmin />} />
+          
+          {/* Admin routes */}
+          <Route path="/admin/create-plans" element={<PlansAdmin />} />
 
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

@@ -75,6 +75,13 @@ All colors MUST be HSL.
     --transition-bounce: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
     --radius: 0.5rem;
+    
+    /* Landing page brand colors */
+    --brand-cream: 39 100% 97%;      /* #FFFAEF */
+    --brand-dark-green: 154 100% 13%; /* #01402E */  
+    --brand-light-green: 88 75% 89%;  /* #E4F8CA */
+    --brand-white: 0 0% 100%;         /* #FFFFFF */
+    --brand-black: 0 0% 0%;           /* #000000 */
 
     --sidebar-background: 0 0% 98%;
 

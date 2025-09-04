@@ -76,7 +76,12 @@ export default {
 				},
 				brand: {
 					light: 'hsl(var(--brand-light))',
-					medium: 'hsl(var(--brand-medium))'
+					medium: 'hsl(var(--brand-medium))',
+					cream: 'hsl(var(--brand-cream))',
+					'dark-green': 'hsl(var(--brand-dark-green))',
+					'light-green': 'hsl(var(--brand-light-green))',
+					white: 'hsl(var(--brand-white))',
+					black: 'hsl(var(--brand-black))'
 				},
 				chart: {
 					'1': 'hsl(var(--chart-1))',

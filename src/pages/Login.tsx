@@ -52,7 +52,7 @@ export default function Login() {
     // Redirect authenticated users with active subscription to dashboard
     if (!authLoading && isAuthenticated && hasAccess()) {
       console.log('User is authenticated with active subscription, redirecting to dashboard');
-      navigate("/", { replace: true });
+      navigate("/dashboard", { replace: true });
     }
   }, [isAuthenticated, authLoading, hasAccess, navigate, toast, loadSubscriptionData]);
 
