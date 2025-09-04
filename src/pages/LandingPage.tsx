@@ -179,7 +179,7 @@ export default function LandingPage() {
                     <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                     <span className="font-semibold">4.9/5</span>
                   </div>
-                  <span>+1.000 empresas confiam</span>
+                  <span>Empresas que confiam</span>
                 </div>
               </div>
             </div>
@@ -351,15 +351,15 @@ export default function LandingPage() {
           </div>
           
           <div className="max-w-lg mx-auto">
-            <Card className="bg-gradient-to-br from-brand-white to-brand-cream/50 border-2 border-brand-dark-green/20 shadow-xl relative overflow-hidden h-fit">
+            <Card className="bg-gradient-to-br from-brand-white to-brand-cream/50 border-2 border-brand-dark-green/20 shadow-xl relative overflow-visible h-fit">
               {/* Popular Badge */}
-              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
-                <div className="bg-gradient-to-r from-brand-dark-green to-brand-light-green text-brand-white px-6 py-2 rounded-full text-sm font-semibold shadow-lg">
+              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
+                <div className="bg-gradient-to-r from-brand-dark-green to-brand-light-green text-brand-white px-6 py-2 rounded-full text-sm font-semibold shadow-lg whitespace-nowrap">
                   Mais Popular
                 </div>
               </div>
 
-              <CardContent className="p-8 pt-16">
+              <CardContent className="p-8 pt-20">
                 <div className="text-center mb-8">
                   <div className="text-5xl md:text-6xl font-bold text-brand-dark-green mb-2">
                     R$ 78
@@ -417,7 +417,7 @@ export default function LandingPage() {
                 </div>
 
                 <div className="text-center mt-6 text-sm text-brand-dark-green/60">
-                  Mais de 1.000 empresas já transformaram suas finanças
+                  Empresas já transformaram suas finanças com nossa solução
                 </div>
               </CardContent>
             </Card>
@@ -448,8 +448,8 @@ export default function LandingPage() {
 
               <div className="grid grid-cols-2 gap-8">
                 <div className="space-y-2">
-                  <div className="text-3xl font-bold text-brand-dark-green">1000+</div>
-                  <div className="text-brand-dark-green/70">Empresas atendidas</div>
+                  <div className="text-3xl font-bold text-brand-dark-green">5+</div>
+                  <div className="text-brand-dark-green/70">Anos no mercado</div>
                 </div>
                 <div className="space-y-2">
                   <div className="text-3xl font-bold text-brand-dark-green">4.9/5</div>
@@ -540,7 +540,7 @@ export default function LandingPage() {
             </h3>
             
             <p className="text-xl text-brand-white/80 max-w-2xl mx-auto">
-              Junte-se a mais de 1.000 empresas que já simplificaram sua gestão financeira com o Balanzzo.
+              Junte-se às empresas que já simplificaram sua gestão financeira com o Balanzzo.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center max-w-md mx-auto">
