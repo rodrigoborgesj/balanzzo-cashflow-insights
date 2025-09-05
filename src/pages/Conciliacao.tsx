@@ -310,7 +310,7 @@ export default function Conciliacao() {
           </div>
           
             <div className="space-y-2 w-full sm:w-auto">
-              <label className="text-sm font-medium text-foreground">Mês de Referência</label>
+              <label className="text-sm font-medium text-foreground mb-1 block pl-1">Mês de Referência</label>
               <MonthSelector
                 value={selectedMonth}
                 onChange={(value) => {

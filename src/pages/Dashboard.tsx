@@ -496,15 +496,15 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Revenue and Expense Charts */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Revenue and Expense Charts - One below the other */}
+          <div className="space-y-4">
             {/* Revenue Chart */}
             <Card className="dashboard-card">
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg">Faturamento Mensal</CardTitle>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={180}>
+                <ResponsiveContainer width="100%" height={200}>
                   <LineChart data={monthlyBarData}>
                     <XAxis 
                       dataKey="month" 
@@ -541,7 +541,7 @@ export default function Dashboard() {
                 <CardTitle className="text-lg">Despesas Mensais</CardTitle>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={180}>
+                <ResponsiveContainer width="100%" height={200}>
                   <LineChart data={monthlyExpenseData}>
                     <XAxis 
                       dataKey="month" 
@@ -684,26 +684,6 @@ export default function Dashboard() {
         <IncomeChart data={incomeChartData} formatCurrency={formatCurrency} />
       </div>
 
-      {/* Written Summary - Always Available */}
-      <Card className="dashboard-card animate-slide-in">
-        <CardHeader className="pb-4">
-          <CardTitle className="flex items-center gap-2 text-foreground">
-            <LineChartIcon className="w-5 h-5" />
-            Relatório Analítico - {new Date(selectedMonth + '-01').toLocaleDateString('pt-BR', { 
-              month: 'long', 
-              year: 'numeric',
-              timeZone: 'America/Sao_Paulo'
-            }).replace(/^./, str => str.toUpperCase())}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="prose prose-sm max-w-none text-foreground">
-            <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed">
-              {generateWrittenSummary()}
-            </pre>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Future Cash Flow Projection Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
