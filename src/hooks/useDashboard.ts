@@ -40,6 +40,7 @@ export function useDashboard() {
   const [painelData, setPainelData] = useState<PainelMensal[]>([]);
   const [selectedMonth, setSelectedMonth] = useState<string>(new Date().toISOString().slice(0, 7));
   const [isLoading, setIsLoading] = useState(false);
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   const { user } = useAuth();
 
   // Função para converter dados do banco para o formato esperado
@@ -159,9 +160,14 @@ export function useDashboard() {
 
   // Carregar dados do painel mensal
   const loadDashboardData = useCallback(async (monthFilter?: string) => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      console.log('No user ID available, skipping data load');
+      return;
+    }
 
+    console.log('Loading dashboard data...', { userId: user.id, monthFilter, initialLoadComplete });
     setIsLoading(true);
+    
     try {
       // First try to get data from painel_mensal
       let query = supabase
@@ -172,12 +178,13 @@ export function useDashboard() {
       // Se especificado um mês, filtrar por ele, senão buscar últimos 12 meses
       if (monthFilter) {
         const [ano, mes] = monthFilter.split('-').map(Number);
-        console.log('Loading dashboard data for:', { ano, mes, monthFilter });
+        console.log('Loading dashboard data for specific month:', { ano, mes, monthFilter });
         query = query.eq('ano', ano).eq('mes', mes);
       } else {
         // Buscar últimos 12 meses
         const currentDate = new Date();
         const twelveMonthsAgo = new Date(currentDate.getFullYear(), currentDate.getMonth() - 11, 1);
+        console.log('Loading dashboard data for last 12 months from:', twelveMonthsAgo);
         query = query
           .gte('ano', twelveMonthsAgo.getFullYear())
           .order('ano', { ascending: false })
@@ -188,21 +195,29 @@ export function useDashboard() {
 
       if (error) {
         console.error('Erro ao carregar dados do dashboard:', error);
+        setInitialLoadComplete(true);
         return;
       }
+
+      console.log('Painel mensal data received:', data?.length || 0, 'records');
 
       // If painel_mensal has data, use it
       if (data && data.length > 0) {
         const convertedData = convertPainelData(data);
+        console.log('Using painel_mensal data:', convertedData.length, 'records');
         setPainelData(convertedData);
       } else {
         // Fallback: calculate from transacoes_conciliadas
         console.log('Painel mensal vazio, calculando a partir das transações...');
         const calculatedData = await calculateDashboardFromTransactions(monthFilter);
+        console.log('Calculated data from transactions:', calculatedData.length, 'records');
         setPainelData(calculatedData);
       }
+      
+      setInitialLoadComplete(true);
     } catch (error) {
       console.error('Erro ao carregar dados do dashboard:', error);
+      setInitialLoadComplete(true);
     } finally {
       setIsLoading(false);
     }
@@ -310,19 +325,21 @@ export function useDashboard() {
   // Verificar se há dados disponíveis
   const hasData = painelData.length > 0;
 
-  // Effect para carregar dados quando o componente monta ou o usuário muda
+  // Effect para carregar dados iniciais quando o usuário está disponível
   useEffect(() => {
-    if (user?.id) {
+    if (user?.id && !initialLoadComplete) {
+      console.log('Initial data load for user:', user.id);
       loadDashboardData();
     }
-  }, [user?.id]);
+  }, [user?.id, initialLoadComplete]);
 
-  // Effect para recarregar dados quando o mês selecionado muda
+  // Effect para recarregar dados quando o mês selecionado muda (somente após carga inicial)
   useEffect(() => {
-    if (user?.id && selectedMonth) {
+    if (user?.id && selectedMonth && initialLoadComplete) {
+      console.log('Loading data for selected month:', selectedMonth);
       loadDashboardData(selectedMonth);
     }
-  }, [selectedMonth, user?.id, loadDashboardData]);
+  }, [selectedMonth, user?.id, initialLoadComplete]);
 
   return {
     painelData,
