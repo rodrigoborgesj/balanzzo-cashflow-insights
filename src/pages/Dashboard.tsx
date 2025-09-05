@@ -465,70 +465,90 @@ export default function Dashboard() {
 
 
   return (
-    <div className="p-6 space-y-8 min-h-screen bg-brand-light">
+    <div className="p-4 md:p-6 space-y-6 min-h-screen bg-gradient-to-br from-background to-muted/20">
       <MonthSelector />
 
-      {/* Header Section with Greeting and Performance */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-fade-in">
-        {/* Left - Greeting and Revenue Growth */}
-        <div className="lg:col-span-2 space-y-6">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">
-              Olá, {companyName}
-            </h1>
-            <div className="flex flex-col space-y-1">
-              <span className="text-muted-foreground">
-                {kpiData.variacaoEntradas >= 0 ? "Faturamento cresceu" : "Faturamento caiu"}
-              </span>
-              <div className="flex items-baseline space-x-2">
-                <span className="text-5xl font-bold text-foreground">
-                  {Math.abs(kpiData.variacaoEntradas).toFixed(1)}%
-                </span>
-                {kpiData.variacaoEntradas >= 0 ? (
-                  <TrendingUp className="w-6 h-6 text-success" />
-                ) : (
-                  <TrendingDown className="w-6 h-6 text-destructive" />
-                )}
+      {/* Modern Header with Stats Overview */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-fade-in">
+        {/* Welcome Section */}
+        <div className="lg:col-span-8 space-y-6">
+          <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-2xl p-6 border border-primary/20">
+            <div className="flex items-start justify-between">
+              <div>
+                <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
+                  Olá, {companyName} 👋
+                </h1>
+                <p className="text-muted-foreground mb-4">
+                  Aqui está um resumo da sua performance financeira
+                </p>
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    {kpiData.variacaoEntradas >= 0 ? (
+                      <div className="flex items-center gap-2 bg-success/10 text-success px-3 py-1 rounded-full">
+                        <TrendingUp className="w-4 h-4" />
+                        <span className="text-sm font-medium">
+                          +{Math.abs(kpiData.variacaoEntradas).toFixed(1)}% vs mês anterior
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 bg-destructive/10 text-destructive px-3 py-1 rounded-full">
+                        <TrendingDown className="w-4 h-4" />
+                        <span className="text-sm font-medium">
+                          -{Math.abs(kpiData.variacaoEntradas).toFixed(1)}% vs mês anterior
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
-              <span className="text-sm text-muted-foreground">
-                em relação ao mês anterior
-              </span>
+              <div className="hidden md:block">
+                <div className="w-20 h-20 bg-primary/20 rounded-full flex items-center justify-center">
+                  <BarChart3 className="w-10 h-10 text-primary" />
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Revenue and Expense Charts - One below the other */}
-          <div className="space-y-4">
+          {/* Charts Section */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Revenue Chart */}
-            <Card className="dashboard-card">
+            <Card className="border-0 shadow-lg bg-gradient-to-br from-card to-card/80 hover:shadow-xl transition-all duration-300">
               <CardHeader className="pb-2">
-                <CardTitle className="text-lg">Faturamento Mensal</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base font-semibold flex items-center gap-2">
+                    <div className="w-2 h-2 bg-chart-1 rounded-full"></div>
+                    Faturamento Mensal
+                  </CardTitle>
+                  <TrendingUp className="w-4 h-4 text-chart-1" />
+                </div>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={200}>
+                <ResponsiveContainer width="100%" height={180}>
                   <LineChart data={monthlyBarData}>
                     <XAxis 
                       dataKey="month" 
                       axisLine={false}
                       tickLine={false}
-                      className="text-muted-foreground text-sm"
+                      className="text-muted-foreground text-xs"
+                      tick={{ fontSize: 12 }}
                     />
                     <YAxis hide />
                     <Tooltip 
                       formatter={(value: number) => [formatCurrency(value), "Faturamento"]}
                       contentStyle={{ 
                         backgroundColor: 'hsl(var(--card))',
-                        border: 'none',
+                        border: '1px solid hsl(var(--border))',
                         borderRadius: '12px',
-                        boxShadow: 'var(--shadow-medium)'
+                        boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)'
                       }}
                     />
                     <Line 
                       type="monotone"
                       dataKey="revenue" 
                       stroke="hsl(var(--chart-1))"
-                      strokeWidth={3}
-                      dot={{ fill: 'hsl(var(--chart-1))', strokeWidth: 2, r: 6 }}
-                      activeDot={{ r: 8, strokeWidth: 0, fill: 'hsl(var(--chart-1))' }}
+                      strokeWidth={2}
+                      dot={{ fill: 'hsl(var(--chart-1))', strokeWidth: 0, r: 4 }}
+                      activeDot={{ r: 6, strokeWidth: 2, stroke: 'hsl(var(--card))', fill: 'hsl(var(--chart-1))' }}
                     />
                   </LineChart>
                 </ResponsiveContainer>
@@ -536,36 +556,43 @@ export default function Dashboard() {
             </Card>
 
             {/* Expense Chart */}
-            <Card className="dashboard-card">
+            <Card className="border-0 shadow-lg bg-gradient-to-br from-card to-card/80 hover:shadow-xl transition-all duration-300">
               <CardHeader className="pb-2">
-                <CardTitle className="text-lg">Despesas Mensais</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base font-semibold flex items-center gap-2">
+                    <div className="w-2 h-2 bg-chart-2 rounded-full"></div>
+                    Despesas Mensais
+                  </CardTitle>
+                  <TrendingDown className="w-4 h-4 text-chart-2" />
+                </div>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={200}>
+                <ResponsiveContainer width="100%" height={180}>
                   <LineChart data={monthlyExpenseData}>
                     <XAxis 
                       dataKey="month" 
                       axisLine={false}
                       tickLine={false}
-                      className="text-muted-foreground text-sm"
+                      className="text-muted-foreground text-xs"
+                      tick={{ fontSize: 12 }}
                     />
                     <YAxis hide />
                     <Tooltip 
                       formatter={(value: number) => [formatCurrency(value), "Despesas"]}
                       contentStyle={{ 
                         backgroundColor: 'hsl(var(--card))',
-                        border: 'none',
+                        border: '1px solid hsl(var(--border))',
                         borderRadius: '12px',
-                        boxShadow: 'var(--shadow-medium)'
+                        boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)'
                       }}
                     />
                     <Line 
                       type="monotone"
                       dataKey="expenses" 
                       stroke="hsl(var(--chart-2))"
-                      strokeWidth={3}
-                      dot={{ fill: 'hsl(var(--chart-2))', strokeWidth: 2, r: 6 }}
-                      activeDot={{ r: 8, strokeWidth: 0, fill: 'hsl(var(--chart-2))' }}
+                      strokeWidth={2}
+                      dot={{ fill: 'hsl(var(--chart-2))', strokeWidth: 0, r: 4 }}
+                      activeDot={{ r: 6, strokeWidth: 2, stroke: 'hsl(var(--card))', fill: 'hsl(var(--chart-2))' }}
                     />
                   </LineChart>
                 </ResponsiveContainer>
@@ -574,154 +601,256 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Right - Progress Ring */}
-        <div className="flex flex-col items-center justify-center animate-scale-in">
-          <Card className="dashboard-card w-full text-center p-6">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg">Margem de Lucro</CardTitle>
+        {/* Profit Margin Section */}
+        <div className="lg:col-span-4 animate-scale-in">
+          <Card className="border-0 shadow-lg bg-gradient-to-br from-primary/5 to-primary/10 hover:shadow-xl transition-all duration-300 h-full">
+            <CardHeader className="text-center pb-4">
+              <CardTitle className="text-lg font-semibold flex items-center justify-center gap-2">
+                <Target className="w-5 h-5 text-primary" />
+                Margem de Lucro
+              </CardTitle>
             </CardHeader>
-            <CardContent>
-              <ProgressRing percentage={Math.round(profitMargin)} />
-              <div className="mt-4 space-y-2">
-                <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg text-left">
-                  <strong className="text-foreground">Como calculamos:</strong><br />
-                  A margem de lucro mostra quanto da sua receita se torna lucro após cobrir todos os custos e despesas. 
-                  É calculada dividindo o lucro pelas vendas totais, expressa em porcentagem. 
-                  Quanto maior a margem, mais eficientemente seu dinheiro está sendo usado.
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Baseado no saldo líquido atual
-                </p>
+            <CardContent className="text-center">
+              <div className="relative">
+                <ProgressRing percentage={Math.round(profitMargin)} />
+                <div className="mt-6 space-y-3">
+                  <div className="bg-muted/30 p-4 rounded-xl">
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      <span className="font-semibold text-foreground">Performance atual:</span><br />
+                      {profitMargin > 20 
+                        ? "Excelente! Sua margem está acima da média do mercado." 
+                        : profitMargin > 10 
+                        ? "Boa margem. Continue otimizando seus custos." 
+                        : "Margem baixa. Considere revisar custos e aumentar receitas."
+                      }
+                    </p>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Calculado com base no saldo líquido atual
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
         </div>
       </div>
 
-      {/* KPI Cards with Modern Styling */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="dashboard-card animate-slide-in">
+      {/* Modern KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-success/5 to-success/10 hover:shadow-xl transition-all duration-300 animate-slide-in group">
           <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="font-semibold text-sm text-foreground">
-                Total Entradas
-              </h3>
-              <DollarSign className="h-5 w-5 text-success" />
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-success/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+                <TrendingUp className="h-6 w-6 text-success" />
+              </div>
+              <div className="text-right">
+                <p className="text-xs font-medium text-success uppercase tracking-wide">
+                  Receitas
+                </p>
+                <div className="flex items-center gap-1 mt-1">
+                  {kpiData.variacaoEntradas >= 0 ? (
+                    <TrendingUp className="w-3 h-3 text-success" />
+                  ) : (
+                    <TrendingDown className="w-3 h-3 text-destructive" />
+                  )}
+                  <span className={`text-xs font-medium ${
+                    kpiData.variacaoEntradas >= 0 ? 'text-success' : 'text-destructive'
+                  }`}>
+                    {kpiData.variacaoEntradas >= 0 ? '+' : ''}{kpiData.variacaoEntradas.toFixed(1)}%
+                  </span>
+                </div>
+              </div>
             </div>
-            <p className="text-2xl font-bold text-foreground kpi-value">
-              {formatCurrency(kpiData.totalEntradas)}
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              {kpiData.variacaoEntradas >= 0 ? '+' : ''}{kpiData.variacaoEntradas.toFixed(1)}% vs mês anterior
-            </p>
+            <div>
+              <p className="text-2xl font-bold text-foreground mb-1">
+                {formatCurrency(kpiData.totalEntradas)}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Total de Entradas
+              </p>
+            </div>
           </CardContent>
         </Card>
 
-        <Card className="dashboard-card animate-slide-in" style={{ animationDelay: '0.1s' }}>
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-orange-500/5 to-orange-500/10 hover:shadow-xl transition-all duration-300 animate-slide-in group" style={{ animationDelay: '0.1s' }}>
           <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="font-semibold text-sm text-foreground">
-                Total Saídas
-              </h3>
-              <TrendingDown className="h-5 w-5 text-destructive" />
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-orange-500/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+                <TrendingDown className="h-6 w-6 text-orange-500" />
+              </div>
+              <div className="text-right">
+                <p className="text-xs font-medium text-orange-500 uppercase tracking-wide">
+                  Despesas
+                </p>
+                <div className="flex items-center gap-1 mt-1">
+                  {kpiData.variacaoSaidas >= 0 ? (
+                    <TrendingUp className="w-3 h-3 text-destructive" />
+                  ) : (
+                    <TrendingDown className="w-3 h-3 text-success" />
+                  )}
+                  <span className={`text-xs font-medium ${
+                    kpiData.variacaoSaidas >= 0 ? 'text-destructive' : 'text-success'
+                  }`}>
+                    {kpiData.variacaoSaidas >= 0 ? '+' : ''}{kpiData.variacaoSaidas.toFixed(1)}%
+                  </span>
+                </div>
+              </div>
             </div>
-            <p className="text-2xl font-bold text-foreground kpi-value">
-              {formatCurrency(kpiData.totalSaidas)}
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              {kpiData.variacaoSaidas >= 0 ? '+' : ''}{kpiData.variacaoSaidas.toFixed(1)}% vs mês anterior
-            </p>
+            <div>
+              <p className="text-2xl font-bold text-foreground mb-1">
+                {formatCurrency(kpiData.totalSaidas)}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Total de Saídas
+              </p>
+            </div>
           </CardContent>
         </Card>
 
-        <Card className="dashboard-card animate-slide-in" style={{ animationDelay: '0.2s' }}>
+        <Card className={`border-0 shadow-lg hover:shadow-xl transition-all duration-300 animate-slide-in group ${
+          kpiData.saldoLiquido >= 0 
+            ? 'bg-gradient-to-br from-primary/5 to-primary/10' 
+            : 'bg-gradient-to-br from-destructive/5 to-destructive/10'
+        }`} style={{ animationDelay: '0.2s' }}>
           <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="font-semibold text-sm text-foreground">
+            <div className="flex items-center justify-between mb-4">
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200 ${
+                kpiData.saldoLiquido >= 0 ? 'bg-primary/20' : 'bg-destructive/20'
+              }`}>
+                <Activity className={`h-6 w-6 ${
+                  kpiData.saldoLiquido >= 0 ? 'text-primary' : 'text-destructive'
+                }`} />
+              </div>
+              <div className="text-right">
+                <p className={`text-xs font-medium uppercase tracking-wide ${
+                  kpiData.saldoLiquido >= 0 ? 'text-primary' : 'text-destructive'
+                }`}>
+                  Resultado
+                </p>
+                <div className="flex items-center gap-1 mt-1">
+                  {kpiData.variacaoSaldo >= 0 ? (
+                    <TrendingUp className="w-3 h-3 text-success" />
+                  ) : (
+                    <TrendingDown className="w-3 h-3 text-destructive" />
+                  )}
+                  <span className={`text-xs font-medium ${
+                    kpiData.variacaoSaldo >= 0 ? 'text-success' : 'text-destructive'
+                  }`}>
+                    {kpiData.variacaoSaldo >= 0 ? '+' : ''}{kpiData.variacaoSaldo.toFixed(1)}%
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div>
+              <p className={`text-2xl font-bold mb-1 ${
+                kpiData.saldoLiquido >= 0 ? 'text-success' : 'text-destructive'
+              }`}>
+                {formatCurrency(kpiData.saldoLiquido)}
+              </p>
+              <p className="text-sm text-muted-foreground">
                 Saldo Líquido
-              </h3>
-              <TrendingUp className="h-5 w-5 text-success" />
+              </p>
             </div>
-            <p className={`text-2xl font-bold kpi-value ${
-              kpiData.saldoLiquido >= 0 ? 'text-success' : 'text-destructive'
-            }`}>
-              {formatCurrency(kpiData.saldoLiquido)}
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              {kpiData.variacaoSaldo >= 0 ? '+' : ''}{kpiData.variacaoSaldo.toFixed(1)}% vs mês anterior
-            </p>
           </CardContent>
         </Card>
 
-        <Card className="bg-primary text-white animate-slide-in" style={{ animationDelay: '0.3s' }}>
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-500/5 to-blue-500/10 hover:shadow-xl transition-all duration-300 animate-slide-in group" style={{ animationDelay: '0.3s' }}>
           <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="font-semibold text-sm text-white">
-                Movimentações
-              </h3>
-              <Activity className="h-5 w-5 text-white" />
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+                <Activity className="h-6 w-6 text-blue-500" />
+              </div>
+              <div className="text-right">
+                <p className="text-xs font-medium text-blue-500 uppercase tracking-wide">
+                  Atividade
+                </p>
+                <div className="flex items-center gap-1 mt-1">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                  <span className="text-xs font-medium text-blue-500">
+                    Este mês
+                  </span>
+                </div>
+              </div>
             </div>
-            <p className="text-2xl font-bold kpi-value text-white">
-              {('dados_brutos' in currentMonthData && currentMonthData.dados_brutos ? currentMonthData.dados_brutos.length : 0)}
-            </p>
-            <p className="text-xs text-white/80 mt-1">
-              Transações registradas
-            </p>
+            <div>
+              <p className="text-2xl font-bold text-foreground mb-1">
+                {('dados_brutos' in currentMonthData && currentMonthData.dados_brutos ? currentMonthData.dados_brutos.length : 0)}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Transações
+              </p>
+            </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Modern Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      {/* Enhanced Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Enhanced Expense Chart */}
-        <ExpenseChart 
-          transactions={transactionsForSelectedMonth}
-          selectedMonth={selectedMonth}
-          formatCurrency={formatCurrency}
-        />
+        <div className="animate-slide-in">
+          <ExpenseChart 
+            transactions={transactionsForSelectedMonth}
+            selectedMonth={selectedMonth}
+            formatCurrency={formatCurrency}
+          />
+        </div>
 
         {/* Enhanced Income Chart */}
-        <IncomeChart data={incomeChartData} formatCurrency={formatCurrency} />
+        <div className="animate-slide-in" style={{ animationDelay: '0.1s' }}>
+          <IncomeChart data={incomeChartData} formatCurrency={formatCurrency} />
+        </div>
       </div>
 
 
-      {/* Future Cash Flow Projection Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Annual Revenue Projection Chart */}
-        <ProjectionChart 
-          data={incomeProjectionsAnnual}
-          formatCurrency={formatCurrency}
-          title="Projeção de Entradas Futuras - Anual"
-          type="annual"
-        />
+      {/* Future Cash Flow Projections */}
+      {(hasFutureData && (incomeProjectionsAnnual.length > 0 || expenseProjectionsAnnual.length > 0)) && (
+        <div className="space-y-6">
+          <div className="flex items-center gap-3">
+            <div className="w-1 h-8 bg-gradient-to-b from-primary to-primary/50 rounded-full"></div>
+            <h2 className="text-xl font-bold text-foreground">Projeções Futuras</h2>
+          </div>
+          
+          {/* Annual Projections */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="animate-slide-in">
+              <ProjectionChart 
+                data={incomeProjectionsAnnual}
+                formatCurrency={formatCurrency}
+                title="Projeção de Entradas - Anual"
+                type="annual"
+              />
+            </div>
+            <div className="animate-slide-in" style={{ animationDelay: '0.1s' }}>
+              <ExpenseProjectionChart 
+                data={expenseProjectionsAnnual}
+                formatCurrency={formatCurrency}
+                title="Projeção de Despesas - Anual"
+                type="annual"
+              />
+            </div>
+          </div>
 
-        {/* Annual Expense Projection Chart */}
-        <ExpenseProjectionChart 
-          data={expenseProjectionsAnnual}
-          formatCurrency={formatCurrency}
-          title="Projeção de Despesas Futuras - Anual"
-          type="annual"
-        />
-      </div>
-
-      {/* Monthly Projection Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Monthly Revenue Projection Chart */}
-        <ProjectionChart 
-          data={incomeProjectionsMonthly}
-          formatCurrency={formatCurrency}
-          title="Projeção de Entradas Futuras - Mensal"
-          type="monthly"
-        />
-
-        {/* Monthly Expense Projection Chart */}
-        <ExpenseProjectionChart 
-          data={expenseProjectionsMonthly}
-          formatCurrency={formatCurrency}
-          title="Projeção de Despesas Futuras - Mensal"
-          type="monthly"
-        />
-      </div>
+          {/* Monthly Projections */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="animate-slide-in" style={{ animationDelay: '0.2s' }}>
+              <ProjectionChart 
+                data={incomeProjectionsMonthly}
+                formatCurrency={formatCurrency}
+                title="Projeção de Entradas - Mensal"
+                type="monthly"
+              />
+            </div>
+            <div className="animate-slide-in" style={{ animationDelay: '0.3s' }}>
+              <ExpenseProjectionChart 
+                data={expenseProjectionsMonthly}
+                formatCurrency={formatCurrency}
+                title="Projeção de Despesas - Mensal"
+                type="monthly"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
