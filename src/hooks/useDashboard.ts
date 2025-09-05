@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import type { Database } from '@/integrations/supabase/types';
@@ -208,8 +208,8 @@ export function useDashboard() {
     }
   }, [user?.id]);
 
-  // Calcular dados do mês atual
-  const currentMonthData = useCallback(() => {
+  // Calcular dados do mês atual - using useMemo for better performance
+  const currentMonthData = useMemo(() => {
     const [ano, mes] = selectedMonth.split('-').map(Number);
     const current = painelData.find(p => p.ano === ano && p.mes === mes);
     
@@ -223,15 +223,13 @@ export function useDashboard() {
   }, [painelData, selectedMonth]);
 
   // Get raw transactions data for the ExpenseChart component
-  const getTransactionsForSelectedMonth = useCallback(() => {
-    const current = currentMonthData();
-    return ('dados_brutos' in current && current.dados_brutos) ? current.dados_brutos : [];
+  const transactionsForSelectedMonth = useMemo(() => {
+    return ('dados_brutos' in currentMonthData && currentMonthData.dados_brutos) ? currentMonthData.dados_brutos : [];
   }, [currentMonthData]);
 
   // Preparar dados para gráfico de pizza (receitas por categoria)
-  const incomeChartData = useCallback((): ChartData[] => {
-    const current = currentMonthData();
-    const data = Object.entries(current.categoria_receitas || {})
+  const incomeChartData = useMemo((): ChartData[] => {
+    const data = Object.entries(currentMonthData.categoria_receitas || {})
       .map(([categoria, valor]) => ({
         name: categoria,
         value: Number(valor),
@@ -243,7 +241,7 @@ export function useDashboard() {
   }, [currentMonthData]);
 
   // Preparar dados para gráfico mensal (linha/coluna)
-  const monthlyChartData = useCallback((): MonthlyData[] => {
+  const monthlyChartData = useMemo((): MonthlyData[] => {
     const data = painelData
       .slice(0, 12) // Últimos 12 meses
       .reverse() // Ordem cronológica
@@ -265,10 +263,9 @@ export function useDashboard() {
   }, [painelData]);
 
   // Calcular indicadores principais (KPIs)
-  const kpiData = useCallback(() => {
-    const current = currentMonthData();
-    const totalEntradas = Number(current.total_entradas || 0);
-    const totalSaidas = Number(current.total_saidas || 0);
+  const kpiData = useMemo(() => {
+    const totalEntradas = Number(currentMonthData.total_entradas || 0);
+    const totalSaidas = Number(currentMonthData.total_saidas || 0);
     const saldoLiquido = totalEntradas - totalSaidas;
     
     // Calcular comparação com mês anterior
@@ -298,7 +295,7 @@ export function useDashboard() {
       variacaoSaldo,
       variacaoEntradas,
       variacaoSaidas,
-      insights: current.insights?.insights || []
+      insights: currentMonthData.insights?.insights || []
     };
   }, [currentMonthData, painelData, selectedMonth]);
 
@@ -318,7 +315,7 @@ export function useDashboard() {
     if (user?.id) {
       loadDashboardData();
     }
-  }, [user?.id, loadDashboardData]);
+  }, [user?.id]);
 
   // Effect para recarregar dados quando o mês selecionado muda
   useEffect(() => {
@@ -333,11 +330,11 @@ export function useDashboard() {
     setSelectedMonth,
     isLoading,
     hasData,
-    currentMonthData: currentMonthData(),
-    transactionsForSelectedMonth: getTransactionsForSelectedMonth(),
-    incomeChartData: incomeChartData(),
-    monthlyChartData: monthlyChartData(),
-    kpiData: kpiData(),
+    currentMonthData,
+    transactionsForSelectedMonth,
+    incomeChartData,
+    monthlyChartData,
+    kpiData,
     formatCurrency,
     loadDashboardData
   };
