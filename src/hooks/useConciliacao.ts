@@ -107,8 +107,16 @@ export function useConciliacao() {
   // Carregar transações do usuário com filtros de mês e empresa
   const loadTransactions = useCallback(async (monthFilter?: string) => {
     if (!user?.id) {
+      console.warn('[useConciliacao] No user ID available, skipping transaction load');
       return;
     }
+
+    const correlationId = `conciliacao-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+    console.log(`[${correlationId}] Loading transactions`, { 
+      userId: user.id, 
+      monthFilter,
+      timestamp: new Date().toISOString()
+    });
 
     setIsLoading(true);
     
@@ -126,29 +134,55 @@ export function useConciliacao() {
         // Get last day of month properly
         const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
         const endDate = `${year}-${month}-${lastDay.toString().padStart(2, '0')}`;
+        console.log(`[${correlationId}] Filtering by date range:`, { startDate, endDate });
         query = query.gte('data_transacao', startDate).lte('data_transacao', endDate);
+      } else {
+        console.log(`[${correlationId}] Loading all transactions (no month filter)`);
       }
 
       const { data, error } = await query.order('data_transacao', { ascending: false });
 
       if (error) {
-        console.error('Erro ao carregar transações:', error);
+        console.error(`[${correlationId}] Supabase query error:`, {
+          error,
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint
+        });
+        
+        const errorMessage = `${error.message}${error.code ? ` (${error.code})` : ''}`;
         toast({
           title: 'Erro ao carregar transações',
-          description: error.message,
+          description: errorMessage,
           variant: 'destructive',
         });
-        return;
+        throw new Error(errorMessage);
       }
 
+      console.log(`[${correlationId}] Successfully loaded transactions:`, {
+        count: data?.length || 0,
+        monthFilter,
+        sample: data?.slice(0, 2)
+      });
+
       setTransactions((data || []) as Transaction[]);
-    } catch (error) {
-      console.error('Erro ao carregar transações:', error);
+    } catch (error: any) {
+      console.error(`[${correlationId}] Error loading transactions:`, {
+        error,
+        message: error?.message,
+        stack: error?.stack,
+        monthFilter,
+        userId: user?.id
+      });
+      
+      const errorMessage = error?.message || 'Erro de conexão com o banco de dados';
       toast({
         title: 'Erro ao carregar transações',
-        description: 'Erro desconhecido',
+        description: errorMessage,
         variant: 'destructive',
       });
+      throw error; // Re-throw to be caught by calling component
     } finally {
       setIsLoading(false);
     }
