@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
   DollarSign, 
   TrendingUp, 
@@ -10,7 +11,9 @@ import {
   BarChart3,
   PieChart,
   Target,
-  LineChart as LineChartIcon
+  LineChart as LineChartIcon,
+  RefreshCw,
+  AlertCircle
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -38,12 +41,21 @@ import { useDashboard } from "@/hooks/useDashboard";
 import { useProfile } from "@/hooks/useProfile";
 import { useCashFlowIntegration } from "@/hooks/useCashFlowIntegration";
 import { useFutureCashFlow } from "@/hooks/useFutureCashFlow";
+import { useToast } from "@/hooks/use-toast";
 
 // Modern Chart Components
 import { ExpenseChart } from "@/components/charts/ExpenseChart";
 import { IncomeChart } from "@/components/charts/IncomeChart";
 import { ProjectionChart } from "@/components/charts/ProjectionChart";
 import { ExpenseProjectionChart } from "@/components/charts/ExpenseProjectionChart";
+
+// Loading Skeletons
+import { 
+  KPISkeleton, 
+  ChartSkeleton, 
+  MonthSelectorSkeleton, 
+  InsightsSkeleton 
+} from "@/components/ui/skeleton-loading";
 
 // Modern Progress Ring Component
 const ProgressRing = ({ percentage, size = 120, strokeWidth = 8 }: { percentage: number; size?: number; strokeWidth?: number }) => {
@@ -99,19 +111,23 @@ const ProgressRing = ({ percentage, size = 120, strokeWidth = 8 }: { percentage:
 export default function Dashboard() {
   const navigate = useNavigate();
   const { profile } = useProfile();
+  const { toast } = useToast();
   
   // Use the dedicated dashboard hook for comprehensive month-based data
   const {
     selectedMonth,
     setSelectedMonth,
     isLoading,
+    error,
     hasData,
     currentMonthData,
     transactionsForSelectedMonth,
     incomeChartData,
     monthlyChartData,
     kpiData,
-    formatCurrency
+    formatCurrency,
+    refreshData,
+    correlationId
   } = useDashboard();
 
   // Get cash flow integration data
@@ -188,12 +204,63 @@ export default function Dashboard() {
     </div>
   );
 
+  // Error handling with retry functionality
+  if (error) {
+    console.error(`[${correlationId}] Dashboard error:`, error);
+    
+    return (
+      <div className="p-6 space-y-6 min-h-screen bg-brand-light">
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-bold text-foreground">Painel de Dados</h1>
+          <MonthSelectorSkeleton />
+        </div>
+        
+        <Alert className="border-destructive bg-destructive/10">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription className="flex items-center justify-between">
+            <span>Erro ao carregar dados financeiros. Tente novamente.</span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                console.log(`[${correlationId}] Retry button clicked`);
+                toast({
+                  title: "Recarregando dados...",
+                  description: "Aguarde enquanto buscamos seus dados atualizados."
+                });
+                refreshData();
+              }}
+              className="ml-4"
+            >
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Tentar Novamente
+            </Button>
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
+  // Loading state with skeletons
   if (isLoading) {
     return (
-    <div className="p-6 space-y-6 min-h-screen bg-brand-light">
-        <MonthSelector />
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
+      <div className="p-6 space-y-6 min-h-screen bg-brand-light">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold text-foreground">Painel de Dados</h1>
+          <MonthSelectorSkeleton />
+        </div>
+        
+        <KPISkeleton />
+        
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <ChartSkeleton height={400} />
+          <ChartSkeleton height={400} />
+        </div>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <ChartSkeleton height={300} />
+          <ChartSkeleton height={300} />
+          <InsightsSkeleton />
         </div>
       </div>
     );

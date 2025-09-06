@@ -22,29 +22,56 @@ import NotFound from "./pages/NotFound";
 import PlansAdmin from "./pages/PlansAdmin"; // 👈 NOVO
 
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30_000, // 30 seconds
+      gcTime: 5 * 60_000, // 5 minutes
+      refetchOnWindowFocus: true,
+      refetchOnReconnect: true,
+      retry: (failureCount, error: any) => {
+        // Don't retry on 4xx errors
+        if (error?.status >= 400 && error?.status < 500) return false;
+        return failureCount < 2;
+      },
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    },
+  },
+});
 
 const App = () => {
-  // Prevent automatic page refresh when returning to tab
+  // Handle visibility changes for React Query
   React.useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        // Don't refresh the page automatically
-        console.log('Tab became visible - maintaining current state');
+        console.log('Tab became visible - invalidating queries for fresh data');
+        // Soft refetch all active queries when tab becomes visible
+        queryClient.invalidateQueries();
+      } else {
+        console.log('Tab hidden - pausing background refetches');
+        // Cancel ongoing queries when tab is hidden
+        queryClient.cancelQueries();
       }
     };
 
     const handleFocus = () => {
-      // Don't refresh on window focus
-      console.log('Window focused - maintaining current state');
+      console.log('Window focused - ensuring fresh data');
+      queryClient.invalidateQueries();
+    };
+
+    const handleOnline = () => {
+      console.log('Connection restored - refetching data');
+      queryClient.invalidateQueries();
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('focus', handleFocus);
+    window.addEventListener('online', handleOnline);
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('online', handleOnline);
     };
   }, []);
 

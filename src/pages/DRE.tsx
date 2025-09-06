@@ -90,10 +90,14 @@ export default function DRE() {
             <p className="text-red-600 mb-4">{error}</p>
             <Button 
               variant="outline" 
-              onClick={() => window.location.reload()}
+              onClick={() => {
+                console.log('Retrying DRE page without reload');
+                // Instead of reloading, we could trigger a refetch or navigate
+                window.history.go(0); // Soft refresh alternative
+              }}
               className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
             >
-              Recarregar página
+              Tentar novamente
             </Button>
           </CardContent>
         </Card>

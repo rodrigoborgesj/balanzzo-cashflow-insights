@@ -1,4 +1,5 @@
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback, useMemo, useRef } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import type { Database } from '@/integrations/supabase/types';
@@ -36,15 +37,30 @@ export interface MonthlyData {
   saldo: number;
 }
 
+// Query keys for React Query
+const QUERY_KEYS = {
+  dashboardData: (userId: string, monthFilter?: string) => 
+    ['dashboard', userId, monthFilter].filter(Boolean),
+  painelMensal: (userId: string, monthFilter?: string) => 
+    ['painel-mensal', userId, monthFilter].filter(Boolean),
+  transactions: (userId: string, monthFilter?: string) => 
+    ['transactions', userId, monthFilter].filter(Boolean),
+} as const;
+
 export function useDashboard() {
-  const [painelData, setPainelData] = useState<PainelMensal[]>([]);
   const [selectedMonth, setSelectedMonth] = useState<string>(new Date().toISOString().slice(0, 7));
-  const [isLoading, setIsLoading] = useState(false);
-  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const requestIdRef = useRef(0);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Generate correlation ID for logging
+  const correlationId = useMemo(() => 
+    `dash-${Date.now()}-${Math.random().toString(36).substring(7)}`, []
+  );
 
   // Função para converter dados do banco para o formato esperado
-  const convertPainelData = (rawData: PainelMensalRow[]): PainelMensal[] => {
+  const convertPainelData = useCallback((rawData: PainelMensalRow[]): PainelMensal[] => {
     return rawData.map(item => ({
       id: item.id,
       usuario_id: item.usuario_id,
@@ -59,13 +75,21 @@ export function useDashboard() {
       criado_em: item.criado_em,
       atualizado_em: item.atualizado_em
     }));
-  };
+  }, []);
 
   // Função para calcular dados do dashboard a partir das transações conciliadas
-  const calculateDashboardFromTransactions = async (monthFilter?: string): Promise<PainelMensal[]> => {
+  const calculateDashboardFromTransactions = useCallback(async (
+    monthFilter?: string,
+    signal?: AbortSignal
+  ): Promise<PainelMensal[]> => {
     if (!user?.id) return [];
 
     try {
+      console.log(`[${correlationId}] Calculating dashboard from transactions`, { 
+        userId: user.id, 
+        monthFilter 
+      });
+
       let query = supabase
         .from('transacoes_conciliadas')
         .select('*')
@@ -75,10 +99,9 @@ export function useDashboard() {
       // Filter by month if specified
       if (monthFilter) {
         const [year, month] = monthFilter.split('-').map(Number);
-        // Create date range for the specific month
         const startDate = `${year}-${month.toString().padStart(2, '0')}-01`;
         const endDate = `${year}-${month.toString().padStart(2, '0')}-31`;
-        console.log('Filtering transactions by date range:', { startDate, endDate, monthFilter });
+        console.log(`[${correlationId}] Filtering transactions by date range:`, { startDate, endDate });
         query = query.gte('data_transacao', startDate).lte('data_transacao', endDate);
       } else {
         // Get last 12 months of data
@@ -88,14 +111,27 @@ export function useDashboard() {
         query = query.gte('data_transacao', startDate);
       }
 
-      const { data: transactions, error } = await query.order('data_transacao', { ascending: true });
-
-      if (error) {
-        console.error('Erro ao buscar transações:', error);
+      // Check if request was aborted
+      if (signal?.aborted) {
+        console.log(`[${correlationId}] Request aborted during query setup`);
         return [];
       }
 
+      const { data: transactions, error } = await query.order('data_transacao', { ascending: true });
+
+      if (error) {
+        console.error(`[${correlationId}] Error fetching transactions:`, error);
+        throw error;
+      }
+
       if (!transactions || transactions.length === 0) {
+        console.log(`[${correlationId}] No transactions found`);
+        return [];
+      }
+
+      // Check if request was aborted after fetch
+      if (signal?.aborted) {
+        console.log(`[${correlationId}] Request aborted after fetch`);
         return [];
       }
 
@@ -105,7 +141,7 @@ export function useDashboard() {
       transactions.forEach(transaction => {
         const transactionDate = new Date(transaction.data_transacao);
         const year = transactionDate.getFullYear();
-        const month = transactionDate.getMonth() + 1; // JavaScript months are 0-indexed
+        const month = transactionDate.getMonth() + 1;
         const key = `${year}-${month}`;
 
         if (!monthlyData.has(key)) {
@@ -137,7 +173,7 @@ export function useDashboard() {
       });
 
       // Convert to PainelMensal format
-      return Array.from(monthlyData.values()).map((data, index) => ({
+      const result = Array.from(monthlyData.values()).map((data, index) => ({
         id: `calculated-${data.ano}-${data.mes}`,
         usuario_id: user.id,
         ano: data.ano,
@@ -152,22 +188,38 @@ export function useDashboard() {
         atualizado_em: new Date().toISOString()
       }));
 
+      console.log(`[${correlationId}] Calculated dashboard data:`, result.length, 'records');
+      return result;
+
     } catch (error) {
-      console.error('Erro ao calcular dados do dashboard:', error);
+      console.error(`[${correlationId}] Error calculating dashboard:`, error);
+      throw error;
+    }
+  }, [user?.id, correlationId]);
+
+  // Main data fetching function with race condition protection
+  const fetchDashboardData = useCallback(async (monthFilter?: string): Promise<PainelMensal[]> => {
+    if (!user?.id) {
+      console.log(`[${correlationId}] No user ID available, skipping data load`);
       return [];
     }
-  };
 
-  // Carregar dados do painel mensal
-  const loadDashboardData = useCallback(async (monthFilter?: string) => {
-    if (!user?.id) {
-      console.log('No user ID available, skipping data load');
-      return;
+    // Cancel previous request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
     }
 
-    console.log('Loading dashboard data...', { userId: user.id, monthFilter, initialLoadComplete });
-    setIsLoading(true);
-    
+    // Create new abort controller
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+    const requestId = ++requestIdRef.current;
+
+    console.log(`[${correlationId}] Fetching dashboard data`, { 
+      userId: user.id, 
+      monthFilter, 
+      requestId 
+    });
+
     try {
       // First try to get data from painel_mensal
       let query = supabase
@@ -175,55 +227,108 @@ export function useDashboard() {
         .select('*')
         .eq('usuario_id', user.id);
 
-      // Se especificado um mês, filtrar por ele, senão buscar últimos 12 meses
       if (monthFilter) {
         const [ano, mes] = monthFilter.split('-').map(Number);
-        console.log('Loading dashboard data for specific month:', { ano, mes, monthFilter });
+        console.log(`[${correlationId}] Loading painel_mensal for month:`, { ano, mes });
         query = query.eq('ano', ano).eq('mes', mes);
       } else {
-        // Buscar últimos 12 meses
+        // Get last 12 months
         const currentDate = new Date();
         const twelveMonthsAgo = new Date(currentDate.getFullYear(), currentDate.getMonth() - 11, 1);
-        console.log('Loading dashboard data for last 12 months from:', twelveMonthsAgo);
+        console.log(`[${correlationId}] Loading painel_mensal for last 12 months from:`, twelveMonthsAgo);
         query = query
           .gte('ano', twelveMonthsAgo.getFullYear())
           .order('ano', { ascending: false })
           .order('mes', { ascending: false });
       }
 
+      // Check if this request is still the latest
+      if (requestId !== requestIdRef.current || controller.signal.aborted) {
+        console.log(`[${correlationId}] Request ${requestId} cancelled - newer request in progress`);
+        return [];
+      }
+
       const { data, error } = await query;
 
       if (error) {
-        console.error('Erro ao carregar dados do dashboard:', error);
-        setInitialLoadComplete(true);
-        return;
+        console.error(`[${correlationId}] Error loading painel_mensal:`, error);
+        throw error;
       }
 
-      console.log('Painel mensal data received:', data?.length || 0, 'records');
+      // Double-check request is still valid
+      if (requestId !== requestIdRef.current || controller.signal.aborted) {
+        console.log(`[${correlationId}] Request ${requestId} cancelled after painel_mensal fetch`);
+        return [];
+      }
+
+      console.log(`[${correlationId}] Painel mensal data received:`, data?.length || 0, 'records');
 
       // If painel_mensal has data, use it
       if (data && data.length > 0) {
         const convertedData = convertPainelData(data);
-        console.log('Using painel_mensal data:', convertedData.length, 'records');
-        setPainelData(convertedData);
+        console.log(`[${correlationId}] Using painel_mensal data:`, convertedData.length, 'records');
+        return convertedData;
       } else {
         // Fallback: calculate from transacoes_conciliadas
-        console.log('Painel mensal vazio, calculando a partir das transações...');
-        const calculatedData = await calculateDashboardFromTransactions(monthFilter);
-        console.log('Calculated data from transactions:', calculatedData.length, 'records');
-        setPainelData(calculatedData);
+        console.log(`[${correlationId}] Painel mensal empty, calculating from transactions...`);
+        const calculatedData = await calculateDashboardFromTransactions(monthFilter, controller.signal);
+        
+        // Final check before returning
+        if (requestId !== requestIdRef.current || controller.signal.aborted) {
+          console.log(`[${correlationId}] Request ${requestId} cancelled after calculation`);
+          return [];
+        }
+        
+        console.log(`[${correlationId}] Calculated data from transactions:`, calculatedData.length, 'records');
+        return calculatedData;
       }
       
-      setInitialLoadComplete(true);
     } catch (error) {
-      console.error('Erro ao carregar dados do dashboard:', error);
-      setInitialLoadComplete(true);
-    } finally {
-      setIsLoading(false);
+      if (controller.signal.aborted) {
+        console.log(`[${correlationId}] Request ${requestId} aborted`);
+        return [];
+      }
+      console.error(`[${correlationId}] Error fetching dashboard data:`, error);
+      throw error;
     }
-  }, [user?.id]);
+  }, [user?.id, convertPainelData, calculateDashboardFromTransactions, correlationId]);
 
-  // Calcular dados do mês atual - using useMemo for better performance
+  // React Query hook for dashboard data
+  const {
+    data: painelData = [],
+    isLoading,
+    error,
+    refetch
+  } = useQuery({
+    queryKey: QUERY_KEYS.dashboardData(user?.id || '', selectedMonth),
+    queryFn: () => fetchDashboardData(selectedMonth),
+    enabled: !!user?.id,
+    staleTime: 30_000, // 30 seconds
+    gcTime: 5 * 60_000, // 5 minutes (renamed from cacheTime)
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
+    retry: 2,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    placeholderData: (previousData) => previousData, // Replacement for keepPreviousData
+  });
+
+  // Invalidate queries when visibility changes (soft refetch only)
+  const handleVisibilityChange = useCallback(() => {
+    if (document.visibilityState === 'visible' && user?.id) {
+      console.log(`[${correlationId}] Tab visible - soft refetch`);
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.dashboardData(user.id, selectedMonth)
+      });
+    }
+  }, [user?.id, selectedMonth, queryClient, correlationId]);
+
+  // Set up visibility change listener
+  useMemo(() => {
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [handleVisibilityChange]);
+
+  // Calcular dados do mês atual
   const currentMonthData = useMemo(() => {
     const [ano, mes] = selectedMonth.split('-').map(Number);
     const current = painelData.find(p => p.ano === ano && p.mes === mes);
@@ -322,30 +427,23 @@ export function useDashboard() {
     }).format(value);
   }, []);
 
+  // Manual refresh function with proper cache invalidation
+  const refreshData = useCallback(async () => {
+    console.log(`[${correlationId}] Manual refresh triggered`);
+    await queryClient.invalidateQueries({
+      queryKey: QUERY_KEYS.dashboardData(user?.id || '', selectedMonth)
+    });
+  }, [user?.id, selectedMonth, queryClient, correlationId]);
+
   // Verificar se há dados disponíveis
   const hasData = painelData.length > 0;
-
-  // Effect para carregar dados iniciais quando o usuário está disponível
-  useEffect(() => {
-    if (user?.id && !initialLoadComplete) {
-      console.log('Initial data load for user:', user.id);
-      loadDashboardData();
-    }
-  }, [user?.id, initialLoadComplete]);
-
-  // Effect para recarregar dados quando o mês selecionado muda (somente após carga inicial)
-  useEffect(() => {
-    if (user?.id && selectedMonth && initialLoadComplete) {
-      console.log('Loading data for selected month:', selectedMonth);
-      loadDashboardData(selectedMonth);
-    }
-  }, [selectedMonth, user?.id, initialLoadComplete]);
 
   return {
     painelData,
     selectedMonth,
     setSelectedMonth,
     isLoading,
+    error,
     hasData,
     currentMonthData,
     transactionsForSelectedMonth,
@@ -353,6 +451,7 @@ export function useDashboard() {
     monthlyChartData,
     kpiData,
     formatCurrency,
-    loadDashboardData
+    refreshData,
+    correlationId
   };
 }
