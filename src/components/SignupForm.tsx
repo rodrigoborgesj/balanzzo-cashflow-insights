@@ -120,16 +120,28 @@ export function SignupForm({ onBack }: SignupFormProps) {
 
     setIsLoading(true);
     try {
+      console.log("Attempting signup with data:", { 
+        ...data, 
+        password: "[HIDDEN]",
+        address_state: data.address_state 
+      });
+      console.log("Selected state (address_state):", data.address_state);
+      console.log("Available states:", states);
+      console.log("Is GO in states?", states.includes("GO"));
+      
       const { error } = await signUp(data.email, data.password);
       
       if (error) {
+        console.error("Signup error:", error);
         toast({
           title: "Erro no cadastro",
-          description: error.message,
+          description: `Erro detalhado: ${error.message}`,
           variant: "destructive",
         });
         return;
       }
+
+      console.log("User signup successful, storing profile data with state:", data.address_state);
 
       // Store profile data in secure storage to be used after email confirmation
       const profileData: ProfileData = {
@@ -148,6 +160,7 @@ export function SignupForm({ onBack }: SignupFormProps) {
         address_zip_code: data.address_zip_code,
       };
       
+      console.log("Storing profile data with state:", profileData.address_state);
       // Store with 24 hour expiry for temporary signup data
       secureStorage.setItem('pendingProfileData', profileData, 24 * 60 * 60 * 1000);
 
@@ -159,9 +172,15 @@ export function SignupForm({ onBack }: SignupFormProps) {
       // Redireciona para tela de login após cadastro bem-sucedido
       onBack();
     } catch (error: any) {
+      console.error("Detailed signup error:", {
+        error,
+        message: error.message,
+        stack: error.stack,
+        address_state: data.address_state
+      });
       toast({
         title: "Erro no cadastro",
-        description: error.message || "Erro inesperado",
+        description: `Erro detalhado: ${error.message || "Erro inesperado"}`,
         variant: "destructive",
       });
     } finally {

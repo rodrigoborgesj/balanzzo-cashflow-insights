@@ -115,6 +115,11 @@ export function useProfile() {
   const createProfile = async (data: ProfileData) => {
     if (!user) throw new Error('User not authenticated');
 
+    console.log('Creating profile with data:', { 
+      ...data, 
+      address_state: data.address_state 
+    });
+
     // Update profile with real data
     const { error: profileError } = await supabase
       .from('profiles')
@@ -125,7 +130,12 @@ export function useProfile() {
       })
       .eq('id', user.id);
 
-    if (profileError) throw profileError;
+    if (profileError) {
+      console.error('Profile update error:', profileError);
+      throw profileError;
+    }
+
+    console.log('Profile updated successfully, now creating company with state:', data.address_state);
 
     // Create company
     const { error: companyError } = await supabase
@@ -145,8 +155,19 @@ export function useProfile() {
         status: 'active',
       });
 
-    if (companyError) throw companyError;
+    if (companyError) {
+      console.error('Company creation error:', {
+        error: companyError,
+        data: {
+          address_state: data.address_state,
+          cnpj: data.cnpj,
+          company_name: data.company_name
+        }
+      });
+      throw companyError;
+    }
 
+    console.log('Company created successfully with state:', data.address_state);
     await loadProfile();
   };
 
