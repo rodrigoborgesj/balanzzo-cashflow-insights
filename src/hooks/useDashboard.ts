@@ -99,9 +99,14 @@ export function useDashboard() {
       // Filter by month if specified
       if (monthFilter) {
         const [year, month] = monthFilter.split('-').map(Number);
+        
+        // Calculate the actual last day of the month to avoid invalid dates like "2025-09-31"
+        const lastDayOfMonth = new Date(year, month, 0).getDate();
+        
         const startDate = `${year}-${month.toString().padStart(2, '0')}-01`;
-        const endDate = `${year}-${month.toString().padStart(2, '0')}-31`;
-        console.log(`[${correlationId}] Filtering transactions by date range:`, { startDate, endDate });
+        const endDate = `${year}-${month.toString().padStart(2, '0')}-${lastDayOfMonth.toString().padStart(2, '0')}`;
+        
+        console.log(`[${correlationId}] Filtering transactions by date range:`, { startDate, endDate, lastDayOfMonth });
         query = query.gte('data_transacao', startDate).lte('data_transacao', endDate);
       } else {
         // Get last 12 months of data

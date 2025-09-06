@@ -51,8 +51,12 @@ export function useCashFlowIntegration(selectedMonth: string) {
 
     setIsLoading(true);
     try {
+      // Calculate the actual last day of the month to avoid invalid dates like "2025-09-31"
+      const [year, month] = selectedMonth.split('-').map(Number);
+      const lastDayOfMonth = new Date(year, month, 0).getDate();
+      
       const startDate = `${selectedMonth}-01`;
-      const endDate = `${selectedMonth}-31`;
+      const endDate = `${selectedMonth}-${lastDayOfMonth.toString().padStart(2, '0')}`;
 
       // Carregar dados das transações conciliadas diretamente
       const { data: transactionsData, error: transactionsError } = await supabase
