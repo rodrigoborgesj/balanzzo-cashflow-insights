@@ -206,7 +206,19 @@ export default function Dashboard() {
 
   // Error handling with retry functionality
   if (error) {
-    console.error(`[${correlationId}] Dashboard error:`, error);
+    const errorDetails = {
+      message: (error as any)?.message || 'Erro desconhecido',
+      code: (error as any)?.code || 'N/A',
+      details: (error as any)?.details || 'Sem detalhes adicionais',
+      hint: (error as any)?.hint || 'Nenhuma dica disponível'
+    };
+    
+    console.error(`[${correlationId}] Dashboard error details:`, {
+      error,
+      errorDetails,
+      selectedMonth,
+      timestamp: new Date().toISOString()
+    });
     
     return (
       <div className="p-6 space-y-6 min-h-screen bg-brand-light">
@@ -217,20 +229,46 @@ export default function Dashboard() {
         
         <Alert className="border-destructive bg-destructive/10">
           <AlertCircle className="h-4 w-4" />
-          <AlertDescription className="flex items-center justify-between">
-            <span>Erro ao carregar dados financeiros. Tente novamente.</span>
+          <AlertDescription className="space-y-3">
+            <div>
+              <h4 className="font-semibold text-destructive mb-2">
+                Erro ao carregar dados financeiros
+              </h4>
+              <div className="space-y-2 text-sm">
+                <div className="bg-destructive/5 p-3 rounded border border-destructive/20">
+                  <p className="font-mono text-xs text-destructive">
+                    <strong>Mensagem:</strong> {errorDetails.message}
+                  </p>
+                  {errorDetails.code !== 'N/A' && (
+                    <p className="font-mono text-xs text-destructive mt-1">
+                      <strong>Código:</strong> {errorDetails.code}
+                    </p>
+                  )}
+                  {errorDetails.details !== 'Sem detalhes adicionais' && (
+                    <p className="font-mono text-xs text-destructive mt-1">
+                      <strong>Detalhes:</strong> {errorDetails.details}
+                    </p>
+                  )}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  <p><strong>Endpoint:</strong> Supabase transacoes_conciliadas & painel_mensal</p>
+                  <p><strong>Mês selecionado:</strong> {selectedMonth}</p>
+                  <p><strong>Timestamp:</strong> {new Date().toLocaleString()}</p>
+                </div>
+              </div>
+            </div>
             <Button
               variant="outline"
               size="sm"
               onClick={() => {
-                console.log(`[${correlationId}] Retry button clicked`);
+                console.log(`[${correlationId}] Retry button clicked - refetching dashboard data`);
                 toast({
                   title: "Recarregando dados...",
-                  description: "Aguarde enquanto buscamos seus dados atualizados."
+                  description: "Tentando carregar os dados novamente..."
                 });
                 refreshData();
               }}
-              className="ml-4"
+              className="w-full mt-3"
             >
               <RefreshCw className="w-4 h-4 mr-2" />
               Tentar Novamente

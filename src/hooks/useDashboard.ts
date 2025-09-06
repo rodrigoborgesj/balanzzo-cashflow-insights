@@ -120,8 +120,24 @@ export function useDashboard() {
       const { data: transactions, error } = await query.order('data_transacao', { ascending: true });
 
       if (error) {
-        console.error(`[${correlationId}] Error fetching transactions:`, error);
-        throw error;
+        console.error(`[${correlationId}] Supabase transacoes_conciliadas error:`, {
+          error,
+          code: (error as any)?.code,
+          message: error.message,
+          details: (error as any)?.details,
+          hint: (error as any)?.hint,
+          monthFilter,
+          userId: user.id
+        });
+        
+        // Create enhanced error with more context
+        const enhancedError: any = new Error(`Erro na consulta transacoes_conciliadas: ${error.message}`);
+        enhancedError.code = (error as any)?.code;
+        enhancedError.details = (error as any)?.details;
+        enhancedError.hint = (error as any)?.hint;
+        enhancedError.originalError = error;
+        
+        throw enhancedError;
       }
 
       if (!transactions || transactions.length === 0) {
@@ -251,8 +267,24 @@ export function useDashboard() {
       const { data, error } = await query;
 
       if (error) {
-        console.error(`[${correlationId}] Error loading painel_mensal:`, error);
-        throw error;
+        console.error(`[${correlationId}] Supabase painel_mensal error:`, {
+          error,
+          code: (error as any)?.code,
+          message: error.message,
+          details: (error as any)?.details,
+          hint: (error as any)?.hint,
+          monthFilter,
+          userId: user.id
+        });
+        
+        // Create enhanced error with more context
+        const enhancedError: any = new Error(`Erro na consulta painel_mensal: ${error.message}`);
+        enhancedError.code = (error as any)?.code;
+        enhancedError.details = (error as any)?.details;
+        enhancedError.hint = (error as any)?.hint;
+        enhancedError.originalError = error;
+        
+        throw enhancedError;
       }
 
       // Double-check request is still valid
@@ -283,13 +315,40 @@ export function useDashboard() {
         return calculatedData;
       }
       
-    } catch (error) {
+    } catch (error: any) {
       if (controller.signal.aborted) {
         console.log(`[${correlationId}] Request ${requestId} aborted`);
         return [];
       }
-      console.error(`[${correlationId}] Error fetching dashboard data:`, error);
-      throw error;
+      
+      // Enhanced error logging with detailed information
+      const errorInfo = {
+        message: error?.message || 'Erro desconhecido',
+        code: error?.code || null,
+        details: error?.details || null,
+        hint: error?.hint || null,
+        status: error?.status || null,
+        statusText: error?.statusText || null,
+        requestId,
+        monthFilter,
+        userId: user?.id,
+        timestamp: new Date().toISOString()
+      };
+      
+      console.error(`[${correlationId}] Detailed error fetching dashboard data:`, {
+        originalError: error,
+        errorInfo,
+        stack: error?.stack
+      });
+      
+      // Create a more informative error object
+      const enhancedError: any = new Error(error?.message || 'Falha ao carregar dados financeiros');
+      enhancedError.code = error?.code;
+      enhancedError.details = error?.details;
+      enhancedError.hint = error?.hint;
+      enhancedError.status = error?.status;
+      
+      throw enhancedError;
     }
   }, [user?.id, convertPainelData, calculateDashboardFromTransactions, correlationId]);
 
