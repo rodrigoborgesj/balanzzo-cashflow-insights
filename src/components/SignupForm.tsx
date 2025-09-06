@@ -118,24 +118,40 @@ export function SignupForm({ onBack }: SignupFormProps) {
       return;
     }
 
+    console.log("=== FORM SUBMISSION DEBUG ===");
+    console.log("Form data:", data);
+    console.log("Form errors:", form.formState.errors);
+    console.log("Form is valid:", form.formState.isValid);
+    console.log("Selected state:", data.address_state);
+    console.log("State validation (min 2 chars):", data.address_state?.length >= 2);
+    
+    // Check for form validation errors
+    const isValid = await form.trigger();
+    if (!isValid) {
+      console.error("Form validation failed:", form.formState.errors);
+      toast({
+        title: "Erro de validação",
+        description: "Por favor, preencha todos os campos obrigatórios corretamente.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
-      console.log("Attempting signup with data:", { 
+      console.log("Attempting signup with validated data:", { 
         ...data, 
         password: "[HIDDEN]",
         address_state: data.address_state 
       });
-      console.log("Selected state (address_state):", data.address_state);
-      console.log("Available states:", states);
-      console.log("Is GO in states?", states.includes("GO"));
       
       const { error } = await signUp(data.email, data.password);
       
       if (error) {
-        console.error("Signup error:", error);
+        console.error("Supabase signup error:", error);
         toast({
           title: "Erro no cadastro",
-          description: `Erro detalhado: ${error.message}`,
+          description: `Erro na criação da conta: ${error.message}`,
           variant: "destructive",
         });
         return;
@@ -447,7 +463,14 @@ export function SignupForm({ onBack }: SignupFormProps) {
 
               <div className="space-y-2">
                 <Label htmlFor="address_state">Estado *</Label>
-                <Select onValueChange={(value) => form.setValue("address_state", value)}>
+                <Select 
+                  onValueChange={(value) => {
+                    console.log("State selected:", value);
+                    form.setValue("address_state", value);
+                    form.trigger("address_state"); // Trigger validation
+                  }}
+                  value={form.watch("address_state")}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="UF" />
                   </SelectTrigger>
