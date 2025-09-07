@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AppLayout } from "./components/AppLayout";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { useEmailAutomation } from "./hooks/useEmailAutomation";
 import LandingPage from "./pages/LandingPage";
 import Dashboard from "./pages/Dashboard";
 import Conciliacao from "./pages/Conciliacao";
@@ -40,6 +41,9 @@ const queryClient = new QueryClient({
 });
 
 const App = () => {
+  // Initialize email automation
+  useEmailAutomation();
+
   // Handle visibility changes for React Query
   React.useEffect(() => {
     const handleVisibilityChange = () => {

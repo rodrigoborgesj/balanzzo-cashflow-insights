@@ -92,6 +92,39 @@ export type Database = {
         }
         Relationships: []
       }
+      email_logs: {
+        Row: {
+          created_at: string
+          email_address: string
+          email_type: string
+          error_message: string | null
+          id: string
+          sent_at: string
+          success: boolean
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email_address: string
+          email_type: string
+          error_message?: string | null
+          id?: string
+          sent_at?: string
+          success?: boolean
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email_address?: string
+          email_type?: string
+          error_message?: string | null
+          id?: string
+          sent_at?: string
+          success?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
       fluxo_caixa: {
         Row: {
           categoria: string | null
