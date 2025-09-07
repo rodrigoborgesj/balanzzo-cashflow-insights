@@ -169,6 +169,42 @@ export function EmailManagement() {
     }
   };
 
+  const sendTestEmail = async () => {
+    setIsSending(true);
+    try {
+      console.log('Sending test email to rodrigoborgesjcontato@gmail.com...');
+
+      const { data, error } = await supabase.functions.invoke('send-welcome-email', {
+        body: { 
+          email: 'rodrigoborgesjcontato@gmail.com',
+          companyName: 'Teste Balanzzo'
+        }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      console.log('Test email result:', data);
+
+      toast({
+        title: "Email de Teste Enviado",
+        description: "Email de teste enviado para rodrigoborgesjcontato@gmail.com com sucesso!",
+        variant: "default",
+      });
+
+    } catch (error: any) {
+      console.error('Error sending test email:', error);
+      toast({
+        title: "Erro no Email de Teste",
+        description: `Erro: ${error.message}`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsSending(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -203,6 +239,19 @@ export function EmailManagement() {
                 <Mail className="mr-2 h-4 w-4" />
               )}
               Enviar para Usuários Existentes
+            </Button>
+
+            <Button 
+              onClick={sendTestEmail} 
+              disabled={isSending}
+              variant="outline"
+            >
+              {isSending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Mail className="mr-2 h-4 w-4" />
+              )}
+              Teste: Enviar Email
             </Button>
 
             {stats && stats.pendingEmails > 0 && (
