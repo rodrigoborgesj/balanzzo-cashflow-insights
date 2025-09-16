@@ -371,15 +371,6 @@ export default function LandingPage() {
                   </div>
                 </div>
 
-                {/* Trial Highlight */}
-                <div className="bg-gradient-to-r from-brand-light-green to-brand-light-green/80 rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8 text-center">
-                  <div className="text-lg sm:text-xl md:text-2xl font-bold text-brand-dark-green mb-2">
-                    🚀 Experimente 10 dias grátis
-                  </div>
-                  <div className="text-brand-dark-green/80 text-sm md:text-base">
-                    Sem cartão de crédito • Cancele quando quiser
-                  </div>
-                </div>
                 
                 <div className="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
                   {[
