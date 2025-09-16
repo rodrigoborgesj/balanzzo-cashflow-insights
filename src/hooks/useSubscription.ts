@@ -31,37 +31,22 @@ export function useSubscription() {
     {
       id: 'monthly',
       name: 'Plano Mensal',
-      price_cents: 19700,
+      price_cents: 7800,
       billing_cycle: 'monthly',
       features: [
         'Acesso completo à plataforma',
         'Importação ilimitada de extratos',
         'Relatórios DRE automatizados',
         'Fluxo de caixa em tempo real',
-        'Suporte por email'
-      ],
-      active: true
-    },
-    {
-      id: 'semiannual',
-      name: 'Plano Semestral',
-      price_cents: 98500,
-      billing_cycle: 'semiannual',
-      features: [
-        'Acesso completo à plataforma por 6 meses',
-        'Importação ilimitada de extratos',
-        'Relatórios DRE automatizados',
-        'Fluxo de caixa em tempo real',
-        'Suporte prioritário',
-        'Consultoria mensal inclusa'
+        'Categorização inteligente',
+        'Conciliação bancária',
+        'Suporte especializado'
       ],
       active: true
     }
   ]);
   const [isLoading, setIsLoading] = useState(true);
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
-  const [trialStartDate, setTrialStartDate] = useState<string | null>(null);
-  const [trialUsed, setTrialUsed] = useState(false);
 
   // Load subscription data
   useEffect(() => {
@@ -78,32 +63,6 @@ export function useSubscription() {
     try {
       setIsLoading(true);
       
-      // Check URL params for payment success first
-      const urlParams = new URLSearchParams(window.location.search);
-      const paymentSuccess = urlParams.get('payment_success') === 'true';
-      
-      if (paymentSuccess) {
-        // If payment was successful, create active subscription
-        const mockSubscription: Subscription = {
-          id: '1',
-          user_id: user.id,
-          plan_id: 'monthly',
-          status: 'active',
-          current_period_start: new Date().toISOString(),
-          current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-          cancel_at_period_end: false,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        };
-        
-        setSubscription(mockSubscription);
-        setHasActiveSubscription(true);
-        
-        // Clear URL params
-        window.history.replaceState({}, document.title, window.location.pathname);
-        return;
-      }
-
       // Check real database for existing subscription
       const { data: subscriptions, error } = await supabase
         .from('subscriptions')
@@ -119,67 +78,13 @@ export function useSubscription() {
         return;
       }
 
-      let hasActiveSub = false;
-
       if (subscriptions && subscriptions.length > 0) {
         const sub = subscriptions[0];
         setSubscription(sub);
         setHasActiveSubscription(true);
-        hasActiveSub = true;
       } else {
-        // Check payments table for successful payments (semiannual plans)
-        const { data: payments, error: paymentError } = await supabase
-          .from('payments')
-          .select('*')
-          .eq('user_id', user.id)
-          .eq('status', 'paid')
-          .order('created_at', { ascending: false })
-          .limit(1);
-
-        if (paymentError) {
-          console.error('Error fetching payments:', paymentError);
-        }
-
-        if (payments && payments.length > 0) {
-          // Create mock subscription for semiannual payment
-          const mockSubscription: Subscription = {
-            id: payments[0].id,
-            user_id: user.id,
-            plan_id: 'semiannual',
-            status: 'active',
-            current_period_start: payments[0].paid_at || payments[0].created_at,
-            current_period_end: new Date(Date.now() + 6 * 30 * 24 * 60 * 60 * 1000).toISOString(),
-            cancel_at_period_end: false,
-            created_at: payments[0].created_at,
-            updated_at: payments[0].updated_at
-          };
-          
-          setSubscription(mockSubscription);
-          setHasActiveSubscription(true);
-          hasActiveSub = true;
-        } else {
-          setSubscription(null);
-          setHasActiveSubscription(false);
-        }
-      }
-
-      // Load trial data from profiles
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('trial_start_date, trial_used')
-        .eq('id', user.id)
-        .maybeSingle();
-
-      if (profileError) {
-        console.error('Error fetching profile trial data:', profileError);
-      } else if (profile) {
-        setTrialStartDate(profile.trial_start_date);
-        setTrialUsed(profile.trial_used);
-      }
-
-      // If no subscription and no trial started, start trial for new users
-      if (!hasActiveSub && profile && !profile.trial_used && !profile.trial_start_date) {
-        await startTrial();
+        setSubscription(null);
+        setHasActiveSubscription(false);
       }
     } catch (error) {
       console.error('Error in loadSubscriptionData:', error);
@@ -189,65 +94,9 @@ export function useSubscription() {
     }
   };
 
-  // Check if user is currently in trial period
-  const isInTrial = () => {
-    if (!trialStartDate || trialUsed) return false;
-    
-    const trialStart = new Date(trialStartDate);
-    const now = new Date();
-    const trialEnd = new Date(trialStart.getTime() + 10 * 24 * 60 * 60 * 1000); // 10 days
-    
-    return now < trialEnd;
-  };
-
-  // Start trial for new user
-  const startTrial = async () => {
-    if (!user) return;
-
-    try {
-      const trialStartDate = new Date().toISOString();
-      
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          trial_start_date: trialStartDate,
-          trial_used: false
-        })
-        .eq('id', user.id);
-
-      if (error) {
-        console.error('Error starting trial:', error);
-      } else {
-        setTrialStartDate(trialStartDate);
-        setTrialUsed(false);
-      }
-    } catch (error) {
-      console.error('Error in startTrial:', error);
-    }
-  };
-
-  // Get days remaining in trial
-  const getTrialDaysRemaining = () => {
-    if (!trialStartDate || trialUsed) return 0;
-    
-    const trialStart = new Date(trialStartDate);
-    const now = new Date();
-    const trialEnd = new Date(trialStart.getTime() + 10 * 24 * 60 * 60 * 1000);
-    
-    if (now >= trialEnd) return 0;
-    
-    return Math.ceil((trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-  };
-
-  // Check if user has access to the platform (including trial)
+  // Check if user has access to the platform (only active subscriptions)
   const hasAccess = () => {
-    // Check if user has active subscription
-    if (hasActiveSubscription && subscription?.status === 'active') {
-      return true;
-    }
-    
-    // Check if user is in trial period
-    return isInTrial();
+    return hasActiveSubscription && subscription?.status === 'active';
   };
 
   // Get subscription status details
@@ -292,10 +141,5 @@ export function useSubscription() {
     getCurrentPlan,
     formatPrice,
     loadSubscriptionData,
-    // Trial-related functions
-    isInTrial,
-    getTrialDaysRemaining,
-    trialStartDate,
-    trialUsed,
   };
 }

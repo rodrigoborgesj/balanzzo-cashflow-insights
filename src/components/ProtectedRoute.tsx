@@ -3,7 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { useSubscription } from "@/hooks/useSubscription";
 import { Navigate } from "react-router-dom";
-import { PaymentSelection } from "@/components/PaymentSelection";
+import { SubscriptionBlock } from "@/components/SubscriptionBlock";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -12,9 +12,9 @@ interface ProtectedRouteProps {
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const { hasProfile, isLoading: profileLoading } = useProfile();
-  const { hasAccess, isLoading: subscriptionLoading, isInTrial, getTrialDaysRemaining } = useSubscription();
+  const { hasAccess, isLoading: subscriptionLoading } = useSubscription();
 
-  console.log('ProtectedRoute - isAuthenticated:', isAuthenticated, 'hasProfile:', hasProfile, 'hasAccess:', hasAccess(), 'isInTrial:', isInTrial(), 'trialDays:', getTrialDaysRemaining(), 'authLoading:', authLoading, 'profileLoading:', profileLoading, 'subscriptionLoading:', subscriptionLoading);
+  console.log('ProtectedRoute - isAuthenticated:', isAuthenticated, 'hasProfile:', hasProfile, 'hasAccess:', hasAccess(), 'authLoading:', authLoading, 'profileLoading:', profileLoading, 'subscriptionLoading:', subscriptionLoading);
 
   // Show loading while checking auth, profile, or subscription
   if (authLoading || profileLoading || subscriptionLoading) {
@@ -31,10 +31,10 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     return <Navigate to="/login" replace />;
   }
 
-  // If authenticated but no active subscription, redirect directly to payment selection
+  // If authenticated but no active subscription, show subscription block
   if (isAuthenticated && !hasAccess()) {
-    console.log('User authenticated but no active subscription - showing payment selection');
-    return <PaymentSelection onBack={() => window.location.href = '/login'} />;
+    console.log('User authenticated but no active subscription - showing subscription block');
+    return <SubscriptionBlock onBack={() => window.location.href = '/login'} />;
   }
 
   // User is authenticated and has active subscription, show protected content

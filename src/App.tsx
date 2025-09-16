@@ -20,7 +20,6 @@ import ResetPassword from "./pages/ResetPassword";
 import PoliticaPrivacidade from "./pages/PoliticaPrivacidade";
 import PoliticaCancelamento from "./pages/PoliticaCancelamento";
 import NotFound from "./pages/NotFound";
-import PlansAdmin from "./pages/PlansAdmin"; // 👈 NOVO
 
 
 const queryClient = new QueryClient({
@@ -141,9 +140,6 @@ const App = () => {
               </AppLayout>
             </ProtectedRoute>
           } />
-          
-          {/* Admin routes */}
-          <Route path="/admin/create-plans" element={<PlansAdmin />} />
 
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
