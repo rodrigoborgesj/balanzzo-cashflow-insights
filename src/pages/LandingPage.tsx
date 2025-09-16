@@ -150,19 +150,19 @@ export default function LandingPage() {
                     onClick={handleGetStarted}
                     className="w-full bg-brand-dark-green hover:bg-brand-dark-green/90 text-brand-white px-6 py-3 h-12 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
                   >
-                    Começar grátis
+                    Começar agora
                     <ArrowRight className="ml-2 w-4 h-4" />
                   </Button>
                 </div>
                 
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-brand-dark-green/60">
                   <span className="flex items-center gap-1">
-                    <Zap className="w-4 h-4" />
-                    10 dias grátis
+                    <Shield className="w-4 h-4" />
+                    Dados seguros
                   </span>
                   <span className="flex items-center gap-1">
-                    <Shield className="w-4 h-4" />
-                    Sem cartão de crédito
+                    <Zap className="w-4 h-4" />
+                    Setup rápido
                   </span>
                 </div>
               </div>
@@ -395,7 +395,7 @@ export default function LandingPage() {
                     onClick={() => window.open('https://wa.me/5551994876689', '_blank')}
                     className="w-full bg-brand-dark-green hover:bg-brand-dark-green/90 text-brand-white py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
                   >
-                    Começar teste grátis
+                    Assinar agora
                     <ArrowRight className="ml-2 w-4 sm:w-5 h-4 sm:h-5" />
                   </Button>
                   
@@ -545,22 +545,22 @@ export default function LandingPage() {
                 onClick={handleGetStarted}
                 className="w-full bg-brand-white text-brand-dark-green hover:bg-brand-light-green px-6 sm:px-8 py-3 sm:py-4 h-12 sm:h-14 font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
               >
-                Começar grátis
+                Assinar agora
                 <ArrowRight className="ml-2 w-4 sm:w-5 h-4 sm:h-5" />
               </Button>
             </div>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 text-sm text-brand-white/70">
               <span className="flex items-center gap-1">
-                <CheckCircle className="w-4 h-4" />
-                10 dias grátis
-              </span>
-              <span className="flex items-center gap-1">
                 <Shield className="w-4 h-4" />
-                Sem cartão
+                Dados seguros
               </span>
               <span className="flex items-center gap-1">
                 <Users className="w-4 h-4" />
+                Suporte dedicado
+              </span>
+              <span className="flex items-center gap-1">
+                <CheckCircle className="w-4 h-4" />
                 Setup em 5 min
               </span>
             </div>
