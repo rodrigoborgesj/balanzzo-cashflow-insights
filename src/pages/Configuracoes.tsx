@@ -6,7 +6,7 @@ import { CategoryManager } from "@/components/CategoryManager";
 import TransactionRemover from "@/components/TransactionRemover";
 import { SecurityMonitoringDashboard } from "@/components/SecurityMonitoringDashboard";
 import { ProfilePhotoUpload } from "@/components/ProfilePhotoUpload";
-import { EmailManagement } from "@/components/EmailManagement";
+
 import { useToast } from "@/hooks/use-toast";
 import { useProfile } from "@/hooks/useProfile";
 import { 
@@ -19,7 +19,6 @@ import {
   Save,
   Trash2,
   User,
-  Mail
 } from "lucide-react";
 
 export default function Configuracoes() {
@@ -173,18 +172,6 @@ export default function Configuracoes() {
           </CardContent>
         </Card>
 
-        {/* Email Management */}
-        <Card className="bg-gradient-to-br from-card to-card/80 border-border/50 shadow-soft lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Mail className="h-5 w-5" />
-              Gestão de Emails Automáticos
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <EmailManagement />
-          </CardContent>
-        </Card>
 
         {/* Categorias */}
         <Card className="bg-gradient-to-br from-card to-card/80 border-border/50 shadow-soft lg:col-span-2">
