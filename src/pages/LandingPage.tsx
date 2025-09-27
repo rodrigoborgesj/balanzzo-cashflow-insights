@@ -347,32 +347,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* How to Use Section */}
-      <section className="py-16 sm:py-20 lg:py-24 bg-brand-cream/30">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h3 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-brand-dark-green mb-4 sm:mb-6">
-            How to use Balanzzo
-          </h3>
-          <p className="text-lg sm:text-xl text-brand-dark-green/70 max-w-2xl mx-auto mb-8">
-            Quickly connect your bank feed, categorize transactions automatically and keep your cash flow under control — no accountants required.
-          </p>
-          
-          <div className="flex justify-center">
-            <Button 
-              onClick={() => window.open('https://wa.me/5511999999999', '_blank')}
-              className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200"
-              aria-label="Open WhatsApp support"
-              title="Opens WhatsApp in a new tab"
-            >
-              Support
-            </Button>
-          </div>
-          
-          <p className="text-sm text-brand-dark-green/60 mt-4">
-            Need help? Chat with our team on WhatsApp.
-          </p>
-        </div>
-      </section>
 
       {/* Pricing Section */}
       <section id="precos" className="py-16 sm:py-20 lg:py-24 bg-brand-white">
@@ -550,63 +524,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Testimonials Section */}
-      <section className="py-16 sm:py-20 lg:py-24 bg-brand-cream/30">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12 sm:mb-16">
-            <h3 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-brand-dark-green mb-4 sm:mb-6">
-              Empresas que confiam na Balanzzo
-            </h3>
-            <p className="text-sm text-brand-dark-green/60 max-w-2xl mx-auto">
-              Esses são exemplos de empresas que já usam a Balanzzo no dia a dia.
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
-            {[
-              {
-                empresa: "Casa da Moda",
-                segmento: "Loja de roupas femininas",
-                feedback: "Com a Balanzzo organizamos nossas contas de forma simples e conseguimos ter mais clareza no caixa da loja."
-              },
-              {
-                empresa: "Ronaldo", 
-                segmento: "Consultório de psicologia",
-                feedback: "O sistema me ajudou a ter mais controle das entradas e despesas mensais sem perder tempo em planilhas."
-              },
-              {
-                empresa: "Sorribem",
-                segmento: "Clínica odontológica", 
-                feedback: "Com a plataforma, consigo acompanhar os pagamentos e organizar melhor os recebimentos dos pacientes."
-              },
-              {
-                empresa: "Hora do Almoço",
-                segmento: "Delivery de marmitas",
-                feedback: "Agora temos controle diário do financeiro e planejamos melhor nossas compras de insumos."
-              }
-            ].map((testimonial, index) => (
-              <Card key={index} className="bg-brand-white border border-brand-dark-green/10 p-6">
-                <CardContent className="p-0">
-                  <p className="text-brand-dark-green/70 mb-4 italic">
-                    "{testimonial.feedback}"
-                  </p>
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-brand-dark-green to-brand-light-green rounded-full"></div>
-                    <div>
-                      <div className="font-semibold text-brand-dark-green text-sm">
-                        {testimonial.empresa}
-                      </div>
-                      <div className="text-brand-dark-green/60 text-xs">
-                        {testimonial.segmento}
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* Final CTA Section */}
       <section className="py-16 sm:py-20 lg:py-24 bg-gradient-to-br from-brand-dark-green via-brand-dark-green to-brand-dark-green/90 relative overflow-hidden">
