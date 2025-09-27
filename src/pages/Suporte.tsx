@@ -30,7 +30,21 @@ export default function Suporte() {
               Fale conosco diretamente pelo WhatsApp para suporte imediato
             </p>
             <Button 
-              onClick={() => window.open('https://wa.me/5551994876689', '_blank')}
+              onClick={() => {
+                try {
+                  const whatsappUrl = 'https://wa.me/5551994876689';
+                  // Tentar abrir em nova aba primeiro
+                  const newWindow = window.open(whatsappUrl, '_blank');
+                  // Se foi bloqueado, usar location.href como fallback
+                  if (!newWindow) {
+                    window.location.href = whatsappUrl;
+                  }
+                } catch (error) {
+                  console.error('Erro ao abrir WhatsApp:', error);
+                  // Fallback final
+                  window.location.href = 'https://wa.me/5551994876689';
+                }
+              }}
               className="bg-brand-dark-green hover:bg-brand-dark-green/90 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 w-full"
             >
               Abrir WhatsApp
@@ -64,7 +78,7 @@ export default function Suporte() {
               Ligue para nosso suporte técnico especializado
             </p>
             <Button 
-              onClick={() => window.open('tel:+5511999999999', '_blank')}
+              onClick={() => window.open('tel:+5551994876689', '_blank')}
               className="bg-brand-dark-green hover:bg-brand-dark-green/90 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 w-full"
             >
               Ligar Agora
