@@ -100,10 +100,12 @@ export default function LandingPage() {
                 Entrar
               </Button>
               <Button 
-                onClick={handleGetStarted}
+                onClick={() => window.open('https://wa.me/5511999999999', '_blank')}
                 className="bg-brand-dark-green hover:bg-brand-dark-green/90 text-brand-white px-3 sm:px-4 md:px-6 py-2 rounded-lg transition-all duration-200 text-sm sm:text-base"
+                aria-label="Schedule a meeting on WhatsApp"
+                title="Opens WhatsApp in a new tab"
               >
-                Começar
+                Schedule a meeting
               </Button>
             </div>
           </div>
@@ -122,18 +124,17 @@ export default function LandingPage() {
             {/* Left Content */}
             <div className={`space-y-6 sm:space-y-8 order-2 lg:order-1 ${isVisible ? 'animate-fade-in' : 'opacity-0'}`}>
               <div className="space-y-4 sm:space-y-6">
+                <div className="inline-flex items-center gap-2 bg-brand-light-green/50 px-4 py-2 rounded-full text-sm font-medium text-brand-dark-green mb-4">
+                  <Zap className="w-4 h-4" />
+                  7-day free trial — no card needed
+                </div>
+                
                 <h1 className="text-3xl sm:text-4xl md:text-5xl xl:text-6xl font-bold text-brand-dark-green leading-tight">
-                  Controle financeiro 
-                  <span className="block text-brand-dark-green">
-                    como deve ser.
-                  </span>
-                  <span className="block text-transparent bg-gradient-to-r from-brand-dark-green to-brand-light-green bg-clip-text">
-                    Simples.
-                  </span>
+                  Try Balanzzo free for 7 days — no card required
                 </h1>
                 
                 <p className="text-lg sm:text-xl md:text-2xl text-brand-dark-green/70 leading-relaxed max-w-lg">
-                  Sua empresa na nova era da eficiência financeira com automação completa.
+                  Explore every feature for 7 days without entering payment details.
                 </p>
               </div>
 
@@ -141,16 +142,22 @@ export default function LandingPage() {
               <div className="space-y-4">
                 <div className="flex flex-col gap-3 max-w-md">
                   <Input 
-                    placeholder="Digite seu email corporativo"
+                    placeholder="Full name"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full h-12 sm:h-12 border-brand-dark-green/20 focus:border-brand-dark-green focus:ring-brand-dark-green/20 text-base"
                   />
+                  <Input 
+                    placeholder="Phone (optional)"
+                    className="w-full h-12 sm:h-12 border-brand-dark-green/20 focus:border-brand-dark-green focus:ring-brand-dark-green/20 text-base"
+                  />
                   <Button 
-                    onClick={handleGetStarted}
+                    onClick={() => window.open('https://wa.me/5511999999999', '_blank')}
                     className="w-full bg-brand-dark-green hover:bg-brand-dark-green/90 text-brand-white px-6 py-3 h-12 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+                    aria-label="Schedule a meeting on WhatsApp"
+                    title="Opens WhatsApp in a new tab"
                   >
-                    Começar agora
+                    Schedule a meeting
                     <ArrowRight className="ml-2 w-4 h-4" />
                   </Button>
                 </div>
@@ -158,13 +165,21 @@ export default function LandingPage() {
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-brand-dark-green/60">
                   <span className="flex items-center gap-1">
                     <Shield className="w-4 h-4" />
-                    Dados seguros
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Zap className="w-4 h-4" />
-                    Setup rápido
+                    We respect your privacy. We never share your data.
                   </span>
                 </div>
+                
+                <p className="text-sm text-brand-dark-green/60 max-w-md">
+                  Prefer a quick chat? Click 'Schedule a meeting' to start a WhatsApp conversation.
+                </p>
+                
+                <p className="text-sm text-brand-dark-green/60 max-w-md">
+                  Still prefer email? Contact us: hello@balanzzo.com.br
+                </p>
+                
+                <p className="text-xs text-brand-dark-green/40 max-w-md">
+                  No automatic charges. Cancel anytime during trial.
+                </p>
               </div>
 
               {/* Social Proof */}
@@ -175,11 +190,7 @@ export default function LandingPage() {
                   ))}
                 </div>
                 <div className="text-sm text-brand-dark-green/70">
-                  <div className="flex items-center gap-1">
-                    <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                    <span className="font-semibold">4.9/5</span>
-                  </div>
-                  <span>Empresas que confiam</span>
+                  <span className="font-semibold">Growing businesses trust us</span>
                 </div>
               </div>
             </div>
@@ -336,6 +347,33 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* How to Use Section */}
+      <section className="py-16 sm:py-20 lg:py-24 bg-brand-cream/30">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h3 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-brand-dark-green mb-4 sm:mb-6">
+            How to use Balanzzo
+          </h3>
+          <p className="text-lg sm:text-xl text-brand-dark-green/70 max-w-2xl mx-auto mb-8">
+            Quickly connect your bank feed, categorize transactions automatically and keep your cash flow under control — no accountants required.
+          </p>
+          
+          <div className="flex justify-center">
+            <Button 
+              onClick={() => window.open('https://wa.me/5511999999999', '_blank')}
+              className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200"
+              aria-label="Open WhatsApp support"
+              title="Opens WhatsApp in a new tab"
+            >
+              Support
+            </Button>
+          </div>
+          
+          <p className="text-sm text-brand-dark-green/60 mt-4">
+            Need help? Chat with our team on WhatsApp.
+          </p>
+        </div>
+      </section>
+
       {/* Pricing Section */}
       <section id="precos" className="py-16 sm:py-20 lg:py-24 bg-brand-white">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -392,20 +430,23 @@ export default function LandingPage() {
 
                 <div className="space-y-3">
                   <Button 
-                    onClick={() => window.open('https://wa.me/5551994876689', '_blank')}
+                    onClick={() => window.open('https://wa.me/5511999999999', '_blank')}
                     className="w-full bg-brand-dark-green hover:bg-brand-dark-green/90 text-brand-white py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+                    aria-label="Schedule a meeting on WhatsApp"
+                    title="Opens WhatsApp in a new tab"
                   >
-                    Assinar agora
+                    Schedule a meeting
                     <ArrowRight className="ml-2 w-4 sm:w-5 h-4 sm:h-5" />
                   </Button>
                   
                   <Button 
                     variant="outline"
-                    onClick={() => window.open('https://wa.me/5551994876689', '_blank')}
+                    onClick={() => window.open('https://wa.me/5511999999999', '_blank')}
                     className="w-full border-brand-dark-green/30 text-brand-dark-green hover:bg-brand-light-green/30 py-3 rounded-xl transition-all duration-200"
+                    aria-label="Open WhatsApp support"
+                    title="Opens WhatsApp in a new tab"
                   >
-                    <Play className="mr-2 w-4 h-4" />
-                    Agendar demonstração
+                    Support
                   </Button>
                 </div>
 
@@ -518,6 +559,64 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Testimonials Section */}
+      <section className="py-16 sm:py-20 lg:py-24 bg-brand-cream/30">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12 sm:mb-16">
+            <h3 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-brand-dark-green mb-4 sm:mb-6">
+              Trusted by growing businesses
+            </h3>
+            <p className="text-sm text-brand-dark-green/60 max-w-2xl mx-auto">
+              These are sample testimonials for layout/testing. Replace them with real customer quotes before publishing.
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+            {[
+              {
+                company: "Sample Company A",
+                role: "CEO",
+                quote: "Balanzzo helped us cut invoice processing time by 60% during our first month. (sample — replace with real feedback)"
+              },
+              {
+                company: "Sample Company B", 
+                role: "CFO",
+                quote: "Automated reconciliation saved us hours each week. (sample — replace with real feedback)"
+              },
+              {
+                company: "Sample Company C",
+                role: "Founder", 
+                quote: "Clear cashflow insights helped us plan payroll better. (sample — replace with real feedback)"
+              },
+              {
+                company: "Sample Company D",
+                role: "Operations Lead",
+                quote: "Simple, reliable and built for small teams. (sample — replace with real feedback)"
+              }
+            ].map((testimonial, index) => (
+              <Card key={index} className="bg-brand-white border border-brand-dark-green/10 p-6">
+                <CardContent className="p-0">
+                  <p className="text-brand-dark-green/70 mb-4 italic">
+                    "{testimonial.quote}"
+                  </p>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-brand-dark-green to-brand-light-green rounded-full"></div>
+                    <div>
+                      <div className="font-semibold text-brand-dark-green text-sm">
+                        {testimonial.company}
+                      </div>
+                      <div className="text-brand-dark-green/60 text-xs">
+                        {testimonial.role}
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Final CTA Section */}
       <section className="py-16 sm:py-20 lg:py-24 bg-gradient-to-br from-brand-dark-green via-brand-dark-green to-brand-dark-green/90 relative overflow-hidden">
         <div className="absolute inset-0">
@@ -538,14 +637,20 @@ export default function LandingPage() {
 
             <div className="flex flex-col gap-3 sm:gap-4 justify-center items-center max-w-md mx-auto">
               <Input 
-                placeholder="Seu email corporativo"
+                placeholder="Full name"
+                className="w-full h-12 sm:h-14 bg-brand-white/10 border-brand-white/20 text-brand-white placeholder:text-brand-white/60 focus:bg-brand-white focus:text-brand-dark-green"
+              />
+              <Input 
+                placeholder="Phone (optional)"
                 className="w-full h-12 sm:h-14 bg-brand-white/10 border-brand-white/20 text-brand-white placeholder:text-brand-white/60 focus:bg-brand-white focus:text-brand-dark-green"
               />
               <Button 
-                onClick={handleGetStarted}
+                onClick={() => window.open('https://wa.me/5511999999999', '_blank')}
                 className="w-full bg-brand-white text-brand-dark-green hover:bg-brand-light-green px-6 sm:px-8 py-3 sm:py-4 h-12 sm:h-14 font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
+                aria-label="Schedule a meeting on WhatsApp"
+                title="Opens WhatsApp in a new tab"
               >
-                Assinar agora
+                Schedule a meeting
                 <ArrowRight className="ml-2 w-4 sm:w-5 h-4 sm:h-5" />
               </Button>
             </div>
@@ -553,15 +658,7 @@ export default function LandingPage() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 text-sm text-brand-white/70">
               <span className="flex items-center gap-1">
                 <Shield className="w-4 h-4" />
-                Dados seguros
-              </span>
-              <span className="flex items-center gap-1">
-                <Users className="w-4 h-4" />
-                Suporte dedicado
-              </span>
-              <span className="flex items-center gap-1">
-                <CheckCircle className="w-4 h-4" />
-                Setup em 5 min
+                We respect your privacy. We never share your data.
               </span>
             </div>
           </div>
