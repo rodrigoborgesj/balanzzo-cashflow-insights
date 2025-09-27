@@ -14,6 +14,7 @@ import FluxoCaixa from "./pages/FluxoCaixa";
 import DRE from "./pages/DRE";
 import Configuracoes from "./pages/Configuracoes";
 import ComoUsar from "./pages/ComoUsar";
+import Suporte from "./pages/Suporte";
 import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
@@ -137,6 +138,13 @@ const App = () => {
             <ProtectedRoute>
               <AppLayout>
                 <ComoUsar />
+              </AppLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/suporte" element={
+            <ProtectedRoute>
+              <AppLayout>
+                <Suporte />
               </AppLayout>
             </ProtectedRoute>
           } />

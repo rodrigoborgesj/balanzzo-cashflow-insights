@@ -347,19 +347,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Support Section */}
-      <section className="py-12 bg-brand-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <Button 
-            onClick={() => window.open('https://wa.me/5511999999999', '_blank')}
-            className="bg-brand-dark-green hover:bg-brand-dark-green/90 text-white px-8 py-3 rounded-lg font-semibold transition-all duration-200 text-lg"
-            aria-label="Falar com suporte no WhatsApp"
-            title="Abrir WhatsApp para suporte"
-          >
-            Falar com suporte
-          </Button>
-        </div>
-      </section>
 
       {/* Pricing Section */}
       <section id="precos" className="py-16 sm:py-20 lg:py-24 bg-brand-white">

@@ -7,6 +7,7 @@ import {
   Calculator,
   LogOut,
   HelpCircle,
+  MessageCircle,
   User
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
@@ -33,6 +34,7 @@ const mainItems = [
   { title: "DRE", url: "/dre", icon: Calculator },
   { title: "Conciliação Bancária", url: "/conciliacao", icon: CheckSquare },
   { title: "Como Usar", url: "/como-usar", icon: HelpCircle },
+  { title: "Suporte", url: "/suporte", icon: MessageCircle },
 ];
 
 export function AppSidebar() {
