@@ -47,7 +47,7 @@ export default function Suporte() {
               Envie sua dúvida por e-mail e retornamos em até 24 horas
             </p>
             <Button 
-              onClick={() => window.open('mailto:suporte@balanzzo.com', '_blank')}
+              onClick={() => window.open('mailto:contatobalanzzo@gmail.com', '_blank')}
               className="bg-brand-dark-green hover:bg-brand-dark-green/90 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 w-full"
             >
               Enviar E-mail
