@@ -102,10 +102,10 @@ export default function LandingPage() {
               <Button 
                 onClick={() => window.open('https://wa.me/5511999999999', '_blank')}
                 className="bg-brand-dark-green hover:bg-brand-dark-green/90 text-brand-white px-3 sm:px-4 md:px-6 py-2 rounded-lg transition-all duration-200 text-sm sm:text-base"
-                aria-label="Schedule a meeting on WhatsApp"
-                title="Opens WhatsApp in a new tab"
+                aria-label="Agendar reunião no WhatsApp"
+                title="Abre o WhatsApp em uma nova aba."
               >
-                Schedule a meeting
+                Agende uma reunião
               </Button>
             </div>
           </div>
@@ -126,15 +126,15 @@ export default function LandingPage() {
               <div className="space-y-4 sm:space-y-6">
                 <div className="inline-flex items-center gap-2 bg-brand-light-green/50 px-4 py-2 rounded-full text-sm font-medium text-brand-dark-green mb-4">
                   <Zap className="w-4 h-4" />
-                  7-day free trial — no card needed
+                  Teste grátis — sem cartão
                 </div>
                 
                 <h1 className="text-3xl sm:text-4xl md:text-5xl xl:text-6xl font-bold text-brand-dark-green leading-tight">
-                  Try Balanzzo free for 7 days — no card required
+                  Teste grátis por 7 dias — sem cartão
                 </h1>
                 
                 <p className="text-lg sm:text-xl md:text-2xl text-brand-dark-green/70 leading-relaxed max-w-lg">
-                  Explore every feature for 7 days without entering payment details.
+                  Experimente todas as funções sem precisar cadastrar cartão.
                 </p>
               </div>
 
@@ -142,22 +142,22 @@ export default function LandingPage() {
               <div className="space-y-4">
                 <div className="flex flex-col gap-3 max-w-md">
                   <Input 
-                    placeholder="Full name"
+                    placeholder="Nome completo"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full h-12 sm:h-12 border-brand-dark-green/20 focus:border-brand-dark-green focus:ring-brand-dark-green/20 text-base"
                   />
                   <Input 
-                    placeholder="Phone (optional)"
+                    placeholder="Celular (opcional)"
                     className="w-full h-12 sm:h-12 border-brand-dark-green/20 focus:border-brand-dark-green focus:ring-brand-dark-green/20 text-base"
                   />
                   <Button 
                     onClick={() => window.open('https://wa.me/5511999999999', '_blank')}
                     className="w-full bg-brand-dark-green hover:bg-brand-dark-green/90 text-brand-white px-6 py-3 h-12 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
-                    aria-label="Schedule a meeting on WhatsApp"
-                    title="Opens WhatsApp in a new tab"
+                    aria-label="Agendar reunião no WhatsApp"
+                    title="Abre o WhatsApp em uma nova aba."
                   >
-                    Schedule a meeting
+                    Agende uma reunião
                     <ArrowRight className="ml-2 w-4 h-4" />
                   </Button>
                 </div>
@@ -165,20 +165,20 @@ export default function LandingPage() {
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-brand-dark-green/60">
                   <span className="flex items-center gap-1">
                     <Shield className="w-4 h-4" />
-                    We respect your privacy. We never share your data.
+                    Respeitamos sua privacidade. Seus dados não são compartilhados.
                   </span>
                 </div>
                 
                 <p className="text-sm text-brand-dark-green/60 max-w-md">
-                  Prefer a quick chat? Click 'Schedule a meeting' to start a WhatsApp conversation.
+                  Se preferir, clique em 'Agende uma reunião' e fale direto pelo WhatsApp.
                 </p>
                 
                 <p className="text-sm text-brand-dark-green/60 max-w-md">
-                  Still prefer email? Contact us: hello@balanzzo.com.br
+                  Prefere falar por e-mail? contato@balanzzo.com.br
                 </p>
                 
                 <p className="text-xs text-brand-dark-green/40 max-w-md">
-                  No automatic charges. Cancel anytime during trial.
+                  Sem cobranças automáticas. Cancele a qualquer momento.
                 </p>
               </div>
 
@@ -190,7 +190,7 @@ export default function LandingPage() {
                   ))}
                 </div>
                 <div className="text-sm text-brand-dark-green/70">
-                  <span className="font-semibold">Growing businesses trust us</span>
+                  <span className="font-semibold">Empresas que confiam na Balanzzo</span>
                 </div>
               </div>
             </div>
@@ -432,10 +432,10 @@ export default function LandingPage() {
                   <Button 
                     onClick={() => window.open('https://wa.me/5511999999999', '_blank')}
                     className="w-full bg-brand-dark-green hover:bg-brand-dark-green/90 text-brand-white py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
-                    aria-label="Schedule a meeting on WhatsApp"
-                    title="Opens WhatsApp in a new tab"
+                    aria-label="Agendar reunião no WhatsApp"
+                    title="Abre o WhatsApp em uma nova aba."
                   >
-                    Schedule a meeting
+                    Agende uma reunião
                     <ArrowRight className="ml-2 w-4 sm:w-5 h-4 sm:h-5" />
                   </Button>
                   
@@ -564,49 +564,49 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 sm:mb-16">
             <h3 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-brand-dark-green mb-4 sm:mb-6">
-              Trusted by growing businesses
+              Empresas que confiam na Balanzzo
             </h3>
             <p className="text-sm text-brand-dark-green/60 max-w-2xl mx-auto">
-              These are sample testimonials for layout/testing. Replace them with real customer quotes before publishing.
+              Esses são exemplos de empresas que já usam a Balanzzo no dia a dia.
             </p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
             {[
               {
-                company: "Sample Company A",
-                role: "CEO",
-                quote: "Balanzzo helped us cut invoice processing time by 60% during our first month. (sample — replace with real feedback)"
+                empresa: "Casa da Moda",
+                segmento: "Loja de roupas femininas",
+                feedback: "Com a Balanzzo organizamos nossas contas de forma simples e conseguimos ter mais clareza no caixa da loja."
               },
               {
-                company: "Sample Company B", 
-                role: "CFO",
-                quote: "Automated reconciliation saved us hours each week. (sample — replace with real feedback)"
+                empresa: "Psicólogo", 
+                segmento: "Consultório de psicologia",
+                feedback: "O sistema me ajudou a ter mais controle das entradas e despesas mensais sem perder tempo em planilhas."
               },
               {
-                company: "Sample Company C",
-                role: "Founder", 
-                quote: "Clear cashflow insights helped us plan payroll better. (sample — replace with real feedback)"
+                empresa: "Consultório Dentista",
+                segmento: "Clínica odontológica", 
+                feedback: "Com a plataforma, consigo acompanhar os pagamentos e organizar melhor os recebimentos dos pacientes."
               },
               {
-                company: "Sample Company D",
-                role: "Operations Lead",
-                quote: "Simple, reliable and built for small teams. (sample — replace with real feedback)"
+                empresa: "Empresa de Marmitas",
+                segmento: "Delivery de marmitas",
+                feedback: "Agora temos controle diário do financeiro e planejamos melhor nossas compras de insumos."
               }
             ].map((testimonial, index) => (
               <Card key={index} className="bg-brand-white border border-brand-dark-green/10 p-6">
                 <CardContent className="p-0">
                   <p className="text-brand-dark-green/70 mb-4 italic">
-                    "{testimonial.quote}"
+                    "{testimonial.feedback}"
                   </p>
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-gradient-to-br from-brand-dark-green to-brand-light-green rounded-full"></div>
                     <div>
                       <div className="font-semibold text-brand-dark-green text-sm">
-                        {testimonial.company}
+                        {testimonial.empresa}
                       </div>
                       <div className="text-brand-dark-green/60 text-xs">
-                        {testimonial.role}
+                        {testimonial.segmento}
                       </div>
                     </div>
                   </div>

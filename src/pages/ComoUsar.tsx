@@ -166,10 +166,15 @@ export default function ComoUsar() {
             <div className="p-4 bg-brand-light/30 rounded-lg">
               <h3 className="font-medium mb-2" style={{ fontFamily: 'Montserrat, sans-serif' }}>Suporte</h3>
               <p className="text-sm text-muted-foreground mb-3">
-                Entre em contato com nossa equipe de suporte
+                Fale diretamente com nossa equipe pelo WhatsApp.
               </p>
-              <button className="text-primary hover:underline text-sm font-medium">
-                Contatar Suporte →
+              <button 
+                onClick={() => window.open('https://wa.me/5511999999999', '_blank')}
+                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+                aria-label="Abrir suporte no WhatsApp"
+                title="Abre o WhatsApp em uma nova aba."
+              >
+                Suporte
               </button>
             </div>
           </div>
