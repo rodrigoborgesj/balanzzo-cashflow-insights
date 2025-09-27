@@ -100,7 +100,7 @@ export default function LandingPage() {
                 Entrar
               </Button>
               <Button 
-                onClick={() => window.open('https://wa.me/5511999999999', '_blank')}
+              onClick={() => window.open('https://wa.me/5551994876689', '_blank')}
                 className="bg-brand-dark-green hover:bg-brand-dark-green/90 text-brand-white px-3 sm:px-4 md:px-6 py-2 rounded-lg transition-all duration-200 text-sm sm:text-base"
                 aria-label="Agendar reunião no WhatsApp"
                 title="Abre o WhatsApp em uma nova aba."
@@ -153,7 +153,7 @@ export default function LandingPage() {
                     className="w-full h-12 sm:h-12 border-brand-dark-green/20 focus:border-brand-dark-green focus:ring-brand-dark-green/20 text-base"
                   />
                   <Button 
-                    onClick={() => window.open('https://wa.me/5511999999999', '_blank')}
+                    onClick={() => window.open('https://wa.me/5551994876689', '_blank')}
                     className="w-full bg-brand-dark-green hover:bg-brand-dark-green/90 text-brand-white px-6 py-3 h-12 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
                     aria-label="Agendar reunião no WhatsApp"
                     title="Abre o WhatsApp em uma nova aba."
@@ -404,7 +404,7 @@ export default function LandingPage() {
 
                 <div className="space-y-3">
                   <Button 
-                    onClick={() => window.open('https://wa.me/5511999999999', '_blank')}
+                    onClick={() => window.open('https://wa.me/5551994876689', '_blank')}
                     className="w-full bg-brand-dark-green hover:bg-brand-dark-green/90 text-brand-white py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
                     aria-label="Agendar reunião no WhatsApp"
                     title="Abre o WhatsApp em uma nova aba."
@@ -553,7 +553,7 @@ export default function LandingPage() {
                 className="w-full h-12 sm:h-14 bg-brand-white/10 border-brand-white/20 text-brand-white placeholder:text-brand-white/60 focus:bg-brand-white focus:text-brand-dark-green"
               />
               <Button 
-                onClick={() => window.open('https://wa.me/5511999999999', '_blank')}
+                onClick={() => window.open('https://wa.me/5551994876689', '_blank')}
                 className="w-full bg-brand-white text-brand-dark-green hover:bg-brand-light-green px-6 sm:px-8 py-3 sm:py-4 h-12 sm:h-14 font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
                 aria-label="Schedule a meeting on WhatsApp"
                 title="Opens WhatsApp in a new tab"

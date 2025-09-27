@@ -30,7 +30,7 @@ export default function Suporte() {
               Fale conosco diretamente pelo WhatsApp para suporte imediato
             </p>
             <Button 
-              onClick={() => window.open('https://wa.me/5511999999999', '_blank')}
+              onClick={() => window.open('https://wa.me/5551994876689', '_blank')}
               className="bg-brand-dark-green hover:bg-brand-dark-green/90 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 w-full"
             >
               Abrir WhatsApp

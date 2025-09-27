@@ -11,7 +11,7 @@ export function SubscriptionBlock({ onBack }: SubscriptionBlockProps) {
     const message = encodeURIComponent(
       'Olá! Gostaria de assinar o Balanzzo e receber o link de pagamento.'
     );
-    const whatsappUrl = `https://wa.me/5511999999999?text=${message}`;
+    const whatsappUrl = `https://wa.me/5551994876689?text=${message}`;
     window.open(whatsappUrl, '_blank');
   };
 

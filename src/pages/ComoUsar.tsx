@@ -169,7 +169,7 @@ export default function ComoUsar() {
                 Fale diretamente com nossa equipe pelo WhatsApp.
               </p>
               <button 
-                onClick={() => window.open('https://wa.me/5511999999999', '_blank')}
+                onClick={() => window.open('https://wa.me/5551994876689', '_blank')}
                 className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
                 aria-label="Abrir suporte no WhatsApp"
                 title="Abre o WhatsApp em uma nova aba."
