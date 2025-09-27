@@ -130,11 +130,12 @@ export default function LandingPage() {
                 </div>
                 
                 <h1 className="text-3xl sm:text-4xl md:text-5xl xl:text-6xl font-bold text-brand-dark-green leading-tight">
-                  Teste grátis por 7 dias — sem cartão
+                  Tudo que sua empresa precisa 
+                  <span className="block">para crescer financeiramente</span>
                 </h1>
                 
                 <p className="text-lg sm:text-xl md:text-2xl text-brand-dark-green/70 leading-relaxed max-w-lg">
-                  Experimente todas as funções sem precisar cadastrar cartão.
+                  Ferramentas que automatizam processos e fornecem insights valiosos para decisões estratégicas.
                 </p>
               </div>
 
@@ -298,11 +299,10 @@ export default function LandingPage() {
               Recursos completos
             </div>
             <h3 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-brand-dark-green mb-4 sm:mb-6 leading-tight px-4">
-              Tudo que sua empresa precisa 
-              <span className="block">para crescer financeiramente</span>
+              Teste grátis por 7 dias — sem cartão
             </h3>
             <p className="text-lg sm:text-xl text-brand-dark-green/70 max-w-3xl mx-auto leading-relaxed px-4">
-              Ferramentas inteligentes que automatizam processos e fornecem insights valiosos para decisões estratégicas.
+              Experimente todas as funções sem precisar cadastrar cartão.
             </p>
           </div>
 
@@ -439,15 +439,6 @@ export default function LandingPage() {
                     <ArrowRight className="ml-2 w-4 sm:w-5 h-4 sm:h-5" />
                   </Button>
                   
-                  <Button 
-                    variant="outline"
-                    onClick={() => window.open('https://wa.me/5511999999999', '_blank')}
-                    className="w-full border-brand-dark-green/30 text-brand-dark-green hover:bg-brand-light-green/30 py-3 rounded-xl transition-all duration-200"
-                    aria-label="Open WhatsApp support"
-                    title="Opens WhatsApp in a new tab"
-                  >
-                    Support
-                  </Button>
                 </div>
 
                 <div className="text-center mt-4 sm:mt-6 text-xs sm:text-sm text-brand-dark-green/60">
@@ -579,17 +570,17 @@ export default function LandingPage() {
                 feedback: "Com a Balanzzo organizamos nossas contas de forma simples e conseguimos ter mais clareza no caixa da loja."
               },
               {
-                empresa: "Psicólogo", 
+                empresa: "Ronaldo", 
                 segmento: "Consultório de psicologia",
                 feedback: "O sistema me ajudou a ter mais controle das entradas e despesas mensais sem perder tempo em planilhas."
               },
               {
-                empresa: "Consultório Dentista",
+                empresa: "Sorribem",
                 segmento: "Clínica odontológica", 
                 feedback: "Com a plataforma, consigo acompanhar os pagamentos e organizar melhor os recebimentos dos pacientes."
               },
               {
-                empresa: "Empresa de Marmitas",
+                empresa: "Hora do Almoço",
                 segmento: "Delivery de marmitas",
                 feedback: "Agora temos controle diário do financeiro e planejamos melhor nossas compras de insumos."
               }
