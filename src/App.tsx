@@ -11,6 +11,7 @@ import LandingPage from "./pages/LandingPage";
 import Dashboard from "./pages/Dashboard";
 import Conciliacao from "./pages/Conciliacao";
 import FluxoCaixa from "./pages/FluxoCaixa";
+import FluxoCaixaProjetado from "./pages/FluxoCaixaProjetado";
 import DRE from "./pages/DRE";
 import Configuracoes from "./pages/Configuracoes";
 import ComoUsar from "./pages/ComoUsar";
@@ -117,6 +118,13 @@ const App = () => {
             <ProtectedRoute>
               <AppLayout>
                 <FluxoCaixa />
+              </AppLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/fluxo-caixa-projetado" element={
+            <ProtectedRoute>
+              <AppLayout>
+                <FluxoCaixaProjetado />
               </AppLayout>
             </ProtectedRoute>
           } />
