@@ -1,27 +1,25 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
-  TrendingUp, 
-  TrendingDown, 
-  Calendar, 
+  ChevronRight,
+  ChevronDown,
   Edit,
-  ArrowUpCircle,
-  ArrowDownCircle,
-  DollarSign
+  Calendar as CalendarIcon
 } from "lucide-react";
 import { MonthSelector } from "@/components/MonthSelector";
 import { useConciliacao, Transaction } from "@/hooks/useConciliacao";
 import { useFutureCashFlow } from "@/hooks/useFutureCashFlow";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { format, parse } from "date-fns";
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, eachWeekOfInterval, startOfWeek, endOfWeek, parseISO } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface EditTransactionDialogProps {
   transaction: Transaction;
@@ -72,8 +70,8 @@ function EditTransactionDialog({ transaction, onSave }: EditTransactionDialogPro
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="sm">
-          <Edit className="h-4 w-4" />
+        <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+          <Edit className="h-3 w-3" />
         </Button>
       </DialogTrigger>
       <DialogContent>
@@ -127,41 +125,166 @@ function EditTransactionDialog({ transaction, onSave }: EditTransactionDialogPro
   );
 }
 
+type PeriodType = 'daily' | 'weekly' | 'monthly';
+
+interface CategoryData {
+  name: string;
+  realized: { [period: string]: number };
+  projected: { [period: string]: number };
+  transactions: { [period: string]: Transaction[] };
+}
+
 export default function FluxoCaixaProjetado() {
   const [selectedMonth, setSelectedMonth] = useState<string>(new Date().toISOString().slice(0, 7));
+  const [periodType, setPeriodType] = useState<PeriodType>('monthly');
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   const { transactions, loadTransactions } = useConciliacao();
-  const { futureTransactions, getIncomeProjections, getExpenseProjections } = useFutureCashFlow();
+  const { futureTransactions } = useFutureCashFlow();
 
   useEffect(() => {
     loadTransactions(selectedMonth);
   }, [selectedMonth, loadTransactions]);
 
-  // Calculate realized values
-  const realizedTransactions = transactions.filter(t => 
-    t.status_conciliacao === true && 
-    (t.categoria_final || t.categoria_sugerida)
-  );
+  const periods = useMemo(() => {
+    const monthDate = parseISO(selectedMonth + '-01');
+    const start = startOfMonth(monthDate);
+    const end = endOfMonth(monthDate);
 
-  const realizedRevenues = realizedTransactions
-    .filter(t => t.valor > 0)
-    .reduce((sum, t) => sum + t.valor, 0);
-  
-  const realizedExpenses = Math.abs(realizedTransactions
-    .filter(t => t.valor < 0)
-    .reduce((sum, t) => sum + t.valor, 0));
-  
-  const realizedResult = realizedRevenues - realizedExpenses;
+    if (periodType === 'daily') {
+      return eachDayOfInterval({ start, end }).map(date => ({
+        key: format(date, 'yyyy-MM-dd'),
+        label: format(date, 'dd/MM', { locale: ptBR }),
+        start: undefined,
+        end: undefined
+      }));
+    } else if (periodType === 'weekly') {
+      return eachWeekOfInterval({ start, end }, { weekStartsOn: 0 }).map((date, idx) => ({
+        key: `week-${idx}`,
+        label: `Sem ${idx + 1}`,
+        start: startOfWeek(date, { weekStartsOn: 0 }),
+        end: endOfWeek(date, { weekStartsOn: 0 })
+      }));
+    } else {
+      return [{ 
+        key: selectedMonth, 
+        label: format(monthDate, 'MMM/yy', { locale: ptBR }),
+        start: undefined,
+        end: undefined
+      }];
+    }
+  }, [selectedMonth, periodType]);
 
-  // Calculate projected values
-  const projectedRevenues = futureTransactions
-    .filter(t => t.tipo === 'entrada')
-    .reduce((sum, t) => sum + t.valor, 0);
+  const categoriesData = useMemo(() => {
+    const categories = new Map<string, CategoryData>();
+    
+    // Process realized transactions
+    const realizedTransactions = transactions.filter(t => 
+      t.status_conciliacao === true && 
+      (t.categoria_final || t.categoria_sugerida)
+    );
 
-  const projectedExpenses = futureTransactions
-    .filter(t => t.tipo === 'saida')
-    .reduce((sum, t) => sum + t.valor, 0);
+    realizedTransactions.forEach(transaction => {
+      const category = transaction.categoria_final || transaction.categoria_sugerida || 'Outros';
+      
+      if (!categories.has(category)) {
+        categories.set(category, {
+          name: category,
+          realized: {},
+          projected: {},
+          transactions: {}
+        });
+      }
 
-  const finalResult = realizedResult + projectedRevenues - projectedExpenses;
+      const catData = categories.get(category)!;
+      const transDate = transaction.data_transacao;
+      let periodKey: string;
+
+      if (periodType === 'daily') {
+        periodKey = transDate;
+      } else if (periodType === 'weekly') {
+        const date = parseISO(transDate);
+        const weekIdx = periods.findIndex(p => {
+          if (!p.start || !p.end) return false;
+          return date >= p.start && date <= p.end;
+        });
+        periodKey = weekIdx >= 0 ? periods[weekIdx].key : '';
+      } else {
+        periodKey = selectedMonth;
+      }
+
+      if (periodKey) {
+        catData.realized[periodKey] = (catData.realized[periodKey] || 0) + transaction.valor;
+        if (!catData.transactions[periodKey]) {
+          catData.transactions[periodKey] = [];
+        }
+        catData.transactions[periodKey].push(transaction);
+      }
+    });
+
+    // Process projected transactions
+    futureTransactions.forEach(transaction => {
+      const category = transaction.categoria || 'Outros';
+      
+      if (!categories.has(category)) {
+        categories.set(category, {
+          name: category,
+          realized: {},
+          projected: {},
+          transactions: {}
+        });
+      }
+
+      const catData = categories.get(category)!;
+      const transDate = transaction.data_competencia;
+      let periodKey: string;
+
+      if (periodType === 'daily') {
+        periodKey = transDate;
+      } else if (periodType === 'weekly') {
+        const date = parseISO(transDate);
+        const weekIdx = periods.findIndex(p => {
+          if (!p.start || !p.end) return false;
+          return date >= p.start && date <= p.end;
+        });
+        periodKey = weekIdx >= 0 ? periods[weekIdx].key : '';
+      } else {
+        periodKey = selectedMonth;
+      }
+
+      if (periodKey) {
+        const value = transaction.tipo === 'entrada' ? transaction.valor : -transaction.valor;
+        catData.projected[periodKey] = (catData.projected[periodKey] || 0) + value;
+      }
+    });
+
+    return Array.from(categories.values()).sort((a, b) => a.name.localeCompare(b.name));
+  }, [transactions, futureTransactions, periods, periodType, selectedMonth]);
+
+  const totals = useMemo(() => {
+    const result: {
+      realized: { [period: string]: number };
+      projected: { [period: string]: number };
+      realizedTotal: number;
+      projectedTotal: number;
+    } = {
+      realized: {},
+      projected: {},
+      realizedTotal: 0,
+      projectedTotal: 0
+    };
+
+    categoriesData.forEach(cat => {
+      periods.forEach(period => {
+        result.realized[period.key] = (result.realized[period.key] || 0) + (cat.realized[period.key] || 0);
+        result.projected[period.key] = (result.projected[period.key] || 0) + (cat.projected[period.key] || 0);
+      });
+    });
+
+    result.realizedTotal = Object.values(result.realized).reduce((sum, val) => sum + val, 0);
+    result.projectedTotal = Object.values(result.projected).reduce((sum, val) => sum + val, 0);
+
+    return result;
+  }, [categoriesData, periods]);
 
   const formatBRL = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -170,257 +293,251 @@ export default function FluxoCaixaProjetado() {
     }).format(value);
   };
 
-  const formatDate = (dateString: string) => {
-    try {
-      const date = new Date(dateString + 'T00:00:00');
-      return format(date, 'dd/MM/yyyy');
-    } catch {
-      return dateString;
+  const toggleCategory = (categoryName: string) => {
+    const newExpanded = new Set(expandedCategories);
+    if (newExpanded.has(categoryName)) {
+      newExpanded.delete(categoryName);
+    } else {
+      newExpanded.add(categoryName);
     }
+    setExpandedCategories(newExpanded);
   };
 
   return (
-    <div className="space-y-6 bg-background min-h-screen px-6" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+    <div className="space-y-6 bg-background min-h-screen px-6 pb-8" style={{ fontFamily: 'Montserrat, sans-serif' }}>
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-4">
         <div>
           <h1 className="text-3xl font-bold text-foreground mb-2">Fluxo de Caixa Projetado</h1>
           <p className="text-muted-foreground">
-            Visão combinada: realizado e projetado
+            Visão integrada: realizado vs. projetado por categoria
           </p>
         </div>
-        <MonthSelector
-          value={selectedMonth}
-          onChange={setSelectedMonth}
-        />
+        <div className="flex gap-3">
+          <Select value={periodType} onValueChange={(val: PeriodType) => setPeriodType(val)}>
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="daily">Diário</SelectItem>
+              <SelectItem value="weekly">Semanal</SelectItem>
+              <SelectItem value="monthly">Mensal</SelectItem>
+            </SelectContent>
+          </Select>
+          <MonthSelector
+            value={selectedMonth}
+            onChange={setSelectedMonth}
+          />
+        </div>
       </div>
 
-      <Tabs defaultValue="realized" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="realized">Realizado</TabsTrigger>
-          <TabsTrigger value="projected">Projetado</TabsTrigger>
-        </TabsList>
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Receitas Realizadas
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">
+              {formatBRL(Math.max(0, totals.realizedTotal))}
+            </div>
+          </CardContent>
+        </Card>
 
-        {/* REALIZED SECTION */}
-        <TabsContent value="realized" className="space-y-6">
-          {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-green-800 flex items-center gap-2">
-                  <ArrowUpCircle className="h-4 w-4" />
-                  Receitas Realizadas
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-green-900">
-                  {formatBRL(realizedRevenues)}
-                </div>
-              </CardContent>
-            </Card>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Despesas Realizadas
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-600">
+              {formatBRL(Math.abs(Math.min(0, totals.realizedTotal)))}
+            </div>
+          </CardContent>
+        </Card>
 
-            <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-red-800 flex items-center gap-2">
-                  <ArrowDownCircle className="h-4 w-4" />
-                  Despesas Realizadas
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-red-900">
-                  {formatBRL(realizedExpenses)}
-                </div>
-              </CardContent>
-            </Card>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Receitas Projetadas
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-emerald-600">
+              {formatBRL(Math.max(0, totals.projectedTotal))}
+            </div>
+          </CardContent>
+        </Card>
 
-            <Card className={`bg-gradient-to-br ${realizedResult >= 0 ? 'from-blue-50 to-blue-100 border-blue-200' : 'from-orange-50 to-orange-100 border-orange-200'}`}>
-              <CardHeader className="pb-3">
-                <CardTitle className={`text-sm font-medium ${realizedResult >= 0 ? 'text-blue-800' : 'text-orange-800'} flex items-center gap-2`}>
-                  <DollarSign className="h-4 w-4" />
-                  Resultado Realizado
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className={`text-2xl font-bold ${realizedResult >= 0 ? 'text-blue-900' : 'text-orange-900'}`}>
-                  {formatBRL(realizedResult)}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Resultado Final
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className={`text-2xl font-bold ${(totals.realizedTotal + totals.projectedTotal) >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
+              {formatBRL(totals.realizedTotal + totals.projectedTotal)}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
-          {/* Transactions Table */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Transações Realizadas</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Data</TableHead>
-                      <TableHead>Descrição</TableHead>
-                      <TableHead>Categoria</TableHead>
-                      <TableHead>Tipo</TableHead>
-                      <TableHead className="text-right">Valor</TableHead>
-                      <TableHead className="text-right">Ações</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {realizedTransactions.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                          Nenhuma transação realizada neste período
+      {/* Spreadsheet Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Plano de Contas - Realizado vs. Projetado</CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/50">
+                  <TableHead className="w-64 font-semibold sticky left-0 bg-muted/50 z-10">
+                    Categoria
+                  </TableHead>
+                  <TableHead className="w-24 text-center font-semibold">Tipo</TableHead>
+                  {periods.map(period => (
+                    <TableHead key={period.key} className="text-right font-semibold min-w-32">
+                      {period.label}
+                    </TableHead>
+                  ))}
+                  <TableHead className="text-right font-semibold min-w-32 bg-muted/50">
+                    Total
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {categoriesData.map(category => {
+                  const isExpanded = expandedCategories.has(category.name);
+                  const categoryRealizedTotal = Object.values(category.realized).reduce((sum, val) => sum + val, 0);
+                  const categoryProjectedTotal = Object.values(category.projected).reduce((sum, val) => sum + val, 0);
+
+                  return (
+                    <>
+                      {/* Realized Row */}
+                      <TableRow key={`${category.name}-realized`} className="hover:bg-muted/30">
+                        <TableCell className="font-medium sticky left-0 bg-background">
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0"
+                              onClick={() => toggleCategory(category.name)}
+                            >
+                              {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                            </Button>
+                            <span>{category.name}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                            Real
+                          </Badge>
+                        </TableCell>
+                        {periods.map(period => {
+                          const value = category.realized[period.key] || 0;
+                          return (
+                            <TableCell 
+                              key={period.key} 
+                              className={`text-right font-mono ${value > 0 ? 'text-green-600' : value < 0 ? 'text-red-600' : 'text-muted-foreground'}`}
+                            >
+                              {value !== 0 ? formatBRL(value) : '-'}
+                            </TableCell>
+                          );
+                        })}
+                        <TableCell className={`text-right font-mono font-semibold bg-muted/30 ${categoryRealizedTotal > 0 ? 'text-green-600' : categoryRealizedTotal < 0 ? 'text-red-600' : ''}`}>
+                          {formatBRL(categoryRealizedTotal)}
                         </TableCell>
                       </TableRow>
-                    ) : (
-                      realizedTransactions
-                        .sort((a, b) => new Date(b.data_transacao).getTime() - new Date(a.data_transacao).getTime())
-                        .map((transaction) => (
-                          <TableRow key={transaction.id}>
-                            <TableCell>{formatDate(transaction.data_transacao)}</TableCell>
-                            <TableCell className="max-w-xs truncate">
-                              {transaction.descricao}
+
+                      {/* Expanded Transactions */}
+                      {isExpanded && periods.map(period => {
+                        const periodTransactions = category.transactions[period.key] || [];
+                        return periodTransactions.map(transaction => (
+                          <TableRow key={transaction.id} className="bg-muted/10 text-sm">
+                            <TableCell className="pl-16 text-muted-foreground sticky left-0 bg-muted/10">
+                              <div className="flex items-center gap-2">
+                                <CalendarIcon className="h-3 w-3" />
+                                {format(parseISO(transaction.data_transacao), 'dd/MM/yyyy')}
+                                <span className="ml-2 truncate max-w-xs">{transaction.descricao}</span>
+                              </div>
                             </TableCell>
-                            <TableCell>
-                              <Badge variant="outline">
-                                {transaction.categoria_final || transaction.categoria_sugerida || 'Outros'}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              {transaction.valor > 0 ? (
-                                <Badge className="bg-green-100 text-green-800">Entrada</Badge>
-                              ) : (
-                                <Badge className="bg-red-100 text-red-800">Saída</Badge>
-                              )}
-                            </TableCell>
-                            <TableCell className={`text-right font-medium ${transaction.valor > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                              {formatBRL(Math.abs(transaction.valor))}
-                            </TableCell>
-                            <TableCell className="text-right">
+                            <TableCell className="text-center">
                               <EditTransactionDialog 
                                 transaction={transaction}
                                 onSave={() => loadTransactions(selectedMonth)}
                               />
                             </TableCell>
-                          </TableRow>
-                        ))
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* PROJECTED SECTION */}
-        <TabsContent value="projected" className="space-y-6">
-          {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-200">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-emerald-800 flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4" />
-                  Receitas Projetadas
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-emerald-900">
-                  {formatBRL(projectedRevenues)}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gradient-to-br from-rose-50 to-rose-100 border-rose-200">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-rose-800 flex items-center gap-2">
-                  <TrendingDown className="h-4 w-4" />
-                  Despesas Projetadas
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-rose-900">
-                  {formatBRL(projectedExpenses)}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className={`bg-gradient-to-br ${finalResult >= 0 ? 'from-violet-50 to-violet-100 border-violet-200' : 'from-amber-50 to-amber-100 border-amber-200'}`}>
-              <CardHeader className="pb-3">
-                <CardTitle className={`text-sm font-medium ${finalResult >= 0 ? 'text-violet-800' : 'text-amber-800'} flex items-center gap-2`}>
-                  <DollarSign className="h-4 w-4" />
-                  Resultado Final
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className={`text-2xl font-bold ${finalResult >= 0 ? 'text-violet-900' : 'text-amber-900'}`}>
-                  {formatBRL(finalResult)}
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Realizado + Projetado
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Projected Transactions Table */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Transações Futuras</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Data Prevista</TableHead>
-                      <TableHead>Descrição</TableHead>
-                      <TableHead>Categoria</TableHead>
-                      <TableHead>Tipo</TableHead>
-                      <TableHead className="text-right">Valor</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {futureTransactions.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
-                          Nenhuma transação projetada
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      futureTransactions
-                        .sort((a, b) => new Date(a.data_competencia).getTime() - new Date(b.data_competencia).getTime())
-                        .map((transaction) => (
-                          <TableRow key={transaction.id}>
-                            <TableCell>{formatDate(transaction.data_competencia)}</TableCell>
-                            <TableCell className="max-w-xs truncate">
-                              {transaction.descricao || 'Sem descrição'}
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant="outline">
-                                {transaction.categoria || 'Outros'}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              {transaction.tipo === 'entrada' ? (
-                                <Badge className="bg-emerald-100 text-emerald-800">Entrada</Badge>
-                              ) : (
-                                <Badge className="bg-rose-100 text-rose-800">Saída</Badge>
-                              )}
-                            </TableCell>
-                            <TableCell className={`text-right font-medium ${transaction.tipo === 'entrada' ? 'text-emerald-600' : 'text-rose-600'}`}>
+                            <TableCell 
+                              colSpan={periods.length} 
+                              className={`text-right font-mono ${transaction.valor > 0 ? 'text-green-600' : 'text-red-600'}`}
+                            >
                               {formatBRL(transaction.valor)}
                             </TableCell>
+                            <TableCell className="bg-muted/30"></TableCell>
                           </TableRow>
-                        ))
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+                        ));
+                      })}
+
+                      {/* Projected Row */}
+                      <TableRow key={`${category.name}-projected`} className="hover:bg-muted/30 border-b-2">
+                        <TableCell className="font-medium sticky left-0 bg-background pl-10">
+                          <span className="text-muted-foreground italic">{category.name}</span>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                            Proj
+                          </Badge>
+                        </TableCell>
+                        {periods.map(period => {
+                          const value = category.projected[period.key] || 0;
+                          return (
+                            <TableCell 
+                              key={period.key} 
+                              className={`text-right font-mono ${value > 0 ? 'text-emerald-600' : value < 0 ? 'text-rose-600' : 'text-muted-foreground'}`}
+                            >
+                              {value !== 0 ? formatBRL(value) : '-'}
+                            </TableCell>
+                          );
+                        })}
+                        <TableCell className={`text-right font-mono font-semibold bg-muted/30 ${categoryProjectedTotal > 0 ? 'text-emerald-600' : categoryProjectedTotal < 0 ? 'text-rose-600' : ''}`}>
+                          {formatBRL(categoryProjectedTotal)}
+                        </TableCell>
+                      </TableRow>
+                    </>
+                  );
+                })}
+
+                {/* Totals Row */}
+                <TableRow className="bg-primary/5 font-bold border-t-2">
+                  <TableCell className="sticky left-0 bg-primary/5">TOTAL GERAL</TableCell>
+                  <TableCell></TableCell>
+                  {periods.map(period => {
+                    const realizedVal = totals.realized[period.key] || 0;
+                    const projectedVal = totals.projected[period.key] || 0;
+                    const total = realizedVal + projectedVal;
+                    return (
+                      <TableCell 
+                        key={period.key} 
+                        className={`text-right font-mono ${total > 0 ? 'text-green-700' : total < 0 ? 'text-red-700' : ''}`}
+                      >
+                        {formatBRL(total)}
+                      </TableCell>
+                    );
+                  })}
+                  <TableCell className={`text-right font-mono bg-primary/10 ${(totals.realizedTotal + totals.projectedTotal) > 0 ? 'text-green-700' : 'text-red-700'}`}>
+                    {formatBRL(totals.realizedTotal + totals.projectedTotal)}
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
