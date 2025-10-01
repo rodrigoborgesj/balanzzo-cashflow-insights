@@ -15,27 +15,33 @@ export function useSecurityMonitoring() {
   const [loginAttempts, setLoginAttempts] = useState(0);
   const [lastLoginAttempt, setLastLoginAttempt] = useState<Date | null>(null);
 
-  // Monitor login attempts
+  // Monitor login attempts - only increment counter on failures
   const recordLoginAttempt = useCallback((success: boolean, email?: string) => {
     const now = new Date();
     
-    if (lastLoginAttempt) {
-      const timeDiff = now.getTime() - lastLoginAttempt.getTime();
-      if (timeDiff < AUTH_RATE_LIMITS.WINDOW_MS) {
-        setLoginAttempts(prev => prev + 1);
+    if (success) {
+      // Reset counter on successful login
+      setLoginAttempts(0);
+      setLastLoginAttempt(null);
+    } else {
+      // Only increment counter on failed attempts
+      if (lastLoginAttempt) {
+        const timeDiff = now.getTime() - lastLoginAttempt.getTime();
+        if (timeDiff < AUTH_RATE_LIMITS.WINDOW_MS) {
+          setLoginAttempts(prev => prev + 1);
+        } else {
+          setLoginAttempts(1);
+        }
       } else {
         setLoginAttempts(1);
       }
-    } else {
-      setLoginAttempts(1);
+      setLastLoginAttempt(now);
     }
-    
-    setLastLoginAttempt(now);
     
     const event: SecurityEvent = {
       type: success ? 'login_attempt' : 'failed_login',
       timestamp: now,
-      details: { email, success, attempts: loginAttempts + 1 }
+      details: { email, success, attempts: success ? 0 : loginAttempts + 1 }
     };
     
     setSecurityEvents(prev => [...prev.slice(-9), event]); // Keep last 10 events
@@ -111,19 +117,8 @@ export function useSecurityMonitoring() {
     }
   }, [lastLoginAttempt]);
 
-  // Monitor session changes
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
-        recordLoginAttempt(true, session.user.email);
-      } else if (event === 'SIGNED_OUT') {
-        // Record logout for audit
-        console.log('User signed out');
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [recordLoginAttempt]);
+  // Monitor session changes - removed to prevent double counting
+  // Login attempts are now tracked directly in secureSignIn
 
   return {
     securityEvents,

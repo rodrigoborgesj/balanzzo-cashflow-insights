@@ -64,12 +64,8 @@ export default function Login() {
     try {
       const { error } = await signIn(email, password);
       
+      // Error handling is now done in useSecureAuth with Portuguese messages
       if (error) {
-        toast({
-          title: "Erro no login",
-          description: error.message,
-          variant: "destructive",
-        });
         return;
       }
 
@@ -82,7 +78,7 @@ export default function Login() {
     } catch (error: any) {
       toast({
         title: "Erro no login",
-        description: error.message || "Erro inesperado",
+        description: "Erro inesperado ao realizar login. Tente novamente.",
         variant: "destructive",
       });
     } finally {
@@ -97,15 +93,15 @@ export default function Login() {
       
       if (error) {
         toast({
-          title: "Erro no login",
-          description: error.message,
+          title: "Erro no login com Google",
+          description: "Não foi possível realizar login com Google. Tente novamente.",
           variant: "destructive",
         });
       }
     } catch (error: any) {
       toast({
         title: "Erro no login",
-        description: error.message || "Erro inesperado",
+        description: "Erro inesperado ao realizar login com Google. Tente novamente.",
         variant: "destructive",
       });
     } finally {
