@@ -22,40 +22,37 @@ export default function Login() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { signIn, signInWithGoogle, isAuthenticated, user, isLoading: authLoading } = useSecureAuth();
-  const { hasProfile, isLoading: profileLoading } = useProfile();
-  const { hasAccess, loadSubscriptionData, isLoading: subscriptionLoading, hasActiveSubscription } = useSubscription();
 
   useEffect(() => {
-    console.log('Login useEffect - isAuthenticated:', isAuthenticated, 'hasActiveSubscription:', hasActiveSubscription, 'authLoading:', authLoading, 'subscriptionLoading:', subscriptionLoading);
+    console.log('Login useEffect - isAuthenticated:', isAuthenticated, 'authLoading:', authLoading);
     
     // Check for payment success/failure in URL params
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('payment_success') === 'true') {
+    const paymentSuccess = urlParams.get('payment');
+    
+    if (paymentSuccess === 'success') {
       toast({
         title: "Pagamento realizado com sucesso!",
-        description: "Sua assinatura foi ativada. Faça login para acessar a plataforma.",
+        description: "Sua assinatura foi ativada.",
       });
-      // Reload subscription data after successful payment
-      loadSubscriptionData();
-      // Clean up URL
+      // Clean URL
       window.history.replaceState({}, document.title, window.location.pathname);
-    } else if (urlParams.get('payment_cancelled') === 'true') {
+    } else if (paymentSuccess === 'failed') {
       toast({
-        title: "Pagamento cancelado",
-        description: "O pagamento foi cancelado. Você pode tentar novamente.",
+        title: "Falha no pagamento",
+        description: "Não foi possível processar seu pagamento. Tente novamente.",
         variant: "destructive",
       });
-      // Clean up URL
+      // Clean URL
       window.history.replaceState({}, document.title, window.location.pathname);
     }
     
-    // Redirect authenticated users with active subscription to dashboard
-    // Wait for both auth and subscription data to load
-    if (!authLoading && !subscriptionLoading && isAuthenticated && hasActiveSubscription) {
-      console.log('User is authenticated with active subscription, redirecting to dashboard');
+    // Redirect authenticated users to dashboard
+    if (!authLoading && isAuthenticated) {
+      console.log('User is authenticated, redirecting to dashboard');
       navigate("/dashboard", { replace: true });
     }
-  }, [isAuthenticated, hasActiveSubscription, authLoading, subscriptionLoading, navigate, toast, loadSubscriptionData]);
+  }, [isAuthenticated, authLoading, navigate, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,10 +72,7 @@ export default function Login() {
         description: "Redirecionando para o painel...",
       });
       
-      // Reload subscription data to ensure we have latest status before redirect
-      await loadSubscriptionData();
-      
-      // Navigation will be handled by useEffect after subscription data loads
+      // Navigation will be handled by useEffect
     } catch (error: any) {
       toast({
         title: "Erro no login",
@@ -113,8 +107,8 @@ export default function Login() {
     }
   };
 
-  // Show loading if still checking auth state or subscription
-  if (authLoading || profileLoading || subscriptionLoading) {
+  // Show loading if still checking auth state
+  if (authLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
