@@ -32,7 +32,7 @@ import {
 const mainItems = [
   { title: "Dados", url: "/dashboard", icon: BarChart3 },
   { title: "Fluxo de Caixa", url: "/fluxo-caixa", icon: TrendingUp },
-  { title: "Fluxo de Caixa Projetado", url: "/fluxo-caixa-projetado", icon: LineChart },
+  // { title: "Fluxo de Caixa Projetado", url: "/fluxo-caixa-projetado", icon: LineChart }, // Em construção
   { title: "DRE", url: "/dre", icon: Calculator },
   { title: "Conciliação Bancária", url: "/conciliacao", icon: CheckSquare },
   { title: "Como Usar", url: "/como-usar", icon: HelpCircle },

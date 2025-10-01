@@ -121,13 +121,14 @@ const App = () => {
               </AppLayout>
             </ProtectedRoute>
           } />
-          <Route path="/fluxo-caixa-projetado" element={
+          {/* Fluxo de Caixa Projetado - Em construção */}
+          {/* <Route path="/fluxo-caixa-projetado" element={
             <ProtectedRoute>
               <AppLayout>
                 <FluxoCaixaProjetado />
               </AppLayout>
             </ProtectedRoute>
-          } />
+          } /> */}
           <Route path="/dre" element={
             <ProtectedRoute>
               <AppLayout>
