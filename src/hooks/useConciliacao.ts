@@ -317,6 +317,26 @@ export function useConciliacao() {
       return false;
     }
 
+    // Get user's company_id if exists
+    let company_id: string | null = null;
+    try {
+      console.log('🔍 Fetching user company...');
+      const { data: companies, error: companyError } = await supabase
+        .from('companies')
+        .select('id')
+        .eq('user_id', user.id)
+        .limit(1);
+      
+      if (companyError) {
+        console.warn('⚠️ Error fetching company (will proceed without company_id):', companyError);
+      } else {
+        company_id = companies?.[0]?.id || null;
+        console.log('✅ Company found:', company_id ? 'Yes' : 'No (will use user_id only)');
+      }
+    } catch (error) {
+      console.warn('⚠️ Exception fetching company:', error);
+    }
+
     // Connectivity check
     try {
       const { error: connectivityError } = await supabase
@@ -416,7 +436,7 @@ export function useConciliacao() {
             valor: normalizedValue,
             descricao: normalizedDescription,
             user_id: user.id,
-            company_id: null,
+            company_id: company_id,
             hash_transacao,
             categoria_sugerida,
             categoria_final: null,
@@ -490,12 +510,18 @@ export function useConciliacao() {
               .select('id');
 
             if (error) {
-              console.error(`❌ Supabase error details:`, {
+              console.error(`❌ Supabase error on chunk ${chunkIndex + 1}:`, {
                 message: error.message,
                 details: error.details,
                 hint: error.hint,
-                code: error.code
+                code: error.code,
+                user_id: user.id,
+                company_id: company_id,
+                sampleTransaction: chunk[0]
               });
+              
+              // Log full error for debugging
+              console.error('❌ Full Supabase error object:', JSON.stringify(error, null, 2));
               throw error;
             }
 
@@ -517,9 +543,25 @@ export function useConciliacao() {
             });
             
             if (attempt === retryAttempts) {
+              // Build detailed error message for the user
+              let errorDescription = `Falha ao salvar o lote ${chunkIndex + 1}/${chunks.length}.\n\n`;
+              errorDescription += `Erro: ${error.message || 'Erro desconhecido'}`;
+              
+              if (error.details) {
+                errorDescription += `\nDetalhes: ${error.details}`;
+              }
+              
+              if (error.hint) {
+                errorDescription += `\nDica: ${error.hint}`;
+              }
+              
+              if (error.code) {
+                errorDescription += `\nCódigo: ${error.code}`;
+              }
+              
               toast({
-                title: 'Erro parcial no salvamento',
-                description: `Falha ao salvar o lote ${chunkIndex + 1}/${chunks.length}. Erro: ${error.message || 'Erro desconhecido'}`,
+                title: 'Erro no processamento',
+                description: errorDescription,
                 variant: 'destructive',
               });
             } else {
