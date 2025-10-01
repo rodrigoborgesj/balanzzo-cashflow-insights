@@ -23,10 +23,10 @@ export default function Login() {
   const { toast } = useToast();
   const { signIn, signInWithGoogle, isAuthenticated, user, isLoading: authLoading } = useSecureAuth();
   const { hasProfile, isLoading: profileLoading } = useProfile();
-  const { hasAccess, loadSubscriptionData } = useSubscription();
+  const { hasAccess, loadSubscriptionData, isLoading: subscriptionLoading, hasActiveSubscription } = useSubscription();
 
   useEffect(() => {
-    console.log('Login useEffect - isAuthenticated:', isAuthenticated, 'hasProfile:', hasProfile, 'authLoading:', authLoading, 'profileLoading:', profileLoading);
+    console.log('Login useEffect - isAuthenticated:', isAuthenticated, 'hasActiveSubscription:', hasActiveSubscription, 'authLoading:', authLoading, 'subscriptionLoading:', subscriptionLoading);
     
     // Check for payment success/failure in URL params
     const urlParams = new URLSearchParams(window.location.search);
@@ -50,11 +50,12 @@ export default function Login() {
     }
     
     // Redirect authenticated users with active subscription to dashboard
-    if (!authLoading && isAuthenticated && hasAccess()) {
+    // Wait for both auth and subscription data to load
+    if (!authLoading && !subscriptionLoading && isAuthenticated && hasActiveSubscription) {
       console.log('User is authenticated with active subscription, redirecting to dashboard');
       navigate("/dashboard", { replace: true });
     }
-  }, [isAuthenticated, authLoading, hasAccess, navigate, toast, loadSubscriptionData]);
+  }, [isAuthenticated, hasActiveSubscription, authLoading, subscriptionLoading, navigate, toast, loadSubscriptionData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,10 +72,13 @@ export default function Login() {
 
       toast({
         title: "Login realizado com sucesso!",
-        description: "Redirecionando...",
+        description: "Redirecionando para o painel...",
       });
       
-      // Navigation will be handled by useEffect
+      // Reload subscription data to ensure we have latest status before redirect
+      await loadSubscriptionData();
+      
+      // Navigation will be handled by useEffect after subscription data loads
     } catch (error: any) {
       toast({
         title: "Erro no login",
@@ -109,8 +113,8 @@ export default function Login() {
     }
   };
 
-  // Show loading if still checking auth state
-  if (authLoading || profileLoading) {
+  // Show loading if still checking auth state or subscription
+  if (authLoading || profileLoading || subscriptionLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
