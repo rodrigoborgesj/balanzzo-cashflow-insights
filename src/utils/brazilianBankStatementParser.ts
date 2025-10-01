@@ -227,9 +227,12 @@ export class BrazilianBankStatementParser {
     // Try different date formats
     const formats = [
       /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/, // DD/MM/YYYY
+      /^(\d{1,2})\/(\d{1,2})\/(\d{2})$/, // DD/MM/YY
       /^(\d{4})-(\d{1,2})-(\d{1,2})$/, // YYYY-MM-DD
       /^(\d{1,2})-(\d{1,2})-(\d{4})$/, // DD-MM-YYYY
+      /^(\d{1,2})-(\d{1,2})-(\d{2})$/, // DD-MM-YY
       /^(\d{1,2})\.(\d{1,2})\.(\d{4})$/, // DD.MM.YYYY
+      /^(\d{1,2})\.(\d{1,2})\.(\d{2})$/, // DD.MM.YY
     ];
 
     for (const format of formats) {
@@ -237,17 +240,35 @@ export class BrazilianBankStatementParser {
       if (match) {
         let day, month, year;
         
-        if (format === formats[1]) { // YYYY-MM-DD
+        if (format === formats[2]) { // YYYY-MM-DD
           [, year, month, day] = match;
         } else { // DD/MM/YYYY variants
           [, day, month, year] = match;
         }
 
-        const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-        if (date.getFullYear() == parseInt(year) && 
+        // Handle 2-digit year format (YY)
+        let fullYear = parseInt(year);
+        if (year.length === 2) {
+          const twoDigitYear = parseInt(year);
+          const currentYear = new Date().getFullYear();
+          const currentCentury = Math.floor(currentYear / 100) * 100;
+          
+          // If year is in the future (e.g., 25 when we're in 2025), use previous century
+          // If year is reasonable past (e.g., 20-24), use current century
+          if (twoDigitYear > (currentYear % 100)) {
+            fullYear = currentCentury - 100 + twoDigitYear;
+          } else {
+            fullYear = currentCentury + twoDigitYear;
+          }
+          
+          console.log(`📅 2-digit year detected: ${year} → ${fullYear} (current year: ${currentYear})`);
+        }
+
+        const date = new Date(fullYear, parseInt(month) - 1, parseInt(day));
+        if (date.getFullYear() == fullYear && 
             date.getMonth() == parseInt(month) - 1 && 
             date.getDate() == parseInt(day)) {
-          return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+          return `${fullYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
         }
       }
     }

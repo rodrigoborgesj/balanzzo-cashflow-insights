@@ -475,7 +475,11 @@ export function useConciliacao() {
         
         for (let attempt = 1; attempt <= retryAttempts; attempt++) {
           try {
-            console.log(`💾 Saving chunk ${chunkIndex + 1}/${chunks.length} (attempt ${attempt}/${retryAttempts})`);
+            console.log(`💾 Saving chunk ${chunkIndex + 1}/${chunks.length} (attempt ${attempt}/${retryAttempts})`, {
+              chunkSize: chunk.length,
+              firstTransaction: chunk[0],
+              lastTransaction: chunk[chunk.length - 1]
+            });
             
             const { data, error } = await supabase
               .from('transacoes_conciliadas')
@@ -486,19 +490,36 @@ export function useConciliacao() {
               .select('id');
 
             if (error) {
+              console.error(`❌ Supabase error details:`, {
+                message: error.message,
+                details: error.details,
+                hint: error.hint,
+                code: error.code
+              });
               throw error;
             }
+
+            console.log(`✅ Chunk ${chunkIndex + 1} saved successfully:`, {
+              rowsSaved: data?.length || 0,
+              expectedRows: chunk.length
+            });
 
             totalSaved += data?.length || 0;
             success = true;
             break;
           } catch (error: any) {
-            console.error(`❌ Chunk ${chunkIndex + 1} attempt ${attempt} failed:`, error);
+            console.error(`❌ Chunk ${chunkIndex + 1} attempt ${attempt} failed:`, {
+              error: error.message,
+              code: error.code,
+              details: error.details,
+              hint: error.hint,
+              chunkSample: chunk.slice(0, 2)
+            });
             
             if (attempt === retryAttempts) {
               toast({
                 title: 'Erro parcial no salvamento',
-                description: `Falha ao salvar o lote ${chunkIndex + 1}. Erro: ${error.message}`,
+                description: `Falha ao salvar o lote ${chunkIndex + 1}/${chunks.length}. Erro: ${error.message || 'Erro desconhecido'}`,
                 variant: 'destructive',
               });
             } else {

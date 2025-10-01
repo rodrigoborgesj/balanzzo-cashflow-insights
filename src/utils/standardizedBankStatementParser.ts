@@ -35,9 +35,12 @@ export class StandardizedBankStatementParser {
 
   private static readonly DATE_FORMATS = [
     /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/, // DD/MM/YYYY
+    /^(\d{1,2})\/(\d{1,2})\/(\d{2})$/, // DD/MM/YY (2-digit year)
     /^(\d{4})-(\d{1,2})-(\d{1,2})$/, // YYYY-MM-DD
     /^(\d{1,2})-(\d{1,2})-(\d{4})$/, // DD-MM-YYYY
+    /^(\d{1,2})-(\d{1,2})-(\d{2})$/, // DD-MM-YY (2-digit year)
     /^(\d{1,2})\.(\d{1,2})\.(\d{4})$/, // DD.MM.YYYY
+    /^(\d{1,2})\.(\d{1,2})\.(\d{2})$/, // DD.MM.YY (2-digit year)
   ];
 
   /**
@@ -294,12 +297,30 @@ export class StandardizedBankStatementParser {
           [, day, month, year] = match;
         }
 
+        // Handle 2-digit year format (YY)
+        let fullYear = parseInt(year);
+        if (year.length === 2) {
+          const twoDigitYear = parseInt(year);
+          const currentYear = new Date().getFullYear();
+          const currentCentury = Math.floor(currentYear / 100) * 100;
+          
+          // If year is in the future (e.g., 25 when we're in 2025), use previous century
+          // If year is reasonable past (e.g., 20-24), use current century
+          if (twoDigitYear > (currentYear % 100)) {
+            fullYear = currentCentury - 100 + twoDigitYear;
+          } else {
+            fullYear = currentCentury + twoDigitYear;
+          }
+          
+          console.log(`📅 2-digit year detected: ${year} → ${fullYear} (current year: ${currentYear})`);
+        }
+
         // Validate date
-        const dateObj = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-        if (dateObj.getFullYear() == parseInt(year) && 
+        const dateObj = new Date(fullYear, parseInt(month) - 1, parseInt(day));
+        if (dateObj.getFullYear() == fullYear && 
             dateObj.getMonth() == parseInt(month) - 1 && 
             dateObj.getDate() == parseInt(day)) {
-          return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+          return `${fullYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
         }
       }
     }
