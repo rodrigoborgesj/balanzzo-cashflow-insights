@@ -4,6 +4,7 @@ export interface StandardizedBankTransaction {
   date: string; // YYYY-MM-DD format
   value: number; // with dot as decimal separator
   description: string;
+  identifier?: string; // Unique bank identifier (e.g., Nubank UUID)
 }
 
 export interface StandardizedParseResult {
@@ -196,10 +197,11 @@ export class StandardizedBankStatementParser {
           mapping.date = index;
         } else if (normalized.includes('valor') || normalized.includes('value') || normalized.includes('amount')) {
           mapping.value = index;
-        } else if (normalized.includes('descricao') || normalized.includes('description')) {
+        } else if (normalized.includes('descricao') || normalized.includes('description') || normalized.includes('descrição')) {
           mapping.description = index;
+        } else if (normalized.includes('identificador') || normalized.includes('identifier') || normalized.includes('id')) {
+          mapping.identifier = index;
         }
-        // Identifier column is deliberately ignored as per requirements
       });
     }
     
@@ -209,7 +211,7 @@ export class StandardizedBankStatementParser {
         // Standard 4-column format: Date, Value, Identifier, Description  
         mapping.date = 0;
         mapping.value = 1;
-        // Skip identifier at index 2 (ignored as per requirements)
+        mapping.identifier = 2; // Now we capture the identifier
         mapping.description = 3;
       } else if (firstRow.length === 3) {
         // 3-column format without identifier: Date, Value, Description
@@ -268,10 +270,16 @@ export class StandardizedBankStatementParser {
         return null;
       }
 
+      // Extract identifier if available
+      const identifier = mapping.identifier !== undefined 
+        ? row[mapping.identifier]?.trim() 
+        : undefined;
+
       return {
         date,
         value,
-        description
+        description,
+        identifier
       };
 
     } catch (error) {

@@ -9,6 +9,7 @@ export interface ParsedTransaction {
   date: string;        // YYYY-MM-DD format
   value: number;       // Normalized number with dot decimal
   description: string; // Trimmed text
+  identifier?: string; // Unique bank identifier (e.g., Nubank UUID)
 }
 
 // Normalized transaction for database insertion
@@ -73,9 +74,19 @@ const normalizeDescription = (desc: string): string => {
   return String(desc).trim().replace(/\s+/g, ' ');
 };
 
-const generateTransactionHash = (userId: string, date: string, value: number, description: string): string => {
-  const data = `${userId}|${date}|${value}|${normalizeDescription(description)}`;
-  return CryptoJS.SHA256(data).toString();
+const generateTransactionHash = (
+  userId: string, 
+  date: string, 
+  value: number, 
+  description: string,
+  identifier?: string
+): string => {
+  // Se existe identificador único do banco, inclui no hash para garantir unicidade
+  const baseData = identifier 
+    ? `${userId}|${identifier}|${date}|${value}`
+    : `${userId}|${date}|${value}|${normalizeDescription(description)}`;
+  
+  return CryptoJS.SHA256(baseData).toString();
 };
 
 export function useConciliacao() {
@@ -401,12 +412,13 @@ export function useConciliacao() {
           }
 
           // Generate deterministic hash for duplicate prevention
-          const hash_transacao = generateTransactionHash(
-            user.id, 
-            normalizedDate, 
-            normalizedValue, 
-            normalizedDescription
-          );
+            const hash_transacao = generateTransactionHash(
+              user.id,
+              normalizedDate,
+              normalizedValue,
+              normalizedDescription,
+              transaction.identifier
+            );
 
           // Determine transaction type
           const isIncome = normalizedValue > 0;
@@ -478,11 +490,32 @@ export function useConciliacao() {
         sample: normalizedTransactions.slice(0, 1)
       });
 
+      // Remove duplicates based on hash before processing
+      const uniqueTransactions = Array.from(
+        new Map(normalizedTransactions.map(t => [t.hash_transacao, t])).values()
+      );
+      
+      const duplicatesRemoved = normalizedTransactions.length - uniqueTransactions.length;
+      if (duplicatesRemoved > 0) {
+        console.warn(`⚠️ ${duplicatesRemoved} transações duplicadas removidas antes do processamento`);
+        toast({
+          title: 'Duplicatas removidas',
+          description: `${duplicatesRemoved} transações duplicadas foram automaticamente removidas.`,
+          variant: 'default',
+        });
+      }
+
+      console.log('📊 After deduplication:', {
+        before: normalizedTransactions.length,
+        after: uniqueTransactions.length,
+        removed: duplicatesRemoved
+      });
+
       // Process in chunks to avoid timeouts
       const chunkSize = 200;
       const chunks: any[][] = [];
-      for (let i = 0; i < normalizedTransactions.length; i += chunkSize) {
-        chunks.push(normalizedTransactions.slice(i, i + chunkSize));
+      for (let i = 0; i < uniqueTransactions.length; i += chunkSize) {
+        chunks.push(uniqueTransactions.slice(i, i + chunkSize));
       }
 
       let totalSaved = 0;
