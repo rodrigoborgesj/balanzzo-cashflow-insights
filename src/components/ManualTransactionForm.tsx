@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 interface ManualTransactionFormProps {
   onTransactionAdded: () => void;
   userCategories?: Array<{ id: string; nome_categoria: string; cor?: string }>;
+  loadUserCategories?: () => Promise<void>;
 }
 
 interface ManualTransactionData {
@@ -25,7 +26,7 @@ interface ManualTransactionData {
   paymentMethod?: string;
 }
 
-export function ManualTransactionForm({ onTransactionAdded, userCategories = [] }: ManualTransactionFormProps) {
+export function ManualTransactionForm({ onTransactionAdded, userCategories = [], loadUserCategories }: ManualTransactionFormProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<ManualTransactionData>({
@@ -39,6 +40,13 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [] 
   
   const { user } = useAuth();
   const { toast } = useToast();
+
+  // Reload categories when dialog opens
+  useEffect(() => {
+    if (isOpen && loadUserCategories) {
+      loadUserCategories();
+    }
+  }, [isOpen, loadUserCategories]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

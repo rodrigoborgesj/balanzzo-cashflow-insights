@@ -140,6 +140,7 @@ export default function FluxoCaixa() {
           <ManualTransactionForm 
             onTransactionAdded={() => loadTransactions(selectedMonth)}
             userCategories={userCategories}
+            loadUserCategories={loadUserCategories}
           />
           <MonthSelector
             value={selectedMonth}
