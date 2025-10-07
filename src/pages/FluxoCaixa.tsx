@@ -138,7 +138,10 @@ export default function FluxoCaixa() {
         </div>
         <div className="flex items-center gap-3">
           <ManualTransactionForm 
-            onTransactionAdded={() => loadTransactions(selectedMonth)}
+            onTransactionAdded={() => {
+              // Force reload of transactions without month filter to show all data
+              loadTransactions(selectedMonth);
+            }}
             userCategories={userCategories}
             loadUserCategories={loadUserCategories}
           />

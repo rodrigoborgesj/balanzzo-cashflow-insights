@@ -152,6 +152,12 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [],
       });
 
       setIsOpen(false);
+      
+      // Reload categories to ensure fresh data
+      if (loadUserCategories) {
+        await loadUserCategories();
+      }
+      
       onTransactionAdded();
 
     } catch (error) {
