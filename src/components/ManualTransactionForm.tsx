@@ -80,6 +80,17 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [],
       return;
     }
 
+    // Validate category exists
+    const categoryExists = allCategories.includes(formData.category);
+    if (!categoryExists) {
+      toast({
+        title: 'Categoria inválida',
+        description: 'A categoria selecionada não existe. Por favor, crie-a nas configurações primeiro.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
       // Prepare transaction data for insertion
@@ -269,21 +280,33 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [],
               </Label>
               <Select 
                 value={formData.category} 
-                onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
+                onValueChange={(value) => {
+                  console.log('Categoria selecionada:', value);
+                  setFormData(prev => ({ ...prev, category: value }));
+                }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione a categoria" />
                 </SelectTrigger>
-                <SelectContent>
-                  {allCategories.map((category) => (
-                    <SelectItem key={category} value={category}>
-                      {category}
-                    </SelectItem>
-                  ))}
+                <SelectContent className="max-h-[300px] overflow-y-auto bg-background z-50">
+                  {allCategories.length === 0 ? (
+                    <div className="p-2 text-sm text-muted-foreground text-center">
+                      Nenhuma categoria disponível
+                    </div>
+                  ) : (
+                    allCategories.map((category) => (
+                      <SelectItem key={category} value={category}>
+                        {category}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">
-                Para criar novas categorias, acesse <strong>Configurações</strong> → <strong>Categorias Personalizadas</strong>
+                {allCategories.length === 0 
+                  ? 'Crie categorias em Configurações → Categorias Personalizadas'
+                  : 'Para criar novas categorias, acesse Configurações → Categorias Personalizadas'
+                }
               </p>
             </div>
           </div>
