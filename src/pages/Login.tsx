@@ -9,7 +9,6 @@ import { useToast } from "@/hooks/use-toast";
 import { Lock, Mail, Eye, EyeOff, Chrome } from "lucide-react";
 import { useSecureAuth } from "@/hooks/useSecureAuth";
 import { useProfile } from "@/hooks/useProfile";
-import { useSubscription } from "@/hooks/useSubscription";
 import { SignupForm } from "@/components/SignupForm";
 import financialHero from "@/assets/financial-hero.png";
 
@@ -26,33 +25,12 @@ export default function Login() {
   useEffect(() => {
     console.log('Login useEffect - isAuthenticated:', isAuthenticated, 'authLoading:', authLoading);
     
-    // Check for payment success/failure in URL params
-    const urlParams = new URLSearchParams(window.location.search);
-    const paymentSuccess = urlParams.get('payment');
-    
-    if (paymentSuccess === 'success') {
-      toast({
-        title: "Pagamento realizado com sucesso!",
-        description: "Sua assinatura foi ativada.",
-      });
-      // Clean URL
-      window.history.replaceState({}, document.title, window.location.pathname);
-    } else if (paymentSuccess === 'failed') {
-      toast({
-        title: "Falha no pagamento",
-        description: "Não foi possível processar seu pagamento. Tente novamente.",
-        variant: "destructive",
-      });
-      // Clean URL
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
-    
     // Redirect authenticated users to dashboard
     if (!authLoading && isAuthenticated) {
       console.log('User is authenticated, redirecting to dashboard');
       navigate("/dashboard", { replace: true });
     }
-  }, [isAuthenticated, authLoading, navigate, toast]);
+  }, [isAuthenticated, authLoading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
