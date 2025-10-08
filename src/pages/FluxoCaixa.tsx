@@ -126,6 +126,33 @@ export default function FluxoCaixa() {
     })
     .sort((a, b) => new Date(a.data_transacao).getTime() - new Date(b.data_transacao).getTime());
 
+  // Export to CSV function
+  const exportToCSV = () => {
+    const headers = ['Data', 'Categoria', 'Descrição', 'Tipo', 'Valor'];
+    const csvData = allTransactionsSorted.map(transaction => [
+      new Date(transaction.data_transacao).toLocaleDateString('pt-BR'),
+      transaction.categoria_final || transaction.categoria_sugerida || 'Outros',
+      transaction.descricao,
+      transaction.valor > 0 ? 'Entrada' : 'Saída',
+      `R$ ${Math.abs(transaction.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+    ]);
+
+    const csv = [
+      headers.join(','),
+      ...csvData.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n');
+
+    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `fluxo-caixa-${selectedMonth}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="space-y-6 bg-white min-h-screen px-6" style={{ fontFamily: 'Montserrat, sans-serif' }}>
       {/* Header */}
@@ -160,7 +187,7 @@ export default function FluxoCaixa() {
             <Settings className="h-4 w-4 mr-2" />
             Configurações
           </Button>
-          <Button variant="outline" size="sm" disabled={!hasData}>
+          <Button variant="outline" size="sm" disabled={!hasData} onClick={exportToCSV}>
             <Download className="h-4 w-4 mr-2" />
             Exportar
           </Button>
