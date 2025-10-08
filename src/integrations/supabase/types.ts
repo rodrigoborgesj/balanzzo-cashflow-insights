@@ -412,6 +412,13 @@ export type Database = {
             foreignKeyName: "subscriptions_plan_id_fkey"
             columns: ["plan_id"]
             isOneToOne: false
+            referencedRelation: "public_subscription_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
             referencedRelation: "subscription_plans"
             referencedColumns: ["id"]
           },
@@ -478,7 +485,30 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      public_subscription_plans: {
+        Row: {
+          billing_cycle: string | null
+          features: Json | null
+          id: string | null
+          name: string | null
+          price_cents: number | null
+        }
+        Insert: {
+          billing_cycle?: string | null
+          features?: Json | null
+          id?: string | null
+          name?: string | null
+          price_cents?: number | null
+        }
+        Update: {
+          billing_cycle?: string | null
+          features?: Json | null
+          id?: string | null
+          name?: string | null
+          price_cents?: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       get_subscription_plans: {

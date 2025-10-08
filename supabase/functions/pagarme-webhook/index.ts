@@ -3,8 +3,44 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-pagarme-signature',
 };
+
+/**
+ * Verify Pagar.me webhook signature using HMAC SHA-256
+ * CRITICAL SECURITY: This prevents webhook spoofing and payment fraud
+ */
+async function verifyWebhookSignature(
+  payload: string,
+  signature: string,
+  secret: string
+): Promise<boolean> {
+  try {
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      'raw',
+      encoder.encode(secret),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign']
+    );
+    
+    const signatureBuffer = await crypto.subtle.sign(
+      'HMAC',
+      key,
+      encoder.encode(payload)
+    );
+    
+    const expectedSignature = Array.from(new Uint8Array(signatureBuffer))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+    
+    return expectedSignature === signature;
+  } catch (error) {
+    console.error('Signature verification error:', error);
+    return false;
+  }
+}
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -13,7 +49,39 @@ serve(async (req) => {
   }
 
   try {
-    const webhookData = await req.json();
+    // Get raw body for signature verification
+    const rawBody = await req.text();
+    const webhookData = JSON.parse(rawBody);
+    
+    // CRITICAL SECURITY: Verify webhook signature
+    const signature = req.headers.get('x-pagarme-signature');
+    const webhookSecret = Deno.env.get('PAGARME_WEBHOOK_SECRET');
+    
+    if (!webhookSecret) {
+      console.error('PAGARME_WEBHOOK_SECRET not configured');
+      return new Response(
+        JSON.stringify({ error: 'Webhook secret not configured', success: false }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      );
+    }
+    
+    if (!signature) {
+      console.warn('Webhook received without signature - rejecting');
+      return new Response(
+        JSON.stringify({ error: 'Missing signature', success: false }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
+      );
+    }
+    
+    const isValid = await verifyWebhookSignature(rawBody, signature, webhookSecret);
+    
+    if (!isValid) {
+      console.warn('Invalid webhook signature detected - possible fraud attempt');
+      return new Response(
+        JSON.stringify({ error: 'Invalid signature', success: false }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
+      );
+    }
     console.log('Webhook received:', JSON.stringify(webhookData, null, 2));
 
     // Create Supabase client with service role key

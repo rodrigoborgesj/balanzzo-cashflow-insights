@@ -340,7 +340,7 @@ export default function Conciliacao() {
           </CardHeader>
           <CardContent className="p-6">
             <div className="space-y-4">
-              <FileUploader onFileSelect={handleFileSelect} acceptedFormats={['.csv']} maxSize={5 * 1024 * 1024} />
+              <FileUploader onFileSelect={handleFileSelect} acceptedFormats={['.csv']} maxSize={5} />
               
               {selectedFile && (
                 <div className="animate-fade-in">

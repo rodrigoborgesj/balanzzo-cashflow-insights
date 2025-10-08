@@ -117,18 +117,10 @@ export function SignupForm({ onBack }: SignupFormProps) {
       });
       return;
     }
-
-    console.log("=== FORM SUBMISSION DEBUG ===");
-    console.log("Form data:", data);
-    console.log("Form errors:", form.formState.errors);
-    console.log("Form is valid:", form.formState.isValid);
-    console.log("Selected state:", data.address_state);
-    console.log("State validation (min 2 chars):", data.address_state?.length >= 2);
     
     // Check for form validation errors
     const isValid = await form.trigger();
     if (!isValid) {
-      console.error("Form validation failed:", form.formState.errors);
       toast({
         title: "Erro de validação",
         description: "Por favor, preencha todos os campos obrigatórios corretamente.",
@@ -139,16 +131,9 @@ export function SignupForm({ onBack }: SignupFormProps) {
 
     setIsLoading(true);
     try {
-      console.log("Attempting signup with validated data:", { 
-        ...data, 
-        password: "[HIDDEN]",
-        address_state: data.address_state 
-      });
-      
       const { error } = await signUp(data.email, data.password);
       
       if (error) {
-        console.error("Supabase signup error:", error);
         toast({
           title: "Erro no cadastro",
           description: `Erro na criação da conta: ${error.message}`,
@@ -156,8 +141,6 @@ export function SignupForm({ onBack }: SignupFormProps) {
         });
         return;
       }
-
-      console.log("User signup successful, storing profile data with state:", data.address_state);
 
       // Store profile data in secure storage to be used after email confirmation
       const profileData: ProfileData = {
@@ -176,7 +159,6 @@ export function SignupForm({ onBack }: SignupFormProps) {
         address_zip_code: data.address_zip_code,
       };
       
-      console.log("Storing profile data with state:", profileData.address_state);
       // Store with 24 hour expiry for temporary signup data
       secureStorage.setItem('pendingProfileData', profileData, 24 * 60 * 60 * 1000);
 
@@ -188,15 +170,9 @@ export function SignupForm({ onBack }: SignupFormProps) {
       // Redireciona para tela de login após cadastro bem-sucedido
       onBack();
     } catch (error: any) {
-      console.error("Detailed signup error:", {
-        error,
-        message: error.message,
-        stack: error.stack,
-        address_state: data.address_state
-      });
       toast({
         title: "Erro no cadastro",
-        description: `Erro detalhado: ${error.message || "Erro inesperado"}`,
+        description: error.message || "Erro inesperado ao criar conta",
         variant: "destructive",
       });
     } finally {
