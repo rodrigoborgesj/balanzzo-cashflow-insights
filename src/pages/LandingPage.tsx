@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 import { 
   CheckCircle, 
   Upload, 
@@ -28,10 +29,18 @@ export default function LandingPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [isVisible, setIsVisible] = useState(false);
+  const { isAuthenticated, isLoading } = useAuth();
 
   useEffect(() => {
     setIsVisible(true);
   }, []);
+
+  // Redirect authenticated users to dashboard
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [isAuthenticated, isLoading, navigate]);
 
   const handleGetStarted = () => {
     navigate("/login");
@@ -95,7 +104,7 @@ export default function LandingPage() {
               <Button 
                 variant="ghost" 
                 onClick={() => navigate("/login")}
-                className="text-brand-dark-green hover:bg-brand-light-green/50 hidden sm:flex text-sm sm:text-base px-3 sm:px-4"
+                className="text-brand-dark-green hover:bg-brand-light-green/50 text-xs sm:text-base px-2 sm:px-4"
               >
                 Entrar
               </Button>
