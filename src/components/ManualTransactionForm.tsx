@@ -197,6 +197,8 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [],
     ? userCategories.map(cat => cat.nome_categoria)
     : defaultCategories;
 
+  const safeCategoryValue = allCategories.includes(formData.category) ? formData.category : "";
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
@@ -205,7 +207,7 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [],
           Adicionar Transação
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[600px]" onInteractOutside={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Plus className="h-5 w-5" />
@@ -282,7 +284,7 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [],
                 Categoria *
               </Label>
               <Select 
-                value={formData.category} 
+                value={safeCategoryValue} 
                 onValueChange={(value) => {
                   console.log('Categoria selecionada:', value);
                   setFormData(prev => ({ ...prev, category: value }));
