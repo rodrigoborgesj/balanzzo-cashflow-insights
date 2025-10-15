@@ -1,12 +1,13 @@
-import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { useEffect } from "react";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { useEmailAutomation } from "@/hooks/useEmailAutomation";
 import { AppLayout } from "./components/AppLayout";
 import { ProtectedRoute } from "./components/ProtectedRoute";
-import { useEmailAutomation } from "./hooks/useEmailAutomation";
 import LandingPage from "./pages/LandingPage";
 import Dashboard from "./pages/Dashboard";
 import Conciliacao from "./pages/Conciliacao";
@@ -46,7 +47,7 @@ const App = () => {
   useEmailAutomation();
 
   // Handle visibility changes for React Query
-  React.useEffect(() => {
+  useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
         console.log('Tab became visible - invalidating queries for fresh data');
@@ -81,11 +82,12 @@ const App = () => {
   }, []);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
           <Routes>
           {/* Public landing page */}
           <Route path="/" element={<LandingPage />} />
@@ -164,6 +166,7 @@ const App = () => {
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
+    </ErrorBoundary>
   );
 };
 
