@@ -222,7 +222,13 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [],
           Adicionar Transação
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[600px]" onInteractOutside={(e) => {
+        const target = e.target as HTMLElement;
+        // Permite interação com conteúdos em portal (Select/Popover/Dropdown) sem fechar o modal
+        if (target?.closest('[data-radix-portal]')) {
+          e.preventDefault();
+        }
+      }}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Plus className="h-5 w-5" />

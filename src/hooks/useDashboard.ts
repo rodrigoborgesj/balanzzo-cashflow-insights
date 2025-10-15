@@ -300,25 +300,18 @@ export function useDashboard() {
 
       console.log(`[${correlationId}] Painel mensal data received:`, data?.length || 0, 'records');
 
-      // If painel_mensal has data, use it
-      if (data && data.length > 0) {
-        const convertedData = convertPainelData(data);
-        console.log(`[${correlationId}] Using painel_mensal data:`, convertedData.length, 'records');
-        return convertedData;
-      } else {
-        // Fallback: calculate from transacoes_conciliadas
-        console.log(`[${correlationId}] Painel mensal empty, calculating from transactions...`);
-        const calculatedData = await calculateDashboardFromTransactions(monthFilter, controller.signal);
-        
-        // Final check before returning
-        if (requestId !== requestIdRef.current || controller.signal.aborted) {
-          console.log(`[${correlationId}] Request ${requestId} cancelled after calculation`);
-          return [];
-        }
-        
-        console.log(`[${correlationId}] Calculated data from transactions:`, calculatedData.length, 'records');
-        return calculatedData;
+      // Always calculate from transacoes_conciliadas to garantir dados em tempo real
+      console.log(`[${correlationId}] Calculating dashboard from transactions (real-time)...`);
+      const calculatedData = await calculateDashboardFromTransactions(monthFilter, controller.signal);
+      
+      // Final check before returning
+      if (requestId !== requestIdRef.current || controller.signal.aborted) {
+        console.log(`[${correlationId}] Request ${requestId} cancelled after calculation`);
+        return [];
       }
+      
+      console.log(`[${correlationId}] Calculated data from transactions:`, calculatedData.length, 'records');
+      return calculatedData;
       
     } catch (error: any) {
       if (controller.signal.aborted) {
