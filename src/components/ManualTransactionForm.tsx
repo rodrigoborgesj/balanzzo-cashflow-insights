@@ -222,7 +222,7 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [],
           Adicionar Transação
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px]" onInteractOutside={(e) => e.preventDefault()}>
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Plus className="h-5 w-5" />
