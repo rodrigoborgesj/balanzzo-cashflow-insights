@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { CategoryManager } from "@/components/CategoryManager";
 import TransactionRemover from "@/components/TransactionRemover";
+import ManualTransactionRemover from "@/components/ManualTransactionRemover";
 import { SecurityMonitoringDashboard } from "@/components/SecurityMonitoringDashboard";
 import { ProfilePhotoUpload } from "@/components/ProfilePhotoUpload";
 
@@ -192,26 +193,44 @@ export default function Configuracoes() {
           </CardContent>
         </Card>
 
-        {/* Remoção de Transações */}
+        {/* Remoção de Transações Importadas */}
         <Card className="bg-gradient-to-br from-card to-card/80 border-border/50 shadow-soft">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Trash2 className="h-5 w-5" />
-              Gerenciamento de Dados
+              Transações Importadas
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                Remova transações importadas quando necessário. Esta funcionalidade foi movida para as configurações por motivos de segurança.
+                Remova transações importadas de arquivos CSV/Excel quando necessário.
               </p>
               <TransactionRemover />
             </div>
           </CardContent>
         </Card>
 
-        {/* Preferências */}
+        {/* Remoção de Transações Manuais */}
         <Card className="bg-gradient-to-br from-card to-card/80 border-border/50 shadow-soft">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Trash2 className="h-5 w-5" />
+              Transações Manuais
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Remova transações criadas manualmente. Os gráficos e dashboards serão atualizados automaticamente.
+              </p>
+              <ManualTransactionRemover />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Preferências */}
+        <Card className="bg-gradient-to-br from-card to-card/80 border-border/50 shadow-soft lg:col-span-2">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Palette className="h-5 w-5" />

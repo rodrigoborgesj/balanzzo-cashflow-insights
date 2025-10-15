@@ -25,10 +25,11 @@ export const CustomTooltip = ({ active, payload, label, chartType }: CustomToolt
       case 'expense':
         return {
           title: `Despesa: ${category}`,
-          value: formatCurrency(value),
-          description: `Esta categoria representa ${((value / (payload[0].payload?.total || value)) * 100).toFixed(1)}% do total de despesas do mês. Baseado no histórico de transações categorizadas automaticamente pelo sistema.`,
+          value: value,
+          rawValue: formatCurrency(value),
+          description: `Valor exato da despesa nesta categoria`,
           details: [
-            `Valor total: ${formatCurrency(value)}`,
+            `Valor exato: ${formatCurrency(value)}`,
             `Percentual do total: ${((value / (payload[0].payload?.total || value)) * 100).toFixed(1)}%`,
             'Fonte: Transações conciliadas'
           ]
@@ -37,10 +38,11 @@ export const CustomTooltip = ({ active, payload, label, chartType }: CustomToolt
       case 'income':
         return {
           title: `Receita: ${category}`,
-          value: formatCurrency(value),
-          description: `Esta fonte de receita contribui com ${((value / (payload[0].payload?.total || value)) * 100).toFixed(1)}% do total de entradas do mês. Dados extraídos do seu histórico financeiro.`,
+          value: value,
+          rawValue: formatCurrency(value),
+          description: `Valor exato da receita nesta categoria`,
           details: [
-            `Valor total: ${formatCurrency(value)}`,
+            `Valor exato: ${formatCurrency(value)}`,
             `Percentual do total: ${((value / (payload[0].payload?.total || value)) * 100).toFixed(1)}%`,
             'Fonte: Transações de entrada'
           ]
@@ -49,8 +51,9 @@ export const CustomTooltip = ({ active, payload, label, chartType }: CustomToolt
       case 'monthly':
         return {
           title: `Movimento: ${label}`,
-          value: formatCurrency(value),
-          description: `Dados consolidados do mês ${label}. Valores calculados a partir de todas as transações processadas e conciliadas no período.`,
+          value: value,
+          rawValue: formatCurrency(value),
+          description: `Valores exatos do mês ${label}`,
           details: [
             `Entradas: ${formatCurrency(data.payload?.entradas || 0)}`,
             `Saídas: ${formatCurrency(data.payload?.saidas || 0)}`,
@@ -59,35 +62,48 @@ export const CustomTooltip = ({ active, payload, label, chartType }: CustomToolt
         };
       
       case 'projection':
+        // Valores exatos de realizado e projetado
+        const realizedValue = payload.find(p => p.dataKey === 'realizado')?.value || 0;
+        const projectedValue = payload.find(p => p.dataKey === 'projetado')?.value || 0;
         return {
-          title: `Projeção: ${label}`,
-          value: formatCurrency(value),
-          description: `Projeção baseada EXCLUSIVAMENTE em transações futuras registradas no Fluxo de Caixa através do botão "Adicionar Transação". Não inclui dados históricos.`,
+          title: `Data: ${label}`,
+          value: realizedValue,
+          rawValue: formatCurrency(realizedValue),
+          projectedValue: projectedValue,
+          projectedRaw: formatCurrency(projectedValue),
+          description: `Valores exatos esperados para esta data`,
           details: [
-            `Valor projetado: ${formatCurrency(value)}`,
-            `Período: ${label}`,
-            'Fonte: Transações futuras manuais'
+            `Realizado: ${formatCurrency(realizedValue)}`,
+            `Projetado: ${formatCurrency(projectedValue)}`,
+            `Diferença: ${formatCurrency(Math.abs(realizedValue - projectedValue))}`
           ]
         };
       
       case 'expense_projection':
+        // Valores exatos de despesas realizadas e projetadas
+        const realizedExpense = payload.find(p => p.dataKey === 'realizado')?.value || 0;
+        const projectedExpense = payload.find(p => p.dataKey === 'projetado')?.value || 0;
         return {
-          title: `Projeção de Despesas: ${label}`,
-          value: formatCurrency(value),
-          description: `Projeção de gastos baseada EXCLUSIVAMENTE em despesas futuras registradas no Fluxo de Caixa através do botão "Adicionar Transação". Não inclui dados históricos.`,
+          title: `Data: ${label}`,
+          value: realizedExpense,
+          rawValue: formatCurrency(realizedExpense),
+          projectedValue: projectedExpense,
+          projectedRaw: formatCurrency(projectedExpense),
+          description: `Valores exatos de despesas para esta data`,
           details: [
-            `Valor projetado: ${formatCurrency(value)}`,
-            `Período: ${label}`,
-            'Fonte: Despesas futuras manuais'
+            `Despesa Realizada: ${formatCurrency(realizedExpense)}`,
+            `Despesa Projetada: ${formatCurrency(projectedExpense)}`,
+            `Diferença: ${formatCurrency(Math.abs(realizedExpense - projectedExpense))}`
           ]
         };
       
       default:
         return {
           title: category,
-          value: formatCurrency(value),
-          description: 'Informações baseadas no histórico financeiro processado.',
-          details: [`Valor: ${formatCurrency(value)}`]
+          value: value,
+          rawValue: formatCurrency(value),
+          description: 'Valor exato da transação',
+          details: [`Valor exato: ${formatCurrency(value)}`]
         };
     }
   };
@@ -100,8 +116,18 @@ export const CustomTooltip = ({ active, payload, label, chartType }: CustomToolt
         {/* Header */}
         <div className="border-b border-border pb-2">
           <h4 className="font-semibold text-foreground text-sm">{content.title}</h4>
-          <p className="text-2xl font-bold text-primary">{content.value}</p>
+          <p className="text-2xl font-bold text-primary">{content.rawValue || formatCurrency(content.value)}</p>
         </div>
+        
+        {/* Valores projetados (se existirem) */}
+        {content.projectedValue !== undefined && (
+          <div className="bg-blue-50 dark:bg-blue-950 p-2 rounded-lg">
+            <p className="text-xs text-blue-600 dark:text-blue-400 font-medium mb-1">Projetado</p>
+            <p className="text-lg font-bold text-blue-700 dark:text-blue-300">
+              {content.projectedRaw || formatCurrency(content.projectedValue)}
+            </p>
+          </div>
+        )}
         
         {/* Description */}
         <p className="text-sm text-muted-foreground leading-relaxed">

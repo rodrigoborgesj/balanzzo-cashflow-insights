@@ -145,6 +145,20 @@ export default function FluxoCaixaProjetado() {
     loadTransactions(selectedMonth);
   }, [selectedMonth, loadTransactions]);
 
+  // Listen for transaction updates (when manual transactions are removed)
+  useEffect(() => {
+    const handleTransactionsUpdate = () => {
+      console.log('FluxoCaixaProjetado: Transações atualizadas, recarregando dados...');
+      loadTransactions(selectedMonth);
+    };
+
+    window.addEventListener('transactionsUpdated', handleTransactionsUpdate);
+    
+    return () => {
+      window.removeEventListener('transactionsUpdated', handleTransactionsUpdate);
+    };
+  }, [selectedMonth, loadTransactions]);
+
   const periods = useMemo(() => {
     const monthDate = parseISO(selectedMonth + '-01');
     const start = startOfMonth(monthDate);

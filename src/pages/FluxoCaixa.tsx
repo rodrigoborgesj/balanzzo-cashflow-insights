@@ -54,6 +54,20 @@ export default function FluxoCaixa() {
     loadUserCategories();
   }, [selectedMonth, loadTransactions, loadUserCategories]);
 
+  // Listen for transaction updates (when manual transactions are removed)
+  useEffect(() => {
+    const handleTransactionsUpdate = () => {
+      console.log('FluxoCaixa: Transações atualizadas, recarregando dados...');
+      loadTransactions(selectedMonth);
+    };
+
+    window.addEventListener('transactionsUpdated', handleTransactionsUpdate);
+    
+    return () => {
+      window.removeEventListener('transactionsUpdated', handleTransactionsUpdate);
+    };
+  }, [selectedMonth, loadTransactions]);
+
   // Group transactions by category - only include categorized transactions
   useEffect(() => {
     const groups: { [key: string]: Transaction[] } = {};

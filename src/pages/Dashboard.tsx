@@ -36,6 +36,7 @@ import {
   LineChart
 } from "recharts";
 
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDashboard } from "@/hooks/useDashboard";
 import { useProfile } from "@/hooks/useProfile";
@@ -129,6 +130,20 @@ export default function Dashboard() {
     refreshData,
     correlationId
   } = useDashboard();
+
+  // Listen for transaction updates (when manual transactions are removed)
+  useEffect(() => {
+    const handleTransactionsUpdate = () => {
+      console.log('Dashboard: Transações atualizadas, recarregando dados...');
+      refreshData();
+    };
+
+    window.addEventListener('transactionsUpdated', handleTransactionsUpdate);
+    
+    return () => {
+      window.removeEventListener('transactionsUpdated', handleTransactionsUpdate);
+    };
+  }, [refreshData]);
 
   // Get cash flow integration data
   const { summary, categorySummary, hasData: hasCashFlowData } = useCashFlowIntegration(selectedMonth);

@@ -94,10 +94,12 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [],
     setIsLoading(true);
     try {
       // Prepare transaction data for insertion
+      // IMPORTANTE: Manter a data como string para evitar problemas de timezone
+      // O input type="date" retorna sempre no formato YYYY-MM-DD
       const finalAmount = formData.type === 'saida' ? -Math.abs(amount) : Math.abs(amount);
       const transactionData = {
         user_id: user.id,
-        data_transacao: formData.date,
+        data_transacao: formData.date, // Manter como string YYYY-MM-DD
         valor: finalAmount,
         descricao: formData.description,
         tipo: formData.type,
@@ -128,10 +130,11 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [],
       const company_id = companies?.[0]?.id || null;
 
       // Insert into fluxo_caixa table
+      // Manter data como string para evitar conversão de timezone
       const fluxoCaixaData = {
         company_id,
         user_id: user.id,
-        data_competencia: formData.date,
+        data_competencia: formData.date, // Manter como string YYYY-MM-DD
         tipo: formData.type,
         categoria: formData.category,
         descricao: formData.description,
