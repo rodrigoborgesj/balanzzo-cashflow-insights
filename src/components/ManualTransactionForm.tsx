@@ -46,7 +46,7 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [],
     if (isOpen && loadUserCategories) {
       loadUserCategories();
     }
-  }, [isOpen, loadUserCategories]);
+  }, [isOpen]); // ✅ FIX: Removido loadUserCategories das dependências para evitar que mudanças na função causem fechamento do modal
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

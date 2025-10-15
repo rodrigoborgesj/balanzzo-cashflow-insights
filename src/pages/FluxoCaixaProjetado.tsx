@@ -143,7 +143,7 @@ export default function FluxoCaixaProjetado() {
 
   useEffect(() => {
     loadTransactions(selectedMonth);
-  }, [selectedMonth, loadTransactions]);
+  }, [selectedMonth]); // ✅ FIX: Removido loadTransactions das dependências para evitar loop de re-renders
 
   // Listen for transaction updates (when manual transactions are removed)
   useEffect(() => {
@@ -157,7 +157,7 @@ export default function FluxoCaixaProjetado() {
     return () => {
       window.removeEventListener('transactionsUpdated', handleTransactionsUpdate);
     };
-  }, [selectedMonth, loadTransactions]);
+  }, [selectedMonth]); // ✅ FIX: Removido loadTransactions das dependências para evitar re-criação do listener
 
   const periods = useMemo(() => {
     const monthDate = parseISO(selectedMonth + '-01');

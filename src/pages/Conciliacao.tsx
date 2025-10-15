@@ -88,7 +88,7 @@ export default function Conciliacao() {
       loadTransactions(selectedMonth);
       loadUserCategories();
     }
-  }, [loadTransactions, loadUserCategories, selectedMonth, user?.id]);
+  }, [selectedMonth, user?.id]); // ✅ FIX: Removido loadTransactions e loadUserCategories das dependências para evitar loop de re-renders
 
   const handleFileSelect = async (file: File) => {
     setSelectedFile(file);

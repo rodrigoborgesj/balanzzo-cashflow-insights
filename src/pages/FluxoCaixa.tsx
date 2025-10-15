@@ -52,7 +52,7 @@ export default function FluxoCaixa() {
   useEffect(() => {
     loadTransactions(selectedMonth);
     loadUserCategories();
-  }, [selectedMonth, loadTransactions, loadUserCategories]);
+  }, [selectedMonth]); // ✅ FIX: Removido loadTransactions e loadUserCategories das dependências para evitar loop de re-renders
 
   // Listen for transaction updates (when manual transactions are removed)
   useEffect(() => {
@@ -66,7 +66,7 @@ export default function FluxoCaixa() {
     return () => {
       window.removeEventListener('transactionsUpdated', handleTransactionsUpdate);
     };
-  }, [selectedMonth, loadTransactions]);
+  }, [selectedMonth]); // ✅ FIX: Removido loadTransactions das dependências para evitar re-criação do listener
 
   // Group transactions by category - only include categorized transactions
   useEffect(() => {

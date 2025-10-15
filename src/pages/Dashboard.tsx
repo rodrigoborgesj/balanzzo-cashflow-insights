@@ -143,7 +143,7 @@ export default function Dashboard() {
     return () => {
       window.removeEventListener('transactionsUpdated', handleTransactionsUpdate);
     };
-  }, [refreshData]);
+  }, []); // ✅ FIX: Removido refreshData das dependências para evitar re-criação do listener
 
   // Get cash flow integration data
   const { summary, categorySummary, hasData: hasCashFlowData } = useCashFlowIntegration(selectedMonth);
