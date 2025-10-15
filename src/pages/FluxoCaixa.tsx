@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -40,6 +42,7 @@ export default function FluxoCaixa() {
   const [selectedMonth, setSelectedMonth] = useState<string>(new Date().toISOString().slice(0, 7));
   const [categoryGroups, setCategoryGroups] = useState<CategoryGroup[]>([]);
   const [transactionFilter, setTransactionFilter] = useState<'todas' | 'entradas' | 'saidas'>('todas');
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const navigate = useNavigate();
 
   // Use reconciliation hook to get categorized transactions
@@ -117,11 +120,28 @@ export default function FluxoCaixa() {
   const netResult = totalInflow - totalOutflow;
   const hasData = transactions.length > 0;
 
-  // Get all transactions sorted by date for unified list
+  // Get all unique categories from transactions
+  const availableCategories = Array.from(
+    new Set(
+      categorizedTransactions
+        .map(t => t.categoria_final || t.categoria_sugerida || 'Outros')
+        .filter(Boolean)
+    )
+  ).sort();
+
+  // Get all transactions sorted by date for unified list with category filter
   const allTransactionsSorted = categorizedTransactions
     .filter(t => {
-      if (transactionFilter === 'entradas') return t.valor > 0;
-      if (transactionFilter === 'saidas') return t.valor < 0;
+      // Filtro de tipo (entrada/saída)
+      if (transactionFilter === 'entradas' && t.valor <= 0) return false;
+      if (transactionFilter === 'saidas' && t.valor >= 0) return false;
+      
+      // Filtro de categorias (multi-select)
+      if (selectedCategories.length > 0) {
+        const transactionCategory = t.categoria_final || t.categoria_sugerida || 'Outros';
+        if (!selectedCategories.includes(transactionCategory)) return false;
+      }
+      
       return true;
     })
     .sort((a, b) => new Date(a.data_transacao).getTime() - new Date(b.data_transacao).getTime());
@@ -310,22 +330,80 @@ export default function FluxoCaixa() {
               <TrendingUp className="h-5 w-5 text-black" />
               Fluxo de Caixa Detalhado
             </CardTitle>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between flex-wrap gap-3">
               <p className="text-sm text-gray-600">
                 Todas as transações organizadas por data
               </p>
-              <div className="flex items-center gap-2">
-                <Filter className="h-4 w-4 text-gray-500" />
-                <Select value={transactionFilter} onValueChange={(value: 'todas' | 'entradas' | 'saidas') => setTransactionFilter(value)}>
-                  <SelectTrigger className="w-32">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="todas">Todas</SelectItem>
-                    <SelectItem value="entradas">Entradas</SelectItem>
-                    <SelectItem value="saidas">Saídas</SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="flex items-center gap-3">
+                {/* Filtro de Tipo */}
+                <div className="flex items-center gap-2">
+                  <Filter className="h-4 w-4 text-gray-500" />
+                  <Select value={transactionFilter} onValueChange={(value: 'todas' | 'entradas' | 'saidas') => setTransactionFilter(value)}>
+                    <SelectTrigger className="w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="todas">Todas</SelectItem>
+                      <SelectItem value="entradas">Entradas</SelectItem>
+                      <SelectItem value="saidas">Saídas</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Filtro Multi-Select de Categorias */}
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className="gap-2">
+                      <Filter className="h-4 w-4" />
+                      Categorias
+                      {selectedCategories.length > 0 && (
+                        <Badge variant="secondary" className="ml-1">
+                          {selectedCategories.length}
+                        </Badge>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-64 p-3 bg-background border shadow-lg z-50">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between pb-2 border-b">
+                        <span className="font-semibold text-sm">Filtrar por Categoria</span>
+                        {selectedCategories.length > 0 && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setSelectedCategories([])}
+                            className="h-6 text-xs"
+                          >
+                            Limpar
+                          </Button>
+                        )}
+                      </div>
+                      <div className="max-h-60 overflow-y-auto space-y-2">
+                        {availableCategories.map((category) => (
+                          <div key={category} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`cat-${category}`}
+                              checked={selectedCategories.includes(category)}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setSelectedCategories([...selectedCategories, category]);
+                                } else {
+                                  setSelectedCategories(selectedCategories.filter(c => c !== category));
+                                }
+                              }}
+                            />
+                            <label
+                              htmlFor={`cat-${category}`}
+                              className="text-sm font-medium leading-none cursor-pointer"
+                            >
+                              {category}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
           </CardHeader>

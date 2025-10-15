@@ -222,7 +222,12 @@ export default function Conciliacao() {
   };
 
   const handleCategorize = async (transactionId: string, category: string) => {
-    await updateTransactionCategory(transactionId, category);
+    try {
+      await updateTransactionCategory(transactionId, category);
+    } catch (error) {
+      console.error('Erro ao categorizar:', error);
+      // FIX: Não bloqueia UI, erro já é tratado no hook
+    }
   };
 
   const handleDeleteTransaction = async (transactionId: string) => {
@@ -236,6 +241,7 @@ export default function Conciliacao() {
         .eq('user_id', user.id);
 
       if (error) {
+        console.error('Erro ao deletar transação:', error);
         toast({
           title: 'Erro ao deletar transação',
           description: error.message,
@@ -250,11 +256,12 @@ export default function Conciliacao() {
       });
 
       // Reload transactions
-      loadTransactions(selectedMonth);
+      await loadTransactions(selectedMonth);
     } catch (error) {
+      console.error('Erro ao deletar transação:', error);
       toast({
         title: 'Erro ao deletar transação',
-        description: 'Erro inesperado',
+        description: 'Erro inesperado ao tentar deletar. Tente novamente.',
         variant: 'destructive',
       });
     }
@@ -278,12 +285,13 @@ export default function Conciliacao() {
   const pendingCount = transactions.filter(t => !t.status_conciliacao).length;
   const reconciledCount = transactions.filter(t => t.status_conciliacao).length;
 
-  // Combinar categorias padrão com categorias do usuário
-  const allCategories = [
+  // Combinar categorias padrão com categorias do usuário - FIX: Remove duplicatas
+  const allCategoriesSet = new Set([
     ...categoriesReceitas,
     ...categoriesDespesas,
     ...userCategories.map(cat => cat.nome_categoria)
-  ];
+  ]);
+  const allCategories = Array.from(allCategoriesSet).sort();
   
   // Simple fallback check
   if (!user) {

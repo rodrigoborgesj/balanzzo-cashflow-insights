@@ -229,7 +229,12 @@ export function CategoryManager() {
                         <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
                         <AlertDialogDescription>
                           Tem certeza que deseja excluir a categoria "<strong>{category.nome_categoria}</strong>"? 
-                          <br />Esta ação não pode ser desfeita.
+                          <br />
+                          <br />
+                          Se esta categoria estiver sendo usada em transações, ela será removida das transações e elas ficarão sem categoria definida.
+                          <br />
+                          <br />
+                          Esta ação não pode ser desfeita.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>

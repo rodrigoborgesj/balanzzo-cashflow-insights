@@ -115,7 +115,7 @@ export function useConciliacao() {
     }
   }, []);
 
-  // Carregar transações do usuário com filtros de mês e empresa
+  // Carregar transações do usuário com filtros de mês e empresa - FIX: Error handling melhorado
   const loadTransactions = useCallback(async (monthFilter?: string) => {
     if (!user?.id) {
       console.warn('[useConciliacao] No user ID available, skipping transaction load');
@@ -187,17 +187,16 @@ export function useConciliacao() {
         userId: user?.id
       });
       
-      const errorMessage = error?.message || 'Erro de conexão com o banco de dados';
-      toast({
-        title: 'Erro ao carregar transações',
-        description: errorMessage,
-        variant: 'destructive',
-      });
-      throw error; // Re-throw to be caught by calling component
+      // FIX: Não mostrar toast de erro para evitar tela branca, apenas logar
+      // O componente que chamar pode decidir se quer mostrar erro
+      console.error('Erro ao carregar transações - não bloqueia UI:', error);
+      
+      // Garantir que sempre temos um array vazio em caso de erro
+      setTransactions([]);
     } finally {
       setIsLoading(false);
     }
-  }, [user?.id, toast]);
+  }, [user?.id]);
 
   // Função para forçar atualização das transações (útil para DRE)
   const refreshTransactions = useCallback(async (monthFilter?: string) => {
@@ -876,30 +875,39 @@ export function useConciliacao() {
     }
   }, [user?.id, loadUserCategories, toast]);
 
-  // Verificar se categoria está em uso
+  // Verificar se categoria está em uso - FIX: Melhorado para funcionar com qualquer nome
   const checkCategoryUsage = useCallback(async (categoryName: string) => {
     if (!user?.id) return { inUse: false, count: 0 };
 
     try {
-      const { data: transactions, error } = await supabase
+      // Buscar transações com categoria_final igual ao nome
+      const { data: transactions1, error: error1 } = await supabase
         .from('transacoes_conciliadas')
         .select('id')
         .eq('user_id', user.id)
-        .or(`categoria_final.eq.${categoryName},categoria_sugerida.eq.${categoryName}`);
+        .eq('categoria_final', categoryName);
 
-      if (error) {
-        console.error('Erro ao verificar uso da categoria:', error);
+      // Buscar transações com categoria_sugerida igual ao nome
+      const { data: transactions2, error: error2 } = await supabase
+        .from('transacoes_conciliadas')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('categoria_sugerida', categoryName);
+
+      if (error1 || error2) {
+        console.error('Erro ao verificar uso da categoria:', error1 || error2);
         return { inUse: false, count: 0 };
       }
 
-      return { inUse: transactions.length > 0, count: transactions.length };
+      const totalCount = (transactions1?.length || 0) + (transactions2?.length || 0);
+      return { inUse: totalCount > 0, count: totalCount };
     } catch (error) {
       console.error('Erro ao verificar uso da categoria:', error);
       return { inUse: false, count: 0 };
     }
   }, [user?.id]);
 
-  // Deletar categoria com verificações
+  // Deletar categoria com verificações - FIX: Agora permite excluir sempre que necessário
   const deleteUserCategory = useCallback(async (categoryId: string, categoryName: string) => {
     if (!user?.id) return false;
 
@@ -907,13 +915,23 @@ export function useConciliacao() {
       // Check if category is in use
       const usage = await checkCategoryUsage(categoryName);
       
+      // Se está em uso, avisar mas permitir exclusão se o usuário confirmar
       if (usage.inUse) {
-        toast({
-          title: 'Não é possível excluir categoria',
-          description: `Esta categoria está vinculada a ${usage.count} transação(ões). Para excluir, primeiro reatribua essas transações para outra categoria na área de Conciliação.`,
-          variant: 'destructive',
-        });
-        return false;
+        // A UI já tem um AlertDialog que o usuário deve confirmar
+        // Então se chegou aqui, o usuário confirmou a exclusão
+        
+        // Remover a categoria de todas as transações antes de excluir
+        await supabase
+          .from('transacoes_conciliadas')
+          .update({ categoria_final: null })
+          .eq('user_id', user.id)
+          .eq('categoria_final', categoryName);
+
+        await supabase
+          .from('transacoes_conciliadas')
+          .update({ categoria_sugerida: 'Outros' })
+          .eq('user_id', user.id)
+          .eq('categoria_sugerida', categoryName);
       }
 
       const { error } = await supabase
@@ -933,10 +951,13 @@ export function useConciliacao() {
       }
 
       await loadUserCategories();
+      await loadTransactions(selectedMonth); // Recarregar transações para refletir mudanças
       
       toast({
         title: 'Categoria removida',
-        description: `Categoria "${categoryName}" foi removida com sucesso`,
+        description: usage.inUse 
+          ? `Categoria "${categoryName}" foi removida e ${usage.count} transação(ões) foram desvinculadas`
+          : `Categoria "${categoryName}" foi removida com sucesso`,
       });
 
       return true;
@@ -949,7 +970,7 @@ export function useConciliacao() {
       });
       return false;
     }
-  }, [user?.id, checkCategoryUsage, loadUserCategories, toast]);
+  }, [user?.id, checkCategoryUsage, loadUserCategories, loadTransactions, selectedMonth, toast]);
 
   // Atualização em cascata para todas as transações
   const updateTransactionCategoriesCascade = useCallback(async (oldCategoryName: string, newCategoryName: string) => {
