@@ -291,7 +291,11 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [],
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione a categoria" />
                 </SelectTrigger>
-                <SelectContent className="max-h-[300px] overflow-y-auto bg-background z-50">
+                <SelectContent 
+                  className="max-h-[300px] overflow-y-auto bg-background z-[100]"
+                  position="popper"
+                  sideOffset={5}
+                >
                   {allCategories.length === 0 ? (
                     <div className="p-2 text-sm text-muted-foreground text-center">
                       Nenhuma categoria disponível

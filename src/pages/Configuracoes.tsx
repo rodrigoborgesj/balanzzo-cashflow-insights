@@ -7,6 +7,7 @@ import TransactionRemover from "@/components/TransactionRemover";
 import ManualTransactionRemover from "@/components/ManualTransactionRemover";
 import { SecurityMonitoringDashboard } from "@/components/SecurityMonitoringDashboard";
 import { ProfilePhotoUpload } from "@/components/ProfilePhotoUpload";
+import { useTheme } from "@/components/ThemeProvider";
 
 import { useToast } from "@/hooks/use-toast";
 import { useProfile } from "@/hooks/useProfile";
@@ -25,6 +26,7 @@ import {
 export default function Configuracoes() {
   const { toast } = useToast();
   const { profile, updateProfilePhoto } = useProfile();
+  const { theme, setTheme } = useTheme();
   
   // Estados das configurações
   const [settings, setSettings] = useState({
@@ -33,8 +35,10 @@ export default function Configuracoes() {
     conciliacaoAutomatica: false,
     autenticacaoDoisFatores: false,
     loginAutomatico: true,
-    modoEscuro: false
   });
+
+  // Sincronizar o tema com o estado do dark mode
+  const isDarkMode = theme === "dark";
 
   const handleSwitchChange = (key: keyof typeof settings) => {
     setSettings(prev => ({
@@ -241,11 +245,17 @@ export default function Configuracoes() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-medium">Modo escuro</p>
-                <p className="text-sm text-muted-foreground">Tema escuro para melhor experiência</p>
+                <p className="text-sm text-muted-foreground">Tema escuro para melhor experiência visual</p>
               </div>
               <Switch 
-                checked={settings.modoEscuro}
-                onCheckedChange={() => handleSwitchChange('modoEscuro')}
+                checked={isDarkMode}
+                onCheckedChange={(checked) => {
+                  setTheme(checked ? "dark" : "light");
+                  toast({
+                    title: checked ? "Modo escuro ativado" : "Modo claro ativado",
+                    description: "Suas preferências de tema foram salvas.",
+                  });
+                }}
               />
             </div>
             <div className="flex items-center justify-between">
