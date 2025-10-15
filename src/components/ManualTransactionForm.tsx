@@ -97,6 +97,15 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [],
       // IMPORTANTE: Manter a data como string para evitar problemas de timezone
       // O input type="date" retorna sempre no formato YYYY-MM-DD
       const finalAmount = formData.type === 'saida' ? -Math.abs(amount) : Math.abs(amount);
+      
+      console.log('💾 Salvando transação manual:', {
+        data: formData.date,
+        tipo: formData.type,
+        valor: finalAmount,
+        categoria: formData.category,
+        descricao: formData.description
+      });
+
       const transactionData = {
         user_id: user.id,
         data_transacao: formData.date, // Manter como string YYYY-MM-DD
@@ -105,10 +114,10 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [],
         tipo: formData.type,
         categoria_final: formData.category,
         categoria_sugerida: formData.category,
-        status_conciliacao: true,
+        status_conciliacao: true, // ✅ CRÍTICO: Marca como conciliada para aparecer no fluxo de caixa
         origem_arquivo: 'manual_entry',
         mes_referencia: formData.date.substring(0, 7) + '-01',
-        hash_transacao: btoa(`${formData.date}-${formData.description}-${finalAmount}-${user.id}-manual`).substring(0, 50)
+        hash_transacao: btoa(`${formData.date}-${formData.description}-${finalAmount}-${user.id}-${Date.now()}`).substring(0, 50)
       };
 
       // Insert into transacoes_conciliadas
@@ -150,6 +159,8 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [],
         // Don't throw error as the main transaction was successful
       }
 
+      console.log('✅ Transação salva com sucesso!');
+
       toast({
         title: 'Transação adicionada com sucesso!',
         description: `${formData.type === 'entrada' ? 'Receita' : 'Despesa'} de R$ ${amount.toFixed(2)} foi registrada`,
@@ -171,6 +182,10 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [],
       if (loadUserCategories) {
         await loadUserCategories();
       }
+      
+      // ✅ CRÍTICO: Disparar eventos para atualizar Dashboard e Fluxo de Caixa
+      window.dispatchEvent(new Event('transactionsUpdated'));
+      console.log('🔄 Evento transactionsUpdated disparado');
       
       onTransactionAdded();
 

@@ -25,8 +25,11 @@ export interface CategorySummary {
 
 export function useCashFlow(transactions: Transaction[], saldoInicial: number = 0) {
   return useMemo(() => {
+    // ✅ FIX: Usar status_conciliacao ao invés de reconciled/status (campos que não existem no DB)
     // Filter only reconciled transactions
-    const reconciledTransactions = transactions.filter(t => t.reconciled && t.status === 'conciliado');
+    const reconciledTransactions = transactions.filter(t => 
+      (t as any).status_conciliacao === true
+    );
     
     // Calculate summary
     const totalEntradas = reconciledTransactions
