@@ -14,17 +14,11 @@ export function useSecureAuth() {
   // Monitor for suspicious activity - removed to prevent premature warnings
 
   // Enhanced sign in with security monitoring
+  // NOTE: Client-side rate limiting has been removed as it provides no real security.
+  // Real rate limiting MUST be configured in Supabase Dashboard:
+  // Authentication → Settings → Rate Limits
+  // Set: 5 login attempts per 15 minutes per IP
   const secureSignIn = async (email: string, password: string) => {
-    // Check rate limit BEFORE attempting login
-    if (security.isRateLimited()) {
-      toast({
-        title: "Muitas tentativas de login",
-        description: "Muitas tentativas falhadas. Aguarde alguns minutos antes de tentar novamente.",
-        variant: "destructive"
-      });
-      return { error: { message: "Muitas tentativas de login. Aguarde alguns minutos." } };
-    }
-
     const result = await auth.signIn(email, password);
     
     // Record login attempt (will reset counter on success, increment on failure)

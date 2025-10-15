@@ -12,61 +12,29 @@ interface SecurityEvent {
 export function useSecurityMonitoring() {
   const { user } = useAuth();
   const [securityEvents, setSecurityEvents] = useState<SecurityEvent[]>([]);
-  const [loginAttempts, setLoginAttempts] = useState(0);
-  const [lastLoginAttempt, setLastLoginAttempt] = useState<Date | null>(null);
 
-  // Monitor login attempts - only increment counter on failures
+  // NOTE: Client-side rate limiting has been removed as it provides no real security.
+  // Attackers can bypass client-side rate limiting by making direct API requests.
+  // Real rate limiting MUST be configured in Supabase Dashboard:
+  // Authentication → Settings → Rate Limits
+  
+  // Monitor login attempts for UI feedback only (not for security)
   const recordLoginAttempt = useCallback((success: boolean, email?: string) => {
     const now = new Date();
-    
-    if (success) {
-      // Reset counter on successful login
-      setLoginAttempts(0);
-      setLastLoginAttempt(null);
-    } else {
-      // Only increment counter on failed attempts
-      if (lastLoginAttempt) {
-        const timeDiff = now.getTime() - lastLoginAttempt.getTime();
-        if (timeDiff < AUTH_RATE_LIMITS.WINDOW_MS) {
-          setLoginAttempts(prev => prev + 1);
-        } else {
-          setLoginAttempts(1);
-        }
-      } else {
-        setLoginAttempts(1);
-      }
-      setLastLoginAttempt(now);
-    }
     
     const event: SecurityEvent = {
       type: success ? 'login_attempt' : 'failed_login',
       timestamp: now,
-      details: { email, success, attempts: success ? 0 : loginAttempts + 1 }
+      details: { email, success }
     };
     
     setSecurityEvents(prev => [...prev.slice(-9), event]); // Keep last 10 events
-    
-    // Log to audit if user is authenticated
-    if (user && success) {
-      const auditLog = createAuditLog(user.id, 'LOGIN', 'AUTH_SYSTEM', {
-        email: user.email,
-        timestamp: now.toISOString()
-      });
-      
-      // Store audit log (could be sent to Supabase if audit table exists)
-      console.log('Audit Log:', auditLog);
-    }
-  }, [lastLoginAttempt, loginAttempts, user]);
+  }, []);
 
-  // Check if rate limit is exceeded
+  // Deprecated: Client-side rate limiting is ineffective
   const isRateLimited = useCallback(() => {
-    if (!lastLoginAttempt) return false;
-    
-    const now = new Date();
-    const timeDiff = now.getTime() - lastLoginAttempt.getTime();
-    
-    return timeDiff < AUTH_RATE_LIMITS.WINDOW_MS && loginAttempts >= AUTH_RATE_LIMITS.LOGIN_ATTEMPTS;
-  }, [lastLoginAttempt, loginAttempts]);
+    return false; // Always return false - real rate limiting must be server-side
+  }, []);
 
   // Monitor suspicious activity
   const recordSuspiciousActivity = useCallback((details: Record<string, any>) => {
@@ -100,29 +68,9 @@ export function useSecurityMonitoring() {
     console.log('Data Access:', auditLog);
   }, [user]);
 
-  // Reset login attempts after window expires
-  useEffect(() => {
-    if (lastLoginAttempt) {
-      const timeout = setTimeout(() => {
-        const now = new Date();
-        const timeDiff = now.getTime() - lastLoginAttempt.getTime();
-        
-        if (timeDiff >= AUTH_RATE_LIMITS.WINDOW_MS) {
-          setLoginAttempts(0);
-          setLastLoginAttempt(null);
-        }
-      }, AUTH_RATE_LIMITS.WINDOW_MS);
-      
-      return () => clearTimeout(timeout);
-    }
-  }, [lastLoginAttempt]);
-
-  // Monitor session changes - removed to prevent double counting
-  // Login attempts are now tracked directly in secureSignIn
-
   return {
     securityEvents,
-    loginAttempts,
+    loginAttempts: 0, // Always return 0 - rate limiting must be server-side
     isRateLimited,
     recordLoginAttempt,
     recordSuspiciousActivity,
