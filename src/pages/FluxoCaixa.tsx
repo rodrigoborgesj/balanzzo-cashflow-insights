@@ -219,17 +219,17 @@ export default function FluxoCaixa() {
   };
 
   return (
-    <div className="space-y-6 bg-white min-h-screen px-6" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+    <div className="space-y-4 md:space-y-6 bg-white min-h-screen px-3 md:px-6" style={{ fontFamily: 'Montserrat, sans-serif' }}>
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-4">
+      <div className="flex flex-col gap-3 md:gap-4 pt-4">
         <div>
-          <h1 className="text-3xl font-bold text-black mb-2">Fluxo de Caixa</h1>
-          <p className="text-gray-600">
+          <h1 className="text-2xl md:text-3xl font-bold text-black mb-2">Fluxo de Caixa</h1>
+          <p className="text-sm md:text-base text-gray-600">
             Baseado nas transações conciliadas - {selectedMonth}
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <ManualTransactionForm 
+        <div className="flex flex-wrap items-center gap-2 md:gap-3">
+          <ManualTransactionForm
             onTransactionAdded={() => {
               // Force reload of transactions without month filter to show all data
               loadTransactions(selectedMonth);
@@ -248,13 +248,14 @@ export default function FluxoCaixa() {
             variant="outline" 
             size="sm"
             onClick={() => setShowSettings(!showSettings)}
+            className="text-xs md:text-sm"
           >
-            <Settings className="h-4 w-4 mr-2" />
-            Configurações
+            <Settings className="h-4 w-4 md:mr-2" />
+            <span className="hidden md:inline">Configurações</span>
           </Button>
-          <Button variant="outline" size="sm" disabled={!hasData} onClick={exportToCSV}>
-            <Download className="h-4 w-4 mr-2" />
-            Exportar
+          <Button variant="outline" size="sm" disabled={!hasData} onClick={exportToCSV} className="text-xs md:text-sm">
+            <Download className="h-4 w-4 md:mr-2" />
+            <span className="hidden md:inline">Exportar</span>
           </Button>
         </div>
       </div>
@@ -302,64 +303,64 @@ export default function FluxoCaixa() {
 
       {/* Summary Cards */}
       {hasData && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
           <Card className="bg-white border border-black" style={{ borderRadius: '50px' }}>
-            <CardContent className="p-6">
+            <CardContent className="p-4 md:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-black">Total Transações</p>
-                  <p className="text-xl font-bold text-black">
+                  <p className="text-xs md:text-sm font-medium text-black">Total Transações</p>
+                  <p className="text-lg md:text-xl font-bold text-black">
                     {transactions.length}
                   </p>
                 </div>
-                <Calendar className="h-6 w-6 text-black" />
+                <Calendar className="h-5 w-5 md:h-6 md:w-6 text-black" />
               </div>
             </CardContent>
           </Card>
 
           <Card className="bg-white border border-black" style={{ borderRadius: '50px' }}>
-            <CardContent className="p-6">
+            <CardContent className="p-4 md:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-black">Total Entradas</p>
-                  <p className="text-xl font-bold text-black">
+                  <p className="text-xs md:text-sm font-medium text-black">Total Entradas</p>
+                  <p className="text-lg md:text-xl font-bold text-black">
                     R$ {totalInflow.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                   </p>
                 </div>
-                <ArrowUpCircle className="h-6 w-6 text-black" />
+                <ArrowUpCircle className="h-5 w-5 md:h-6 md:w-6 text-black" />
               </div>
             </CardContent>
           </Card>
 
           <Card className="bg-white border border-black" style={{ borderRadius: '50px' }}>
-            <CardContent className="p-6">
+            <CardContent className="p-4 md:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-black">Total Saídas</p>
-                  <p className="text-xl font-bold text-black">
+                  <p className="text-xs md:text-sm font-medium text-black">Total Saídas</p>
+                  <p className="text-lg md:text-xl font-bold text-black">
                     R$ {totalOutflow.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                   </p>
                 </div>
-                <ArrowDownCircle className="h-6 w-6 text-black" />
+                <ArrowDownCircle className="h-5 w-5 md:h-6 md:w-6 text-black" />
               </div>
             </CardContent>
           </Card>
 
           <Card style={{ backgroundColor: '#1A3423', borderRadius: '50px' }}>
-            <CardContent className="p-6">
+            <CardContent className="p-4 md:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-white">
+                  <p className="text-xs md:text-sm font-medium text-white">
                     Resultado Líquido
                   </p>
-                  <p className="text-xl font-bold text-white">
+                  <p className="text-lg md:text-xl font-bold text-white">
                     R$ {netResult.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                   </p>
                 </div>
                 {netResult >= 0 ? (
-                  <TrendingUp className="h-6 w-6 text-white" />
+                  <TrendingUp className="h-5 w-5 md:h-6 md:w-6 text-white" />
                 ) : (
-                  <TrendingDown className="h-6 w-6 text-white" />
+                  <TrendingDown className="h-5 w-5 md:h-6 md:w-6 text-white" />
                 )}
               </div>
             </CardContent>
@@ -370,16 +371,16 @@ export default function FluxoCaixa() {
       {/* Cash Flow - Unified Transaction List */}
       {hasData && (
         <Card className="bg-white border border-black">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-black">
-              <TrendingUp className="h-5 w-5 text-black" />
+          <CardHeader className="p-4 md:p-6">
+            <CardTitle className="flex items-center gap-2 text-black text-base md:text-lg">
+              <TrendingUp className="h-4 w-4 md:h-5 md:w-5 text-black" />
               Fluxo de Caixa Detalhado
             </CardTitle>
-            <div className="flex items-center justify-between flex-wrap gap-3">
-              <p className="text-sm text-gray-600">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-2">
+              <p className="text-xs md:text-sm text-gray-600">
                 Todas as transações organizadas por data
               </p>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-2 md:gap-3">
                 {/* Filtro de Tipo */}
                 <div className="flex items-center gap-2">
                   <Filter className="h-4 w-4 text-gray-500" />
@@ -452,88 +453,92 @@ export default function FluxoCaixa() {
               </div>
             </div>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 p-3 md:p-6">
             {/* Unified Transaction List */}
             <div className="space-y-3">
               <div className="flex items-center gap-2 pb-2 border-b border-black">
                 <Calendar className="h-4 w-4 text-black" />
-                <h3 className="font-semibold text-black">TRANSAÇÕES</h3>
+                <h3 className="text-sm md:text-base font-semibold text-black">TRANSAÇÕES</h3>
               </div>
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-gray-50">
-                    <TableHead className="w-[100px] text-black">Data</TableHead>
-                    <TableHead className="w-[120px] text-black">Categoria</TableHead>
-                    <TableHead className="text-black">Descrição</TableHead>
-                    <TableHead className="text-right w-[120px] text-black">Valor</TableHead>
-                    <TableHead className="w-[50px]"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {allTransactionsSorted.map((transaction) => (
-                    <TableRow key={transaction.id} className={`hover:bg-gray-50 ${transaction.valor > 0 ? 'border-l-4 border-l-green-500' : 'border-l-4 border-l-red-500'}`}>
-                       <TableCell className="font-medium text-sm">
-                         {new Date(transaction.data_transacao).toLocaleDateString('pt-BR', { 
-                           day: '2-digit', 
-                           month: '2-digit'
-                         })}
-                       </TableCell>
-                      <TableCell className="text-sm">
-                        <div className="font-medium text-black text-left">
-                          {transaction.categoria_final || transaction.categoria_sugerida || 'Outros'}
-                        </div>
-                      </TableCell>
-                       <TableCell className="max-w-[200px]">
-                         <div className="flex items-center gap-2 w-full">
-                           <div className="flex-1 text-sm whitespace-nowrap overflow-hidden text-ellipsis" title={transaction.descricao}>
-                             {transaction.descricao}
-                           </div>
-                           {transaction.origem_arquivo === 'manual_entry' && (
-                             <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20 flex-shrink-0">
-                               Manual
-                             </Badge>
-                           )}
-                         </div>
-                       </TableCell>
-                       <TableCell className={`text-right font-bold whitespace-nowrap ${transaction.valor > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                         {transaction.valor > 0 ? '+' : ''}R$ {Math.abs(transaction.valor).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                       </TableCell>
-                      <TableCell>
-                        <TransactionActions 
-                          transaction={transaction}
-                          onTransactionUpdated={() => loadTransactions(selectedMonth)}
-                        />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              <div className="overflow-x-auto -mx-3 md:mx-0">
+                <div className="min-w-[640px]">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-gray-50">
+                        <TableHead className="text-black text-xs md:text-sm">Data</TableHead>
+                        <TableHead className="text-black text-xs md:text-sm">Categoria</TableHead>
+                        <TableHead className="text-black text-xs md:text-sm">Descrição</TableHead>
+                        <TableHead className="text-right text-black text-xs md:text-sm">Valor</TableHead>
+                        <TableHead className="w-[50px]"></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {allTransactionsSorted.map((transaction) => (
+                        <TableRow key={transaction.id} className={`hover:bg-gray-50 ${transaction.valor > 0 ? 'border-l-4 border-l-green-500' : 'border-l-4 border-l-red-500'}`}>
+                          <TableCell className="font-medium text-xs md:text-sm whitespace-nowrap">
+                            {new Date(transaction.data_transacao).toLocaleDateString('pt-BR', { 
+                              day: '2-digit', 
+                              month: '2-digit'
+                            })}
+                          </TableCell>
+                          <TableCell className="text-xs md:text-sm">
+                            <div className="font-medium text-black text-left">
+                              {transaction.categoria_final || transaction.categoria_sugerida || 'Outros'}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2 w-full">
+                              <div className="flex-1 text-xs md:text-sm whitespace-nowrap overflow-hidden text-ellipsis" title={transaction.descricao}>
+                                {transaction.descricao}
+                              </div>
+                              {transaction.origem_arquivo === 'manual_entry' && (
+                                <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20 flex-shrink-0">
+                                  Manual
+                                </Badge>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className={`text-right font-bold whitespace-nowrap text-xs md:text-sm ${transaction.valor > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            {transaction.valor > 0 ? '+' : ''}R$ {Math.abs(transaction.valor).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                          </TableCell>
+                          <TableCell>
+                            <TransactionActions 
+                              transaction={transaction}
+                              onTransactionUpdated={() => loadTransactions(selectedMonth)}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
             </div>
 
             {/* Net Result Summary */}
             <div className="pt-4 border-t border-border">
-              <div className={`flex justify-between items-center p-4 rounded-lg ${
+              <div className={`flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 p-3 md:p-4 rounded-lg ${
                 netResult >= 0 
                   ? 'bg-success/10 border border-success/20' 
                   : 'bg-destructive/10 border border-destructive/20'
               }`}>
                 <div className="flex items-center gap-2">
                   {netResult >= 0 ? (
-                    <TrendingUp className="h-5 w-5 text-success" />
+                    <TrendingUp className="h-4 w-4 md:h-5 md:w-5 text-success" />
                   ) : (
-                    <TrendingDown className="h-5 w-5 text-destructive" />
+                    <TrendingDown className="h-4 w-4 md:h-5 md:w-5 text-destructive" />
                   )}
-                  <h3 className={`font-semibold ${
+                  <h3 className={`text-sm md:text-base font-semibold ${
                     netResult >= 0 ? 'text-success' : 'text-destructive'
                   }`}>
                     Resultado Líquido do Período
                   </h3>
                 </div>
-                 <div className={`text-xl font-bold whitespace-nowrap ${
-                   netResult >= 0 ? 'text-success' : 'text-destructive'
-                 }`}>
-                   R$ {netResult.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                 </div>
+                <div className={`text-lg md:text-xl font-bold whitespace-nowrap ${
+                  netResult >= 0 ? 'text-success' : 'text-destructive'
+                }`}>
+                  R$ {netResult.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                </div>
               </div>
             </div>
           </CardContent>

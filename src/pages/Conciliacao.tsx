@@ -523,29 +523,29 @@ export default function Conciliacao() {
 
           <TabsContent value="conciliacao" className="space-y-4">
             {/* Balance Details for Manual Tab */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 mb-6">
               <Card className="bg-gradient-to-br from-success/10 to-success/5 border-success/20">
-                <CardContent className="p-4">
+                <CardContent className="p-3 md:p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-success">Entradas</p>
-                      <p className="text-xl font-bold">R$ {totalEntradas.toLocaleString("pt-BR")}</p>
+                      <p className="text-xs md:text-sm font-medium text-success">Entradas</p>
+                      <p className="text-lg md:text-xl font-bold">R$ {totalEntradas.toLocaleString("pt-BR")}</p>
                       <p className="text-xs text-muted-foreground">{entradas.length} transações</p>
                     </div>
-                    <TrendingUp className="h-6 w-6 text-success" />
+                    <TrendingUp className="h-5 w-5 md:h-6 md:w-6 text-success" />
                   </div>
                 </CardContent>
               </Card>
 
               <Card className="bg-gradient-to-br from-destructive/10 to-destructive/5 border-destructive/20">
-                <CardContent className="p-4">
+                <CardContent className="p-3 md:p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-destructive">Saídas</p>
-                      <p className="text-xl font-bold">R$ {totalSaidas.toLocaleString("pt-BR")}</p>
+                      <p className="text-xs md:text-sm font-medium text-destructive">Saídas</p>
+                      <p className="text-lg md:text-xl font-bold">R$ {totalSaidas.toLocaleString("pt-BR")}</p>
                       <p className="text-xs text-muted-foreground">{saidas.length} transações</p>
                     </div>
-                    <TrendingDown className="h-6 w-6 text-destructive" />
+                    <TrendingDown className="h-5 w-5 md:h-6 md:w-6 text-destructive" />
                   </div>
                 </CardContent>
               </Card>
@@ -555,14 +555,14 @@ export default function Conciliacao() {
                   ? 'from-primary/10 to-primary/5 border-primary/20' 
                   : 'from-warning/10 to-warning/5 border-warning/20'
               }`}>
-                <CardContent className="p-4">
+                <CardContent className="p-3 md:p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium">Saldo Líquido</p>
-                      <p className="text-xl font-bold">R$ {saldoLiquido.toLocaleString("pt-BR")}</p>
+                      <p className="text-xs md:text-sm font-medium">Saldo Líquido</p>
+                      <p className="text-lg md:text-xl font-bold">R$ {saldoLiquido.toLocaleString("pt-BR")}</p>
                       <p className="text-xs text-muted-foreground">{transactions.length} total</p>
                     </div>
-                    <DollarSign className="h-6 w-6" />
+                    <DollarSign className="h-5 w-5 md:h-6 md:w-6" />
                   </div>
                 </CardContent>
               </Card>
@@ -597,16 +597,17 @@ export default function Conciliacao() {
             {/* Tabela de Transações */}
             <Card>
               <CardContent className="p-0">
-                <div className="overflow-x-auto mobile-scroll">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Data</TableHead>
-                        <TableHead>Descrição</TableHead>
-                        <TableHead>Valor</TableHead>
-                        <TableHead>Categoria</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="w-[50px]">
+                <div className="overflow-x-auto -mx-3 md:mx-0">
+                  <div className="min-w-[640px]">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="text-xs md:text-sm">Data</TableHead>
+                          <TableHead className="text-xs md:text-sm">Descrição</TableHead>
+                          <TableHead className="text-xs md:text-sm">Valor</TableHead>
+                          <TableHead className="text-xs md:text-sm">Categoria</TableHead>
+                          <TableHead className="text-xs md:text-sm">Status</TableHead>
+                          <TableHead className="w-[50px]">
                           <div className="flex items-center justify-between">
                             <span className="sr-only">Ações</span>
                             <Button
@@ -702,8 +703,9 @@ export default function Conciliacao() {
                           </TableCell>
                         </TableRow>
                       ))}
-                    </TableBody>
-                  </Table>
+                     </TableBody>
+                   </Table>
+                  </div>
                 </div>
                 <TablePagination
                   count={filteredTransactions.length}
