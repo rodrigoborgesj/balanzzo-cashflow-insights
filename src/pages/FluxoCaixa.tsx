@@ -27,6 +27,7 @@ import { useConciliacao, Transaction } from "@/hooks/useConciliacao";
 import { useNavigate } from "react-router-dom";
 import { ManualTransactionForm } from "@/components/ManualTransactionForm";
 import { TransactionActions } from "@/components/TransactionActions";
+import { supabase } from "@/integrations/supabase/client";
 
 interface CategoryGroup {
   category: string;
@@ -67,6 +68,33 @@ export default function FluxoCaixa() {
       window.removeEventListener('transactionsUpdated', handleTransactionsUpdate);
     };
   }, [selectedMonth]); // ✅ FIX: Removido loadTransactions das dependências para evitar re-criação do listener
+
+  // Realtime: atualizar automaticamente quando houver mudanças nas tabelas relevantes
+  useEffect(() => {
+    const channel = supabase
+      .channel('fluxo-caixa-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'transacoes_conciliadas' },
+        () => {
+          console.log('FluxoCaixa: Mudança em transacoes_conciliadas (realtime) → recarregando...');
+          loadTransactions(selectedMonth);
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'fluxo_caixa' },
+        () => {
+          console.log('FluxoCaixa: Mudança em fluxo_caixa (realtime) → recarregando...');
+          loadTransactions(selectedMonth);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [selectedMonth]);
 
   // Group transactions by category - only include categorized transactions
   useEffect(() => {
