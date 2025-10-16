@@ -28,6 +28,7 @@ import { useNavigate } from "react-router-dom";
 import { ManualTransactionForm } from "@/components/ManualTransactionForm";
 import { TransactionActions } from "@/components/TransactionActions";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 interface CategoryGroup {
   category: string;
@@ -45,15 +46,17 @@ export default function FluxoCaixa() {
   const [transactionFilter, setTransactionFilter] = useState<'todas' | 'entradas' | 'saidas'>('todas');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   // Use reconciliation hook to get categorized transactions
   const { transactions, isLoading, loadTransactions, userCategories, loadUserCategories } = useConciliacao();
 
-  // Load transactions when month changes
+  // Load transactions when month or user changes
   useEffect(() => {
+    if (!user?.id) return;
     loadTransactions(selectedMonth);
     loadUserCategories();
-  }, [selectedMonth]); // ✅ FIX: Removido loadTransactions e loadUserCategories das dependências para evitar loop de re-renders
+  }, [selectedMonth, user?.id]); // Garantir carregamento inicial após login
 
   // Listen for transaction updates (when manual transactions are removed)
   useEffect(() => {
