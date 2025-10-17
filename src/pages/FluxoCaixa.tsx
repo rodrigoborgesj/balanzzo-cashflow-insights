@@ -41,7 +41,10 @@ interface CategoryGroup {
 export default function FluxoCaixa() {
   const [saldoInicial, setSaldoInicial] = useState(0);
   const [showSettings, setShowSettings] = useState(false);
-  const [selectedMonth, setSelectedMonth] = useState<string>(new Date().toISOString().slice(0, 7));
+  const [selectedMonth, setSelectedMonth] = useState<string>(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  });
   const [categoryGroups, setCategoryGroups] = useState<CategoryGroup[]>([]);
   const [transactionFilter, setTransactionFilter] = useState<'todas' | 'entradas' | 'saidas'>('todas');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);

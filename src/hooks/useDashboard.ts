@@ -48,7 +48,10 @@ const QUERY_KEYS = {
 } as const;
 
 export function useDashboard() {
-  const [selectedMonth, setSelectedMonth] = useState<string>(new Date().toISOString().slice(0, 7));
+  const [selectedMonth, setSelectedMonth] = useState<string>(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  });
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const requestIdRef = useRef(0);
