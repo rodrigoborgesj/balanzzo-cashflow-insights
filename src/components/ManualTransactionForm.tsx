@@ -183,11 +183,12 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [],
         await loadUserCategories();
       }
       
-      // ✅ CRÍTICO: Disparar eventos para atualizar Dashboard e Fluxo de Caixa
-      window.dispatchEvent(new Event('transactionsUpdated'));
-      console.log('🔄 Evento transactionsUpdated disparado');
-      
-      onTransactionAdded();
+      // ✅ CRÍTICO: Aguarda 100ms antes de disparar eventos para garantir que o DB atualizou
+      setTimeout(() => {
+        window.dispatchEvent(new Event('transactionsUpdated'));
+        console.log('🔄 Evento transactionsUpdated disparado');
+        onTransactionAdded();
+      }, 100);
 
     } catch (error) {
       console.error('Erro ao adicionar transação manual:', error);

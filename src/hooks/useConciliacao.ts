@@ -140,16 +140,13 @@ export function useConciliacao() {
         .select('*')
         .eq('user_id', user.id);
 
-      // Filtrar por mês se especificado - fix month selection bug
+      // Filtrar por mês se especificado - usando mes_referencia ao invés de data_transacao
       if (monthFilter) {
         const year = monthFilter.split('-')[0];
         const month = monthFilter.split('-')[1];
-        const startDate = `${year}-${month}-01`;
-        // Get last day of month properly
-        const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
-        const endDate = `${year}-${month}-${lastDay.toString().padStart(2, '0')}`;
-        console.log(`[${correlationId}] Filtering by date range:`, { startDate, endDate });
-        query = query.gte('data_transacao', startDate).lte('data_transacao', endDate);
+        const monthReference = `${year}-${month}-01`;
+        console.log(`[${correlationId}] Filtering by mes_referencia:`, { monthReference });
+        query = query.eq('mes_referencia', monthReference);
       } else {
         console.log(`[${correlationId}] Loading all transactions (no month filter)`);
       }
