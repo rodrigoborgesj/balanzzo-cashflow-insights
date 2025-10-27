@@ -263,7 +263,7 @@ async function sendWelcomeEmail(email: string, companyName: string) {
               Agora você tem acesso a uma forma simples e inteligente de cuidar das finanças do seu negócio.<br><br>
               Acesse sua conta e comece a explorar as ferramentas que criamos para te ajudar a ter mais clareza e controle financeiro.
             </p>
-            <a href="https://www.balanzzo.com.br/login" class="button">Acessar minha conta</a>
+            <a href="https://www.balanzzo.com.br/dashboard" class="button">Acessar minha conta</a>
             <p class="secondary-text">
               Qualquer dúvida, é só responder este e-mail ou entrar em contato pelo nosso suporte.
             </p>
