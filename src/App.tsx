@@ -6,7 +6,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useEffect } from "react";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ThemeProvider } from "@/components/ThemeProvider";
-import { useEmailAutomation } from "@/hooks/useEmailAutomation";
 import { AppLayout } from "./components/AppLayout";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import LandingPage from "./pages/LandingPage";
@@ -44,9 +43,6 @@ const queryClient = new QueryClient({
 });
 
 const App = () => {
-  // Initialize email automation
-  useEmailAutomation();
-
   // Handle visibility changes for React Query
   useEffect(() => {
     const handleVisibilityChange = () => {
