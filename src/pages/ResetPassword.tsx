@@ -18,24 +18,32 @@ export default function ResetPassword() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [validation, setValidation] = useState<PasswordValidationResult | null>(null);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { updatePassword, user, isAuthenticated } = useSecureAuth();
+  const { updatePassword, user, isAuthenticated, isLoading: authLoading } = useSecureAuth();
   const { profile } = useProfile();
 
   useEffect(() => {
-    // Check if user is authenticated (came from password reset email)
-    if (!isAuthenticated) {
-      toast({
-        title: "Acesso negado",
-        description: "Link de redefinição de senha inválido ou expirado.",
-        variant: "destructive",
-      });
-      navigate("/login");
-    }
-  }, [isAuthenticated, navigate, toast]);
+    // Give Supabase time to process the token from the email link
+    const checkAuthTimeout = setTimeout(() => {
+      setIsCheckingAuth(false);
+      
+      // After processing, check if user is authenticated
+      if (!isAuthenticated && !authLoading) {
+        toast({
+          title: "Acesso negado",
+          description: "Link de redefinição de senha inválido ou expirado. Solicite um novo link.",
+          variant: "destructive",
+        });
+        navigate("/forgot-password");
+      }
+    }, 2000); // Wait 2 seconds for token processing
+
+    return () => clearTimeout(checkAuthTimeout);
+  }, [isAuthenticated, authLoading, navigate, toast]);
 
   // Validate password as user types (with async breach check)
   useEffect(() => {
@@ -149,6 +157,35 @@ export default function ResetPassword() {
       setIsLoading(false);
     }
   };
+
+  // Show loading state while checking authentication
+  if (isCheckingAuth || authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5 flex items-center justify-center p-4">
+        <div className="w-full max-w-md space-y-6">
+          <div className="text-center space-y-2">
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <div className="p-3 bg-primary rounded-xl">
+                <Building2 className="h-8 w-8 text-primary-foreground" />
+              </div>
+              <h1 className="text-3xl font-bold text-foreground">Balanzzo</h1>
+            </div>
+            <h2 className="text-xl font-semibold text-foreground">
+              Verificando link...
+            </h2>
+            <p className="text-muted-foreground">
+              Aguarde enquanto validamos seu acesso
+            </p>
+          </div>
+          <Card className="bg-card/80 backdrop-blur-sm border-border/50 shadow-lg">
+            <CardContent className="p-6 flex justify-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5 flex items-center justify-center p-4">
