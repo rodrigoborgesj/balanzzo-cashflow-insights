@@ -47,7 +47,7 @@ export function useAuth() {
   }, []);
 
   const signUp = async (email: string, password: string) => {
-    const redirectUrl = `${window.location.origin}/`;
+    const redirectUrl = `https://www.balanzzo.com.br/`;
     
     const { error } = await supabase.auth.signUp({
       email,
@@ -68,7 +68,7 @@ export function useAuth() {
   };
 
   const signInWithGoogle = async () => {
-    const redirectUrl = `${window.location.origin}/`;
+    const redirectUrl = `https://www.balanzzo.com.br/`;
     
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -81,7 +81,7 @@ export function useAuth() {
   };
 
   const resetPassword = async (email: string) => {
-    const redirectUrl = `${window.location.origin}/reset-password`;
+    const redirectUrl = `https://www.balanzzo.com.br/reset-password`;
     
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: redirectUrl,
