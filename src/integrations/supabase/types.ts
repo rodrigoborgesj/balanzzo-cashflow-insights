@@ -512,7 +512,7 @@ export type Database = {
     }
     Functions: {
       get_subscription_plans: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           active: boolean
           billing_cycle: string
@@ -537,10 +537,7 @@ export type Database = {
           user_id: string
         }[]
       }
-      sugerir_categoria: {
-        Args: { descricao_input: string }
-        Returns: string
-      }
+      sugerir_categoria: { Args: { descricao_input: string }; Returns: string }
     }
     Enums: {
       [_ in never]: never

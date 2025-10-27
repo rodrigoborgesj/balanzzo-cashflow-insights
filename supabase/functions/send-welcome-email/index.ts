@@ -154,36 +154,125 @@ const handler = async (req: Request): Promise<Response> => {
 async function sendWelcomeEmail(email: string, companyName: string) {
   try {
     const emailResult = await resend.emails.send({
-      from: 'Rodrigo Borges - Balanzzo <onboarding@resend.dev>',
+      from: 'Balanzzo <contato@balanzzo.com.br>',
       to: [email],
-      subject: 'Bem-vindo ao sistema financeiro da Balanzzo 🎉',
+      subject: 'Seja bem-vindo à Balanzzo 🚀',
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; line-height: 1.6;">
-          <h2 style="color: #2563eb; margin-bottom: 20px;">Olá, ${companyName}!</h2>
-          
-          <p>Seja muito bem-vindo ao sistema financeiro da Balanzzo 🚀</p>
-          
-          <p>Preparamos um ambiente prático e intuitivo para ajudar você a cuidar das finanças do seu negócio sem burocracia.</p>
-          
-          <p>A gente sabe que, quando a empresa ainda é pequena, olhar para os números pode ser um desafio. Por isso, nossa missão é tirar você das planilhas e trazer mais organização, praticidade e tempo livre.</p>
-          
-          <p>Assim, cada minuto dedicado ao sistema vai entregar dados valiosos e uma experiência financeira muito mais leve.</p>
-          
-          <div style="margin: 30px 0; text-align: center;">
-            <a href="https://www.balanzzo.com.br" 
-               style="background-color: #2563eb; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
-              👉 Acesse o sistema agora
-            </a>
+        <!DOCTYPE html>
+        <html lang="pt-BR">
+        <head>
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <title>Bem-vindo à Balanzzo</title>
+          <style>
+            body {
+              font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+              background-color: #F5F5F5;
+              margin: 0;
+              padding: 0;
+              color: #1A3423;
+            }
+            .container {
+              max-width: 520px;
+              margin: 40px auto;
+              background-color: #FFFFFF;
+              border-radius: 12px;
+              box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+              padding: 40px 30px;
+              text-align: center;
+            }
+            .logo {
+              margin-bottom: 24px;
+            }
+            .logo img {
+              max-width: 120px;
+              height: auto;
+            }
+            h1 {
+              font-size: 24px;
+              margin-bottom: 16px;
+              color: #1A3423;
+              font-weight: 600;
+            }
+            p {
+              font-size: 15px;
+              color: #333333;
+              line-height: 1.6;
+              margin-bottom: 20px;
+            }
+            .button {
+              display: inline-block;
+              background-color: #1A3423;
+              color: #E4F8CA;
+              text-decoration: none;
+              padding: 12px 24px;
+              border-radius: 8px;
+              font-weight: 600;
+              transition: background-color 0.3s ease;
+              font-size: 15px;
+            }
+            .button:hover {
+              background-color: #A9C7A1;
+              color: #1A3423;
+            }
+            .secondary-text {
+              margin-top: 24px;
+              font-size: 14px;
+              color: #555;
+            }
+            .footer {
+              font-size: 13px;
+              color: #777;
+              margin-top: 32px;
+            }
+            .footer a {
+              color: #1A3423;
+              text-decoration: none;
+            }
+            .footer a:hover {
+              text-decoration: underline;
+            }
+            
+            /* Responsividade */
+            @media only screen and (max-width: 600px) {
+              .container {
+                margin: 20px;
+                padding: 30px 20px;
+              }
+              h1 {
+                font-size: 22px;
+              }
+              p {
+                font-size: 14px;
+              }
+              .button {
+                padding: 10px 20px;
+                font-size: 14px;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="logo">
+              <img src="https://www.balanzzo.com.br/logo.png" alt="Balanzzo" />
+            </div>
+            <h1>Bem-vindo à Balanzzo!</h1>
+            <p>
+              Estamos muito felizes em ter você com a gente. 🎉<br><br>
+              Agora você tem acesso a uma forma simples e inteligente de cuidar das finanças do seu negócio.<br><br>
+              Acesse sua conta e comece a explorar as ferramentas que criamos para te ajudar a ter mais clareza e controle financeiro.
+            </p>
+            <a href="https://www.balanzzo.com.br/login" class="button">Acessar minha conta</a>
+            <p class="secondary-text">
+              Qualquer dúvida, é só responder este e-mail ou entrar em contato pelo nosso suporte.
+            </p>
+            <div class="footer">
+              Balanzzo © Todos os direitos reservados — <a href="https://www.balanzzo.com.br">www.balanzzo.com.br</a>
+            </div>
           </div>
-          
-          <p>E, se precisar de ajuda, fale com o nosso time de atendimento pelo WhatsApp <strong>(51) 99487-6689</strong>. Estamos prontos para atender você!</p>
-          
-          <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee;">
-            <p style="margin: 0;"><strong>Atenciosamente,</strong></p>
-            <p style="margin: 5px 0;"><strong>Rodrigo Borges</strong></p>
-            <p style="margin: 0; color: #666;">Fundador da Balanzzo</p>
-          </div>
-        </div>
+        </body>
+        </html>
       `,
     });
 
