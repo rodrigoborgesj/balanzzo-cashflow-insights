@@ -23,7 +23,7 @@ export default function ResetPassword() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { updatePassword, user, isAuthenticated, isLoading: authLoading } = useSecureAuth();
+  const { updatePassword, user, isAuthenticated, isLoading: authLoading, logout } = useSecureAuth();
   const { profile } = useProfile();
 
   useEffect(() => {
@@ -138,14 +138,15 @@ export default function ResetPassword() {
       await savePasswordToHistory(password, user.id);
 
       toast({
-        title: "Senha redefinida com sucesso!",
-        description: "Sua senha foi alterada. Redirecionando...",
+        title: "Senha alterada com sucesso!",
+        description: "Faça login novamente. Redirecionando...",
       });
 
-      // Redirect to dashboard
-      setTimeout(() => {
-        navigate("/", { replace: true });
-      }, 2000);
+      // Logout and redirect to login after 3 seconds
+      setTimeout(async () => {
+        await logout();
+        navigate("/login", { replace: true });
+      }, 3000);
       
     } catch (error: any) {
       toast({

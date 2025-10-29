@@ -94,6 +94,7 @@ const App = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/auth/reset-password" element={<ResetPassword />} />
           
           {/* Policy pages */}
           <Route path="/politica-de-privacidade" element={<PoliticaPrivacidade />} />
