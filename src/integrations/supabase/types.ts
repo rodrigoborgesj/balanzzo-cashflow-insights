@@ -483,6 +483,48 @@ export type Database = {
           },
         ]
       }
+      transacoes_recorrentes: {
+        Row: {
+          ativo: boolean | null
+          company_id: string | null
+          created_at: string | null
+          id: string
+          intervalo_dias: number | null
+          mes_especifico: number | null
+          proximo_lancamento: string
+          tipo_recorrencia: string
+          transacao_origem_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          ativo?: boolean | null
+          company_id?: string | null
+          created_at?: string | null
+          id?: string
+          intervalo_dias?: number | null
+          mes_especifico?: number | null
+          proximo_lancamento: string
+          tipo_recorrencia: string
+          transacao_origem_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          ativo?: boolean | null
+          company_id?: string | null
+          created_at?: string | null
+          id?: string
+          intervalo_dias?: number | null
+          mes_especifico?: number | null
+          proximo_lancamento?: string
+          tipo_recorrencia?: string
+          transacao_origem_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       public_subscription_plans: {

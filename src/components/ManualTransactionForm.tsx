@@ -6,10 +6,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Calendar, DollarSign, Tag, FileText } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Plus, Calendar, DollarSign, Tag, FileText, Repeat } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { addMonths, addDays, format } from "date-fns";
 
 interface ManualTransactionFormProps {
   onTransactionAdded: () => void;
@@ -24,6 +26,11 @@ interface ManualTransactionData {
   category: string;
   description: string;
   paymentMethod?: string;
+  // NEW: Recurring transaction fields
+  isRecurring?: boolean;
+  recurrenceType?: 'monthly' | 'specific_month' | 'custom';
+  customIntervalDays?: string;
+  specificMonth?: string;
 }
 
 export function ManualTransactionForm({ onTransactionAdded, userCategories = [], loadUserCategories }: ManualTransactionFormProps) {
@@ -35,7 +42,12 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [],
     amount: '',
     category: '',
     description: '',
-    paymentMethod: ''
+    paymentMethod: '',
+    // NEW: Initialize recurring fields
+    isRecurring: false,
+    recurrenceType: 'monthly',
+    customIntervalDays: '',
+    specificMonth: ''
   });
   
   const { user } = useAuth();
@@ -47,6 +59,71 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [],
       loadUserCategories();
     }
   }, [isOpen]); // ✅ FIX: Removido loadUserCategories das dependências para evitar que mudanças na função causem fechamento do modal
+
+  // NEW: Function to calculate next occurrence date
+  const calculateNextOccurrence = (currentDate: string): string => {
+    const date = new Date(currentDate + 'T00:00:00');
+    
+    switch (formData.recurrenceType) {
+      case 'monthly':
+        return format(addMonths(date, 1), 'yyyy-MM-dd');
+      
+      case 'specific_month':
+        if (!formData.specificMonth) return currentDate;
+        const targetMonth = parseInt(formData.specificMonth);
+        const nextYear = date.getFullYear() + 1;
+        return `${nextYear}-${String(targetMonth).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+      
+      case 'custom':
+        if (!formData.customIntervalDays) return currentDate;
+        const intervalDays = parseInt(formData.customIntervalDays);
+        return format(addDays(date, intervalDays), 'yyyy-MM-dd');
+      
+      default:
+        return currentDate;
+    }
+  };
+
+  // NEW: Function to handle recurring transaction creation
+  const handleRecurringTransaction = async (transactionData: any, company_id: string | null) => {
+    try {
+      // Validate recurring fields
+      if (formData.recurrenceType === 'custom' && !formData.customIntervalDays) {
+        throw new Error('Intervalo de dias é obrigatório para recorrência personalizada');
+      }
+      if (formData.recurrenceType === 'specific_month' && !formData.specificMonth) {
+        throw new Error('Mês específico é obrigatório para este tipo de recorrência');
+      }
+
+      const nextOccurrence = calculateNextOccurrence(formData.date);
+
+      const recurringData = {
+        transacao_origem_id: transactionData.hash_transacao, // Using hash as unique identifier
+        user_id: user!.id,
+        company_id,
+        tipo_recorrencia: formData.recurrenceType,
+        intervalo_dias: formData.recurrenceType === 'custom' ? parseInt(formData.customIntervalDays!) : null,
+        mes_especifico: formData.recurrenceType === 'specific_month' ? parseInt(formData.specificMonth!) : null,
+        proximo_lancamento: nextOccurrence,
+        ativo: true
+      };
+
+      const { error } = await supabase
+        .from('transacoes_recorrentes')
+        .insert([recurringData]);
+
+      if (error) throw error;
+
+      console.log('✅ Configuração de recorrência salva:', recurringData);
+    } catch (error) {
+      console.error('Erro ao configurar recorrência:', error);
+      toast({
+        title: 'Aviso',
+        description: 'Transação salva, mas houve erro ao configurar recorrência',
+        variant: 'destructive'
+      });
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -161,9 +238,16 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [],
 
       console.log('✅ Transação salva com sucesso!');
 
+      // NEW: Handle recurring transaction if enabled
+      if (formData.isRecurring && formData.recurrenceType) {
+        await handleRecurringTransaction(transactionData, company_id);
+      }
+
       toast({
         title: 'Transação adicionada com sucesso!',
-        description: `${formData.type === 'entrada' ? 'Receita' : 'Despesa'} de R$ ${amount.toFixed(2)} foi registrada`,
+        description: formData.isRecurring 
+          ? `${formData.type === 'entrada' ? 'Receita' : 'Despesa'} recorrente de R$ ${amount.toFixed(2)} foi registrada`
+          : `${formData.type === 'entrada' ? 'Receita' : 'Despesa'} de R$ ${amount.toFixed(2)} foi registrada`,
       });
 
       // Reset form
@@ -173,7 +257,11 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [],
         amount: '',
         category: '',
         description: '',
-        paymentMethod: ''
+        paymentMethod: '',
+        isRecurring: false,
+        recurrenceType: 'monthly',
+        customIntervalDays: '',
+        specificMonth: ''
       });
 
       setIsOpen(false);
@@ -378,6 +466,106 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [],
                 <SelectItem value="outros">Outros</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          {/* NEW: Recurring Transaction Section */}
+          <div className="space-y-4 p-4 border-2 border-dashed border-primary/20 rounded-lg bg-primary/5">
+            <div className="flex items-center gap-3">
+              <Checkbox
+                id="isRecurring"
+                checked={formData.isRecurring}
+                onCheckedChange={(checked) => setFormData(prev => ({ 
+                  ...prev, 
+                  isRecurring: checked as boolean 
+                }))}
+              />
+              <Label htmlFor="isRecurring" className="flex items-center gap-2 cursor-pointer text-base font-medium">
+                <Repeat className="h-5 w-5 text-primary" />
+                🔁 Tornar Recorrente
+              </Label>
+            </div>
+
+            {formData.isRecurring && (
+              <div className="space-y-4 pl-8 animate-in slide-in-from-top-2">
+                <div className="space-y-2">
+                  <Label htmlFor="recurrenceType">Qual a frequência de recorrência? *</Label>
+                  <Select
+                    value={formData.recurrenceType}
+                    onValueChange={(value: 'monthly' | 'specific_month' | 'custom') => 
+                      setFormData(prev => ({ ...prev, recurrenceType: value }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione a frequência" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="monthly">
+                        <div className="flex items-center gap-2">
+                          📅 Mensal (repete todo mês)
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="specific_month">
+                        <div className="flex items-center gap-2">
+                          📆 Mês específico (ex: só em Março)
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="custom">
+                        <div className="flex items-center gap-2">
+                          🗓️ Personalizado (escolher intervalo)
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {formData.recurrenceType === 'specific_month' && (
+                  <div className="space-y-2">
+                    <Label htmlFor="specificMonth">Mês específico *</Label>
+                    <Select
+                      value={formData.specificMonth}
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, specificMonth: value }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Escolha o mês" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">Janeiro</SelectItem>
+                        <SelectItem value="2">Fevereiro</SelectItem>
+                        <SelectItem value="3">Março</SelectItem>
+                        <SelectItem value="4">Abril</SelectItem>
+                        <SelectItem value="5">Maio</SelectItem>
+                        <SelectItem value="6">Junho</SelectItem>
+                        <SelectItem value="7">Julho</SelectItem>
+                        <SelectItem value="8">Agosto</SelectItem>
+                        <SelectItem value="9">Setembro</SelectItem>
+                        <SelectItem value="10">Outubro</SelectItem>
+                        <SelectItem value="11">Novembro</SelectItem>
+                        <SelectItem value="12">Dezembro</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {formData.recurrenceType === 'custom' && (
+                  <div className="space-y-2">
+                    <Label htmlFor="customIntervalDays">Intervalo em dias *</Label>
+                    <Input
+                      id="customIntervalDays"
+                      type="number"
+                      min="1"
+                      placeholder="Ex: 15 (a cada 15 dias)"
+                      value={formData.customIntervalDays}
+                      onChange={(e) => setFormData(prev => ({ ...prev, customIntervalDays: e.target.value }))}
+                    />
+                  </div>
+                )}
+
+                <div className="text-sm text-muted-foreground bg-background p-3 rounded-md border">
+                  <strong>ℹ️ Como funciona:</strong> Esta transação será lançada automaticamente nas próximas datas, 
+                  conforme a frequência selecionada.
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Manual Entry Badge */}
