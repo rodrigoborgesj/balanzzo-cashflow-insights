@@ -84,8 +84,30 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [],
     }
   };
 
+  // NEW: Function to generate future occurrences for projections
+  const generateFutureOccurrences = (startDate: string, amount: number, numOccurrences: number) => {
+    const occurrences = [];
+    let currentDate = startDate;
+
+    for (let i = 0; i < numOccurrences; i++) {
+      currentDate = calculateNextOccurrence(currentDate);
+      
+      occurrences.push({
+        user_id: user!.id,
+        company_id: null, // Will be set later
+        data_competencia: currentDate,
+        tipo: formData.type,
+        categoria: formData.category,
+        descricao: formData.description,
+        valor: Math.abs(amount)
+      });
+    }
+
+    return occurrences;
+  };
+
   // NEW: Function to handle recurring transaction creation
-  const handleRecurringTransaction = async (transactionData: any, company_id: string | null) => {
+  const handleRecurringTransaction = async (transactionData: any, company_id: string | null, amount: number) => {
     try {
       // Validate recurring fields
       if (formData.recurrenceType === 'custom' && !formData.customIntervalDays) {
@@ -115,6 +137,34 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [],
       if (error) throw error;
 
       console.log('✅ Configuração de recorrência salva:', recurringData);
+
+      // Generate and insert future occurrences for projections
+      const numOccurrences = formData.recurrenceType === 'specific_month' ? 5 : 12; // 12 months for monthly/custom, 5 years for specific month
+      const futureOccurrences = generateFutureOccurrences(formData.date, amount, numOccurrences);
+      
+      // Set company_id for all occurrences
+      const futureOccurrencesWithCompany = futureOccurrences.map(occ => ({
+        ...occ,
+        company_id
+      }));
+
+      if (futureOccurrencesWithCompany.length > 0) {
+        const { error: fluxoError } = await supabase
+          .from('fluxo_caixa')
+          .insert(futureOccurrencesWithCompany);
+
+        if (fluxoError) {
+          console.error('Erro ao criar lançamentos futuros:', fluxoError);
+          toast({
+            title: 'Aviso',
+            description: 'Recorrência configurada, mas houve erro ao criar projeções futuras',
+            variant: 'default'
+          });
+        } else {
+          console.log(`✅ ${futureOccurrencesWithCompany.length} lançamentos futuros criados para projeção`);
+        }
+      }
+
     } catch (error) {
       console.error('Erro ao configurar recorrência:', error);
       toast({
@@ -240,7 +290,7 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [],
 
       // NEW: Handle recurring transaction if enabled
       if (formData.isRecurring && formData.recurrenceType) {
-        await handleRecurringTransaction(transactionData, company_id);
+        await handleRecurringTransaction(transactionData, company_id, amount);
       }
 
       toast({
