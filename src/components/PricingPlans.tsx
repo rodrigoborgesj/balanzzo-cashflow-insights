@@ -3,70 +3,23 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-
-interface Plan {
-  id: string;
-  name: string;
-  price_cents: number;
-  billing_cycle: string;
-  features: string[];
-  popular?: boolean;
-}
+import { useSubscription } from "@/hooks/useSubscription";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface PricingPlansProps {
-  plans?: Plan[];
+  showTitle?: boolean;
 }
 
-export function PricingPlans({ plans }: PricingPlansProps) {
+export function PricingPlans({ showTitle = true }: PricingPlansProps) {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
+  const { plans, isLoading } = useSubscription();
 
-  const defaultPlans: Plan[] = [
-    {
-      id: "monthly",
-      name: "Plano Mensal",
-      price_cents: 7800,
-      billing_cycle: "monthly",
-      features: [
-        "Acesso completo ao sistema",
-        "Gestão de fluxo de caixa",
-        "Relatórios DRE",
-        "Conciliação bancária",
-        "Suporte por email"
-      ],
-    },
-    {
-      id: "quarterly",
-      name: "Plano Trimestral",
-      price_cents: 20400,
-      billing_cycle: "quarterly",
-      features: [
-        "Acesso completo ao sistema",
-        "Gestão de fluxo de caixa",
-        "Relatórios DRE",
-        "Conciliação bancária",
-        "Suporte por email",
-        "Economia de 13%"
-      ],
-      popular: true,
-    },
-    {
-      id: "semiannual",
-      name: "Plano Semestral",
-      price_cents: 36000,
-      billing_cycle: "semiannual",
-      features: [
-        "Acesso completo ao sistema",
-        "Gestão de fluxo de caixa",
-        "Relatórios DRE",
-        "Conciliação bancária",
-        "Suporte prioritário",
-        "Economia de 23%"
-      ],
-    },
-  ];
-
-  const displayPlans = plans || defaultPlans;
+  // Mark quarterly plan as popular
+  const displayPlans = plans?.map(plan => ({
+    ...plan,
+    popular: plan.billing_cycle === 'quarterly'
+  }));
 
   const handleSelectPlan = (planId: string) => {
     if (!isAuthenticated) {
@@ -94,17 +47,58 @@ export function PricingPlans({ plans }: PricingPlansProps) {
     return map[cycle] || cycle;
   };
 
+  if (isLoading) {
+    return (
+      <section className="py-20 px-4 bg-gradient-to-b from-background to-muted/20">
+        <div className="container mx-auto max-w-6xl">
+          {showTitle && (
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                Escolha o Plano Ideal para Seu Negócio
+              </h2>
+              <p className="text-muted-foreground text-lg">
+                Comece a gerenciar suas finanças de forma profissional
+              </p>
+            </div>
+          )}
+          <div className="grid md:grid-cols-3 gap-8">
+            {[1, 2, 3].map((i) => (
+              <Card key={i}>
+                <CardHeader>
+                  <Skeleton className="h-8 w-3/4" />
+                  <Skeleton className="h-6 w-1/2 mt-2" />
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-full" />
+                  </div>
+                </CardContent>
+                <CardFooter>
+                  <Skeleton className="h-10 w-full" />
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="py-20 px-4 bg-gradient-to-b from-background to-muted/20">
       <div className="container mx-auto max-w-6xl">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Escolha o Plano Ideal para Seu Negócio
-          </h2>
-          <p className="text-muted-foreground text-lg">
-            Comece a gerenciar suas finanças de forma profissional
-          </p>
-        </div>
+        {showTitle && (
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              Escolha o Plano Ideal para Seu Negócio
+            </h2>
+            <p className="text-muted-foreground text-lg">
+              Comece a gerenciar suas finanças de forma profissional
+            </p>
+          </div>
+        )}
 
         <div className="grid md:grid-cols-3 gap-8">
           {displayPlans.map((plan) => (
