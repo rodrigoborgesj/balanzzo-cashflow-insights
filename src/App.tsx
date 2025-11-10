@@ -22,6 +22,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import PoliticaPrivacidade from "./pages/PoliticaPrivacidade";
 import PoliticaCancelamento from "./pages/PoliticaCancelamento";
+import Checkout from "./pages/Checkout";
 import NotFound from "./pages/NotFound";
 
 
@@ -99,6 +100,13 @@ const App = () => {
           {/* Policy pages */}
           <Route path="/politica-de-privacidade" element={<PoliticaPrivacidade />} />
           <Route path="/politica-de-cancelamento" element={<PoliticaCancelamento />} />
+          
+          {/* Checkout page - requires authentication */}
+          <Route path="/checkout" element={
+            <ProtectedRoute>
+              <Checkout />
+            </ProtectedRoute>
+          } />
           
           {/* Protected app routes */}
           <Route path="/dashboard" element={

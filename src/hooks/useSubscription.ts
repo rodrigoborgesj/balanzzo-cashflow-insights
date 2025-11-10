@@ -1,0 +1,76 @@
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from './useAuth';
+
+export interface SubscriptionPlan {
+  id: string;
+  name: string;
+  price_cents: number;
+  billing_cycle: string;
+  features: string[];
+  active: boolean;
+}
+
+export interface UserSubscription {
+  id: string;
+  plan_id: string;
+  status: string;
+  current_period_start: string;
+  current_period_end: string;
+  plan?: SubscriptionPlan;
+}
+
+export function useSubscription() {
+  const { user } = useAuth();
+
+  // Fetch user's active subscription
+  const { data: subscription, isLoading: loadingSubscription, refetch: refetchSubscription } = useQuery({
+    queryKey: ['subscription', user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+
+      const { data, error } = await supabase
+        .from('subscriptions')
+        .select(`
+          *,
+          plan:subscription_plans(*)
+        `)
+        .eq('user_id', user.id)
+        .in('status', ['active', 'trialing'])
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data as UserSubscription | null;
+    },
+    enabled: !!user,
+  });
+
+  // Fetch available plans
+  const { data: plans, isLoading: loadingPlans } = useQuery({
+    queryKey: ['subscription-plans'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('subscription_plans')
+        .select('*')
+        .eq('active', true)
+        .order('price_cents', { ascending: true });
+
+      if (error) throw error;
+      return data as SubscriptionPlan[];
+    },
+  });
+
+  const hasActiveSubscription = subscription?.status === 'active' || subscription?.status === 'trialing';
+  const isTrialing = subscription?.status === 'trialing';
+
+  return {
+    subscription,
+    plans,
+    hasActiveSubscription,
+    isTrialing,
+    isLoading: loadingSubscription || loadingPlans,
+    refetchSubscription,
+  };
+}

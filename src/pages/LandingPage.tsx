@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { PricingPlans } from "@/components/PricingPlans";
 import { 
   CheckCircle, 
   Upload, 
@@ -358,80 +359,7 @@ export default function LandingPage() {
 
 
       {/* Pricing Section */}
-      <section id="precos" className="py-16 sm:py-20 lg:py-24 bg-brand-white">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12 sm:mb-16">
-            <div className="inline-flex items-center gap-2 bg-brand-light-green/50 px-4 py-2 rounded-full text-sm font-medium text-brand-dark-green mb-4 sm:mb-6">
-              <Zap className="w-4 h-4" />
-              Preços transparentes
-            </div>
-            <h3 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-brand-dark-green mb-4 sm:mb-6">
-              Um plano. Tudo incluso.
-            </h3>
-            <p className="text-lg sm:text-xl text-brand-dark-green/70 max-w-2xl mx-auto px-4">
-              Sem pegadinhas, sem limites ocultos. Acesso completo a todas as funcionalidades.
-            </p>
-          </div>
-          
-          <div className="max-w-md sm:max-w-lg mx-auto">
-            <Card className="bg-gradient-to-br from-brand-white to-brand-cream/50 border-2 border-brand-dark-green/20 shadow-xl relative overflow-visible">
-              {/* Popular Badge */}
-              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
-                <div className="bg-gradient-to-r from-brand-dark-green to-brand-light-green text-brand-white px-4 sm:px-6 py-2 rounded-full text-xs sm:text-sm font-semibold shadow-lg whitespace-nowrap">
-                  Mais Popular
-                </div>
-              </div>
-
-              <CardContent className="p-6 sm:p-8 pt-16 sm:pt-20">
-                <div className="text-center mb-6 sm:mb-8">
-                  <div className="text-4xl sm:text-5xl md:text-6xl font-bold text-brand-dark-green mb-2">
-                    R$ 78
-                  </div>
-                  <div className="text-base sm:text-lg text-brand-dark-green/70">
-                    por mês, por empresa
-                  </div>
-                </div>
-
-                
-                <div className="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
-                  {[
-                    "Conciliação bancária automática",
-                    "Categorização inteligente",
-                    "Fluxo de caixa em tempo real", 
-                    "DRE e relatórios completos",
-                    "Insights e projeções",
-                    "Suporte prioritário",
-                    "Atualizações automáticas",
-                    "Backup seguro na nuvem"
-                  ].map((feature, index) => (
-                    <div key={index} className="flex items-start gap-3">
-                      <CheckCircle className="w-4 sm:w-5 h-4 sm:h-5 text-brand-dark-green flex-shrink-0 mt-0.5" />
-                      <span className="text-brand-dark-green text-sm sm:text-base">{feature}</span>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="space-y-3">
-                  <Button 
-                    onClick={() => window.open('https://wa.me/5551994876689', '_blank')}
-                    className="w-full bg-brand-dark-green hover:bg-brand-dark-green/90 text-brand-white py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
-                    aria-label="Agendar reunião no WhatsApp"
-                    title="Abre o WhatsApp em uma nova aba."
-                  >
-                    Agende uma reunião
-                    <ArrowRight className="ml-2 w-4 sm:w-5 h-4 sm:h-5" />
-                  </Button>
-                  
-                </div>
-
-                <div className="text-center mt-4 sm:mt-6 text-xs sm:text-sm text-brand-dark-green/60">
-                  Empresas já transformaram suas finanças com nossa solução
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
+      <PricingPlans />
 
       {/* About Us Section */}
       <section id="sobre" className="py-16 sm:py-20 lg:py-24 bg-gradient-to-b from-brand-cream/30 to-brand-white">

@@ -1,6 +1,7 @@
 import { useAuth } from "@/hooks/useAuth";
 import { Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { SubscriptionGuard } from "./SubscriptionGuard";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -42,7 +43,11 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     return <Navigate to="/login" replace />;
   }
 
-  // User is authenticated, show protected content
-  console.log('User authenticated, allowing access');
-  return <>{children}</>;
+  // User is authenticated, check subscription status
+  console.log('User authenticated, checking subscription');
+  return (
+    <SubscriptionGuard>
+      {children}
+    </SubscriptionGuard>
+  );
 }
