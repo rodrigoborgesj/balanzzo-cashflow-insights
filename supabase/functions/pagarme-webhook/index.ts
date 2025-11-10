@@ -1,9 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.5";
+import { crypto } from "https://deno.land/std@0.177.0/crypto/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-hub-signature',
 };
 
 serve(async (req) => {
@@ -14,9 +15,62 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const webhookSecret = Deno.env.get('PAGARME_WEBHOOK_SECRET')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const webhook = await req.json();
+    // Verify webhook secret is configured
+    if (!webhookSecret) {
+      console.error('PAGARME_WEBHOOK_SECRET not configured');
+      return new Response(
+        JSON.stringify({ error: 'Webhook secret not configured' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Read body as text for signature verification
+    const body = await req.text();
+    const signature = req.headers.get('X-Hub-Signature');
+
+    // Verify webhook signature
+    if (!signature) {
+      console.error('Missing X-Hub-Signature header');
+      return new Response(
+        JSON.stringify({ error: 'Missing signature' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Calculate expected signature using HMAC SHA-1
+    const encoder = new TextEncoder();
+    const keyData = encoder.encode(webhookSecret);
+    const messageData = encoder.encode(body);
+    
+    const key = await crypto.subtle.importKey(
+      'raw',
+      keyData,
+      { name: 'HMAC', hash: 'SHA-1' },
+      false,
+      ['sign']
+    );
+    
+    const signatureBuffer = await crypto.subtle.sign('HMAC', key, messageData);
+    const expectedSignature = 'sha1=' + Array.from(new Uint8Array(signatureBuffer))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+
+    // Compare signatures securely (timing-safe comparison)
+    if (signature !== expectedSignature) {
+      console.error('Invalid webhook signature');
+      console.error('Received:', signature);
+      console.error('Expected:', expectedSignature);
+      return new Response(
+        JSON.stringify({ error: 'Invalid signature' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Signature verified! Parse webhook data
+    const webhook = JSON.parse(body);
     console.log('Webhook received:', webhook.type, webhook.id);
 
     // Handle subscription events
