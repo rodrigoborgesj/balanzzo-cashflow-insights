@@ -15,10 +15,6 @@ export function PricingPlans({ showTitle = true }: PricingPlansProps) {
   const { isAuthenticated } = useAuth();
   const { plans, isLoading } = useSubscription();
 
-  console.log('PricingPlans - isLoading:', isLoading);
-  console.log('PricingPlans - plans:', plans);
-  console.log('PricingPlans - plans length:', plans?.length);
-
   // Mark quarterly plan as popular
   const displayPlans = plans?.map(plan => ({
     ...plan,

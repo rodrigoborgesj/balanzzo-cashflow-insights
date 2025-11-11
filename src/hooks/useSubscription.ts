@@ -47,7 +47,7 @@ export function useSubscription() {
     enabled: !!user,
   });
 
-  // Fetch available plans
+  // Fetch available plans (always load, even without user)
   const { data: plans, isLoading: loadingPlans } = useQuery({
     queryKey: ['subscription-plans'],
     queryFn: async () => {
@@ -55,7 +55,7 @@ export function useSubscription() {
         .from('subscription_plans')
         .select('*')
         .eq('active', true)
-        .order('price_cents', { ascending: true });
+        .order('price_cents', { ascending: true});
 
       if (error) throw error;
       return data as SubscriptionPlan[];
@@ -91,7 +91,8 @@ export function useSubscription() {
     plans,
     hasActiveSubscription,
     isTrialing,
-    isLoading: loadingSubscription || loadingPlans,
+    // Only consider subscription loading if user exists
+    isLoading: (user ? loadingSubscription : false) || loadingPlans,
     refetchSubscription,
   };
 }
