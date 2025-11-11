@@ -359,7 +359,9 @@ export default function LandingPage() {
 
 
       {/* Pricing Section */}
-      <PricingPlans />
+      <div id="precos">
+        <PricingPlans />
+      </div>
 
       {/* About Us Section */}
       <section id="sobre" className="py-16 sm:py-20 lg:py-24 bg-gradient-to-b from-brand-cream/30 to-brand-white">
