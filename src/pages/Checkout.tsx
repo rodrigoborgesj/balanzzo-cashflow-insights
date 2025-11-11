@@ -19,7 +19,8 @@ export default function Checkout() {
   const [isLoading, setIsLoading] = useState(false);
 
   const planId = searchParams.get('plan');
-  const selectedPlan = plans?.find(p => p.id === planId);
+  // Se não houver planId na URL, usar o primeiro plano disponível
+  const selectedPlan = plans?.find(p => p.id === planId) || (plans && plans.length > 0 ? plans[0] : null);
 
   const [formData, setFormData] = useState({
     cardNumber: '',
@@ -36,18 +37,8 @@ export default function Checkout() {
     if (!user) {
       const suffix = planId ? `&plan=${planId}` : '';
       navigate(`/login?redirect=/checkout${suffix}`);
-      return;
     }
-    if (!selectedPlan && plans && plans.length > 0) {
-      // Default to the first available plan if none was specified
-      const defaultPlanId = plans[0].id;
-      toast({
-        title: "Selecionei um plano para você",
-        description: "Você pode alterar o plano antes de pagar.",
-      });
-      navigate(`/checkout?plan=${defaultPlanId}`, { replace: true });
-    }
-  }, [user, selectedPlan, plans, planId, navigate, toast]);
+  }, [user, planId, navigate]);
 
   const formatCardNumber = (value: string) => {
     const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
