@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, CreditCard, Lock } from "lucide-react";
@@ -33,12 +34,6 @@ export default function Checkout() {
     phone: '',
   });
 
-  useEffect(() => {
-    if (!user) {
-      const suffix = planId ? `&plan=${planId}` : '';
-      navigate(`/login?redirect=/checkout${suffix}`);
-    }
-  }, [user, planId, navigate]);
 
   const formatCardNumber = (value: string) => {
     const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
@@ -208,6 +203,24 @@ export default function Checkout() {
                 <p className="text-sm text-muted-foreground">
                   Cobrança recorrente
                 </p>
+                <div className="mt-4">
+                  <Label htmlFor="plan">Escolher plano</Label>
+                  <Select 
+                    value={selectedPlan.id}
+                    onValueChange={(val) => navigate(`/checkout?plan=${val}`, { replace: true })}
+                  >
+                    <SelectTrigger id="plan" className="mt-1">
+                      <SelectValue placeholder="Selecione um plano" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {plans?.map((p) => (
+                        <SelectItem key={p.id} value={p.id}>
+                          {p.name} - {formatPrice(p.price_cents)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               <div className="border-t pt-4">

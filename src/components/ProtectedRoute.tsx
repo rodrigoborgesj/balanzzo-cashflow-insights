@@ -1,7 +1,6 @@
 import { useAuth } from "@/hooks/useAuth";
 import { Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { SubscriptionGuard } from "./SubscriptionGuard";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -25,7 +24,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     }
   }, [authLoading]);
 
-  // Show loading while checking auth or waiting for stabilization
+  // Show loading while checking auth or waiting for estabilization
   if (authLoading || !isReady) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -43,11 +42,6 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     return <Navigate to="/login" replace />;
   }
 
-  // User is authenticated, check subscription status
-  console.log('User authenticated, checking subscription');
-  return (
-    <SubscriptionGuard>
-      {children}
-    </SubscriptionGuard>
-  );
+  // User is authenticated, render children as-is (subscription is handled per-route)
+  return <>{children}</>;
 }
