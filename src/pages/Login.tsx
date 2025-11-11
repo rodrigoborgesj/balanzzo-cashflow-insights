@@ -36,7 +36,7 @@ export default function Login() {
       // Check if user has active subscription
       if (!hasActiveSubscription) {
         console.log('User authenticated but no active subscription, redirecting to checkout');
-        const checkoutUrl = planId ? `/checkout?plan=${planId}` : '/';
+        const checkoutUrl = planId ? `/checkout?plan=${planId}` : '/checkout';
         navigate(checkoutUrl, { replace: true });
       } else {
         console.log('User is authenticated with active subscription, redirecting to:', redirectTo);

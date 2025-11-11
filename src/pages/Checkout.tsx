@@ -34,15 +34,18 @@ export default function Checkout() {
 
   useEffect(() => {
     if (!user) {
-      navigate(`/login?redirect=/checkout&plan=${planId}`);
+      const suffix = planId ? `&plan=${planId}` : '';
+      navigate(`/login?redirect=/checkout${suffix}`);
+      return;
     }
-    if (!selectedPlan && plans) {
+    if (!selectedPlan && plans && plans.length > 0) {
+      // Default to the first available plan if none was specified
+      const defaultPlanId = plans[0].id;
       toast({
-        title: "Plano não encontrado",
-        description: "Por favor, selecione um plano válido.",
-        variant: "destructive",
+        title: "Selecionei um plano para você",
+        description: "Você pode alterar o plano antes de pagar.",
       });
-      navigate('/');
+      navigate(`/checkout?plan=${defaultPlanId}`, { replace: true });
     }
   }, [user, selectedPlan, plans, planId, navigate, toast]);
 

@@ -52,12 +52,15 @@ export function useSubscription() {
     queryKey: ['subscription-plans'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('public_subscription_plans')
-        .select('*')
-        .order('price_cents', { ascending: true});
+        .rpc('get_subscription_plans');
 
       if (error) throw error;
-      return data as SubscriptionPlan[];
+      const safe = (data || []).map((p: any) => ({
+        ...p,
+        features: Array.isArray(p.features) ? p.features : [],
+      }));
+      return safe as SubscriptionPlan[];
+
     },
   });
 
