@@ -66,14 +66,26 @@ serve(async (req) => {
       );
     }
 
-    // Calculate interval based on billing cycle
+    // Verify that plan has pagarme_plan_id
+    if (!plan.pagarme_plan_id) {
+      console.error('Plan does not have pagarme_plan_id:', plan.id);
+      return new Response(
+        JSON.stringify({ error: 'Plano não configurado corretamente no gateway de pagamento' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log('Using Pagar.me plan_id:', plan.pagarme_plan_id);
+
+    // Calculate interval for period calculation
     let intervalCount = 1;
-    let interval = 'month';
     
     if (plan.billing_cycle === 'quarterly') {
       intervalCount = 3;
     } else if (plan.billing_cycle === 'semiannual') {
       intervalCount = 6;
+    } else if (plan.billing_cycle === 'yearly') {
+      intervalCount = 12;
     }
 
     // Create customer in Pagar.me
@@ -110,7 +122,7 @@ serve(async (req) => {
     const pagarmeCustomer = await customerResponse.json();
     console.log('Customer created:', pagarmeCustomer.id);
 
-    // Create subscription in Pagar.me
+    // Create subscription in Pagar.me using the plan_id
     const subscriptionResponse = await fetch('https://api.pagar.me/core/v5/subscriptions', {
       method: 'POST',
       headers: {
@@ -119,19 +131,8 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         customer_id: pagarmeCustomer.id,
-        plan_id: plan.pagarme_plan_id || undefined,
+        plan_id: plan.pagarme_plan_id,
         payment_method: 'credit_card',
-        currency: 'BRL',
-        interval,
-        interval_count: intervalCount,
-        billing_type: 'prepaid',
-        items: [{
-          description: plan.name,
-          quantity: 1,
-          pricing_scheme: {
-            price: plan.price_cents,
-          }
-        }],
         card: {
           number: cardData.number.replace(/\s/g, ''),
           holder_name: cardData.holderName,
