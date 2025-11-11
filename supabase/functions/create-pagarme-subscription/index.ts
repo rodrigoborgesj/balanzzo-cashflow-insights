@@ -70,7 +70,7 @@ serve(async (req) => {
     const basicAuth = 'Basic ' + btoa(`${pagarmeKey}:`);
 
     // Create Pagar.me Checkout Session
-    const checkoutSessionResponse = await fetch('https://api.pagar.me/core/v5/checkout_sessions', {
+    const checkoutSessionResponse = await fetch('https://api.pagar.me/core/v5/subscriptions', {
       method: 'POST',
       headers: {
         'Authorization': basicAuth,
