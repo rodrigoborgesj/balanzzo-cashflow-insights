@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,12 +15,28 @@ export function PricingPlans({ showTitle = true }: PricingPlansProps) {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const { plans, isLoading } = useSubscription();
+  const [showFallback, setShowFallback] = useState(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => setShowFallback(true), 1500);
+    return () => clearTimeout(t);
+  }, []);
 
   // Mark quarterly plan as popular
   const displayPlans = plans?.map(plan => ({
     ...plan,
     popular: plan.billing_cycle === 'quarterly'
   }));
+
+  const fallbackPlans = [
+    { id: 'fallback-monthly', name: 'Plano Mensal', price_cents: 7800, billing_cycle: 'monthly', features: ['Todos os recursos essenciais', 'Suporte por email', 'Sem fidelidade'], popular: false },
+    { id: 'fallback-quarterly', name: 'Plano Trimestral', price_cents: 20400, billing_cycle: 'quarterly', features: ['Economize 12%', 'Todos os recursos', 'Prioridade no suporte'], popular: true },
+    { id: 'fallback-semiannual', name: 'Plano Semestral', price_cents: 36000, billing_cycle: 'semiannual', features: ['Economize 23%', 'Todos os recursos', 'Suporte prioritário'], popular: false },
+  ];
+
+  const plansToRender = (displayPlans && displayPlans.length > 0)
+    ? displayPlans
+    : (showFallback ? fallbackPlans : []);
 
   const handleSelectPlan = (planId: string) => {
     if (!isAuthenticated) {
@@ -100,15 +117,15 @@ export function PricingPlans({ showTitle = true }: PricingPlansProps) {
           </div>
         )}
 
-        {!displayPlans || displayPlans.length === 0 ? (
+        {plansToRender.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-muted-foreground">
-              Nenhum plano disponível no momento. Entre em contato conosco.
+              Carregando planos...
             </p>
           </div>
         ) : (
           <div className="grid md:grid-cols-3 gap-8">
-            {displayPlans.map((plan) => (
+            {plansToRender.map((plan) => (
               <Card 
                 key={plan.id}
                 className={`relative ${plan.popular ? 'border-primary shadow-lg scale-105' : ''}`}
@@ -149,7 +166,7 @@ export function PricingPlans({ showTitle = true }: PricingPlansProps) {
                     className="w-full"
                     variant={plan.popular ? 'default' : 'outline'}
                     size="lg"
-                    onClick={() => handleSelectPlan(plan.id)}
+                    onClick={() => handleSelectPlan(plan.id.startsWith('fallback-') ? '' : plan.id)}
                   >
                     Assinar Agora
                   </Button>
