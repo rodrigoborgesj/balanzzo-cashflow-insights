@@ -14,7 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useSecureAuth } from "@/hooks/useSecureAuth";
 import { useProfile, ProfileData } from "@/hooks/useProfile";
 import { secureStorage } from "@/utils/secureStorage";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { validatePasswordAsync } from "@/utils/passwordValidationAsync";
 import { PasswordValidationDisplay } from "@/components/PasswordValidationDisplay";
 import { PasswordValidationResult } from "@/utils/passwordValidation";
@@ -61,6 +61,7 @@ export function SignupForm({ onBack }: SignupFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [acceptedPrivacyPolicy, setAcceptedPrivacyPolicy] = useState(false);
   const [passwordValidation, setPasswordValidation] = useState<PasswordValidationResult | null>(null);
+  const navigate = useNavigate();
   const { toast } = useToast();
   const { signUp, signInWithGoogle } = useSecureAuth();
   const { createProfile } = useProfile();
@@ -164,11 +165,13 @@ export function SignupForm({ onBack }: SignupFormProps) {
 
       toast({
         title: "Conta criada com sucesso!",
-        description: "Verifique seu email para confirmar a conta e depois faça login.",
+        description: "Agora você será redirecionado para escolher um plano de assinatura.",
       });
 
-      // Redireciona para tela de login após cadastro bem-sucedido
-      onBack();
+      // Redireciona para a landing page (página de vendas) para escolher um plano
+      setTimeout(() => {
+        navigate('/', { replace: true });
+      }, 2000);
     } catch (error: any) {
       toast({
         title: "Erro no cadastro",

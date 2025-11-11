@@ -4,11 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Lock, Mail, Eye, EyeOff, Chrome } from "lucide-react";
 import { useSecureAuth } from "@/hooks/useSecureAuth";
 import { useProfile } from "@/hooks/useProfile";
+import { useSubscription } from "@/hooks/useSubscription";
 import { SignupForm } from "@/components/SignupForm";
 import financialHero from "@/assets/financial-hero.png";
 
@@ -19,18 +20,30 @@ export default function Login() {
   const [mode, setMode] = useState<'login' | 'signup'>('login');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const { signIn, signInWithGoogle, isAuthenticated, user, isLoading: authLoading } = useSecureAuth();
+  const { hasActiveSubscription, isLoading: subLoading } = useSubscription();
 
   useEffect(() => {
-    console.log('Login useEffect - isAuthenticated:', isAuthenticated, 'authLoading:', authLoading);
+    console.log('Login useEffect - isAuthenticated:', isAuthenticated, 'authLoading:', authLoading, 'hasActiveSubscription:', hasActiveSubscription);
     
-    // Redirect authenticated users to dashboard
-    if (!authLoading && isAuthenticated) {
-      console.log('User is authenticated, redirecting to dashboard');
-      navigate("/dashboard", { replace: true });
+    // Wait for both auth and subscription checks
+    if (!authLoading && !subLoading && isAuthenticated) {
+      const redirectTo = searchParams.get('redirect') || '/dashboard';
+      const planId = searchParams.get('plan');
+      
+      // Check if user has active subscription
+      if (!hasActiveSubscription) {
+        console.log('User authenticated but no active subscription, redirecting to checkout');
+        const checkoutUrl = planId ? `/checkout?plan=${planId}` : '/';
+        navigate(checkoutUrl, { replace: true });
+      } else {
+        console.log('User is authenticated with active subscription, redirecting to:', redirectTo);
+        navigate(redirectTo, { replace: true });
+      }
     }
-  }, [isAuthenticated, authLoading, navigate]);
+  }, [isAuthenticated, authLoading, hasActiveSubscription, subLoading, navigate, searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,8 +98,8 @@ export default function Login() {
     }
   };
 
-  // Show loading if still checking auth state
-  if (authLoading) {
+  // Show loading if still checking auth or subscription state
+  if (authLoading || subLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>

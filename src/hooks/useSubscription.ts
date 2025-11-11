@@ -62,7 +62,28 @@ export function useSubscription() {
     },
   });
 
-  const hasActiveSubscription = subscription?.status === 'active' || subscription?.status === 'trialing';
+  // Check if subscription is active and not expired
+  const hasActiveSubscription = (() => {
+    if (!subscription) return false;
+    
+    const isActiveStatus = subscription.status === 'active' || subscription.status === 'trialing';
+    if (!isActiveStatus) return false;
+
+    // Check if subscription period is valid
+    if (subscription.current_period_end) {
+      const periodEnd = new Date(subscription.current_period_end);
+      const now = new Date();
+      
+      // Add a 1-day grace period
+      const gracePeriodEnd = new Date(periodEnd);
+      gracePeriodEnd.setDate(gracePeriodEnd.getDate() + 1);
+      
+      return now <= gracePeriodEnd;
+    }
+    
+    return isActiveStatus;
+  })();
+
   const isTrialing = subscription?.status === 'trialing';
 
   return {

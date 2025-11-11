@@ -8,6 +8,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { AppLayout } from "./components/AppLayout";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { SubscriptionGuard } from "./components/SubscriptionGuard";
 import LandingPage from "./pages/LandingPage";
 import Dashboard from "./pages/Dashboard";
 import Conciliacao from "./pages/Conciliacao";
@@ -108,62 +109,78 @@ const App = () => {
             </ProtectedRoute>
           } />
           
-          {/* Protected app routes */}
+          {/* Protected app routes - Require active subscription */}
           <Route path="/dashboard" element={
             <ProtectedRoute>
-              <AppLayout>
-                <Dashboard />
-              </AppLayout>
+              <SubscriptionGuard>
+                <AppLayout>
+                  <Dashboard />
+                </AppLayout>
+              </SubscriptionGuard>
             </ProtectedRoute>
           } />
           <Route path="/conciliacao" element={
             <ProtectedRoute>
-              <AppLayout>
-                <Conciliacao />
-              </AppLayout>
+              <SubscriptionGuard>
+                <AppLayout>
+                  <Conciliacao />
+                </AppLayout>
+              </SubscriptionGuard>
             </ProtectedRoute>
           } />
           <Route path="/fluxo-caixa" element={
             <ProtectedRoute>
-              <AppLayout>
-                <FluxoCaixa />
-              </AppLayout>
+              <SubscriptionGuard>
+                <AppLayout>
+                  <FluxoCaixa />
+                </AppLayout>
+              </SubscriptionGuard>
             </ProtectedRoute>
           } />
           {/* Fluxo de Caixa Projetado - Em construção */}
           {/* <Route path="/fluxo-caixa-projetado" element={
             <ProtectedRoute>
-              <AppLayout>
-                <FluxoCaixaProjetado />
-              </AppLayout>
+              <SubscriptionGuard>
+                <AppLayout>
+                  <FluxoCaixaProjetado />
+                </AppLayout>
+              </SubscriptionGuard>
             </ProtectedRoute>
           } /> */}
           <Route path="/dre" element={
             <ProtectedRoute>
-              <AppLayout>
-                <DRE />
-              </AppLayout>
+              <SubscriptionGuard>
+                <AppLayout>
+                  <DRE />
+                </AppLayout>
+              </SubscriptionGuard>
             </ProtectedRoute>
           } />
           <Route path="/configuracoes" element={
             <ProtectedRoute>
-              <AppLayout>
-                <Configuracoes />
-              </AppLayout>
+              <SubscriptionGuard>
+                <AppLayout>
+                  <Configuracoes />
+                </AppLayout>
+              </SubscriptionGuard>
             </ProtectedRoute>
           } />
           <Route path="/como-usar" element={
             <ProtectedRoute>
-              <AppLayout>
-                <ComoUsar />
-              </AppLayout>
+              <SubscriptionGuard>
+                <AppLayout>
+                  <ComoUsar />
+                </AppLayout>
+              </SubscriptionGuard>
             </ProtectedRoute>
           } />
           <Route path="/suporte" element={
             <ProtectedRoute>
-              <AppLayout>
-                <Suporte />
-              </AppLayout>
+              <SubscriptionGuard>
+                <AppLayout>
+                  <Suporte />
+                </AppLayout>
+              </SubscriptionGuard>
             </ProtectedRoute>
           } />
 
