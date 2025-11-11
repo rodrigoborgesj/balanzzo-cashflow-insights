@@ -48,17 +48,24 @@ export function validateFileUpload(file: File): { isValid: boolean; error?: stri
   const allowedTypes = [
     'text/csv',
     'application/vnd.ms-excel',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'application/x-ofx', // OFX files
+    'application/ofx', // Alternative OFX MIME type
+    'text/plain' // OFX files may be detected as plain text
   ];
   
-  const maxSize = 10 * 1024 * 1024; // 10MB
+  const maxSize = 20 * 1024 * 1024; // 20MB
   
-  if (!allowedTypes.includes(file.type)) {
-    return { isValid: false, error: 'Tipo de arquivo não permitido' };
+  // For OFX files, also check file extension if MIME type is text/plain
+  const fileExtension = file.name.toLowerCase().split('.').pop();
+  const isOFX = fileExtension === 'ofx';
+  
+  if (!allowedTypes.includes(file.type) && !isOFX) {
+    return { isValid: false, error: 'Tipo de arquivo não permitido. Apenas CSV e OFX são aceitos.' };
   }
   
   if (file.size > maxSize) {
-    return { isValid: false, error: 'Arquivo muito grande (máximo 10MB)' };
+    return { isValid: false, error: 'Arquivo muito grande (máximo 20MB)' };
   }
   
   return { isValid: true };
