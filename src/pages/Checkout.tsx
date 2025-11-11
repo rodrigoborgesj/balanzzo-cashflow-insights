@@ -24,10 +24,6 @@ export default function Checkout() {
   const selectedPlan = plans?.find(p => p.id === planId) || (plans && plans.length > 0 ? plans[0] : null);
 
   const [formData, setFormData] = useState({
-    cardNumber: '',
-    cardName: '',
-    expirationDate: '',
-    cvv: '',
     name: '',
     email: user?.email || '',
     document: '',
@@ -35,26 +31,6 @@ export default function Checkout() {
   });
 
 
-  const formatCardNumber = (value: string) => {
-    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
-    const matches = v.match(/\d{4,16}/g);
-    const match = (matches && matches[0]) || '';
-    const parts = [];
-
-    for (let i = 0, len = match.length; i < len; i += 4) {
-      parts.push(match.substring(i, i + 4));
-    }
-
-    return parts.length ? parts.join(' ') : value;
-  };
-
-  const formatExpirationDate = (value: string) => {
-    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
-    if (v.length >= 2) {
-      return v.slice(0, 2) + '/' + v.slice(2, 4);
-    }
-    return v;
-  };
 
   const formatDocument = (value: string) => {
     const v = value.replace(/\D/g, '');
@@ -75,13 +51,7 @@ export default function Checkout() {
   const handleInputChange = (field: string, value: string) => {
     let formattedValue = value;
 
-    if (field === 'cardNumber') {
-      formattedValue = formatCardNumber(value);
-    } else if (field === 'expirationDate') {
-      formattedValue = formatExpirationDate(value);
-    } else if (field === 'cvv') {
-      formattedValue = value.replace(/\D/g, '').slice(0, 4);
-    } else if (field === 'document') {
+    if (field === 'document') {
       formattedValue = formatDocument(value);
     } else if (field === 'phone') {
       formattedValue = formatPhone(value);
@@ -101,12 +71,6 @@ export default function Checkout() {
       const { data, error } = await supabase.functions.invoke('create-pagarme-subscription', {
         body: {
           planId: selectedPlan.id,
-          cardData: {
-            number: formData.cardNumber,
-            holderName: formData.cardName,
-            expirationDate: formData.expirationDate,
-            cvv: formData.cvv,
-          },
           customer: {
             name: formData.name,
             email: formData.email,
@@ -118,27 +82,27 @@ export default function Checkout() {
 
       if (error) throw error;
 
-      toast({
-        title: "Pagamento realizado com sucesso!",
-        description: "Sua assinatura foi ativada. Redirecionando...",
-      });
-
-      // Refresh subscription status
-      await refetchSubscription();
-
-      // Redirect to dashboard
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 2000);
+      if (data?.checkout_url) {
+        toast({
+          title: "Redirecionando para pagamento",
+          description: "Você será redirecionado para finalizar o pagamento...",
+        });
+        
+        // Redirect to Pagar.me hosted checkout
+        setTimeout(() => {
+          window.location.href = data.checkout_url;
+        }, 1000);
+      } else {
+        throw new Error('URL de checkout não retornada');
+      }
 
     } catch (error: any) {
       console.error('Payment error:', error);
       toast({
-        title: "Erro no pagamento",
-        description: error.message || "Não foi possível processar o pagamento. Tente novamente.",
+        title: "Erro ao criar sessão de pagamento",
+        description: error.message || "Não foi possível criar a sessão de pagamento. Tente novamente.",
         variant: "destructive",
       });
-    } finally {
       setIsLoading(false);
     }
   };
@@ -304,56 +268,6 @@ export default function Checkout() {
                   </div>
                 </div>
 
-                <div className="border-t pt-4 space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="cardNumber">Número do Cartão</Label>
-                    <Input
-                      id="cardNumber"
-                      required
-                      value={formData.cardNumber}
-                      onChange={(e) => handleInputChange('cardNumber', e.target.value)}
-                      placeholder="0000 0000 0000 0000"
-                      maxLength={19}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="cardName">Nome no Cartão</Label>
-                    <Input
-                      id="cardName"
-                      required
-                      value={formData.cardName}
-                      onChange={(e) => handleInputChange('cardName', e.target.value)}
-                      placeholder="Nome como está no cartão"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="expirationDate">Validade</Label>
-                      <Input
-                        id="expirationDate"
-                        required
-                        value={formData.expirationDate}
-                        onChange={(e) => handleInputChange('expirationDate', e.target.value)}
-                        placeholder="MM/AA"
-                        maxLength={5}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="cvv">CVV</Label>
-                      <Input
-                        id="cvv"
-                        required
-                        value={formData.cvv}
-                        onChange={(e) => handleInputChange('cvv', e.target.value)}
-                        placeholder="000"
-                        maxLength={4}
-                      />
-                    </div>
-                  </div>
-                </div>
 
                 <Button
                   type="submit"
@@ -364,18 +278,18 @@ export default function Checkout() {
                   {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Processando...
+                      Redirecionando...
                     </>
                   ) : (
                     <>
                       <Lock className="mr-2 h-4 w-4" />
-                      Finalizar Pagamento
+                      Continuar para Pagamento
                     </>
                   )}
                 </Button>
 
                 <p className="text-xs text-center text-muted-foreground">
-                  Seus dados estão protegidos com criptografia de ponta a ponta
+                  Você será redirecionado para a página segura de pagamento da Pagar.me
                 </p>
               </form>
             </CardContent>

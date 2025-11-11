@@ -8,12 +8,6 @@ const corsHeaders = {
 
 interface CreateSubscriptionRequest {
   planId: string;
-  cardData: {
-    number: string;
-    holderName: string;
-    expirationDate: string;
-    cvv: string;
-  };
   customer: {
     name: string;
     email: string;
@@ -47,9 +41,9 @@ serve(async (req) => {
       );
     }
 
-    const { planId, cardData, customer }: CreateSubscriptionRequest = await req.json();
+    const { planId, customer }: CreateSubscriptionRequest = await req.json();
     
-    console.log('Creating subscription for user:', user.id, 'plan:', planId);
+    console.log('Creating checkout session for user:', user.id, 'plan:', planId);
 
     // Get plan details
     const { data: plan, error: planError } = await supabase
@@ -66,80 +60,48 @@ serve(async (req) => {
       );
     }
 
-    // Verify that plan has pagarme_plan_id
-    if (!plan.pagarme_plan_id) {
-      console.error('Plan does not have pagarme_plan_id:', plan.id);
-      return new Response(
-        JSON.stringify({ error: 'Plano não configurado corretamente no gateway de pagamento' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    // Format phone number
+    const phoneDigits = customer.phone.replace(/\D/g, '');
+    const areaCode = phoneDigits.substring(0, 2);
+    const phoneNumber = phoneDigits.substring(2);
 
-    console.log('Using Pagar.me plan_id:', plan.pagarme_plan_id);
+    console.log('Creating Pagar.me checkout session...');
 
-    // Calculate interval for period calculation
-    let intervalCount = 1;
-    
-    if (plan.billing_cycle === 'quarterly') {
-      intervalCount = 3;
-    } else if (plan.billing_cycle === 'semiannual') {
-      intervalCount = 6;
-    } else if (plan.billing_cycle === 'yearly') {
-      intervalCount = 12;
-    }
-
-    // Create customer in Pagar.me
-    const customerResponse = await fetch('https://api.pagar.me/core/v5/customers', {
+    // Create Pagar.me Checkout Session
+    const checkoutSessionResponse = await fetch('https://api.pagar.me/core/v5/checkout_sessions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${pagarmeKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        name: customer.name,
-        email: customer.email,
-        document: customer.document.replace(/\D/g, ''),
-        type: 'individual',
-        phones: {
-          mobile_phone: {
-            country_code: '55',
-            area_code: customer.phone.substring(0, 2),
-            number: customer.phone.substring(2).replace(/\D/g, ''),
+        customer: {
+          name: customer.name,
+          email: customer.email,
+          document: customer.document.replace(/\D/g, ''),
+          type: 'individual',
+          phones: {
+            mobile_phone: {
+              country_code: '55',
+              area_code: areaCode,
+              number: phoneNumber,
+            }
           }
-        }
-      }),
-    });
-
-    if (!customerResponse.ok) {
-      const errorData = await customerResponse.text();
-      console.error('Pagar.me customer creation error:', errorData);
-      return new Response(
-        JSON.stringify({ error: 'Erro ao criar cliente no gateway de pagamento' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const pagarmeCustomer = await customerResponse.json();
-    console.log('Customer created:', pagarmeCustomer.id);
-
-    // Create subscription in Pagar.me using the plan_id
-    const subscriptionResponse = await fetch('https://api.pagar.me/core/v5/subscriptions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${pagarmeKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        customer_id: pagarmeCustomer.id,
-        plan_id: plan.pagarme_plan_id,
-        payment_method: 'credit_card',
-        card: {
-          number: cardData.number.replace(/\s/g, ''),
-          holder_name: cardData.holderName,
-          exp_month: parseInt(cardData.expirationDate.split('/')[0]),
-          exp_year: parseInt('20' + cardData.expirationDate.split('/')[1]),
-          cvv: cardData.cvv,
         },
+        payment_methods: ['credit_card', 'pix', 'boleto'],
+        items: [
+          {
+            name: plan.name,
+            amount: plan.price_cents,
+            quantity: 1,
+            description: `Assinatura ${plan.name}`,
+          }
+        ],
+        subscription: {
+          plan_id: plan.pagarme_plan_id,
+        },
+        success_url: 'https://hbjobpbiordnwflfhjnu.supabase.co/dashboard?payment=success',
+        cancel_url: 'https://hbjobpbiordnwflfhjnu.supabase.co/checkout?payment=canceled',
         metadata: {
           user_id: user.id,
           plan_id: planId,
@@ -147,65 +109,24 @@ serve(async (req) => {
       }),
     });
 
-    if (!subscriptionResponse.ok) {
-      const errorData = await subscriptionResponse.text();
-      console.error('Pagar.me subscription error:', errorData);
+    if (!checkoutSessionResponse.ok) {
+      const errorData = await checkoutSessionResponse.text();
+      console.error('Pagar.me checkout session error:', errorData);
       return new Response(
-        JSON.stringify({ error: 'Erro ao processar pagamento. Verifique os dados do cartão.' }),
+        JSON.stringify({ error: 'Erro ao criar sessão de pagamento' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const pagarmeSubscription = await subscriptionResponse.json();
-    console.log('Subscription created:', pagarmeSubscription.id);
-
-    // Calculate period dates
-    const currentPeriodStart = new Date();
-    const currentPeriodEnd = new Date();
-    currentPeriodEnd.setMonth(currentPeriodEnd.getMonth() + intervalCount);
-
-    // Save subscription in database
-    const { data: subscription, error: subError } = await supabase
-      .from('subscriptions')
-      .insert({
-        user_id: user.id,
-        plan_id: planId,
-        pagarme_subscription_id: pagarmeSubscription.id,
-        status: pagarmeSubscription.status,
-        current_period_start: currentPeriodStart.toISOString(),
-        current_period_end: currentPeriodEnd.toISOString(),
-      })
-      .select()
-      .single();
-
-    if (subError) {
-      console.error('Database error:', subError);
-      return new Response(
-        JSON.stringify({ error: 'Erro ao salvar assinatura' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Create initial payment record
-    await supabase
-      .from('payments')
-      .insert({
-        user_id: user.id,
-        subscription_id: subscription.id,
-        amount_cents: plan.price_cents,
-        status: pagarmeSubscription.status === 'active' ? 'paid' : 'pending',
-        payment_method: 'credit_card',
-        pagarme_transaction_id: pagarmeSubscription.current_charge?.id,
-        paid_at: pagarmeSubscription.status === 'active' ? new Date().toISOString() : null,
-      });
-
-    console.log('Subscription completed successfully');
+    const checkoutSession = await checkoutSessionResponse.json();
+    console.log('Checkout session created:', checkoutSession.id);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        subscription,
-        message: 'Assinatura criada com sucesso!' 
+        checkout_url: checkoutSession.url,
+        session_id: checkoutSession.id,
+        message: 'Redirecionando para pagamento...' 
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
