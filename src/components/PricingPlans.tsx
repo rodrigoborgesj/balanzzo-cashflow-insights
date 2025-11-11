@@ -15,6 +15,10 @@ export function PricingPlans({ showTitle = true }: PricingPlansProps) {
   const { isAuthenticated } = useAuth();
   const { plans, isLoading } = useSubscription();
 
+  console.log('PricingPlans - isLoading:', isLoading);
+  console.log('PricingPlans - plans:', plans);
+  console.log('PricingPlans - plans length:', plans?.length);
+
   // Mark quarterly plan as popular
   const displayPlans = plans?.map(plan => ({
     ...plan,
@@ -100,56 +104,64 @@ export function PricingPlans({ showTitle = true }: PricingPlansProps) {
           </div>
         )}
 
-        <div className="grid md:grid-cols-3 gap-8">
-          {displayPlans.map((plan) => (
-            <Card 
-              key={plan.id}
-              className={`relative ${plan.popular ? 'border-primary shadow-lg scale-105' : ''}`}
-            >
-              {plan.popular && (
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                  <span className="bg-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-semibold">
-                    Mais Popular
-                  </span>
-                </div>
-              )}
-              
-              <CardHeader>
-                <CardTitle className="text-2xl">{plan.name}</CardTitle>
-                <CardDescription>
-                  <span className="text-3xl font-bold text-foreground">
-                    {formatPrice(plan.price_cents)}
-                  </span>
-                  <span className="text-muted-foreground ml-2">
-                    {getBillingText(plan.billing_cycle)}
-                  </span>
-                </CardDescription>
-              </CardHeader>
+        {!displayPlans || displayPlans.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">
+              Nenhum plano disponível no momento. Entre em contato conosco.
+            </p>
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-3 gap-8">
+            {displayPlans.map((plan) => (
+              <Card 
+                key={plan.id}
+                className={`relative ${plan.popular ? 'border-primary shadow-lg scale-105' : ''}`}
+              >
+                {plan.popular && (
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                    <span className="bg-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-semibold">
+                      Mais Popular
+                    </span>
+                  </div>
+                )}
+                
+                <CardHeader>
+                  <CardTitle className="text-2xl">{plan.name}</CardTitle>
+                  <CardDescription>
+                    <span className="text-3xl font-bold text-foreground">
+                      {formatPrice(plan.price_cents)}
+                    </span>
+                    <span className="text-muted-foreground ml-2">
+                      {getBillingText(plan.billing_cycle)}
+                    </span>
+                  </CardDescription>
+                </CardHeader>
 
-              <CardContent>
-                <ul className="space-y-3">
-                  {plan.features.map((feature, index) => (
-                    <li key={index} className="flex items-start gap-2">
-                      <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                      <span className="text-sm">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
+                <CardContent>
+                  <ul className="space-y-3">
+                    {plan.features.map((feature, index) => (
+                      <li key={index} className="flex items-start gap-2">
+                        <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                        <span className="text-sm">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
 
-              <CardFooter>
-                <Button 
-                  className="w-full"
-                  variant={plan.popular ? 'default' : 'outline'}
-                  size="lg"
-                  onClick={() => handleSelectPlan(plan.id)}
-                >
-                  Assinar Agora
-                </Button>
-              </CardFooter>
-            </Card>
-          ))}
-        </div>
+                <CardFooter>
+                  <Button 
+                    className="w-full"
+                    variant={plan.popular ? 'default' : 'outline'}
+                    size="lg"
+                    onClick={() => handleSelectPlan(plan.id)}
+                  >
+                    Assinar Agora
+                  </Button>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        )}
 
         <p className="text-center text-sm text-muted-foreground mt-8">
           Todos os planos incluem 7 dias de garantia de reembolso
