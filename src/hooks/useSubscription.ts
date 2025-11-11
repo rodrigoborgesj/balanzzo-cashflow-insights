@@ -52,9 +52,8 @@ export function useSubscription() {
     queryKey: ['subscription-plans'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('subscription_plans')
+        .from('public_subscription_plans')
         .select('*')
-        .eq('active', true)
         .order('price_cents', { ascending: true});
 
       if (error) throw error;
