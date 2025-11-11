@@ -38,7 +38,12 @@ export function PricingPlans({ showTitle = true }: PricingPlansProps) {
     ? displayPlans
     : (showFallback ? fallbackPlans : []);
 
-  const handleSelectPlan = (planId: string) => {
+  const handleSelectPlan = (planId: string, isFallback: boolean = false) => {
+    if (isFallback || !planId) {
+      // Don't allow checkout with fallback plans
+      return;
+    }
+    
     if (!isAuthenticated) {
       // Redirect to login/signup with return URL
       navigate(`/login?redirect=/checkout&plan=${planId}`);
@@ -166,7 +171,8 @@ export function PricingPlans({ showTitle = true }: PricingPlansProps) {
                     className="w-full"
                     variant={plan.popular ? 'default' : 'outline'}
                     size="lg"
-                    onClick={() => handleSelectPlan(plan.id.startsWith('fallback-') ? '' : plan.id)}
+                    disabled={plan.id.startsWith('fallback-')}
+                    onClick={() => handleSelectPlan(plan.id, plan.id.startsWith('fallback-'))}
                   >
                     Assinar Agora
                   </Button>
