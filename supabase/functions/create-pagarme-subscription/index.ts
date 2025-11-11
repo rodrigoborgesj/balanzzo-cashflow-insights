@@ -67,12 +67,15 @@ serve(async (req) => {
 
     console.log('Creating Pagar.me checkout session...');
 
+    const basicAuth = 'Basic ' + btoa(`${pagarmeKey}:`);
+
     // Create Pagar.me Checkout Session
     const checkoutSessionResponse = await fetch('https://api.pagar.me/core/v5/checkout_sessions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${pagarmeKey}`,
+        'Authorization': basicAuth,
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
       },
       body: JSON.stringify({
         customer: {
@@ -110,8 +113,8 @@ serve(async (req) => {
     });
 
     if (!checkoutSessionResponse.ok) {
-      const errorData = await checkoutSessionResponse.text();
-      console.error('Pagar.me checkout session error:', errorData);
+      const errorText = await checkoutSessionResponse.text();
+      console.error('Pagar.me checkout session error:', checkoutSessionResponse.status, errorText);
       return new Response(
         JSON.stringify({ error: 'Erro ao criar sessão de pagamento' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
