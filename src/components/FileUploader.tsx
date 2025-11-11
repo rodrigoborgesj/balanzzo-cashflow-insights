@@ -142,9 +142,9 @@ export function FileUploader({
                 </div>
                 <div className="flex-1 text-left">
                   <p className="font-medium text-foreground">{selectedFile.name}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {(selectedFile.size / 1024).toFixed(1)} KB • CSV
-                  </p>
+                        <p className="text-sm text-muted-foreground">
+                          {(selectedFile.size / 1024).toFixed(1)} KB • {selectedFile.name.toUpperCase().split('.').pop()}
+                        </p>
                 </div>
               </div>
             </div>
@@ -186,7 +186,7 @@ export function FileUploader({
                     {dragActive ? 'Solte seu arquivo aqui' : 'Upload do Extrato'}
                   </h3>
                   <p className="text-muted-foreground">
-                    Arraste e solte seu arquivo CSV ou clique para selecionar
+                    Arraste e solte seu arquivo CSV/OFX ou clique para selecionar
                   </p>
                   <div className="flex items-center gap-6 text-sm text-muted-foreground">
                     <div className="flex items-center gap-2">

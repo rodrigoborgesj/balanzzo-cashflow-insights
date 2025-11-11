@@ -1,5 +1,25 @@
 import { parse } from 'papaparse';
 
+// OFX Parser helper functions
+function extractOFXValue(content: string, tag: string): string {
+  const regex = new RegExp(`<${tag}>([^<]+)`, 'i');
+  const match = content.match(regex);
+  return match ? match[1].trim() : '';
+}
+
+function parseOFXDate(dateStr: string): string {
+  if (!dateStr || dateStr.length < 8) return '';
+  const year = dateStr.substring(0, 4);
+  const month = dateStr.substring(4, 6);
+  const day = dateStr.substring(6, 8);
+  return `${year}-${month}-${day}`;
+}
+
+function parseOFXAmount(amountStr: string): number {
+  if (!amountStr) return 0;
+  return parseFloat(amountStr.replace(',', '.'));
+}
+
 export interface StandardizedBankTransaction {
   date: string; // YYYY-MM-DD format
   value: number; // with dot as decimal separator
@@ -45,7 +65,7 @@ export class StandardizedBankStatementParser {
   ];
 
   /**
-   * Parse standardized bank statement CSV file
+   * Parse standardized bank statement CSV or OFX file
    */
   static async parseFile(file: File): Promise<StandardizedParseResult> {
     console.log('🏦 Parsing standardized bank statement:', file.name);
@@ -60,6 +80,15 @@ export class StandardizedBankStatementParser {
 
     try {
       const content = await this.readFileContent(file);
+      
+      // Detect file type and delegate to appropriate parser
+      const fileExtension = file.name.toLowerCase().split('.').pop();
+      if (fileExtension === 'ofx') {
+        console.log('📄 OFX file detected, using OFX parser');
+        return await this.parseOFXFile(content);
+      }
+      
+      // Continue with CSV parsing for non-OFX files
       
       if (!content || content.trim().length === 0) {
         result.errors.push('Arquivo vazio ou sem conteúdo válido');
@@ -358,5 +387,86 @@ export class StandardizedBankStatementParser {
 
     const amount = parseFloat(cleaned);
     return isNaN(amount) ? NaN : (isNegative ? -Math.abs(amount) : amount);
+  }
+
+  /**
+   * Parse OFX file format
+   */
+  private static async parseOFXFile(content: string): Promise<StandardizedParseResult> {
+    const result: StandardizedParseResult = {
+      transactions: [],
+      errors: [],
+      warnings: [],
+      processedRows: 0,
+      validRows: 0
+    };
+
+    try {
+      if (!content || content.trim().length === 0) {
+        result.errors.push('Arquivo OFX vazio ou sem conteúdo válido');
+        return result;
+      }
+
+      // Extract all transaction blocks
+      const transactionRegex = /<STMTTRN>([\s\S]*?)<\/STMTTRN>/gi;
+      const matches = content.matchAll(transactionRegex);
+
+      let transactionCount = 0;
+      for (const match of matches) {
+        transactionCount++;
+        const transactionBlock = match[1];
+
+        try {
+          const amountStr = extractOFXValue(transactionBlock, 'TRNAMT');
+          const dateStr = extractOFXValue(transactionBlock, 'DTPOSTED');
+          const memo = extractOFXValue(transactionBlock, 'MEMO') || 
+                      extractOFXValue(transactionBlock, 'NAME') || 
+                      'Transação OFX';
+
+          if (!dateStr || !amountStr) {
+            result.warnings.push(`Transação OFX ${transactionCount}: Dados incompletos (data ou valor ausente)`);
+            continue;
+          }
+
+          const date = parseOFXDate(dateStr);
+          const value = parseOFXAmount(amountStr);
+
+          if (!date || isNaN(value)) {
+            result.warnings.push(`Transação OFX ${transactionCount}: Formato inválido`);
+            continue;
+          }
+
+          result.transactions.push({
+            date,
+            value,
+            description: memo
+          });
+          
+          result.validRows++;
+        } catch (error) {
+          result.warnings.push(`Transação OFX ${transactionCount}: Erro ao processar - ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+        }
+      }
+
+      result.processedRows = transactionCount;
+
+      console.log('✅ OFX Parse completed:', {
+        processedRows: result.processedRows,
+        validRows: result.validRows,
+        errors: result.errors.length,
+        warnings: result.warnings.length
+      });
+
+      if (result.transactions.length === 0 && transactionCount === 0) {
+        result.errors.push('Nenhuma transação encontrada no arquivo OFX. Verifique se o arquivo está no formato correto.');
+      }
+
+      return result;
+
+    } catch (error) {
+      console.error('❌ Error parsing OFX file:', error);
+      result.errors.push(`Erro ao processar arquivo OFX: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+      return result;
+    }
   }
 }
