@@ -119,6 +119,7 @@ serve(async (req) => {
               },
               boleto: {
                 instructions: `Pagamento do plano ${plan.name}`,
+                due_at: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 3 dias à frente
               },
             }
           }
