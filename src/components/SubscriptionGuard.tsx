@@ -13,11 +13,11 @@ export function SubscriptionGuard({ children }: SubscriptionGuardProps) {
   const { user } = useAuth();
   const { hasActiveSubscription, isLoading } = useSubscription();
 
-  // Email que precisa de assinatura ativa para testar o fluxo real
-  const REQUIRES_SUBSCRIPTION_EMAILS = ['rodrigoborgesjcontato@gmail.com'];
+  // Emails que NÃO precisam de assinatura (acesso livre)
+  const FREE_ACCESS_EMAILS = ['emerson.ocontador@gmail.com', 'lucianalimacarmo2@gmail.com'];
   
-  // Verifica se o usuário atual precisa de assinatura
-  const requiresSubscription = user?.email && REQUIRES_SUBSCRIPTION_EMAILS.includes(user.email);
+  // Por padrão todos precisam de assinatura, exceto os emails na lista de acesso livre
+  const requiresSubscription = user?.email ? !FREE_ACCESS_EMAILS.includes(user.email) : true;
 
   useEffect(() => {
     // Só redireciona se o usuário estiver na lista de teste E não tiver assinatura ativa
