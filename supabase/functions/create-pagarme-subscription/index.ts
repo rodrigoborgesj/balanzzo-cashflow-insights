@@ -65,12 +65,12 @@ serve(async (req) => {
     const areaCode = phoneDigits.substring(0, 2);
     const phoneNumber = phoneDigits.substring(2);
 
-    console.log('Creating Pagar.me checkout session...');
+    console.log('Creating Pagar.me order with checkout...');
 
     const basicAuth = 'Basic ' + btoa(`${pagarmeKey}:`);
 
-    // Create Pagar.me Checkout Session
-    const checkoutSessionResponse = await fetch('https://api.pagar.me/core/v5/subscriptions', {
+    // Create Pagar.me Order with Checkout
+    const orderResponse = await fetch('https://api.pagar.me/core/v5/orders', {
       method: 'POST',
       headers: {
         'Authorization': basicAuth,
@@ -91,44 +91,70 @@ serve(async (req) => {
             }
           }
         },
-        payment_methods: ['credit_card', 'pix', 'boleto'],
         items: [
           {
-            name: plan.name,
             amount: plan.price_cents,
-            quantity: 1,
             description: `Assinatura ${plan.name}`,
+            quantity: 1,
+            code: plan.pagarme_plan_id,
           }
         ],
-        subscription: {
-          plan_id: plan.pagarme_plan_id,
-        },
-        success_url: 'https://hbjobpbiordnwflfhjnu.supabase.co/dashboard?payment=success',
-        cancel_url: 'https://hbjobpbiordnwflfhjnu.supabase.co/checkout?payment=canceled',
+        payments: [
+          {
+            payment_method: 'checkout',
+            checkout: {
+              accepted_payment_methods: ['credit_card', 'pix', 'boleto'],
+              success_url: 'https://hbjobpbiordnwflfhjnu.supabase.co/dashboard?payment=success',
+              cancel_url: 'https://hbjobpbiordnwflfhjnu.supabase.co/checkout?payment=canceled',
+              customer_editable: true,
+              skip_checkout_success_page: false,
+              expires_in: 3600,
+              billing_address_editable: false,
+              accepted_multi_payment_methods: [
+                ['credit_card'],
+                ['pix'],
+                ['boleto']
+              ]
+            }
+          }
+        ],
+        closed: false,
         metadata: {
           user_id: user.id,
           plan_id: planId,
+          plan_name: plan.name,
         }
       }),
     });
 
-    if (!checkoutSessionResponse.ok) {
-      const errorText = await checkoutSessionResponse.text();
-      console.error('Pagar.me checkout session error:', checkoutSessionResponse.status, errorText);
+    if (!orderResponse.ok) {
+      const errorText = await orderResponse.text();
+      console.error('Pagar.me order creation error:', orderResponse.status, errorText);
       return new Response(
-        JSON.stringify({ error: 'Erro ao criar sessão de pagamento' }),
+        JSON.stringify({ error: 'Erro ao criar pedido de pagamento' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const checkoutSession = await checkoutSessionResponse.json();
-    console.log('Checkout session created:', checkoutSession.id);
+    const order = await orderResponse.json();
+    console.log('Order created:', order.id);
+
+    // Extract checkout URL from order
+    const checkoutUrl = order.checkouts?.[0]?.payment_url;
+    
+    if (!checkoutUrl) {
+      console.error('No checkout URL in order response:', order);
+      return new Response(
+        JSON.stringify({ error: 'URL de pagamento não disponível' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        checkout_url: checkoutSession.url,
-        session_id: checkoutSession.id,
+        checkout_url: checkoutUrl,
+        order_id: order.id,
         message: 'Redirecionando para pagamento...' 
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
