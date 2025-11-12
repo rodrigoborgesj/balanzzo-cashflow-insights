@@ -99,6 +99,10 @@ serve(async (req) => {
             code: plan.pagarme_plan_id,
           }
         ],
+        // Vincula o pedido a um plano para criar assinatura recorrente
+        subscription: {
+          plan_id: plan.pagarme_plan_id,
+        },
         payments: [
           {
             payment_method: 'checkout',
@@ -110,11 +114,12 @@ serve(async (req) => {
               skip_checkout_success_page: false,
               expires_in: 3600,
               billing_address_editable: false,
-              accepted_multi_payment_methods: [
-                ['credit_card'],
-                ['pix'],
-                ['boleto']
-              ]
+              pix: {
+                expires_in: 3600,
+              },
+              boleto: {
+                instructions: `Pagamento do plano ${plan.name}`,
+              },
             }
           }
         ],
