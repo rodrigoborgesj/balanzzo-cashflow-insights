@@ -9,37 +9,41 @@ interface SubscriptionGuardProps {
 }
 
 export function SubscriptionGuard({ children }: SubscriptionGuardProps) {
-  // TEMPORÁRIO: Verificação de assinatura desabilitada enquanto o fluxo de pagamento está sendo ajustado
-  // TODO: Reativar quando o fluxo de pagamento estiver 100% funcional
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { hasActiveSubscription, isLoading } = useSubscription();
+
+  // Email que precisa de assinatura ativa para testar o fluxo real
+  const REQUIRES_SUBSCRIPTION_EMAILS = ['rodrigoborgesjcontato@gmail.com'];
   
-  // const navigate = useNavigate();
-  // const { user } = useAuth();
-  // const { hasActiveSubscription, isLoading } = useSubscription();
+  // Verifica se o usuário atual precisa de assinatura
+  const requiresSubscription = user?.email && REQUIRES_SUBSCRIPTION_EMAILS.includes(user.email);
 
-  // useEffect(() => {
-  //   if (!isLoading && user && !hasActiveSubscription) {
-  //     console.log('No active subscription, redirecting to checkout');
-  //     navigate('/checkout', { replace: true });
-  //   }
-  // }, [hasActiveSubscription, isLoading, user, navigate]);
+  useEffect(() => {
+    // Só redireciona se o usuário estiver na lista de teste E não tiver assinatura ativa
+    if (!isLoading && user && requiresSubscription && !hasActiveSubscription) {
+      console.log('User requires subscription, redirecting to checkout');
+      navigate('/checkout', { replace: true });
+    }
+  }, [hasActiveSubscription, isLoading, user, requiresSubscription, navigate]);
 
-  // // Show loading while checking subscription
-  // if (isLoading) {
-  //   return (
-  //     <div className="min-h-screen bg-background flex items-center justify-center">
-  //       <div className="flex flex-col items-center gap-4">
-  //         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-  //         <p className="text-sm text-muted-foreground">Verificando assinatura...</p>
-  //       </div>
-  //     </div>
-  //   );
-  // }
+  // Show loading while checking subscription (apenas para usuários que precisam)
+  if (isLoading && requiresSubscription) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">Verificando assinatura...</p>
+        </div>
+      </div>
+    );
+  }
 
-  // // If no active subscription, don't render children (will redirect)
-  // if (!hasActiveSubscription) {
-  //   return null;
-  // }
+  // Se o usuário requer assinatura mas não tem, não renderiza (vai redirecionar)
+  if (requiresSubscription && !hasActiveSubscription) {
+    return null;
+  }
 
-  // Permitir acesso livre temporariamente
+  // Permite acesso livre para todos os outros usuários
   return <>{children}</>;
 }
