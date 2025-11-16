@@ -17,9 +17,20 @@ export function SubscriptionGuard({ children }: SubscriptionGuardProps) {
   const FREE_ACCESS_EMAILS = ['emerson.ocontador@gmail.com', 'lucianalimacarmo2@gmail.com', 'ellenfarias09@hotmail.com'];
   
   // Por padrão todos precisam de assinatura, exceto os emails na lista de acesso livre
-  const requiresSubscription = user?.email ? !FREE_ACCESS_EMAILS.includes(user.email) : true;
+  // Verificação case-insensitive e trim para evitar problemas
+  const requiresSubscription = user?.email 
+    ? !FREE_ACCESS_EMAILS.some(email => email.toLowerCase().trim() === user.email.toLowerCase().trim())
+    : true;
 
   useEffect(() => {
+    // Log para debug
+    console.log('SubscriptionGuard check:', {
+      userEmail: user?.email,
+      requiresSubscription,
+      hasActiveSubscription,
+      isLoading
+    });
+    
     // Só redireciona se o usuário estiver na lista de teste E não tiver assinatura ativa
     if (!isLoading && user && requiresSubscription && !hasActiveSubscription) {
       console.log('User requires subscription, redirecting to checkout');
