@@ -523,12 +523,27 @@ export class StandardizedBankStatementParser {
       console.log(`📄 Total lines extracted: ${lines.length}`);
 
       // PRE-PROCESSING: Reconstruct fragmented transactions
-      // Many PDFs (like Sicredi) extract transactions across multiple lines
+      // Banks like Sicredi and Itaú Empresas extract transactions across multiple lines
       console.log('🔧 Pre-processing: Reconstructing fragmented transactions...');
       
       const reconstructedLines: string[] = [];
       let currentBlock: string[] = [];
       let blockStarted = false;
+
+      // Keywords to ignore even if line starts with date (balance lines)
+      const balanceKeywords = [
+        'SALDO EM CONTA CORRENTE',
+        'SALDO TOTAL DISPONÍVEL DIA',
+        'SALDO TOTAL DISPONIVEL DIA',
+        'SALDO ANTERIOR',
+        'SALDO DISPONÍVEL',
+        'SALDO DISPONIVEL',
+        'SALDO TOTAL',
+        'LIMITE DA CONTA',
+        'LIMITE DISPONÍVEL',
+        'AGÊNCIA',
+        'CONTA'
+      ];
 
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
@@ -537,6 +552,30 @@ export class StandardizedBankStatementParser {
         const startsWithDate = /^\d{1,2}\/\d{1,2}\/\d{4}/.test(line);
         
         if (startsWithDate) {
+          // Check if this is a balance/summary line (should be ignored)
+          const isBalanceLine = balanceKeywords.some(keyword => 
+            line.toUpperCase().includes(keyword)
+          );
+          
+          // Check if second word after date is "SALDO"
+          const parts = line.split(/\s+/);
+          const secondWordIsSaldo = parts.length > 1 && parts[1].toUpperCase() === 'SALDO';
+          
+          if (isBalanceLine || secondWordIsSaldo) {
+            console.log(`⏭️ Ignoring balance line: ${line.substring(0, 60)}...`);
+            
+            // If we had a block started, save it first
+            if (blockStarted && currentBlock.length > 0) {
+              const reconstructed = currentBlock.join(' ').replace(/\s+/g, ' ').trim();
+              reconstructedLines.push(reconstructed);
+              console.log(`✅ Saved block before balance line: ${reconstructed.substring(0, 80)}...`);
+              currentBlock = [];
+              blockStarted = false;
+            }
+            
+            continue; // Skip this balance line
+          }
+          
           // If we already had a block, save it first
           if (blockStarted && currentBlock.length > 0) {
             const reconstructed = currentBlock.join(' ').replace(/\s+/g, ' ').trim();
@@ -553,9 +592,9 @@ export class StandardizedBankStatementParser {
           
           // Check if this line ends with a monetary value (transaction complete)
           // Look for value at the END of the line: number with comma as decimal
-          // Examples: 39,44 | -380,00 | 1.234,56 | -2.345,67
-          // Must be at the end of line (after any CNPJ, CPF, or other numbers)
-          const valueMatch = line.match(/(-?\d{1,3}(?:\.\d{3})*,\d{2})\s*$/);
+          // Pattern: [+/-]?digits with optional thousand separators, comma, 2 decimals
+          // Examples: 39,44 | -380,00 | 1.234,56 | -2.345,67 | +500,00
+          const valueMatch = line.match(/([+-]?\d{1,3}(?:\.\d{3})*,\d{2})\s*$/);
           
           if (valueMatch) {
             // Transaction complete - save and reset
@@ -571,8 +610,14 @@ export class StandardizedBankStatementParser {
       // Save last block if exists (some PDFs might not end with a value)
       if (blockStarted && currentBlock.length > 0) {
         const reconstructed = currentBlock.join(' ').replace(/\s+/g, ' ').trim();
-        reconstructedLines.push(reconstructed);
-        console.log(`✅ Final: ${reconstructed.substring(0, 100)}...`);
+        // Check if it has a value at the end before saving
+        const hasValue = /([+-]?\d{1,3}(?:\.\d{3})*,\d{2})\s*$/.test(reconstructed);
+        if (hasValue) {
+          reconstructedLines.push(reconstructed);
+          console.log(`✅ Final: ${reconstructed.substring(0, 100)}...`);
+        } else {
+          console.log(`⚠️ Discarding incomplete block (no value): ${reconstructed.substring(0, 80)}...`);
+        }
       }
       
       console.log(`📄 Reconstructed ${reconstructedLines.length} transaction blocks from ${lines.length} original lines`);
