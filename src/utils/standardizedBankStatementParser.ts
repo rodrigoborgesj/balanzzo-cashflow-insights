@@ -518,9 +518,59 @@ export class StandardizedBankStatementParser {
       console.log('📄 Text extracted from PDF, analyzing transactions...');
 
       // Split text into lines for intelligent parsing
-      const lines = fullText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+      let lines = fullText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
       
       console.log(`📄 Total lines extracted: ${lines.length}`);
+
+      // PRE-PROCESSING: Reconstruct fragmented transactions
+      // Many PDFs (like Sicredi) extract transactions across multiple lines
+      console.log('🔧 Pre-processing: Reconstructing fragmented transactions...');
+      
+      const reconstructedLines: string[] = [];
+      let currentBlock: string[] = [];
+      let blockStarted = false;
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        
+        // Check if line starts with a date (DD/MM/YYYY)
+        const startsWithDate = /^\d{1,2}\/\d{1,2}\/\d{4}/.test(line);
+        
+        if (startsWithDate) {
+          // If we already had a block, save it first
+          if (blockStarted && currentBlock.length > 0) {
+            reconstructedLines.push(currentBlock.join(' '));
+          }
+          
+          // Start new block with this date line
+          currentBlock = [line];
+          blockStarted = true;
+        } else if (blockStarted) {
+          // Add line to current block
+          currentBlock.push(line);
+          
+          // Check if this line contains a value (end of transaction)
+          // Pattern: number with comma as decimal separator, possibly negative
+          const hasValue = /(-?\d{1,3}(?:\.\d{3})*,\d{2})/.test(line);
+          
+          if (hasValue) {
+            // Transaction complete - save and reset
+            reconstructedLines.push(currentBlock.join(' '));
+            currentBlock = [];
+            blockStarted = false;
+          }
+        }
+      }
+      
+      // Save last block if exists
+      if (blockStarted && currentBlock.length > 0) {
+        reconstructedLines.push(currentBlock.join(' '));
+      }
+      
+      console.log(`📄 Reconstructed ${reconstructedLines.length} transaction blocks from ${lines.length} lines`);
+      
+      // Replace original lines with reconstructed ones
+      lines = reconstructedLines;
 
       // Blocked phrases that indicate non-transaction lines (balance, summaries, etc.)
       const blockedPhrases = [
