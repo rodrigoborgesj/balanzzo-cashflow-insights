@@ -539,7 +539,9 @@ export class StandardizedBankStatementParser {
         if (startsWithDate) {
           // If we already had a block, save it first
           if (blockStarted && currentBlock.length > 0) {
-            reconstructedLines.push(currentBlock.join(' '));
+            const reconstructed = currentBlock.join(' ');
+            reconstructedLines.push(reconstructed);
+            console.log(`✅ Reconstructed block: ${reconstructed.substring(0, 80)}...`);
           }
           
           // Start new block with this date line
@@ -549,13 +551,17 @@ export class StandardizedBankStatementParser {
           // Add line to current block
           currentBlock.push(line);
           
-          // Check if this line contains a value (end of transaction)
-          // Pattern: number with comma as decimal separator, possibly negative
-          const hasValue = /(-?\d{1,3}(?:\.\d{3})*,\d{2})/.test(line);
+          // Check if this line contains a monetary value (end of transaction)
+          // Pattern: monetary value at end of line or followed by space
+          // Must have comma as decimal separator and 2 decimal places
+          // Examples: 39,44 or -380,00 or 1.234,56
+          const hasValue = /(?:^|[^\/\d])(-?\d{1,3}(?:\.\d{3})*,\d{2})(?:\s|$)/.test(line);
           
           if (hasValue) {
             // Transaction complete - save and reset
-            reconstructedLines.push(currentBlock.join(' '));
+            const reconstructed = currentBlock.join(' ');
+            reconstructedLines.push(reconstructed);
+            console.log(`✅ Reconstructed block: ${reconstructed.substring(0, 80)}...`);
             currentBlock = [];
             blockStarted = false;
           }
@@ -564,7 +570,9 @@ export class StandardizedBankStatementParser {
       
       // Save last block if exists
       if (blockStarted && currentBlock.length > 0) {
-        reconstructedLines.push(currentBlock.join(' '));
+        const reconstructed = currentBlock.join(' ');
+        reconstructedLines.push(reconstructed);
+        console.log(`✅ Reconstructed final block: ${reconstructed.substring(0, 80)}...`);
       }
       
       console.log(`📄 Reconstructed ${reconstructedLines.length} transaction blocks from ${lines.length} lines`);
