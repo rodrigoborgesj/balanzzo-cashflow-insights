@@ -533,49 +533,49 @@ export class StandardizedBankStatementParser {
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
         
-        // Check if line starts with a date (DD/MM/YYYY)
+        // Check if line starts with a date (DD/MM/YYYY or D/M/YYYY)
         const startsWithDate = /^\d{1,2}\/\d{1,2}\/\d{4}/.test(line);
         
         if (startsWithDate) {
           // If we already had a block, save it first
           if (blockStarted && currentBlock.length > 0) {
-            const reconstructed = currentBlock.join(' ');
+            const reconstructed = currentBlock.join(' ').replace(/\s+/g, ' ').trim();
             reconstructedLines.push(reconstructed);
-            console.log(`✅ Reconstructed block: ${reconstructed.substring(0, 80)}...`);
+            console.log(`✅ Block: ${reconstructed.substring(0, 100)}...`);
           }
           
           // Start new block with this date line
           currentBlock = [line];
           blockStarted = true;
         } else if (blockStarted) {
-          // Add line to current block
+          // Add line to current block (it's a continuation of the transaction)
           currentBlock.push(line);
           
-          // Check if this line contains a monetary value (end of transaction)
-          // Pattern: monetary value at end of line or followed by space
-          // Must have comma as decimal separator and 2 decimal places
-          // Examples: 39,44 or -380,00 or 1.234,56
-          const hasValue = /(?:^|[^\/\d])(-?\d{1,3}(?:\.\d{3})*,\d{2})(?:\s|$)/.test(line);
+          // Check if this line ends with a monetary value (transaction complete)
+          // Look for value at the END of the line: number with comma as decimal
+          // Examples: 39,44 | -380,00 | 1.234,56 | -2.345,67
+          // Must be at the end of line (after any CNPJ, CPF, or other numbers)
+          const valueMatch = line.match(/(-?\d{1,3}(?:\.\d{3})*,\d{2})\s*$/);
           
-          if (hasValue) {
+          if (valueMatch) {
             // Transaction complete - save and reset
-            const reconstructed = currentBlock.join(' ');
+            const reconstructed = currentBlock.join(' ').replace(/\s+/g, ' ').trim();
             reconstructedLines.push(reconstructed);
-            console.log(`✅ Reconstructed block: ${reconstructed.substring(0, 80)}...`);
+            console.log(`✅ Complete: ${reconstructed.substring(0, 100)}...`);
             currentBlock = [];
             blockStarted = false;
           }
         }
       }
       
-      // Save last block if exists
+      // Save last block if exists (some PDFs might not end with a value)
       if (blockStarted && currentBlock.length > 0) {
-        const reconstructed = currentBlock.join(' ');
+        const reconstructed = currentBlock.join(' ').replace(/\s+/g, ' ').trim();
         reconstructedLines.push(reconstructed);
-        console.log(`✅ Reconstructed final block: ${reconstructed.substring(0, 80)}...`);
+        console.log(`✅ Final: ${reconstructed.substring(0, 100)}...`);
       }
       
-      console.log(`📄 Reconstructed ${reconstructedLines.length} transaction blocks from ${lines.length} lines`);
+      console.log(`📄 Reconstructed ${reconstructedLines.length} transaction blocks from ${lines.length} original lines`);
       
       // Replace original lines with reconstructed ones
       lines = reconstructedLines;
