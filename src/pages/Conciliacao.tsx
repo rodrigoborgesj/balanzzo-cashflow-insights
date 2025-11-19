@@ -343,12 +343,12 @@ export default function Conciliacao() {
               Upload do Extrato
             </CardTitle>
             <p className="text-sm text-muted-foreground mt-1">
-              Envie seu extrato bancário em formato CSV ou OFX
+              Envie seu extrato bancário em formato CSV, OFX ou PDF
             </p>
           </CardHeader>
           <CardContent className="p-6">
             <div className="space-y-4">
-              <FileUploader onFileSelect={handleFileSelect} acceptedFormats={['.csv', '.ofx']} maxSize={5} />
+              <FileUploader onFileSelect={handleFileSelect} acceptedFormats={['.csv', '.ofx', '.pdf']} maxSize={5} />
               
               {selectedFile && (
                 <div className="animate-fade-in">
