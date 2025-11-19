@@ -186,7 +186,7 @@ export function FileUploader({
                     {dragActive ? 'Solte seu arquivo aqui' : 'Upload do Extrato'}
                   </h3>
                   <p className="text-muted-foreground">
-                    Arraste e solte seu arquivo CSV/OFX ou clique para selecionar
+                    Arraste e solte seu arquivo CSV/OFX/PDF ou clique para selecionar
                   </p>
                   <div className="flex items-center gap-6 text-sm text-muted-foreground">
                     <div className="flex items-center gap-2">
