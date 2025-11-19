@@ -517,75 +517,165 @@ export class StandardizedBankStatementParser {
 
       console.log('📄 Text extracted from PDF, analyzing transactions...');
 
-      // Patterns to match transactions in Brazilian bank statements
-      // Common formats:
-      // DD/MM/YYYY Description R$ 1.234,56
-      // DD/MM Description R$ 1.234,56
-      // Date may be followed by various spacing and description, then amount
+      // Split text into lines for intelligent parsing
+      const lines = fullText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
       
-      const transactionPatterns = [
-        // Pattern 1: DD/MM/YYYY or DD/MM followed by description and amount
-        /(\d{1,2}\/\d{1,2}(?:\/\d{4})?)\s+(.*?)\s+(?:R\$\s*)?(-?\d{1,3}(?:\.\d{3})*,\d{2})/gi,
-        // Pattern 2: Date at start of line with description and amount
-        /^(\d{1,2}\/\d{1,2}(?:\/\d{4})?)\s+(.*?)\s+(-?\d{1,3}(?:\.\d{3})*,\d{2})/gm,
-        // Pattern 3: More flexible pattern for different bank formats
-        /(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})\s+(.+?)\s+(?:R\$)?\s*(-?\d{1,3}(?:\.\d{3})*,\d{2})/gi,
+      console.log(`📄 Total lines extracted: ${lines.length}`);
+
+      // Keywords to ignore (headers, titles, etc.)
+      const ignoreKeywords = [
+        'data',
+        'lançamentos',
+        'razão social',
+        'saldo',
+        'valor',
+        'agência',
+        'conta',
+        'limite',
+        'disponível',
+        'cnpj',
+        'cpf',
+        'período',
+        'extrato',
+        'banco',
+        'página',
+        'folha'
       ];
 
       const foundTransactions = new Set<string>();
       let transactionCount = 0;
+      let i = 0;
 
-      for (const pattern of transactionPatterns) {
-        const matches = fullText.matchAll(pattern);
+      while (i < lines.length) {
+        const line = lines[i];
         
-        for (const match of matches) {
-          try {
-            const dateStr = match[1].trim();
-            let description = match[2].trim();
-            const amountStr = match[3].trim();
-
-            // Create unique key to avoid duplicates
-            const uniqueKey = `${dateStr}-${amountStr}-${description.substring(0, 20)}`;
-            if (foundTransactions.has(uniqueKey)) {
-              continue;
-            }
-            foundTransactions.add(uniqueKey);
-
-            transactionCount++;
-
-            // Clean up description (remove extra spaces, special characters)
-            description = description.replace(/\s+/g, ' ').substring(0, 200);
-            
-            if (!description || description.length < 3) {
-              result.warnings.push(`Transação ${transactionCount}: Descrição muito curta ou vazia`);
-              continue;
-            }
-
-            // Parse date
-            const date = this.parseDate(dateStr);
-            if (!date) {
-              result.warnings.push(`Transação ${transactionCount}: Data inválida (${dateStr})`);
-              continue;
-            }
-
-            // Parse amount (Brazilian format: 1.234,56)
-            const value = this.parseAmount(amountStr.replace('R$', '').trim());
-            if (isNaN(value) || value === 0) {
-              result.warnings.push(`Transação ${transactionCount}: Valor inválido (${amountStr})`);
-              continue;
-            }
-
-            result.transactions.push({
-              date,
-              value,
-              description
-            });
-            
-            result.validRows++;
-          } catch (error) {
-            result.warnings.push(`Transação ${transactionCount}: Erro ao processar - ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
-          }
+        // Check if line starts with a valid date (DD/MM/YYYY)
+        const dateMatch = line.match(/^(\d{1,2}\/\d{1,2}\/\d{4})\s+(.*)$/);
+        
+        if (!dateMatch) {
+          i++;
+          continue;
         }
+
+        const dateStr = dateMatch[1];
+        let remainingText = dateMatch[2].trim();
+
+        // Check if this line contains ignore keywords (likely a header)
+        const lowerLine = line.toLowerCase();
+        const isHeader = ignoreKeywords.some(keyword => {
+          const parts = lowerLine.split(/\s+/);
+          return parts.some(part => part === keyword);
+        });
+
+        if (isHeader) {
+          console.log(`⏭️ Skipping header line: ${line.substring(0, 50)}...`);
+          i++;
+          continue;
+        }
+
+        // Try to extract amount from current line
+        // Pattern: value at the end, format: -?1.234,56 or -?1234,56
+        const amountPattern = /(-?\d{1,3}(?:\.\d{3})*,\d{2})$/;
+        let amountMatch = remainingText.match(amountPattern);
+        let description = remainingText;
+        let amountStr = '';
+
+        if (amountMatch) {
+          // Amount found on same line
+          amountStr = amountMatch[1];
+          description = remainingText.substring(0, remainingText.lastIndexOf(amountStr)).trim();
+        } else {
+          // Amount might be on next lines, collect description until we find a value
+          let j = i + 1;
+          let descriptionParts = [remainingText];
+          
+          while (j < lines.length && j < i + 5) { // Look ahead max 5 lines
+            const nextLine = lines[j].trim();
+            
+            // Stop if next line starts with a date (new transaction)
+            if (/^\d{1,2}\/\d{1,2}\/\d{4}/.test(nextLine)) {
+              break;
+            }
+
+            // Check if this line contains the amount
+            const nextAmountMatch = nextLine.match(amountPattern);
+            if (nextAmountMatch) {
+              amountStr = nextAmountMatch[1];
+              const beforeAmount = nextLine.substring(0, nextLine.lastIndexOf(amountStr)).trim();
+              if (beforeAmount) {
+                descriptionParts.push(beforeAmount);
+              }
+              i = j; // Update main counter to skip processed lines
+              break;
+            } else {
+              // Add to description
+              descriptionParts.push(nextLine);
+            }
+            
+            j++;
+          }
+          
+          description = descriptionParts.join(' ').trim();
+        }
+
+        // If no amount found, skip this entry
+        if (!amountStr) {
+          console.log(`⏭️ No amount found for date ${dateStr}, skipping`);
+          i++;
+          continue;
+        }
+
+        // Clean up description
+        description = description.replace(/\s+/g, ' ').substring(0, 200);
+
+        // Validate minimum description length
+        if (description.length < 3) {
+          console.log(`⏭️ Description too short for ${dateStr}: "${description}"`);
+          i++;
+          continue;
+        }
+
+        // Create unique key to avoid duplicates
+        const uniqueKey = `${dateStr}-${amountStr}-${description.substring(0, 20)}`;
+        if (foundTransactions.has(uniqueKey)) {
+          i++;
+          continue;
+        }
+        foundTransactions.add(uniqueKey);
+
+        transactionCount++;
+
+        try {
+          // Parse date
+          const date = this.parseDate(dateStr);
+          if (!date) {
+            result.warnings.push(`Transação ${transactionCount}: Data inválida (${dateStr})`);
+            i++;
+            continue;
+          }
+
+          // Parse amount (Brazilian format: 1.234,56)
+          const value = this.parseAmount(amountStr.replace('R$', '').trim());
+          if (isNaN(value) || value === 0) {
+            result.warnings.push(`Transação ${transactionCount}: Valor inválido (${amountStr})`);
+            i++;
+            continue;
+          }
+
+          console.log(`✅ Transaction found: ${dateStr} | ${description.substring(0, 30)}... | ${amountStr}`);
+
+          result.transactions.push({
+            date,
+            value,
+            description
+          });
+          
+          result.validRows++;
+        } catch (error) {
+          result.warnings.push(`Transação ${transactionCount}: Erro ao processar - ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+        }
+
+        i++;
       }
 
       result.processedRows = transactionCount;
