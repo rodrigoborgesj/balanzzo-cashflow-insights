@@ -522,24 +522,25 @@ export class StandardizedBankStatementParser {
       
       console.log(`📄 Total lines extracted: ${lines.length}`);
 
-      // Keywords to ignore (headers, titles, etc.)
-      const ignoreKeywords = [
-        'data',
-        'lançamentos',
-        'razão social',
-        'saldo',
-        'valor',
-        'agência',
-        'conta',
-        'limite',
+      // Blocked phrases that indicate non-transaction lines (balance, summaries, etc.)
+      const blockedPhrases = [
+        'saldo total disponível dia',
+        'saldo total disponivel dia',
+        'saldo em conta corrente',
+        'saldo anterior',
+        'saldo disponivel',
+        'saldo disponível',
+        'saldo em',
+        'saldo total',
+        'limite da conta',
+        'utilizado',
         'disponível',
-        'cnpj',
-        'cpf',
-        'período',
-        'extrato',
-        'banco',
-        'página',
-        'folha'
+        'disponivel',
+        'agência',
+        'agencia',
+        'conta',
+        'lançamentos do período',
+        'lancamentos do periodo'
       ];
 
       const foundTransactions = new Set<string>();
@@ -560,15 +561,12 @@ export class StandardizedBankStatementParser {
         const dateStr = dateMatch[1];
         let remainingText = dateMatch[2].trim();
 
-        // Check if this line contains ignore keywords (likely a header)
+        // Check if this line contains blocked phrases (balance lines, not transactions)
         const lowerLine = line.toLowerCase();
-        const isHeader = ignoreKeywords.some(keyword => {
-          const parts = lowerLine.split(/\s+/);
-          return parts.some(part => part === keyword);
-        });
+        const isBlocked = blockedPhrases.some(phrase => lowerLine.includes(phrase));
 
-        if (isHeader) {
-          console.log(`⏭️ Skipping header line: ${line.substring(0, 50)}...`);
+        if (isBlocked) {
+          console.log(`⏭️ Skipping balance/summary line: ${line.substring(0, 60)}...`);
           i++;
           continue;
         }
