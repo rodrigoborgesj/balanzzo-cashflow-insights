@@ -1,4 +1,5 @@
 import { parse } from 'papaparse';
+import * as pdfjsLib from 'pdfjs-dist';
 
 // OFX Parser helper functions
 function extractOFXValue(content: string, tag: string): string {
@@ -86,6 +87,11 @@ export class StandardizedBankStatementParser {
       if (fileExtension === 'ofx') {
         console.log('📄 OFX file detected, using OFX parser');
         return await this.parseOFXFile(content);
+      }
+      
+      if (fileExtension === 'pdf') {
+        console.log('📄 PDF file detected, using PDF parser');
+        return await this.parsePDFFile(file);
       }
       
       // Continue with CSV parsing for non-OFX files
@@ -466,6 +472,141 @@ export class StandardizedBankStatementParser {
     } catch (error) {
       console.error('❌ Error parsing OFX file:', error);
       result.errors.push(`Erro ao processar arquivo OFX: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+      return result;
+    }
+  }
+
+  /**
+   * Parse PDF bank statement file
+   */
+  private static async parsePDFFile(file: File): Promise<StandardizedParseResult> {
+    console.log('📄 Starting PDF parse');
+    
+    const result: StandardizedParseResult = {
+      transactions: [],
+      errors: [],
+      warnings: [],
+      processedRows: 0,
+      validRows: 0
+    };
+
+    try {
+      // Configure PDF.js worker
+      pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+
+      // Read file as ArrayBuffer
+      const arrayBuffer = await file.arrayBuffer();
+      
+      // Load PDF document
+      const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+      const pdf = await loadingTask.promise;
+      
+      console.log(`📄 PDF loaded: ${pdf.numPages} pages`);
+
+      let fullText = '';
+
+      // Extract text from all pages
+      for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+        const page = await pdf.getPage(pageNum);
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items
+          .map((item: any) => item.str)
+          .join(' ');
+        fullText += pageText + '\n';
+      }
+
+      console.log('📄 Text extracted from PDF, analyzing transactions...');
+
+      // Patterns to match transactions in Brazilian bank statements
+      // Common formats:
+      // DD/MM/YYYY Description R$ 1.234,56
+      // DD/MM Description R$ 1.234,56
+      // Date may be followed by various spacing and description, then amount
+      
+      const transactionPatterns = [
+        // Pattern 1: DD/MM/YYYY or DD/MM followed by description and amount
+        /(\d{1,2}\/\d{1,2}(?:\/\d{4})?)\s+(.*?)\s+(?:R\$\s*)?(-?\d{1,3}(?:\.\d{3})*,\d{2})/gi,
+        // Pattern 2: Date at start of line with description and amount
+        /^(\d{1,2}\/\d{1,2}(?:\/\d{4})?)\s+(.*?)\s+(-?\d{1,3}(?:\.\d{3})*,\d{2})/gm,
+        // Pattern 3: More flexible pattern for different bank formats
+        /(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})\s+(.+?)\s+(?:R\$)?\s*(-?\d{1,3}(?:\.\d{3})*,\d{2})/gi,
+      ];
+
+      const foundTransactions = new Set<string>();
+      let transactionCount = 0;
+
+      for (const pattern of transactionPatterns) {
+        const matches = fullText.matchAll(pattern);
+        
+        for (const match of matches) {
+          try {
+            const dateStr = match[1].trim();
+            let description = match[2].trim();
+            const amountStr = match[3].trim();
+
+            // Create unique key to avoid duplicates
+            const uniqueKey = `${dateStr}-${amountStr}-${description.substring(0, 20)}`;
+            if (foundTransactions.has(uniqueKey)) {
+              continue;
+            }
+            foundTransactions.add(uniqueKey);
+
+            transactionCount++;
+
+            // Clean up description (remove extra spaces, special characters)
+            description = description.replace(/\s+/g, ' ').substring(0, 200);
+            
+            if (!description || description.length < 3) {
+              result.warnings.push(`Transação ${transactionCount}: Descrição muito curta ou vazia`);
+              continue;
+            }
+
+            // Parse date
+            const date = this.parseDate(dateStr);
+            if (!date) {
+              result.warnings.push(`Transação ${transactionCount}: Data inválida (${dateStr})`);
+              continue;
+            }
+
+            // Parse amount (Brazilian format: 1.234,56)
+            const value = this.parseAmount(amountStr.replace('R$', '').trim());
+            if (isNaN(value) || value === 0) {
+              result.warnings.push(`Transação ${transactionCount}: Valor inválido (${amountStr})`);
+              continue;
+            }
+
+            result.transactions.push({
+              date,
+              value,
+              description
+            });
+            
+            result.validRows++;
+          } catch (error) {
+            result.warnings.push(`Transação ${transactionCount}: Erro ao processar - ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+          }
+        }
+      }
+
+      result.processedRows = transactionCount;
+
+      console.log('✅ PDF Parse completed:', {
+        processedRows: result.processedRows,
+        validRows: result.validRows,
+        errors: result.errors.length,
+        warnings: result.warnings.length
+      });
+
+      if (result.transactions.length === 0) {
+        result.errors.push('Nenhuma transação encontrada no PDF. Verifique se o arquivo contém um extrato bancário no formato esperado.');
+        result.warnings.push('Formatos esperados: Data (DD/MM/YYYY), Descrição, Valor (R$ 1.234,56)');
+      }
+
+      return result;
+
+    } catch (error) {
+      console.error('❌ Error parsing PDF file:', error);
+      result.errors.push(`Erro ao processar arquivo PDF: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
       return result;
     }
   }
