@@ -14,7 +14,7 @@ export function SubscriptionGuard({ children }: SubscriptionGuardProps) {
   const { hasActiveSubscription, isLoading } = useSubscription();
 
   // Emails que NÃO precisam de assinatura (acesso livre)
-  const FREE_ACCESS_EMAILS = ['emerson.ocontador@gmail.com', 'lucianalimacarmo2@gmail.com', 'ellenfarias09@hotmail.com', 'bilu.neto13@gmail.com'];
+  const FREE_ACCESS_EMAILS = ['emerson.ocontador@gmail.com', 'lucianalimacarmo2@gmail.com', 'ellenfarias09@hotmail.com', 'bilu.neto13@gmail.com', 'rodrigoborgesjcontato@gmail.com'];
   
   // Por padrão todos precisam de assinatura, exceto os emails na lista de acesso livre
   // Verificação case-insensitive e trim para evitar problemas
