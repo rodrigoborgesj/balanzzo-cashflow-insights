@@ -244,21 +244,43 @@ export class StandardizedBankStatementParser {
       // Map based on header keywords
       firstRow.forEach((header, index) => {
         const normalized = header.toLowerCase().trim();
-        
-        if (normalized.includes('data') || normalized.includes('date')) {
+
+        // Date columns
+        if ((normalized.includes('data') || normalized.includes('date')) && mapping.date === undefined) {
           mapping.date = index;
-        } else if (normalized.includes('valor') || normalized.includes('value') || normalized.includes('amount')) {
-          mapping.value = index;
-        } else if (normalized.includes('descricao') || normalized.includes('description') || normalized.includes('descrição')) {
+          return;
+        }
+
+        // Skip "valor em dólar" / "valor em dolar" when choosing main value column
+        const isForeignValue =
+          normalized.includes('valor em dólar') ||
+          normalized.includes('valor em dolar') ||
+          normalized.includes('dólar') ||
+          normalized.includes('dolar');
+
+        // Main value column (use the first valid match only)
+        if (!isForeignValue && (normalized.includes('valor') || normalized.includes('value') || normalized.includes('amount'))) {
+          if (mapping.value === undefined) {
+            mapping.value = index;
+          }
+          return;
+        }
+
+        // Description columns
+        if ((normalized.includes('descricao') || normalized.includes('descrição') || normalized.includes('description')) && mapping.description === undefined) {
           mapping.description = index;
-        } else if (normalized.includes('identificador') || normalized.includes('identifier') || normalized.includes('id')) {
+          return;
+        }
+
+        // Optional identifier column
+        if ((normalized.includes('identificador') || normalized.includes('identifier') || normalized.includes(' id')) && mapping.identifier === undefined) {
           mapping.identifier = index;
         }
       });
     }
     
     // Default mapping if no header or incomplete mapping
-    if (!mapping.date || mapping.value === undefined || !mapping.description) {
+    if (mapping.date === undefined || mapping.value === undefined || mapping.description === undefined) {
       if (firstRow.length >= 4) {
         // Standard 4-column format: Date, Value, Identifier, Description  
         mapping.date = 0;
