@@ -278,11 +278,27 @@ export default function FluxoCaixa() {
                   <Input
                     id="saldo-inicial"
                     type="text"
-                    value={saldoInicial.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    value={saldoInicial === 0 ? '' : saldoInicial.toString()}
                     onChange={(e) => {
-                      const rawValue = e.target.value.replace(/[^\d,.-]/g, '').replace(',', '.');
-                      const numValue = parseFloat(rawValue) || 0;
-                      setSaldoInicial(numValue);
+                      const rawValue = e.target.value.replace(/[^\d,.-]/g, '');
+                      const normalizedValue = rawValue.replace(',', '.');
+                      const numValue = normalizedValue === '' || normalizedValue === '-' ? 0 : parseFloat(normalizedValue);
+                      if (!isNaN(numValue)) {
+                        setSaldoInicial(numValue);
+                      }
+                    }}
+                    onBlur={(e) => {
+                      // Format on blur for better UX
+                      if (saldoInicial !== 0) {
+                        e.target.value = saldoInicial.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                      }
+                    }}
+                    onFocus={(e) => {
+                      // Show raw number on focus for easier editing
+                      if (saldoInicial !== 0) {
+                        e.target.value = saldoInicial.toString();
+                        e.target.select();
+                      }
                     }}
                     placeholder="0,00"
                   />
