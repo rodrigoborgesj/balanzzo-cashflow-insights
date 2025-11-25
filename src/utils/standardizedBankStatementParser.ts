@@ -66,6 +66,15 @@ export class StandardizedBankStatementParser {
   ];
 
   /**
+   * Detect if content is from a credit card statement (fatura)
+   */
+  private static isCreditCardStatement(content: string): boolean {
+    const lowerContent = content.toLowerCase();
+    // Look for the word "fatura" in the content as indicator of credit card statement
+    return lowerContent.includes('fatura');
+  }
+
+  /**
    * Parse standardized bank statement CSV or OFX file
    */
   static async parseFile(file: File): Promise<StandardizedParseResult> {
@@ -81,6 +90,12 @@ export class StandardizedBankStatementParser {
 
     try {
       const content = await this.readFileContent(file);
+      
+      // Detect if this is a credit card statement
+      const isCreditCard = this.isCreditCardStatement(content);
+      if (isCreditCard) {
+        console.log('💳 Credit card statement detected - all values will be treated as negative (expenses)');
+      }
       
       // Detect file type and delegate to appropriate parser
       const fileExtension = file.name.toLowerCase().split('.').pop();
@@ -165,7 +180,7 @@ export class StandardizedBankStatementParser {
           continue;
         }
 
-        const transaction = this.createTransactionFromRow(row, columnMapping, i + 1);
+        const transaction = this.createTransactionFromRow(row, columnMapping, i + 1, isCreditCard);
         
         if (transaction) {
           result.transactions.push(transaction);
@@ -306,7 +321,8 @@ export class StandardizedBankStatementParser {
   private static createTransactionFromRow(
     row: string[], 
     mapping: Record<string, number>, 
-    lineNumber: number
+    lineNumber: number,
+    isCreditCard: boolean = false
   ): StandardizedBankTransaction | null {
     
     try {
@@ -330,10 +346,16 @@ export class StandardizedBankStatementParser {
         return null;
       }
 
-      const value = this.parseAmount(rawValue);
+      let value = this.parseAmount(rawValue);
       if (isNaN(value)) {
         console.warn(`Line ${lineNumber}: Invalid amount format - "${rawValue}"`);
         return null;
+      }
+
+      // For credit card statements, all transactions are expenses (negative values)
+      if (isCreditCard && value > 0) {
+        value = -value;
+        console.log(`💳 Line ${lineNumber}: Converted to negative (credit card expense): ${rawValue} → ${value}`);
       }
 
       // Extract description
