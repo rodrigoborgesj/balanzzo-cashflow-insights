@@ -14,26 +14,36 @@ export function SubscriptionGuard({ children }: SubscriptionGuardProps) {
   const { hasActiveSubscription, isLoading } = useSubscription();
 
   // Emails que NÃO precisam de assinatura (acesso livre)
-  const FREE_ACCESS_EMAILS = ['emerson.ocontador@gmail.com', 'lucianalimacarmo2@gmail.com', 'ellenfarias09@hotmail.com', 'bilu.neto13@gmail.com', 'rodrigoborgesjcontato@gmail.com', 'eduardalopes.especialista@gmail.com'];
+  const FREE_ACCESS_EMAILS = [
+    'emerson.ocontador@gmail.com', 
+    'lucianalimacarmo2@gmail.com', 
+    'ellenfarias09@hotmail.com', 
+    'bilu.neto13@gmail.com', 
+    'rodrigoborgesjcontato@gmail.com', 
+    'eduardalopes.especialista@gmail.com'
+  ];
   
   // Por padrão todos precisam de assinatura, exceto os emails na lista de acesso livre
   // Verificação case-insensitive e trim para evitar problemas
-  const requiresSubscription = user?.email 
-    ? !FREE_ACCESS_EMAILS.some(email => email.toLowerCase().trim() === user.email.toLowerCase().trim())
+  const userEmail = user?.email?.toLowerCase().trim() || '';
+  const requiresSubscription = userEmail 
+    ? !FREE_ACCESS_EMAILS.some(email => email.toLowerCase().trim() === userEmail)
     : true;
+  
+  // Debug detalhado
+  console.log('🔐 SubscriptionGuard - Email check:', {
+    userEmail: user?.email,
+    normalizedEmail: userEmail,
+    isInWhitelist: FREE_ACCESS_EMAILS.some(email => email.toLowerCase().trim() === userEmail),
+    requiresSubscription,
+    hasActiveSubscription,
+    isLoading
+  });
 
   useEffect(() => {
-    // Log para debug
-    console.log('SubscriptionGuard check:', {
-      userEmail: user?.email,
-      requiresSubscription,
-      hasActiveSubscription,
-      isLoading
-    });
-    
     // Só redireciona se o usuário estiver na lista de teste E não tiver assinatura ativa
     if (!isLoading && user && requiresSubscription && !hasActiveSubscription) {
-      console.log('User requires subscription, redirecting to checkout');
+      console.log('❌ User requires subscription, redirecting to checkout');
       navigate('/checkout', { replace: true });
     }
   }, [hasActiveSubscription, isLoading, user, requiresSubscription, navigate]);
