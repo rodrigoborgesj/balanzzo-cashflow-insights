@@ -109,7 +109,8 @@ export class StandardizedBankStatementParser {
         header: false,
         skipEmptyLines: true,
         trimFields: true,
-        transform: (value: string) => value.trim()
+        transform: (value: string) => value.trim(),
+        quoteChar: '"' // Handle quoted values like "R$ 189,90"
       });
 
       if (parseResult.errors.length > 0) {
@@ -117,7 +118,7 @@ export class StandardizedBankStatementParser {
         result.warnings.push(...parseResult.errors.map(e => e.message));
       }
 
-      const rows = parseResult.data as string[][];
+      let rows = parseResult.data as string[][];
       result.processedRows = rows.length;
 
       if (rows.length === 0) {
@@ -125,23 +126,39 @@ export class StandardizedBankStatementParser {
         return result;
       }
 
-      // Detect if first row is header
-      const hasHeader = this.hasHeaderRow(rows[0]);
-      const dataStartIndex = hasHeader ? 1 : 0;
+      // Find the actual header row (Sicredi has metadata lines before the header)
+      let headerIndex = -1;
+      for (let i = 0; i < Math.min(rows.length, 15); i++) {
+        if (this.hasHeaderRow(rows[i])) {
+          headerIndex = i;
+          console.log(`📋 Header found at line ${i + 1}:`, rows[i]);
+          break;
+        }
+      }
+
+      // Skip all lines before the header and the header itself
+      const dataStartIndex = headerIndex >= 0 ? headerIndex + 1 : 0;
+      rows = rows.slice(dataStartIndex);
+      
+      console.log(`📊 Data starts at original line ${dataStartIndex + 1}, ${rows.length} data rows to process`);
+
+      // Determine column mapping based on the header row
+      const headerRow = headerIndex >= 0 ? parseResult.data[headerIndex] as string[] : rows[0];
+      const hasHeader = headerIndex >= 0;
+      
+      // Determine column mapping based on file structure
+      const columnMapping = this.determineColumnMapping(headerRow, hasHeader);
+      console.log('🗂️ Column mapping:', columnMapping);
       
       console.log('📊 Processing info:', {
-        totalRows: rows.length,
+        totalDataRows: rows.length,
         hasHeader,
-        dataStartIndex,
-        firstRow: rows[0]
+        columnMapping,
+        sampleRow: rows[0]
       });
 
-      // Determine column mapping based on file structure
-      const columnMapping = this.determineColumnMapping(rows[0], hasHeader);
-      console.log('🗂️ Column mapping:', columnMapping);
-
       // Process data rows
-      for (let i = dataStartIndex; i < rows.length; i++) {
+      for (let i = 0; i < rows.length; i++) {
         const row = rows[i];
         
         if (!row || row.length === 0) {
@@ -210,7 +227,7 @@ export class StandardizedBankStatementParser {
   }
 
   private static hasHeaderRow(firstRow: string[]): boolean {
-    const headerKeywords = ['data', 'date', 'valor', 'value', 'amount', 'descricao', 'description', 'identificador', 'identifier'];
+    const headerKeywords = ['data', 'date', 'valor', 'value', 'amount', 'descricao', 'description', 'identificador', 'identifier', 'descrição', 'parcela'];
     const rowText = firstRow.join(' ').toLowerCase();
     
     const keywordMatches = headerKeywords.filter(keyword => rowText.includes(keyword)).length;
@@ -374,19 +391,19 @@ export class StandardizedBankStatementParser {
   private static parseAmount(amountStr: string): number {
     if (!amountStr) return NaN;
 
-    // Remove currency symbols and spaces
-    let cleaned = amountStr.replace(/[R$\s€£¥₹₽]/g, '');
+    // Remove currency symbols, spaces, and quotes
+    let cleaned = amountStr.replace(/[R$\s€£¥₹₽"]/g, '');
     
     // Handle parentheses for negative amounts
-    const isNegative = cleaned.includes('(') && cleaned.includes(')');
-    cleaned = cleaned.replace(/[()]/g, '');
+    const isNegative = cleaned.includes('(') && cleaned.includes(')') || cleaned.includes('-');
+    cleaned = cleaned.replace(/[()-]/g, '');
 
     // Handle different decimal separators
     if (cleaned.includes(',') && cleaned.includes('.')) {
       // Format: 1.234.567,89 -> 1234567.89
       cleaned = cleaned.replace(/\./g, '').replace(',', '.');
     } else if (cleaned.includes(',') && !cleaned.includes('.')) {
-      // Format: 1234,89 -> 1234.89
+      // Format: 1234,89 or "R$ 189,90" -> 1234.89
       cleaned = cleaned.replace(',', '.');
     }
     // If only dots, assume already in correct format
