@@ -277,9 +277,13 @@ export default function FluxoCaixa() {
                   <Label htmlFor="saldo-inicial">Saldo Inicial (R$)</Label>
                   <Input
                     id="saldo-inicial"
-                    type="number"
-                    value={saldoInicial}
-                    onChange={(e) => setSaldoInicial(Number(e.target.value) || 0)}
+                    type="text"
+                    value={saldoInicial.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    onChange={(e) => {
+                      const rawValue = e.target.value.replace(/[^\d,.-]/g, '').replace(',', '.');
+                      const numValue = parseFloat(rawValue) || 0;
+                      setSaldoInicial(numValue);
+                    }}
                     placeholder="0,00"
                   />
                 </div>
