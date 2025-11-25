@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useAuth } from "@/hooks/useAuth";
+import { useFreeAccess } from "@/hooks/useFreeAccess";
 import { Loader2 } from "lucide-react";
 
 interface SubscriptionGuardProps {
@@ -11,34 +12,11 @@ interface SubscriptionGuardProps {
 export function SubscriptionGuard({ children }: SubscriptionGuardProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { hasActiveSubscription, isLoading } = useSubscription();
+  const { hasActiveSubscription, isLoading: subscriptionLoading } = useSubscription();
+  const { data: hasFreeAccess, isLoading: freeAccessLoading } = useFreeAccess(user?.email);
 
-  // Emails que NÃO precisam de assinatura (acesso livre)
-  const FREE_ACCESS_EMAILS = [
-    'emerson.ocontador@gmail.com', 
-    'lucianalimacarmo2@gmail.com', 
-    'ellenfarias09@hotmail.com', 
-    'bilu.neto13@gmail.com', 
-    'rodrigoborgesjcontato@gmail.com', 
-    'eduardalopes.especialista@gmail.com'
-  ];
-  
-  // Por padrão todos precisam de assinatura, exceto os emails na lista de acesso livre
-  // Verificação case-insensitive e trim para evitar problemas
-  const userEmail = user?.email?.toLowerCase().trim() || '';
-  const requiresSubscription = userEmail 
-    ? !FREE_ACCESS_EMAILS.some(email => email.toLowerCase().trim() === userEmail)
-    : true;
-  
-  // Debug detalhado
-  console.log('🔐 SubscriptionGuard - Email check:', {
-    userEmail: user?.email,
-    normalizedEmail: userEmail,
-    isInWhitelist: FREE_ACCESS_EMAILS.some(email => email.toLowerCase().trim() === userEmail),
-    requiresSubscription,
-    hasActiveSubscription,
-    isLoading
-  });
+  const isLoading = subscriptionLoading || freeAccessLoading;
+  const requiresSubscription = !hasFreeAccess;
 
   useEffect(() => {
     // Só redireciona se o usuário estiver na lista de teste E não tiver assinatura ativa
