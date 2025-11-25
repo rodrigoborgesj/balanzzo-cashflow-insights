@@ -182,6 +182,27 @@ export type Database = {
           },
         ]
       }
+      free_access_users: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id?: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       painel_mensal: {
         Row: {
           ano: number
@@ -579,6 +600,7 @@ export type Database = {
           user_id: string
         }[]
       }
+      has_free_access: { Args: { user_email: string }; Returns: boolean }
       sugerir_categoria: { Args: { descricao_input: string }; Returns: string }
     }
     Enums: {
