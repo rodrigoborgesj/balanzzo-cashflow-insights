@@ -58,6 +58,7 @@ export class StandardizedBankStatementParser {
   private static readonly DATE_FORMATS = [
     /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/, // DD/MM/YYYY
     /^(\d{1,2})\/(\d{1,2})\/(\d{2})$/, // DD/MM/YY (2-digit year)
+    /^(\d{1,2})\/(\d{1,2})\/(\d{2})\s+às\s+\d{2}:\d{2}:\d{2}$/, // DD/MM/YY às HH:MM:SS (XP Investimentos)
     /^(\d{4})-(\d{1,2})-(\d{1,2})$/, // YYYY-MM-DD
     /^(\d{1,2})-(\d{1,2})-(\d{4})$/, // DD-MM-YYYY
     /^(\d{1,2})-(\d{1,2})-(\d{2})$/, // DD-MM-YY (2-digit year)
@@ -266,6 +267,12 @@ export class StandardizedBankStatementParser {
           return;
         }
 
+        // Skip "saldo" column completely (XP Investimentos and other banks)
+        if (normalized.includes('saldo') || normalized.includes('balance')) {
+          console.log(`📊 Ignoring balance column at index ${index}: "${header}"`);
+          return;
+        }
+
         // Skip "valor em dólar" / "valor em dolar" when choosing main value column
         const isForeignValue =
           normalized.includes('valor em dólar') ||
@@ -387,8 +394,14 @@ export class StandardizedBankStatementParser {
   private static parseDate(dateStr: string): string | null {
     if (!dateStr) return null;
 
+    // Remove timestamp from XP Investimentos format (DD/MM/YY às HH:MM:SS)
+    let cleaned = dateStr;
+    if (cleaned.includes(' às ')) {
+      cleaned = cleaned.split(' às ')[0];
+    }
+    
     // Remove non-date characters
-    const cleaned = dateStr.replace(/[^\d\/\-\.]/g, '');
+    cleaned = cleaned.replace(/[^\d\/\-\.]/g, '');
     
     for (const format of this.DATE_FORMATS) {
       const match = cleaned.match(format);
