@@ -7,6 +7,31 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-hub-signature',
 };
 
+// Calculate period end date based on billing cycle
+function calculatePeriodEnd(billingCycle: string, startDate: Date): Date {
+  const periodEnd = new Date(startDate);
+  
+  switch (billingCycle) {
+    case 'monthly':
+      periodEnd.setDate(periodEnd.getDate() + 30);
+      break;
+    case 'quarterly':
+      periodEnd.setDate(periodEnd.getDate() + 90);
+      break;
+    case 'semiannual':
+      periodEnd.setDate(periodEnd.getDate() + 180);
+      break;
+    case 'yearly':
+      periodEnd.setDate(periodEnd.getDate() + 365);
+      break;
+    default:
+      // Default to monthly if unknown
+      periodEnd.setDate(periodEnd.getDate() + 30);
+  }
+  
+  return periodEnd;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -71,77 +96,155 @@ serve(async (req) => {
 
     // Signature verified! Parse webhook data
     const webhook = JSON.parse(body);
-    console.log('Webhook received:', webhook.type, webhook.id);
+    console.log('📨 Webhook received:', webhook.type, webhook.id);
+    console.log('📦 Webhook data:', JSON.stringify(webhook.data, null, 2));
 
-    // Handle subscription events
-    if (webhook.type === 'subscription.updated' || webhook.type === 'subscription.created') {
-      const subscriptionData = webhook.data;
-      const userId = subscriptionData.metadata?.user_id;
+    // Handle charge.paid - This is the main event for successful payments
+    if (webhook.type === 'charge.paid' || webhook.type === 'order.paid') {
+      const data = webhook.data;
+      const metadata = data.metadata || data.order?.metadata || {};
+      const userId = metadata.user_id;
+      const planId = metadata.plan_id;
 
-      if (!userId) {
-        console.error('No user_id in subscription metadata');
-        return new Response('OK', { status: 200 });
+      console.log('💳 Payment confirmed for user:', userId, 'plan:', planId);
+
+      if (!userId || !planId) {
+        console.error('❌ Missing user_id or plan_id in metadata:', metadata);
+        return new Response('OK - Missing metadata', { status: 200, headers: corsHeaders });
       }
 
-      // Update subscription status
-      const { error: updateError } = await supabase
-        .from('subscriptions')
-        .update({
-          status: subscriptionData.status,
-          current_period_start: subscriptionData.current_period_start,
-          current_period_end: subscriptionData.current_period_end,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('pagarme_subscription_id', subscriptionData.id);
+      // Get plan details to determine billing cycle
+      const { data: plan, error: planError } = await supabase
+        .from('subscription_plans')
+        .select('*')
+        .eq('id', planId)
+        .single();
 
-      if (updateError) {
-        console.error('Error updating subscription:', updateError);
+      if (planError || !plan) {
+        console.error('❌ Plan not found:', planId, planError);
+        return new Response('OK - Plan not found', { status: 200, headers: corsHeaders });
+      }
+
+      console.log('📋 Plan details:', plan.name, plan.billing_cycle);
+
+      // Calculate subscription period based on billing cycle
+      const now = new Date();
+      const periodEnd = calculatePeriodEnd(plan.billing_cycle, now);
+
+      console.log('📅 Period calculated:', now.toISOString(), 'to', periodEnd.toISOString());
+
+      // Check if subscription already exists for this user
+      const { data: existingSubscription } = await supabase
+        .from('subscriptions')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('plan_id', planId)
+        .single();
+
+      if (existingSubscription) {
+        // Update existing subscription
+        const { error: updateError } = await supabase
+          .from('subscriptions')
+          .update({
+            status: 'active',
+            current_period_start: now.toISOString(),
+            current_period_end: periodEnd.toISOString(),
+            pagarme_subscription_id: data.id || data.order?.id,
+            updated_at: now.toISOString(),
+          })
+          .eq('id', existingSubscription.id);
+
+        if (updateError) {
+          console.error('❌ Error updating subscription:', updateError);
+        } else {
+          console.log('✅ Subscription updated successfully');
+        }
       } else {
-        console.log('Subscription updated successfully');
+        // Create new subscription
+        const { error: insertError } = await supabase
+          .from('subscriptions')
+          .insert({
+            user_id: userId,
+            plan_id: planId,
+            status: 'active',
+            current_period_start: now.toISOString(),
+            current_period_end: periodEnd.toISOString(),
+            pagarme_subscription_id: data.id || data.order?.id,
+          });
+
+        if (insertError) {
+          console.error('❌ Error creating subscription:', insertError);
+        } else {
+          console.log('✅ New subscription created successfully');
+        }
+      }
+
+      // Create payment record
+      const { error: paymentError } = await supabase
+        .from('payments')
+        .insert({
+          user_id: userId,
+          subscription_id: existingSubscription?.id || (await supabase
+            .from('subscriptions')
+            .select('id')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single()).data?.id,
+          amount_cents: plan.price_cents,
+          status: 'paid',
+          payment_method: data.payment_method || 'checkout',
+          pagarme_transaction_id: data.id,
+          paid_at: now.toISOString(),
+        });
+
+      if (paymentError) {
+        console.error('⚠️ Error creating payment record:', paymentError);
+      } else {
+        console.log('✅ Payment record created');
       }
     }
 
-    // Handle charge/payment events
-    if (webhook.type === 'charge.paid' || webhook.type === 'charge.created') {
-      const chargeData = webhook.data;
-      const subscriptionId = chargeData.subscription?.id;
+    // Handle subscription events from Pagar.me
+    if (webhook.type === 'subscription.updated' || webhook.type === 'subscription.created') {
+      const subscriptionData = webhook.data;
+      const metadata = subscriptionData.metadata || {};
+      const userId = metadata.user_id;
+      const planId = metadata.plan_id;
 
-      if (!subscriptionId) {
-        console.log('Charge not related to subscription');
-        return new Response('OK', { status: 200 });
-      }
+      console.log('📝 Subscription event for user:', userId);
 
-      // Find subscription
-      const { data: subscription } = await supabase
-        .from('subscriptions')
-        .select('id, user_id, plan_id')
-        .eq('pagarme_subscription_id', subscriptionId)
-        .single();
-
-      if (subscription) {
-        // Get plan price
+      if (userId && planId) {
+        // Get plan to calculate correct period
         const { data: plan } = await supabase
           .from('subscription_plans')
-          .select('price_cents')
-          .eq('id', subscription.plan_id)
+          .select('billing_cycle')
+          .eq('id', planId)
           .single();
 
-        // Create or update payment record
-        await supabase
-          .from('payments')
-          .upsert({
-            user_id: subscription.user_id,
-            subscription_id: subscription.id,
-            amount_cents: plan?.price_cents || chargeData.amount,
-            status: chargeData.status === 'paid' ? 'paid' : 'pending',
-            payment_method: chargeData.payment_method,
-            pagarme_transaction_id: chargeData.id,
-            paid_at: chargeData.status === 'paid' ? new Date().toISOString() : null,
-          }, {
-            onConflict: 'pagarme_transaction_id'
-          });
+        const now = new Date();
+        const periodEnd = plan ? calculatePeriodEnd(plan.billing_cycle, now) : new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
 
-        console.log('Payment record created/updated');
+        // Update or create subscription
+        const { data: existing } = await supabase
+          .from('subscriptions')
+          .select('id')
+          .eq('pagarme_subscription_id', subscriptionData.id)
+          .single();
+
+        if (existing) {
+          await supabase
+            .from('subscriptions')
+            .update({
+              status: subscriptionData.status === 'active' ? 'active' : subscriptionData.status,
+              current_period_start: now.toISOString(),
+              current_period_end: periodEnd.toISOString(),
+              updated_at: now.toISOString(),
+            })
+            .eq('id', existing.id);
+        }
+
+        console.log('✅ Subscription synced');
       }
     }
 
@@ -149,7 +252,7 @@ serve(async (req) => {
     if (webhook.type === 'subscription.canceled') {
       const subscriptionData = webhook.data;
       
-      await supabase
+      const { error } = await supabase
         .from('subscriptions')
         .update({
           status: 'canceled',
@@ -158,13 +261,31 @@ serve(async (req) => {
         })
         .eq('pagarme_subscription_id', subscriptionData.id);
 
-      console.log('Subscription canceled');
+      if (error) {
+        console.error('❌ Error canceling subscription:', error);
+      } else {
+        console.log('✅ Subscription canceled');
+      }
+    }
+
+    // Handle payment failure
+    if (webhook.type === 'charge.payment_failed' || webhook.type === 'charge.underpaid') {
+      const chargeData = webhook.data;
+      const metadata = chargeData.metadata || chargeData.order?.metadata || {};
+      const userId = metadata.user_id;
+
+      console.log('❌ Payment failed for user:', userId);
+
+      if (userId) {
+        // Don't cancel immediately, just log the failure
+        console.log('⚠️ Payment failure logged, user may need to retry payment');
+      }
     }
 
     return new Response('OK', { status: 200, headers: corsHeaders });
 
   } catch (error) {
-    console.error('Error in pagarme-webhook:', error);
+    console.error('❌ Error in pagarme-webhook:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
