@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +9,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -20,7 +21,8 @@ import {
   Settings,
   ChevronDown,
   ChevronRight,
-  Filter
+  Filter,
+  CalendarRange
 } from "lucide-react";
 import { MonthSelector } from "@/components/MonthSelector";
 import { useConciliacao, Transaction } from "@/hooks/useConciliacao";
@@ -29,6 +31,9 @@ import { ManualTransactionForm } from "@/components/ManualTransactionForm";
 import { TransactionActions } from "@/components/TransactionActions";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { format, isWithinInterval, parseISO, startOfMonth, endOfMonth } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 
 interface CategoryGroup {
   category: string;
@@ -38,13 +43,18 @@ interface CategoryGroup {
   isOpen: boolean;
 }
 
+type PeriodMode = 'month' | 'custom';
+
 export default function FluxoCaixa() {
   const [saldoInicial, setSaldoInicial] = useState(0);
   const [showSettings, setShowSettings] = useState(false);
+  const [periodMode, setPeriodMode] = useState<PeriodMode>('month');
   const [selectedMonth, setSelectedMonth] = useState<string>(() => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   });
+  const [customStartDate, setCustomStartDate] = useState<Date | undefined>(undefined);
+  const [customEndDate, setCustomEndDate] = useState<Date | undefined>(undefined);
   const [categoryGroups, setCategoryGroups] = useState<CategoryGroup[]>([]);
   const [transactionFilter, setTransactionFilter] = useState<'todas' | 'entradas' | 'saidas'>('todas');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -152,48 +162,88 @@ export default function FluxoCaixa() {
     );
   };
 
-  // Calculate totals from categorized transactions only
-  const categorizedTransactions = transactions.filter(t => 
-    t.status_conciliacao === true && 
-    (t.categoria_final || t.categoria_sugerida)
-  );
+  // Filter transactions by period (month or custom date range)
+  const periodFilteredTransactions = useMemo(() => {
+    const categorized = transactions.filter(t => 
+      t.status_conciliacao === true && 
+      (t.categoria_final || t.categoria_sugerida)
+    );
 
-  const totalInflow = categorizedTransactions
+    if (periodMode === 'custom' && customStartDate && customEndDate) {
+      return categorized.filter(t => {
+        const txDate = parseISO(t.data_transacao);
+        return isWithinInterval(txDate, { start: customStartDate, end: customEndDate });
+      });
+    }
+    
+    return categorized;
+  }, [transactions, periodMode, customStartDate, customEndDate]);
+
+  // Calculate totals from period-filtered transactions
+  const totalInflow = periodFilteredTransactions
     .filter(t => t.valor > 0)
     .reduce((sum, t) => sum + t.valor, 0);
   
-  const totalOutflow = Math.abs(categorizedTransactions
+  const totalOutflow = Math.abs(periodFilteredTransactions
     .filter(t => t.valor < 0)
     .reduce((sum, t) => sum + t.valor, 0));
   
-  const netResult = totalInflow - totalOutflow;
   const hasData = transactions.length > 0;
 
   // Get all unique categories from transactions
   const availableCategories = Array.from(
     new Set(
-      categorizedTransactions
+      periodFilteredTransactions
         .map(t => t.categoria_final || t.categoria_sugerida || 'Outros')
         .filter(Boolean)
     )
   ).sort();
 
-  // Get all transactions sorted by date for unified list with category filter
-  const allTransactionsSorted = categorizedTransactions
-    .filter(t => {
-      // Filtro de tipo (entrada/saída)
-      if (transactionFilter === 'entradas' && t.valor <= 0) return false;
-      if (transactionFilter === 'saidas' && t.valor >= 0) return false;
-      
-      // Filtro de categorias (multi-select)
-      if (selectedCategories.length > 0) {
-        const transactionCategory = t.categoria_final || t.categoria_sugerida || 'Outros';
-        if (!selectedCategories.includes(transactionCategory)) return false;
-      }
-      
-      return true;
-    })
-    .sort((a, b) => new Date(a.data_transacao).getTime() - new Date(b.data_transacao).getTime());
+  // Get all transactions sorted by date for unified list with all filters applied
+  const allTransactionsSorted = useMemo(() => {
+    return periodFilteredTransactions
+      .filter(t => {
+        // Filtro de tipo (entrada/saída)
+        if (transactionFilter === 'entradas' && t.valor <= 0) return false;
+        if (transactionFilter === 'saidas' && t.valor >= 0) return false;
+        
+        // Filtro de categorias (multi-select)
+        if (selectedCategories.length > 0) {
+          const transactionCategory = t.categoria_final || t.categoria_sugerida || 'Outros';
+          if (!selectedCategories.includes(transactionCategory)) return false;
+        }
+        
+        return true;
+      })
+      .sort((a, b) => new Date(a.data_transacao).getTime() - new Date(b.data_transacao).getTime());
+  }, [periodFilteredTransactions, transactionFilter, selectedCategories]);
+
+  // Calculate filtered result based on currently displayed transactions
+  const filteredNetResult = useMemo(() => {
+    const filteredInflow = allTransactionsSorted
+      .filter(t => t.valor > 0)
+      .reduce((sum, t) => sum + t.valor, 0);
+    
+    const filteredOutflow = Math.abs(allTransactionsSorted
+      .filter(t => t.valor < 0)
+      .reduce((sum, t) => sum + t.valor, 0));
+    
+    return filteredInflow - filteredOutflow;
+  }, [allTransactionsSorted]);
+
+  // Check if any filter is active
+  const hasActiveFilters = transactionFilter !== 'todas' || selectedCategories.length > 0;
+  
+  // Use filtered result when filters are active, otherwise use total
+  const displayNetResult = hasActiveFilters ? filteredNetResult : (totalInflow - totalOutflow);
+
+  // Format period display text
+  const periodDisplayText = useMemo(() => {
+    if (periodMode === 'custom' && customStartDate && customEndDate) {
+      return `${format(customStartDate, 'dd/MM/yyyy')} - ${format(customEndDate, 'dd/MM/yyyy')}`;
+    }
+    return selectedMonth;
+  }, [periodMode, customStartDate, customEndDate, selectedMonth]);
 
   // Export to CSV function
   const exportToCSV = () => {
@@ -229,7 +279,7 @@ export default function FluxoCaixa() {
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-black mb-2">Fluxo de Caixa</h1>
           <p className="text-sm md:text-base text-gray-600">
-            Baseado nas transações conciliadas - {selectedMonth}
+            Baseado nas transações conciliadas - {periodDisplayText}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2 md:gap-3">
@@ -241,13 +291,80 @@ export default function FluxoCaixa() {
             userCategories={userCategories}
             loadUserCategories={loadUserCategories}
           />
-          <MonthSelector
-            value={selectedMonth}
-            onChange={(value) => {
-              console.log('Month changed from', selectedMonth, 'to', value);
-              setSelectedMonth(value);
-            }}
-          />
+          
+          {/* Period Mode Selector */}
+          <div className="flex items-center gap-2">
+            <Select value={periodMode} onValueChange={(value: PeriodMode) => {
+              setPeriodMode(value);
+              if (value === 'month') {
+                setCustomStartDate(undefined);
+                setCustomEndDate(undefined);
+              }
+            }}>
+              <SelectTrigger className="w-32 text-xs md:text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="month">Por Mês</SelectItem>
+                <SelectItem value="custom">Personalizado</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {periodMode === 'month' ? (
+            <MonthSelector
+              value={selectedMonth}
+              onChange={(value) => {
+                console.log('Month changed from', selectedMonth, 'to', value);
+                setSelectedMonth(value);
+              }}
+            />
+          ) : (
+            <div className="flex items-center gap-2">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className={cn(
+                    "text-xs md:text-sm justify-start text-left font-normal",
+                    !customStartDate && "text-muted-foreground"
+                  )}>
+                    <CalendarRange className="h-4 w-4 mr-2" />
+                    {customStartDate ? format(customStartDate, "dd/MM/yyyy") : "Data início"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0 pointer-events-auto" align="start">
+                  <CalendarComponent
+                    mode="single"
+                    selected={customStartDate}
+                    onSelect={setCustomStartDate}
+                    locale={ptBR}
+                    className="pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+              <span className="text-gray-500">até</span>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className={cn(
+                    "text-xs md:text-sm justify-start text-left font-normal",
+                    !customEndDate && "text-muted-foreground"
+                  )}>
+                    <CalendarRange className="h-4 w-4 mr-2" />
+                    {customEndDate ? format(customEndDate, "dd/MM/yyyy") : "Data fim"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0 pointer-events-auto" align="start">
+                  <CalendarComponent
+                    mode="single"
+                    selected={customEndDate}
+                    onSelect={setCustomEndDate}
+                    locale={ptBR}
+                    disabled={(date) => customStartDate ? date < customStartDate : false}
+                    className="pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+          )}
           <Button 
             variant="outline" 
             size="sm"
@@ -375,13 +492,13 @@ export default function FluxoCaixa() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs md:text-sm font-medium text-white">
-                    Resultado Líquido
+                    Resultado Líquido {hasActiveFilters && <span className="text-xs opacity-75">(filtrado)</span>}
                   </p>
                   <p className="text-lg md:text-xl font-bold text-white">
-                    R$ {netResult.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                    R$ {displayNetResult.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                   </p>
                 </div>
-                {netResult >= 0 ? (
+                {displayNetResult >= 0 ? (
                   <TrendingUp className="h-5 w-5 md:h-6 md:w-6 text-white" />
                 ) : (
                   <TrendingDown className="h-5 w-5 md:h-6 md:w-6 text-white" />
@@ -542,26 +659,26 @@ export default function FluxoCaixa() {
             {/* Net Result Summary */}
             <div className="pt-4 border-t border-border">
               <div className={`flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 p-3 md:p-4 rounded-lg ${
-                netResult >= 0 
+                displayNetResult >= 0 
                   ? 'bg-success/10 border border-success/20' 
                   : 'bg-destructive/10 border border-destructive/20'
               }`}>
                 <div className="flex items-center gap-2">
-                  {netResult >= 0 ? (
+                  {displayNetResult >= 0 ? (
                     <TrendingUp className="h-4 w-4 md:h-5 md:w-5 text-success" />
                   ) : (
                     <TrendingDown className="h-4 w-4 md:h-5 md:w-5 text-destructive" />
                   )}
                   <h3 className={`text-sm md:text-base font-semibold ${
-                    netResult >= 0 ? 'text-success' : 'text-destructive'
+                    displayNetResult >= 0 ? 'text-success' : 'text-destructive'
                   }`}>
-                    Resultado Líquido do Período
+                    Resultado Líquido {hasActiveFilters ? '(Filtrado)' : 'do Período'}
                   </h3>
                 </div>
                 <div className={`text-lg md:text-xl font-bold whitespace-nowrap ${
-                  netResult >= 0 ? 'text-success' : 'text-destructive'
+                  displayNetResult >= 0 ? 'text-success' : 'text-destructive'
                 }`}>
-                  R$ {netResult.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                  R$ {displayNetResult.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                 </div>
               </div>
             </div>
