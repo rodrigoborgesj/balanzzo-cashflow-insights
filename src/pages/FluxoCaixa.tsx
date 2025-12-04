@@ -55,6 +55,8 @@ export default function FluxoCaixa() {
   });
   const [customStartDate, setCustomStartDate] = useState<Date | undefined>(undefined);
   const [customEndDate, setCustomEndDate] = useState<Date | undefined>(undefined);
+  const [pendingStartDate, setPendingStartDate] = useState<Date | undefined>(undefined);
+  const [pendingEndDate, setPendingEndDate] = useState<Date | undefined>(undefined);
   const [categoryGroups, setCategoryGroups] = useState<CategoryGroup[]>([]);
   const [transactionFilter, setTransactionFilter] = useState<'todas' | 'entradas' | 'saidas'>('todas');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -299,6 +301,8 @@ export default function FluxoCaixa() {
               if (value === 'month') {
                 setCustomStartDate(undefined);
                 setCustomEndDate(undefined);
+                setPendingStartDate(undefined);
+                setPendingEndDate(undefined);
               }
             }}>
               <SelectTrigger className="w-32 text-xs md:text-sm">
@@ -325,17 +329,17 @@ export default function FluxoCaixa() {
                 <PopoverTrigger asChild>
                   <Button variant="outline" size="sm" className={cn(
                     "text-xs md:text-sm justify-start text-left font-normal",
-                    !customStartDate && "text-muted-foreground"
+                    !pendingStartDate && "text-muted-foreground"
                   )}>
                     <CalendarRange className="h-4 w-4 mr-2" />
-                    {customStartDate ? format(customStartDate, "dd/MM/yyyy") : "Data início"}
+                    {pendingStartDate ? format(pendingStartDate, "dd/MM/yyyy") : "Data início"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0 pointer-events-auto" align="start">
                   <CalendarComponent
                     mode="single"
-                    selected={customStartDate}
-                    onSelect={setCustomStartDate}
+                    selected={pendingStartDate}
+                    onSelect={setPendingStartDate}
                     locale={ptBR}
                     className="pointer-events-auto"
                   />
@@ -346,23 +350,36 @@ export default function FluxoCaixa() {
                 <PopoverTrigger asChild>
                   <Button variant="outline" size="sm" className={cn(
                     "text-xs md:text-sm justify-start text-left font-normal",
-                    !customEndDate && "text-muted-foreground"
+                    !pendingEndDate && "text-muted-foreground"
                   )}>
                     <CalendarRange className="h-4 w-4 mr-2" />
-                    {customEndDate ? format(customEndDate, "dd/MM/yyyy") : "Data fim"}
+                    {pendingEndDate ? format(pendingEndDate, "dd/MM/yyyy") : "Data fim"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0 pointer-events-auto" align="start">
                   <CalendarComponent
                     mode="single"
-                    selected={customEndDate}
-                    onSelect={setCustomEndDate}
+                    selected={pendingEndDate}
+                    onSelect={setPendingEndDate}
                     locale={ptBR}
-                    disabled={(date) => customStartDate ? date < customStartDate : false}
+                    disabled={(date) => pendingStartDate ? date < pendingStartDate : false}
                     className="pointer-events-auto"
                   />
                 </PopoverContent>
               </Popover>
+              <Button 
+                size="sm" 
+                onClick={() => {
+                  if (pendingStartDate && pendingEndDate) {
+                    setCustomStartDate(pendingStartDate);
+                    setCustomEndDate(pendingEndDate);
+                  }
+                }}
+                disabled={!pendingStartDate || !pendingEndDate}
+                className="text-xs md:text-sm bg-primary hover:bg-primary/90"
+              >
+                Aplicar
+              </Button>
             </div>
           )}
           <Button 
