@@ -107,20 +107,13 @@ serve(async (req) => {
           {
             payment_method: 'checkout',
             checkout: {
-              accepted_payment_methods: ['credit_card', 'pix', 'boleto'],
+              accepted_payment_methods: ['credit_card'],
               success_url: 'https://hbjobpbiordnwflfhjnu.supabase.co/dashboard?payment=success',
               cancel_url: 'https://hbjobpbiordnwflfhjnu.supabase.co/checkout?payment=canceled',
               customer_editable: true,
               skip_checkout_success_page: false,
               expires_in: 3600,
               billing_address_editable: false,
-              pix: {
-                expires_in: 3600,
-              },
-              boleto: {
-                instructions: `Pagamento do plano ${plan.name}`,
-                due_at: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 3 dias à frente
-              },
             }
           }
         ],

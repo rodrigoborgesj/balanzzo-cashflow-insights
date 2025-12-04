@@ -69,6 +69,15 @@ export function PricingPlans({ showTitle = true }: PricingPlansProps) {
     return map[cycle] || cycle;
   };
 
+  const getRecurringText = (cycle: string) => {
+    const map: Record<string, string> = {
+      monthly: 'Cobrança mensal no cartão de crédito',
+      quarterly: 'Cobrança trimestral no cartão de crédito',
+      semiannual: 'Cobrança semestral no cartão de crédito',
+    };
+    return map[cycle] || 'Cobrança recorrente no cartão de crédito';
+  };
+
   if (isLoading) {
     return (
       <section className="py-20 px-4 bg-gradient-to-b from-background to-muted/20">
@@ -164,6 +173,11 @@ export function PricingPlans({ showTitle = true }: PricingPlansProps) {
                       </li>
                     ))}
                   </ul>
+                  <div className="mt-4 pt-4 border-t border-border">
+                    <p className="text-xs text-muted-foreground text-center">
+                      💳 {getRecurringText(plan.billing_cycle)}
+                    </p>
+                  </div>
                 </CardContent>
 
                 <CardFooter>
@@ -182,9 +196,14 @@ export function PricingPlans({ showTitle = true }: PricingPlansProps) {
           </div>
         )}
 
-        <p className="text-center text-sm text-muted-foreground mt-8">
-          Todos os planos incluem 7 dias de garantia de reembolso
-        </p>
+        <div className="text-center mt-8 space-y-2">
+          <p className="text-sm text-muted-foreground">
+            💳 Pagamento exclusivo via cartão de crédito com cobrança recorrente automática
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Todos os planos incluem 7 dias de garantia de reembolso
+          </p>
+        </div>
       </div>
     </section>
   );
