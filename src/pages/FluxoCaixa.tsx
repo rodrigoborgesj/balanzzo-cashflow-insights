@@ -373,6 +373,9 @@ export default function FluxoCaixa() {
                   if (pendingStartDate && pendingEndDate) {
                     setCustomStartDate(pendingStartDate);
                     setCustomEndDate(pendingEndDate);
+                    // Carregar TODAS as transações para filtrar pelo período personalizado
+                    console.log('🔄 FluxoCaixa: Carregando todas transações para período personalizado');
+                    loadTransactions(); // Sem filtro de mês = carrega todas
                   }
                 }}
                 disabled={!pendingStartDate || !pendingEndDate}
