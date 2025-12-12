@@ -549,6 +549,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_settings: {
+        Row: {
+          alertas_vencimento: boolean | null
+          autenticacao_dois_fatores: boolean | null
+          conciliacao_automatica: boolean | null
+          created_at: string | null
+          id: string
+          login_automatico: boolean | null
+          relatorios_mensais: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          alertas_vencimento?: boolean | null
+          autenticacao_dois_fatores?: boolean | null
+          conciliacao_automatica?: boolean | null
+          created_at?: string | null
+          id?: string
+          login_automatico?: boolean | null
+          relatorios_mensais?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          alertas_vencimento?: boolean | null
+          autenticacao_dois_fatores?: boolean | null
+          conciliacao_automatica?: boolean | null
+          created_at?: string | null
+          id?: string
+          login_automatico?: boolean | null
+          relatorios_mensais?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       public_subscription_plans: {
