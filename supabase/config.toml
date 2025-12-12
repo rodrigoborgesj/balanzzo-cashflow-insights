@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.setup-correct-plans]
 verify_jwt = false
+
+[functions.categorize-transactions]
+verify_jwt = true

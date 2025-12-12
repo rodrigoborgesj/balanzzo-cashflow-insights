@@ -17,10 +17,13 @@ import {
   Filter,
   Calendar,
   Search,
-  RefreshCw
+  RefreshCw,
+  Sparkles,
+  Loader2
 } from "lucide-react";
 import { Transaction, useConciliacao } from "@/hooks/useConciliacao";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface TransactionProcessorProps {
   onDataChange?: () => void;
@@ -34,6 +37,7 @@ export default function TransactionProcessor({ onDataChange }: TransactionProces
   const [filterCategory, setFilterCategory] = useState<string>("todos");
   const [searchTerm, setSearchTerm] = useState("");
   const [dateFilter, setDateFilter] = useState("");
+  const [isCategorizingAI, setIsCategorizingAI] = useState(false);
   
   // Pagination state
   const [page, setPage] = useState(0);
@@ -134,6 +138,77 @@ export default function TransactionProcessor({ onDataChange }: TransactionProces
     valorSaidas: Math.abs(transactions.filter(t => t.tipo === 'saida').reduce((sum, t) => sum + t.valor, 0))
   };
 
+  // Categorização automática com IA
+  const handleAICategorization = async () => {
+    // Filtrar transações sem categoria final
+    const uncategorizedTransactions = transactions.filter(
+      t => !t.categoria_final
+    );
+
+    if (uncategorizedTransactions.length === 0) {
+      toast({
+        title: "Todas categorizadas",
+        description: "Todas as transações já possuem categoria definida.",
+      });
+      return;
+    }
+
+    setIsCategorizingAI(true);
+
+    try {
+      // Processar em lotes de 20 transações para evitar timeout
+      const batchSize = 20;
+      let processedCount = 0;
+
+      for (let i = 0; i < uncategorizedTransactions.length; i += batchSize) {
+        const batch = uncategorizedTransactions.slice(i, i + batchSize);
+        
+        const { data, error } = await supabase.functions.invoke('categorize-transactions', {
+          body: { 
+            transactions: batch.map(t => ({
+              id: t.id,
+              descricao: t.descricao,
+              valor: t.valor,
+              tipo: t.tipo
+            })),
+            userCategories: userCategories.map(c => c.nome_categoria)
+          }
+        });
+
+        if (error) throw error;
+
+        if (data?.categorizations) {
+          // Atualizar cada transação com a categoria sugerida
+          for (const cat of data.categorizations) {
+            await updateTransactionCategory(cat.id, { 
+              categoria_sugerida: cat.categoria 
+            });
+          }
+          processedCount += data.categorizations.length;
+        }
+      }
+
+      toast({
+        title: "Categorização concluída",
+        description: `${processedCount} transações foram categorizadas automaticamente pela IA.`,
+      });
+
+      // Recarregar transações
+      await loadTransactions(selectedMonth);
+      onDataChange?.();
+
+    } catch (error) {
+      console.error('Erro na categorização com IA:', error);
+      toast({
+        title: "Erro na categorização",
+        description: error instanceof Error ? error.message : "Não foi possível categorizar as transações.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsCategorizingAI(false);
+    }
+  };
+
   const exportToCSV = () => {
     const csvContent = [
       "Data,Descrição,Valor,Tipo,Categoria",
@@ -154,6 +229,9 @@ export default function TransactionProcessor({ onDataChange }: TransactionProces
       document.body.removeChild(link);
     }
   };
+
+  // Contador de transações sem categoria
+  const uncategorizedCount = transactions.filter(t => !t.categoria_final).length;
 
   return (
     <div className="space-y-6">
@@ -202,6 +280,44 @@ export default function TransactionProcessor({ onDataChange }: TransactionProces
           </CardContent>
         </Card>
       </div>
+
+      {/* Categorização com IA */}
+      {uncategorizedCount > 0 && (
+        <Card className="bg-gradient-to-br from-primary/5 to-accent/5 border-primary/20">
+          <CardContent className="p-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="font-medium">Categorização Inteligente com IA</p>
+                  <p className="text-sm text-muted-foreground">
+                    {uncategorizedCount} transações aguardando categorização automática
+                  </p>
+                </div>
+              </div>
+              <Button 
+                onClick={handleAICategorization}
+                disabled={isCategorizingAI}
+                className="bg-primary hover:bg-primary/90"
+              >
+                {isCategorizingAI ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Categorizando...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    Categorizar com IA
+                  </>
+                )}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Filtros e Controles */}
       <Card>
