@@ -8,6 +8,8 @@ import ManualTransactionRemover from "@/components/ManualTransactionRemover";
 import { SecurityMonitoringDashboard } from "@/components/SecurityMonitoringDashboard";
 import { ProfilePhotoUpload } from "@/components/ProfilePhotoUpload";
 import { useTheme } from "@/components/ThemeProvider";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 import { useToast } from "@/hooks/use-toast";
 import { useProfile } from "@/hooks/useProfile";
@@ -21,39 +23,152 @@ import {
   Save,
   Trash2,
   User,
+  Loader2,
 } from "lucide-react";
+
+interface UserSettings {
+  relatorios_mensais: boolean;
+  alertas_vencimento: boolean;
+  conciliacao_automatica: boolean;
+  autenticacao_dois_fatores: boolean;
+  login_automatico: boolean;
+}
 
 export default function Configuracoes() {
   const { toast } = useToast();
   const { profile, updateProfilePhoto } = useProfile();
   const { theme, setTheme } = useTheme();
+  const { user } = useAuth();
+  
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   
   // Estados das configurações
-  const [settings, setSettings] = useState({
-    relatoriosMensais: true,
-    alertasVencimento: true,
-    conciliacaoAutomatica: false,
-    autenticacaoDoisFatores: false,
-    loginAutomatico: true,
+  const [settings, setSettings] = useState<UserSettings>({
+    relatorios_mensais: true,
+    alertas_vencimento: true,
+    conciliacao_automatica: false,
+    autenticacao_dois_fatores: false,
+    login_automatico: true,
   });
+
+  // Carregar configurações do banco de dados
+  useEffect(() => {
+    const loadSettings = async () => {
+      if (!user?.id) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('user_settings')
+          .select('*')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        
+        if (error) throw error;
+        
+        if (data) {
+          setSettings({
+            relatorios_mensais: data.relatorios_mensais ?? true,
+            alertas_vencimento: data.alertas_vencimento ?? true,
+            conciliacao_automatica: data.conciliacao_automatica ?? false,
+            autenticacao_dois_fatores: data.autenticacao_dois_fatores ?? false,
+            login_automatico: data.login_automatico ?? true,
+          });
+        }
+      } catch (error) {
+        console.error('Erro ao carregar configurações:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadSettings();
+  }, [user?.id]);
 
   // Sincronizar o tema com o estado do dark mode
   const isDarkMode = theme === "dark";
 
-  const handleSwitchChange = (key: keyof typeof settings) => {
+  const handleSwitchChange = (key: keyof UserSettings) => {
     setSettings(prev => ({
       ...prev,
       [key]: !prev[key]
     }));
   };
 
-  const handleSaveSettings = () => {
-    // Aqui você salvaria as configurações no banco de dados
-    toast({
-      title: "Configurações salvas",
-      description: "Suas preferências foram atualizadas com sucesso.",
-    });
+  const handleSaveSettings = async () => {
+    if (!user?.id) {
+      toast({
+        title: "Erro",
+        description: "Usuário não autenticado.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsSaving(true);
+    
+    try {
+      // Verificar se já existe um registro
+      const { data: existing } = await supabase
+        .from('user_settings')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      if (existing) {
+        // Atualizar registro existente
+        const { error } = await supabase
+          .from('user_settings')
+          .update({
+            relatorios_mensais: settings.relatorios_mensais,
+            alertas_vencimento: settings.alertas_vencimento,
+            conciliacao_automatica: settings.conciliacao_automatica,
+            autenticacao_dois_fatores: settings.autenticacao_dois_fatores,
+            login_automatico: settings.login_automatico,
+          })
+          .eq('user_id', user.id);
+        
+        if (error) throw error;
+      } else {
+        // Inserir novo registro
+        const { error } = await supabase
+          .from('user_settings')
+          .insert({
+            user_id: user.id,
+            relatorios_mensais: settings.relatorios_mensais,
+            alertas_vencimento: settings.alertas_vencimento,
+            conciliacao_automatica: settings.conciliacao_automatica,
+            autenticacao_dois_fatores: settings.autenticacao_dois_fatores,
+            login_automatico: settings.login_automatico,
+          });
+        
+        if (error) throw error;
+      }
+      
+      toast({
+        title: "Configurações salvas",
+        description: "Suas preferências foram atualizadas com sucesso.",
+      });
+    } catch (error) {
+      console.error('Erro ao salvar configurações:', error);
+      toast({
+        title: "Erro ao salvar",
+        description: "Não foi possível salvar as configurações. Tente novamente.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="p-6 flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 space-y-6 bg-background min-h-full">
       {/* Header */}
@@ -64,8 +179,12 @@ export default function Configuracoes() {
             Personalize as configurações do sistema e preferências
           </p>
         </div>
-        <Button size="sm" onClick={handleSaveSettings}>
-          <Save className="h-4 w-4 mr-2" />
+        <Button size="sm" onClick={handleSaveSettings} disabled={isSaving}>
+          {isSaving ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : (
+            <Save className="h-4 w-4 mr-2" />
+          )}
           Salvar Alterações
         </Button>
       </div>
@@ -102,8 +221,8 @@ export default function Configuracoes() {
                 <p className="text-sm text-muted-foreground">Receber relatórios automáticos por email</p>
               </div>
               <Switch 
-                checked={settings.relatoriosMensais}
-                onCheckedChange={() => handleSwitchChange('relatoriosMensais')}
+                checked={settings.relatorios_mensais}
+                onCheckedChange={() => handleSwitchChange('relatorios_mensais')}
               />
             </div>
             <div className="flex items-center justify-between">
@@ -112,8 +231,8 @@ export default function Configuracoes() {
                 <p className="text-sm text-muted-foreground">Avisos sobre contas próximas do vencimento</p>
               </div>
               <Switch 
-                checked={settings.alertasVencimento}
-                onCheckedChange={() => handleSwitchChange('alertasVencimento')}
+                checked={settings.alertas_vencimento}
+                onCheckedChange={() => handleSwitchChange('alertas_vencimento')}
               />
             </div>
             <div className="flex items-center justify-between">
@@ -122,8 +241,8 @@ export default function Configuracoes() {
                 <p className="text-sm text-muted-foreground">Sugerir categorias para transações similares</p>
               </div>
               <Switch 
-                checked={settings.conciliacaoAutomatica}
-                onCheckedChange={() => handleSwitchChange('conciliacaoAutomatica')}
+                checked={settings.conciliacao_automatica}
+                onCheckedChange={() => handleSwitchChange('conciliacao_automatica')}
               />
             </div>
           </CardContent>
@@ -144,8 +263,8 @@ export default function Configuracoes() {
                 <p className="text-sm text-muted-foreground">Maior segurança para sua conta</p>
               </div>
               <Switch 
-                checked={settings.autenticacaoDoisFatores}
-                onCheckedChange={() => handleSwitchChange('autenticacaoDoisFatores')}
+                checked={settings.autenticacao_dois_fatores}
+                onCheckedChange={() => handleSwitchChange('autenticacao_dois_fatores')}
               />
             </div>
             <div className="flex items-center justify-between">
@@ -154,8 +273,8 @@ export default function Configuracoes() {
                 <p className="text-sm text-muted-foreground">Manter sessão ativa por 30 dias</p>
               </div>
               <Switch 
-                checked={settings.loginAutomatico}
-                onCheckedChange={() => handleSwitchChange('loginAutomatico')}
+                checked={settings.login_automatico}
+                onCheckedChange={() => handleSwitchChange('login_automatico')}
               />
             </div>
             <Button variant="outline" className="w-full">
