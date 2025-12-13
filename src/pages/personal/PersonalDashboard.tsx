@@ -27,7 +27,7 @@ import PersonalTransactionForm from '@/components/personal/PersonalTransactionFo
 
 export default function PersonalDashboard() {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, logout, isLoading: authLoading } = useAuth();
   const { 
     hasPersonalSubscription, 
     isPersonalProfileComplete,
@@ -42,7 +42,8 @@ export default function PersonalDashboard() {
 
   const [activeTab, setActiveTab] = useState('transactions');
 
-  const isLoading = moduleLoading || profileLoading;
+  // Wait for auth, module, and profile to finish loading before making decisions
+  const isLoading = authLoading || moduleLoading || profileLoading;
 
   // Check access - users with any subscription (PJ or PF) or free access can access personal module
   const hasAnyAccess = hasPersonalSubscription || hasCompanySubscription || hasFreeAccess;
