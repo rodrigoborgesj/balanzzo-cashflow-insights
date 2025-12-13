@@ -11,6 +11,7 @@ interface ModuleContextType {
   hasPersonalSubscription: boolean;
   isPersonalProfileComplete: boolean;
   isLoading: boolean;
+  hasFreeAccess: boolean;
   refreshContext: () => Promise<void>;
 }
 
@@ -22,6 +23,7 @@ export function ModuleProvider({ children }: { children: React.ReactNode }) {
   const [hasCompanySubscription, setHasCompanySubscription] = useState(false);
   const [hasPersonalSubscription, setHasPersonalSubscription] = useState(false);
   const [isPersonalProfileComplete, setIsPersonalProfileComplete] = useState(false);
+  const [hasFreeAccess, setHasFreeAccess] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   const checkSubscriptions = useCallback(async () => {
@@ -29,12 +31,20 @@ export function ModuleProvider({ children }: { children: React.ReactNode }) {
       setHasCompanySubscription(false);
       setHasPersonalSubscription(false);
       setIsPersonalProfileComplete(false);
+      setHasFreeAccess(false);
       setCurrentContextState(null);
       setIsLoading(false);
       return;
     }
 
     try {
+      // Check free access first
+      const { data: freeAccessData } = await supabase
+        .rpc('has_free_access', { user_email: user.email || '' });
+      
+      const isFreeAccess = !!freeAccessData;
+      setHasFreeAccess(isFreeAccess);
+
       // Check company subscription
       const { data: companyData } = await supabase
         .rpc('has_active_subscription', { p_user_id: user.id, p_type: 'company' });
@@ -51,8 +61,9 @@ export function ModuleProvider({ children }: { children: React.ReactNode }) {
       const { data: contextData } = await supabase
         .rpc('get_user_context', { p_user_id: user.id });
 
-      setHasCompanySubscription(!!companyData);
-      setHasPersonalSubscription(!!personalData);
+      // Free access grants both subscriptions
+      setHasCompanySubscription(!!companyData || isFreeAccess);
+      setHasPersonalSubscription(!!personalData || isFreeAccess);
       setIsPersonalProfileComplete(!!profileComplete);
       setCurrentContextState(contextData as SubscriptionType || null);
     } catch (error) {
@@ -102,6 +113,7 @@ export function ModuleProvider({ children }: { children: React.ReactNode }) {
         hasPersonalSubscription,
         isPersonalProfileComplete,
         isLoading,
+        hasFreeAccess,
         refreshContext
       }}
     >
