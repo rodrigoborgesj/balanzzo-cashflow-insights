@@ -9,11 +9,14 @@ import {
   HelpCircle,
   MessageCircle,
   User,
-  LineChart
+  LineChart,
+  ArrowLeftRight,
+  Wallet
 } from "lucide-react";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
+import { useModule } from "@/contexts/ModuleContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 import {
@@ -43,9 +46,11 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
+  const navigate = useNavigate();
   const currentPath = location.pathname;
   const { logout } = useAuth();
   const { profile } = useProfile();
+  const { hasPersonalSubscription, setCurrentContext } = useModule();
 
   const isActive = (path: string) => {
     if (path === "/dashboard") {
@@ -63,6 +68,11 @@ export function AppSidebar() {
 
   const handleLogout = async () => {
     await logout();
+  };
+
+  const handleSwitchToPersonal = async () => {
+    await setCurrentContext('personal');
+    navigate('/personal', { replace: true });
   };
 
   return (
@@ -125,6 +135,21 @@ export function AppSidebar() {
               </NavLink>
             </SidebarMenuButton>
           </SidebarMenuItem>
+          
+          {/* Switch to Personal Account */}
+          {hasPersonalSubscription && (
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <button 
+                  onClick={handleSwitchToPersonal}
+                  className="w-full justify-start transition-colors text-foreground hover:bg-muted"
+                >
+                  <Wallet className="h-5 w-5 flex-shrink-0" />
+                  {!collapsed && <span className="ml-3">Conta Pessoal</span>}
+                </button>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          )}
           
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
