@@ -319,6 +319,149 @@ export type Database = {
           },
         ]
       }
+      personal_categories: {
+        Row: {
+          active: boolean | null
+          color: string | null
+          created_at: string | null
+          id: string
+          name: string
+          type: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          active?: boolean | null
+          color?: string | null
+          created_at?: string | null
+          id?: string
+          name: string
+          type: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          active?: boolean | null
+          color?: string | null
+          created_at?: string | null
+          id?: string
+          name?: string
+          type?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      personal_profiles: {
+        Row: {
+          address_city: string
+          address_complement: string | null
+          address_neighborhood: string
+          address_number: string
+          address_state: string
+          address_street: string
+          address_zip_code: string
+          created_at: string | null
+          email: string
+          full_name: string
+          id: string
+          phone: string
+          profile_complete: boolean
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          address_city: string
+          address_complement?: string | null
+          address_neighborhood: string
+          address_number: string
+          address_state: string
+          address_street: string
+          address_zip_code: string
+          created_at?: string | null
+          email: string
+          full_name: string
+          id?: string
+          phone: string
+          profile_complete?: boolean
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          address_city?: string
+          address_complement?: string | null
+          address_neighborhood?: string
+          address_number?: string
+          address_state?: string
+          address_street?: string
+          address_zip_code?: string
+          created_at?: string | null
+          email?: string
+          full_name?: string
+          id?: string
+          phone?: string
+          profile_complete?: boolean
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      personal_transactions: {
+        Row: {
+          amount: number
+          category_id: string | null
+          created_at: string | null
+          description: string | null
+          hash_transaction: string | null
+          id: string
+          reconciled: boolean | null
+          reference_month: string | null
+          source_file: string | null
+          transaction_date: string
+          type: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          category_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          hash_transaction?: string | null
+          id?: string
+          reconciled?: boolean | null
+          reference_month?: string | null
+          source_file?: string | null
+          transaction_date: string
+          type: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          hash_transaction?: string | null
+          id?: string
+          reconciled?: boolean | null
+          reference_month?: string | null
+          source_file?: string | null
+          transaction_date?: string
+          type?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personal_transactions_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "personal_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string | null
@@ -365,6 +508,7 @@ export type Database = {
           name: string
           pagarme_plan_id: string | null
           price_cents: number
+          subscription_type: Database["public"]["Enums"]["subscription_type"]
           updated_at: string
         }
         Insert: {
@@ -376,6 +520,7 @@ export type Database = {
           name: string
           pagarme_plan_id?: string | null
           price_cents: number
+          subscription_type?: Database["public"]["Enums"]["subscription_type"]
           updated_at?: string
         }
         Update: {
@@ -387,6 +532,7 @@ export type Database = {
           name?: string
           pagarme_plan_id?: string | null
           price_cents?: number
+          subscription_type?: Database["public"]["Enums"]["subscription_type"]
           updated_at?: string
         }
         Relationships: []
@@ -402,6 +548,7 @@ export type Database = {
           pagarme_subscription_id: string | null
           plan_id: string
           status: string
+          subscription_type: Database["public"]["Enums"]["subscription_type"]
           updated_at: string
           user_id: string
         }
@@ -415,6 +562,7 @@ export type Database = {
           pagarme_subscription_id?: string | null
           plan_id: string
           status?: string
+          subscription_type?: Database["public"]["Enums"]["subscription_type"]
           updated_at?: string
           user_id: string
         }
@@ -428,6 +576,7 @@ export type Database = {
           pagarme_subscription_id?: string | null
           plan_id?: string
           status?: string
+          subscription_type?: Database["public"]["Enums"]["subscription_type"]
           updated_at?: string
           user_id?: string
         }
@@ -549,6 +698,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_session_context: {
+        Row: {
+          current_context: Database["public"]["Enums"]["subscription_type"]
+          id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          current_context?: Database["public"]["Enums"]["subscription_type"]
+          id?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          current_context?: Database["public"]["Enums"]["subscription_type"]
+          id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_settings: {
         Row: {
           alertas_vencimento: boolean | null
@@ -624,6 +794,10 @@ export type Database = {
           price_cents: number
         }[]
       }
+      get_user_context: {
+        Args: { p_user_id: string }
+        Returns: Database["public"]["Enums"]["subscription_type"]
+      }
       get_user_subscription: {
         Args: { p_user_id: string }
         Returns: {
@@ -639,11 +813,22 @@ export type Database = {
           user_id: string
         }[]
       }
+      has_active_subscription: {
+        Args: {
+          p_type: Database["public"]["Enums"]["subscription_type"]
+          p_user_id: string
+        }
+        Returns: boolean
+      }
       has_free_access: { Args: { user_email: string }; Returns: boolean }
+      is_personal_profile_complete: {
+        Args: { p_user_id: string }
+        Returns: boolean
+      }
       sugerir_categoria: { Args: { descricao_input: string }; Returns: string }
     }
     Enums: {
-      [_ in never]: never
+      subscription_type: "company" | "personal"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -770,6 +955,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      subscription_type: ["company", "personal"],
+    },
   },
 } as const
