@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { usePersonalProfile, PersonalProfileInput } from '@/hooks/usePersonalProfile';
 import { useAuth } from '@/hooks/useAuth';
+import { useModule } from '@/contexts/ModuleContext';
 import { toast } from 'sonner';
 
 const profileSchema = z.object({
@@ -31,6 +32,7 @@ export default function PersonalProfileSetup() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { profile, isLoading, createOrUpdateProfile, isUpdating } = usePersonalProfile();
+  const { refreshContext, setCurrentContext } = useModule();
   const [isLoadingCep, setIsLoadingCep] = useState(false);
 
   const {
@@ -103,7 +105,16 @@ export default function PersonalProfileSetup() {
 
   const onSubmit = (data: ProfileFormData) => {
     createOrUpdateProfile(data as PersonalProfileInput, {
-      onSuccess: () => {
+      onSuccess: async () => {
+        try {
+          // Atualiza o contexto e o status de perfil completo antes de ir para o dashboard pessoal
+          await Promise.all([
+            refreshContext(),
+            setCurrentContext('personal'),
+          ]);
+        } catch (error) {
+          console.error('Erro ao atualizar contexto após salvar perfil pessoal:', error);
+        }
         navigate('/personal', { replace: true });
       }
     });
