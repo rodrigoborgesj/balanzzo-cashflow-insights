@@ -59,15 +59,19 @@ export default function Login() {
         const checkoutUrl = planId ? `/checkout?plan=${planId}` : '/checkout';
         navigate(checkoutUrl, { replace: true });
       } else {
+        // Free access grants both modules
+        const canAccessCompany = hasCompanySubscription || hasFreeAccess;
+        const canAccessPersonal = hasPersonalSubscription || hasFreeAccess;
+        
         // Smart redirect: if only one subscription type, go directly to that module
-        if (hasCompanySubscription && !hasPersonalSubscription) {
+        if (canAccessCompany && !canAccessPersonal) {
           console.log('User only has company access, redirecting to dashboard');
           navigate('/dashboard', { replace: true });
-        } else if (hasPersonalSubscription && !hasCompanySubscription) {
+        } else if (canAccessPersonal && !canAccessCompany) {
           console.log('User only has personal access, redirecting to personal');
           navigate('/personal', { replace: true });
         } else {
-          // Has both, show module selector
+          // Has both (including free access), show module selector
           console.log('User has both accesses, redirecting to module selector');
           navigate('/select-module', { replace: true });
         }
