@@ -1,5 +1,5 @@
 import { useAuth } from "@/hooks/useAuth";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 
 interface ProtectedRouteProps {
@@ -8,6 +8,7 @@ interface ProtectedRouteProps {
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const location = useLocation();
   const [isReady, setIsReady] = useState(false);
 
   console.log('ProtectedRoute - isAuthenticated:', isAuthenticated, 'authLoading:', authLoading);
@@ -24,7 +25,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     }
   }, [authLoading]);
 
-  // Show loading while checking auth or waiting for estabilization
+  // Show loading while checking auth or waiting for estabilização
   if (authLoading || !isReady) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -36,10 +37,11 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     );
   }
 
-  // If not authenticated, redirect to login
+  // If not authenticated, redirect to login preserving target route
   if (!isAuthenticated) {
     console.log('Not authenticated, redirecting to login');
-    return <Navigate to="/login" replace />;
+    const redirectPath = encodeURIComponent(location.pathname + location.search);
+    return <Navigate to={`/login?redirect=${redirectPath}`} replace />;
   }
 
   // User is authenticated, render children as-is (subscription is handled per-route)
