@@ -32,6 +32,7 @@ export default function PersonalDashboard() {
     hasPersonalSubscription, 
     isPersonalProfileComplete,
     hasCompanySubscription,
+    hasFreeAccess,
     setCurrentContext,
     isLoading: moduleLoading 
   } = useModule();
@@ -43,18 +44,20 @@ export default function PersonalDashboard() {
 
   const isLoading = moduleLoading || profileLoading;
 
-  // Check access
+  // Check access - users with any subscription (PJ or PF) or free access can access personal module
+  const hasAnyAccess = hasPersonalSubscription || hasCompanySubscription || hasFreeAccess;
+  
   useEffect(() => {
     if (!isLoading) {
       if (!user) {
         navigate('/login', { replace: true });
-      } else if (!hasPersonalSubscription) {
+      } else if (!hasAnyAccess) {
         navigate('/checkout', { replace: true });
       } else if (!isPersonalProfileComplete) {
         navigate('/personal/setup', { replace: true });
       }
     }
-  }, [isLoading, user, hasPersonalSubscription, isPersonalProfileComplete, navigate]);
+  }, [isLoading, user, hasAnyAccess, isPersonalProfileComplete, navigate]);
 
   // Initialize default categories on first access
   useEffect(() => {

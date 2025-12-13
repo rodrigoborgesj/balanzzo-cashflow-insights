@@ -59,15 +59,26 @@ export default function Login() {
         const checkoutUrl = planId ? `/checkout?plan=${planId}` : '/checkout';
         navigate(checkoutUrl, { replace: true });
       } else {
-        // Redirect to module selector to choose between company/personal
-        console.log('User is authenticated with access, redirecting to module selector');
-        navigate('/select-module', { replace: true });
+        // Smart redirect: if only one subscription type, go directly to that module
+        if (hasCompanySubscription && !hasPersonalSubscription) {
+          console.log('User only has company access, redirecting to dashboard');
+          navigate('/dashboard', { replace: true });
+        } else if (hasPersonalSubscription && !hasCompanySubscription) {
+          console.log('User only has personal access, redirecting to personal');
+          navigate('/personal', { replace: true });
+        } else {
+          // Has both, show module selector
+          console.log('User has both accesses, redirecting to module selector');
+          navigate('/select-module', { replace: true });
+        }
       }
     }
   }, [
     isAuthenticated,
     authLoading,
     hasAnyAccess,
+    hasCompanySubscription,
+    hasPersonalSubscription,
     moduleLoading,
     navigate,
     searchParams,
