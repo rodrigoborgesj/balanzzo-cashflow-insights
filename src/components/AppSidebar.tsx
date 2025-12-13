@@ -50,7 +50,8 @@ export function AppSidebar() {
   const currentPath = location.pathname;
   const { logout } = useAuth();
   const { profile } = useProfile();
-  const { hasPersonalSubscription, setCurrentContext } = useModule();
+  const { hasPersonalSubscription, hasFreeAccess, setCurrentContext } = useModule();
+  const canAccessPersonal = hasPersonalSubscription || hasFreeAccess;
 
   const isActive = (path: string) => {
     if (path === "/dashboard") {
@@ -137,7 +138,7 @@ export function AppSidebar() {
           </SidebarMenuItem>
           
           {/* Switch to Personal Account */}
-          {hasPersonalSubscription && (
+          {canAccessPersonal && (
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
                 <button 

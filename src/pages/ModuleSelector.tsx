@@ -11,12 +11,18 @@ export default function ModuleSelector() {
   const { user, isLoading: authLoading } = useAuth();
   const { 
     hasCompanySubscription, 
-    hasPersonalSubscription, 
+    hasPersonalSubscription,
+    hasFreeAccess,
     setCurrentContext, 
     isLoading: moduleLoading 
   } = useModule();
 
   const isLoading = authLoading || moduleLoading;
+  
+  // Free access grants both modules
+  const canAccessCompany = hasCompanySubscription || hasFreeAccess;
+  const canAccessPersonal = hasPersonalSubscription || hasFreeAccess;
+  const hasAnyAccess = canAccessCompany || canAccessPersonal;
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -27,16 +33,16 @@ export default function ModuleSelector() {
   // If user only has one subscription type, redirect directly
   useEffect(() => {
     if (!isLoading && user) {
-      if (hasCompanySubscription && !hasPersonalSubscription) {
+      if (canAccessCompany && !canAccessPersonal) {
         handleSelectModule('company');
-      } else if (hasPersonalSubscription && !hasCompanySubscription) {
+      } else if (canAccessPersonal && !canAccessCompany) {
         handleSelectModule('personal');
-      } else if (!hasCompanySubscription && !hasPersonalSubscription) {
+      } else if (!hasAnyAccess) {
         // No subscription, redirect to checkout
         navigate('/checkout', { replace: true });
       }
     }
-  }, [isLoading, user, hasCompanySubscription, hasPersonalSubscription]);
+  }, [isLoading, user, canAccessCompany, canAccessPersonal, hasAnyAccess]);
 
   const handleSelectModule = async (module: 'company' | 'personal') => {
     await setCurrentContext(module);
@@ -58,8 +64,8 @@ export default function ModuleSelector() {
     );
   }
 
-  // Show selector only if user has both subscriptions
-  if (!hasCompanySubscription && !hasPersonalSubscription) {
+  // Show selector only if user has access to both modules
+  if (!hasAnyAccess) {
     return null;
   }
 
@@ -72,7 +78,7 @@ export default function ModuleSelector() {
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">
-          {hasCompanySubscription && (
+          {canAccessCompany && (
             <Card className="hover:border-primary transition-colors cursor-pointer group">
               <CardHeader className="text-center pb-4">
                 <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
@@ -112,7 +118,7 @@ export default function ModuleSelector() {
             </Card>
           )}
 
-          {hasPersonalSubscription && (
+          {canAccessPersonal && (
             <Card className="hover:border-primary transition-colors cursor-pointer group">
               <CardHeader className="text-center pb-4">
                 <div className="mx-auto w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mb-4 group-hover:bg-accent/20 transition-colors">
