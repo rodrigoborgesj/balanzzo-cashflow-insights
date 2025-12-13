@@ -30,8 +30,14 @@ export default function Login() {
     
     // Wait for both auth and subscription checks
     if (!authLoading && !subLoading && isAuthenticated) {
-      const redirectTo = searchParams.get('redirect') || '/dashboard';
+      const redirectTo = searchParams.get('redirect');
       const planId = searchParams.get('plan');
+      
+      // If explicit redirect, use it
+      if (redirectTo) {
+        navigate(redirectTo, { replace: true });
+        return;
+      }
       
       // Check if user has active subscription
       if (!hasActiveSubscription) {
@@ -39,8 +45,9 @@ export default function Login() {
         const checkoutUrl = planId ? `/checkout?plan=${planId}` : '/checkout';
         navigate(checkoutUrl, { replace: true });
       } else {
-        console.log('User is authenticated with active subscription, redirecting to:', redirectTo);
-        navigate(redirectTo, { replace: true });
+        // Redirect to module selector to choose between company/personal
+        console.log('User is authenticated with active subscription, redirecting to module selector');
+        navigate('/select-module', { replace: true });
       }
     }
   }, [isAuthenticated, authLoading, hasActiveSubscription, subLoading, navigate, searchParams]);

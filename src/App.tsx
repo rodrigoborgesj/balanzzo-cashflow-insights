@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useEffect } from "react";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { ModuleProvider } from "@/contexts/ModuleContext";
 import { AppLayout } from "./components/AppLayout";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { SubscriptionGuard } from "./components/SubscriptionGuard";
@@ -25,7 +26,9 @@ import PoliticaPrivacidade from "./pages/PoliticaPrivacidade";
 import PoliticaCancelamento from "./pages/PoliticaCancelamento";
 import Checkout from "./pages/Checkout";
 import NotFound from "./pages/NotFound";
-
+import ModuleSelector from "./pages/ModuleSelector";
+import PersonalDashboard from "./pages/personal/PersonalDashboard";
+import PersonalProfileSetup from "./pages/personal/PersonalProfileSetup";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -84,10 +87,11 @@ const App = () => {
     <ErrorBoundary>
       <ThemeProvider defaultTheme="light" storageKey="balanzzo-ui-theme">
         <QueryClientProvider client={queryClient}>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
+          <ModuleProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
           <Routes>
           {/* Public landing page */}
           <Route path="/" element={<LandingPage />} />
@@ -184,12 +188,32 @@ const App = () => {
             </ProtectedRoute>
           } />
 
+          {/* Module Selector - Post-login module selection */}
+          <Route path="/select-module" element={
+            <ProtectedRoute>
+              <ModuleSelector />
+            </ProtectedRoute>
+          } />
+
+          {/* Personal Finance Module Routes */}
+          <Route path="/personal" element={
+            <ProtectedRoute>
+              <PersonalDashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/personal/setup" element={
+            <ProtectedRoute>
+              <PersonalProfileSetup />
+            </ProtectedRoute>
+          } />
+
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
+            </TooltipProvider>
+          </ModuleProvider>
+        </QueryClientProvider>
       </ThemeProvider>
     </ErrorBoundary>
   );

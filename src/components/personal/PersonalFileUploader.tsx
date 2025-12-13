@@ -11,7 +11,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { usePersonalTransactions, PersonalTransactionInput } from '@/hooks/usePersonalTransactions';
-import { parseCSV, parseOFX } from '@/utils/fileParser';
+import { FileParser } from '@/utils/fileParser';
 import { toast } from 'sonner';
 
 export default function PersonalFileUploader() {
@@ -41,9 +41,9 @@ export default function PersonalFileUploader() {
       let transactions: any[] = [];
 
       if (extension === 'csv') {
-        transactions = await parseCSV(text);
+        transactions = FileParser.parseCSV(text);
       } else if (extension === 'ofx') {
-        transactions = await parseOFX(text);
+        transactions = FileParser.parseOFX(text);
       }
 
       // Convert to PersonalTransactionInput format
