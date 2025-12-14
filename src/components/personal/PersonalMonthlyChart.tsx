@@ -24,10 +24,10 @@ const formatCurrency = (value: number) => {
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-popover border border-border rounded-lg p-3 shadow-lg">
+      <div className="bg-card border border-border rounded-lg p-3 shadow-md">
         <p className="font-medium text-foreground mb-2">{label}</p>
         {payload.map((entry: any, index: number) => (
-          <p key={index} className="text-sm" style={{ color: entry.color }}>
+          <p key={index} className="text-sm text-foreground">
             {entry.name}: {formatCurrency(entry.value)}
           </p>
         ))}
@@ -39,43 +39,46 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 export function PersonalMonthlyChart({ data }: PersonalMonthlyChartProps) {
   return (
-    <Card>
+    <Card className="border-border/50 bg-card">
       <CardHeader>
-        <CardTitle className="text-lg font-semibold">Evolução Mensal</CardTitle>
+        <CardTitle className="text-base font-semibold text-foreground">Evolução Mensal</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="h-[300px]">
+        <div className="h-[280px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={data}
               margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
             >
-              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis 
                 dataKey="monthLabel" 
-                className="text-xs fill-muted-foreground"
-                tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                tick={{ fill: 'hsl(var(--foreground))', fontSize: 12 }}
+                axisLine={{ stroke: 'hsl(var(--border))' }}
+                tickLine={{ stroke: 'hsl(var(--border))' }}
               />
               <YAxis 
-                className="text-xs fill-muted-foreground"
-                tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                tick={{ fill: 'hsl(var(--foreground))', fontSize: 11 }}
                 tickFormatter={(value) => formatCurrency(value)}
                 width={80}
+                axisLine={{ stroke: 'hsl(var(--border))' }}
+                tickLine={{ stroke: 'hsl(var(--border))' }}
               />
               <Tooltip content={<CustomTooltip />} />
               <Legend 
-                wrapperStyle={{ paddingTop: '20px' }}
+                wrapperStyle={{ paddingTop: '16px' }}
+                formatter={(value) => <span className="text-foreground text-sm">{value}</span>}
               />
               <Bar 
                 dataKey="income" 
                 name="Receitas" 
-                fill="hsl(142, 76%, 36%)" 
+                fill="#1A3423"
                 radius={[4, 4, 0, 0]}
               />
               <Bar 
                 dataKey="expense" 
                 name="Despesas" 
-                fill="hsl(0, 84%, 60%)" 
+                fill="#6B7280"
                 radius={[4, 4, 0, 0]}
               />
             </BarChart>
