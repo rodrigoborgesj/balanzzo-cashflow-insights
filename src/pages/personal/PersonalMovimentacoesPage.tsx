@@ -11,12 +11,28 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, CalendarIcon, ArrowUpCircle, ArrowDownCircle, ChevronLeft, ChevronRight } from "lucide-react";
-import { format, parseISO } from "date-fns";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Loader2, CalendarIcon, ArrowUpCircle, ArrowDownCircle, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { format, parseISO, startOfMonth, endOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 
 const ITEMS_PER_PAGE = 20;
+
+// Generate last 24 months for month selector
+const generateMonthOptions = () => {
+  const options = [];
+  const now = new Date();
+  for (let i = 0; i < 24; i++) {
+    const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const value = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+    const label = format(date, "MMMM yyyy", { locale: ptBR });
+    options.push({ value, label: label.charAt(0).toUpperCase() + label.slice(1) });
+  }
+  return options;
+};
+
+const monthOptions = generateMonthOptions();
 
 export default function PersonalMovimentacoesPage() {
   const navigate = useNavigate();
@@ -25,12 +41,20 @@ export default function PersonalMovimentacoesPage() {
   const { categories } = usePersonalCategories();
 
   // Filter states
-  const [typeFilter, setTypeFilter] = useState<'all' | 'income' | 'expense'>('all');
-  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  
+  // Period filter states
+  const [periodType, setPeriodType] = useState<'month' | 'custom'>('month');
+  const [selectedMonth, setSelectedMonth] = useState<string>(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  });
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [appliedStartDate, setAppliedStartDate] = useState<Date | undefined>(undefined);
   const [appliedEndDate, setAppliedEndDate] = useState<Date | undefined>(undefined);
+  const [appliedMonth, setAppliedMonth] = useState<string | undefined>(undefined);
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -41,25 +65,57 @@ export default function PersonalMovimentacoesPage() {
   // Check access
   const hasAccess = hasPersonalSubscription || hasFreeAccess || hasCompanySubscription;
 
+  // Toggle type selection
+  const toggleType = (type: string) => {
+    setSelectedTypes(prev => 
+      prev.includes(type) 
+        ? prev.filter(t => t !== type)
+        : [...prev, type]
+    );
+  };
+
+  // Toggle category selection
+  const toggleCategory = (categoryId: string) => {
+    setSelectedCategories(prev => 
+      prev.includes(categoryId) 
+        ? prev.filter(c => c !== categoryId)
+        : [...prev, categoryId]
+    );
+  };
+
   // Filter transactions
   const filteredTransactions = useMemo(() => {
     if (!transactions) return [];
 
     return transactions.filter(t => {
-      // Type filter
-      if (typeFilter !== 'all' && t.type !== typeFilter) return false;
+      // Type filter (multi-select)
+      if (selectedTypes.length > 0 && !selectedTypes.includes(t.type)) return false;
 
-      // Category filter
-      if (categoryFilter !== 'all') {
-        if (categoryFilter === 'uncategorized') {
-          if (t.category_id) return false;
-        } else {
-          if (t.category_id !== categoryFilter) return false;
+      // Category filter (multi-select)
+      if (selectedCategories.length > 0) {
+        const hasUncategorized = selectedCategories.includes('uncategorized');
+        const hasCategoryMatch = t.category_id && selectedCategories.includes(t.category_id);
+        
+        if (hasUncategorized && !t.category_id) {
+          // Match uncategorized
+        } else if (hasCategoryMatch) {
+          // Match specific category
+        } else if (!hasUncategorized && !hasCategoryMatch) {
+          return false;
+        } else if (hasUncategorized && t.category_id && !hasCategoryMatch) {
+          return false;
         }
       }
 
-      // Date range filter (only if applied)
-      if (appliedStartDate || appliedEndDate) {
+      // Date filter
+      if (periodType === 'month' && appliedMonth) {
+        const [year, month] = appliedMonth.split('-').map(Number);
+        const monthStart = startOfMonth(new Date(year, month - 1));
+        const monthEnd = endOfMonth(new Date(year, month - 1));
+        const transactionDate = parseISO(t.transaction_date);
+        
+        if (transactionDate < monthStart || transactionDate > monthEnd) return false;
+      } else if (periodType === 'custom' && (appliedStartDate || appliedEndDate)) {
         const transactionDate = parseISO(t.transaction_date);
         
         if (appliedStartDate && transactionDate < appliedStartDate) return false;
@@ -68,7 +124,7 @@ export default function PersonalMovimentacoesPage() {
 
       return true;
     });
-  }, [transactions, typeFilter, categoryFilter, appliedStartDate, appliedEndDate]);
+  }, [transactions, selectedTypes, selectedCategories, periodType, appliedMonth, appliedStartDate, appliedEndDate]);
 
   // Pagination calculations
   const totalPages = Math.ceil(filteredTransactions.length / ITEMS_PER_PAGE);
@@ -80,7 +136,7 @@ export default function PersonalMovimentacoesPage() {
   // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [typeFilter, categoryFilter, appliedStartDate, appliedEndDate]);
+  }, [selectedTypes, selectedCategories, periodType, appliedMonth, appliedStartDate, appliedEndDate]);
 
   // Calculate totals based on filtered transactions
   const totals = useMemo(() => {
@@ -105,22 +161,32 @@ export default function PersonalMovimentacoesPage() {
   };
 
   const handleApplyPeriod = () => {
-    setAppliedStartDate(startDate);
-    setAppliedEndDate(endDate);
+    if (periodType === 'month') {
+      setAppliedMonth(selectedMonth);
+      setAppliedStartDate(undefined);
+      setAppliedEndDate(undefined);
+    } else {
+      setAppliedStartDate(startDate);
+      setAppliedEndDate(endDate);
+      setAppliedMonth(undefined);
+    }
     setCurrentPage(1);
   };
 
   const handleClearFilters = () => {
-    setTypeFilter('all');
-    setCategoryFilter('all');
+    setSelectedTypes([]);
+    setSelectedCategories([]);
+    setPeriodType('month');
+    setSelectedMonth(monthOptions[0].value);
     setStartDate(undefined);
     setEndDate(undefined);
     setAppliedStartDate(undefined);
     setAppliedEndDate(undefined);
+    setAppliedMonth(undefined);
     setCurrentPage(1);
   };
 
-  const hasActiveFilters = typeFilter !== 'all' || categoryFilter !== 'all' || appliedStartDate || appliedEndDate;
+  const hasActiveFilters = selectedTypes.length > 0 || selectedCategories.length > 0 || appliedMonth || appliedStartDate || appliedEndDate;
 
   if (authLoading || isLoading) {
     return (
@@ -144,10 +210,10 @@ export default function PersonalMovimentacoesPage() {
 
   return (
     <PersonalLayout>
-      <div className="space-y-6">
+      <div className="container mx-auto px-4 py-6 space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-semibold text-foreground">Suas Movimentações</h1>
+          <h1 className="text-2xl font-bold text-foreground">Suas Movimentações</h1>
           <p className="text-sm text-muted-foreground mt-1">
             Visualize e analise todas as suas entradas e saídas
           </p>
@@ -158,8 +224,8 @@ export default function PersonalMovimentacoesPage() {
           <Card className="border-border/50">
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-[#E4F8CA]">
-                  <ArrowUpCircle className="h-5 w-5 text-[#1A3423]" />
+                <div className="p-2 rounded-lg bg-[hsl(var(--primary-light))]">
+                  <ArrowUpCircle className="h-5 w-5 text-[hsl(var(--primary))]" />
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Total Entradas</p>
@@ -172,8 +238,8 @@ export default function PersonalMovimentacoesPage() {
           <Card className="border-border/50">
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-[#E9E9E9]">
-                  <ArrowDownCircle className="h-5 w-5 text-gray-600" />
+                <div className="p-2 rounded-lg bg-muted">
+                  <ArrowDownCircle className="h-5 w-5 text-muted-foreground" />
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Total Saídas</p>
@@ -188,19 +254,19 @@ export default function PersonalMovimentacoesPage() {
               <div className="flex items-center gap-3">
                 <div className={cn(
                   "p-2 rounded-lg",
-                  totals.income - totals.expense >= 0 ? "bg-[#E4F8CA]" : "bg-red-50"
+                  totals.income - totals.expense >= 0 ? "bg-[hsl(var(--primary-light))]" : "bg-destructive/10"
                 )}>
                   {totals.income - totals.expense >= 0 ? (
-                    <ArrowUpCircle className="h-5 w-5 text-[#1A3423]" />
+                    <ArrowUpCircle className="h-5 w-5 text-[hsl(var(--primary))]" />
                   ) : (
-                    <ArrowDownCircle className="h-5 w-5 text-red-500" />
+                    <ArrowDownCircle className="h-5 w-5 text-destructive" />
                   )}
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Saldo</p>
                   <p className={cn(
                     "text-xl font-semibold",
-                    totals.income - totals.expense >= 0 ? "text-foreground" : "text-red-500"
+                    totals.income - totals.expense >= 0 ? "text-foreground" : "text-destructive"
                   )}>
                     {formatCurrency(totals.income - totals.expense)}
                   </p>
@@ -230,105 +296,202 @@ export default function PersonalMovimentacoesPage() {
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* Filters Row */}
-            <div className="flex flex-wrap items-end gap-3 pb-4 border-b border-border/50">
-              {/* Type Filter */}
-              <div className="space-y-1.5">
-                <label className="text-xs text-muted-foreground">Tipo</label>
-                <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as 'all' | 'income' | 'expense')}>
-                  <SelectTrigger className="w-[140px] h-9 bg-background">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-background border border-border">
-                    <SelectItem value="all">Todas</SelectItem>
-                    <SelectItem value="income">Entradas</SelectItem>
-                    <SelectItem value="expense">Saídas</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            {/* Filters Section */}
+            <div className="space-y-4 pb-4 border-b border-border/50">
+              {/* Type and Category Filters Row */}
+              <div className="flex flex-wrap gap-6">
+                {/* Type Filter - Multi-select */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">Tipo</label>
+                  <div className="flex flex-wrap gap-3">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <Checkbox
+                        checked={selectedTypes.includes('income')}
+                        onCheckedChange={() => toggleType('income')}
+                      />
+                      <span className="text-sm text-foreground">Entradas</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <Checkbox
+                        checked={selectedTypes.includes('expense')}
+                        onCheckedChange={() => toggleType('expense')}
+                      />
+                      <span className="text-sm text-foreground">Saídas</span>
+                    </label>
+                  </div>
+                </div>
 
-              {/* Category Filter */}
-              <div className="space-y-1.5">
-                <label className="text-xs text-muted-foreground">Categoria</label>
-                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                  <SelectTrigger className="w-[160px] h-9 bg-background">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-background border border-border">
-                    <SelectItem value="all">Todas</SelectItem>
-                    <SelectItem value="uncategorized">Sem categoria</SelectItem>
+                {/* Category Filter - Multi-select */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">Categorias</label>
+                  <div className="flex flex-wrap gap-3">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <Checkbox
+                        checked={selectedCategories.includes('uncategorized')}
+                        onCheckedChange={() => toggleCategory('uncategorized')}
+                      />
+                      <span className="text-sm text-foreground">Sem categoria</span>
+                    </label>
                     {categories?.map(cat => (
-                      <SelectItem key={cat.id} value={cat.id}>
-                        {cat.name}
-                      </SelectItem>
+                      <label key={cat.id} className="flex items-center gap-2 cursor-pointer">
+                        <Checkbox
+                          checked={selectedCategories.includes(cat.id)}
+                          onCheckedChange={() => toggleCategory(cat.id)}
+                        />
+                        <span className="text-sm text-foreground">{cat.name}</span>
+                      </label>
                     ))}
-                  </SelectContent>
-                </Select>
+                  </div>
+                </div>
               </div>
 
-              {/* Date Range Filter */}
-              <div className="space-y-1.5">
-                <label className="text-xs text-muted-foreground">Data Inicial</label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-[140px] h-9 justify-start text-left font-normal bg-background",
-                        !startDate && "text-muted-foreground"
-                      )}
+              {/* Period Filter Row */}
+              <div className="flex flex-wrap items-end gap-4">
+                {/* Period Type Selector */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">Período</label>
+                  <Select value={periodType} onValueChange={(v) => setPeriodType(v as 'month' | 'custom')}>
+                    <SelectTrigger className="w-[140px] h-9 bg-background">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background border border-border">
+                      <SelectItem value="month">Por Mês</SelectItem>
+                      <SelectItem value="custom">Personalizado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {periodType === 'month' ? (
+                  /* Month Selector */
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-foreground">Mês</label>
+                    <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                      <SelectTrigger className="w-[180px] h-9 bg-background">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-background border border-border max-h-[300px]">
+                        {monthOptions.map(opt => (
+                          <SelectItem key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ) : (
+                  /* Custom Date Range */
+                  <>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-foreground">Data Inicial</label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "w-[150px] h-9 justify-start text-left font-normal bg-background",
+                              !startDate && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {startDate ? format(startDate, "dd/MM/yyyy") : "Selecionar"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0 bg-background border border-border" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={startDate}
+                            onSelect={setStartDate}
+                            locale={ptBR}
+                            className="pointer-events-auto"
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-foreground">Data Final</label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "w-[150px] h-9 justify-start text-left font-normal bg-background",
+                              !endDate && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {endDate ? format(endDate, "dd/MM/yyyy") : "Selecionar"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0 bg-background border border-border" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={endDate}
+                            onSelect={setEndDate}
+                            locale={ptBR}
+                            className="pointer-events-auto"
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  </>
+                )}
+
+                {/* Apply Button */}
+                <Button
+                  onClick={handleApplyPeriod}
+                  className="h-9 bg-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))]/90 text-primary-foreground"
+                >
+                  Aplicar
+                </Button>
+              </div>
+
+              {/* Active Filters Display */}
+              {hasActiveFilters && (
+                <div className="flex flex-wrap gap-2 pt-2">
+                  {selectedTypes.map(type => (
+                    <span 
+                      key={type}
+                      className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-[hsl(var(--primary-light))] text-[hsl(var(--primary))]"
                     >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {startDate ? format(startDate, "dd/MM/yyyy") : "Selecionar"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 bg-background border border-border" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={startDate}
-                      onSelect={setStartDate}
-                      locale={ptBR}
-                      className="pointer-events-auto"
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs text-muted-foreground">Data Final</label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-[140px] h-9 justify-start text-left font-normal bg-background",
-                        !endDate && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {endDate ? format(endDate, "dd/MM/yyyy") : "Selecionar"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 bg-background border border-border" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={endDate}
-                      onSelect={setEndDate}
-                      locale={ptBR}
-                      className="pointer-events-auto"
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              {/* Apply Button */}
-              <Button
-                onClick={handleApplyPeriod}
-                disabled={!startDate && !endDate}
-                className="h-9 bg-[#1A3423] hover:bg-[#1A3423]/90 text-white"
-              >
-                Aplicar
-              </Button>
+                      {type === 'income' ? 'Entradas' : 'Saídas'}
+                      <X 
+                        className="h-3 w-3 cursor-pointer hover:opacity-70" 
+                        onClick={() => toggleType(type)}
+                      />
+                    </span>
+                  ))}
+                  {selectedCategories.map(catId => {
+                    const catName = catId === 'uncategorized' 
+                      ? 'Sem categoria' 
+                      : categories?.find(c => c.id === catId)?.name || catId;
+                    return (
+                      <span 
+                        key={catId}
+                        className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground"
+                      >
+                        {catName}
+                        <X 
+                          className="h-3 w-3 cursor-pointer hover:opacity-70" 
+                          onClick={() => toggleCategory(catId)}
+                        />
+                      </span>
+                    );
+                  })}
+                  {appliedMonth && (
+                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground">
+                      {monthOptions.find(m => m.value === appliedMonth)?.label}
+                    </span>
+                  )}
+                  {(appliedStartDate || appliedEndDate) && (
+                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground">
+                      {appliedStartDate ? format(appliedStartDate, "dd/MM/yyyy") : '...'} 
+                      {' - '} 
+                      {appliedEndDate ? format(appliedEndDate, "dd/MM/yyyy") : '...'}
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Table */}
@@ -377,15 +540,15 @@ export default function PersonalMovimentacoesPage() {
                             <span className={cn(
                               "inline-flex items-center px-2 py-1 rounded-full text-xs font-medium",
                               transaction.type === 'income' 
-                                ? "bg-[#E4F8CA] text-[#1A3423]" 
-                                : "bg-[#E9E9E9] text-gray-600"
+                                ? "bg-[hsl(var(--primary-light))] text-[hsl(var(--primary))]" 
+                                : "bg-muted text-muted-foreground"
                             )}>
                               {transaction.type === 'income' ? 'Entrada' : 'Saída'}
                             </span>
                           </TableCell>
                           <TableCell className={cn(
                             "text-right font-medium",
-                            transaction.type === 'income' ? "text-[#1A3423]" : "text-foreground"
+                            transaction.type === 'income' ? "text-[hsl(var(--primary))]" : "text-foreground"
                           )}>
                             {transaction.type === 'income' ? '+' : '-'} {formatCurrency(Math.abs(Number(transaction.amount)))}
                           </TableCell>
@@ -429,8 +592,8 @@ export default function PersonalMovimentacoesPage() {
                               size="sm"
                               onClick={() => setCurrentPage(pageNum)}
                               className={cn(
-                                "w-8 h-8 p-0",
-                                currentPage === pageNum && "bg-[#1A3423] hover:bg-[#1A3423]/90"
+                                "w-8 h-8",
+                                currentPage === pageNum && "bg-[hsl(var(--primary))] text-primary-foreground"
                               )}
                             >
                               {pageNum}
