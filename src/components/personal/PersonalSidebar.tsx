@@ -2,10 +2,9 @@ import {
   Wallet, 
   PiggyBank,
   ArrowUpDown,
-  Settings,
   LogOut,
   Building2,
-  HelpCircle
+  Receipt
 } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -25,6 +24,7 @@ import {
 const personalItems = [
   { title: "Transações", url: "/personal", icon: ArrowUpDown },
   { title: "Caixinhas", url: "/personal/savings", icon: PiggyBank },
+  { title: "Contas Fixas", url: "/personal/fixed-expenses", icon: Receipt },
 ];
 
 export function PersonalSidebar() {
