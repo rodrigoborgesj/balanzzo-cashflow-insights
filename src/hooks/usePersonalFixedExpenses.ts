@@ -126,6 +126,7 @@ export const usePersonalFixedExpenses = () => {
 
   return {
     expenses,
+    fixedExpenses: expenses, // alias for chart component
     isLoading,
     error,
     totalMonthlyExpenses,

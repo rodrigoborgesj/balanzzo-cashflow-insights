@@ -28,6 +28,7 @@ import Checkout from "./pages/Checkout";
 import NotFound from "./pages/NotFound";
 import ModuleSelector from "./pages/ModuleSelector";
 import PersonalDashboard from "./pages/personal/PersonalDashboard";
+import PersonalConciliacao from "./pages/personal/PersonalConciliacao";
 import PersonalProfileSetup from "./pages/personal/PersonalProfileSetup";
 import PersonalSavingsPage from "./pages/personal/PersonalSavingsPage";
 import PersonalFixedExpensesPage from "./pages/personal/PersonalFixedExpensesPage";
@@ -201,6 +202,11 @@ const App = () => {
           <Route path="/personal" element={
             <ProtectedRoute>
               <PersonalDashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/personal/transactions" element={
+            <ProtectedRoute>
+              <PersonalConciliacao />
             </ProtectedRoute>
           } />
           <Route path="/personal/setup" element={
