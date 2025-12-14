@@ -1,17 +1,28 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { PersonalLayout } from '@/components/personal/PersonalLayout';
 import { CreateFixedExpenseDialog } from '@/components/personal/CreateFixedExpenseDialog';
 import { FixedExpenseCard } from '@/components/personal/FixedExpenseCard';
 import { usePersonalFixedExpenses } from '@/hooks/usePersonalFixedExpenses';
-import { Receipt, Wallet, TrendingUp, AlertTriangle, CheckCircle } from 'lucide-react';
+import { usePersonalBankBalance } from '@/hooks/usePersonalBankBalance';
+import { Receipt, Wallet, TrendingUp, AlertTriangle, CheckCircle, Save, Loader2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
 
 const PersonalFixedExpensesPage = () => {
   const { expenses, isLoading, totalMonthlyExpenses } = usePersonalFixedExpenses();
+  const { balance: savedBalance, isLoading: isLoadingBalance, isSaving, saveBalance } = usePersonalBankBalance();
   const [bankBalance, setBankBalance] = useState<string>('');
+  const [hasChanges, setHasChanges] = useState(false);
+
+  // Load saved balance when available
+  useEffect(() => {
+    if (!isLoadingBalance && savedBalance > 0) {
+      setBankBalance(savedBalance.toFixed(2).replace('.', ','));
+    }
+  }, [savedBalance, isLoadingBalance]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -23,6 +34,12 @@ const PersonalFixedExpensesPage = () => {
   const handleBalanceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/[^\d,]/g, '');
     setBankBalance(value);
+    setHasChanges(true);
+  };
+
+  const handleSaveBalance = async () => {
+    await saveBalance(parsedBalance);
+    setHasChanges(false);
   };
 
   const parsedBalance = useMemo(() => {
@@ -93,12 +110,12 @@ const PersonalFixedExpensesPage = () => {
           <CreateFixedExpenseDialog />
         </div>
 
-        {/* Bank Balance & Thermometer Section */}
+        {/* Bank Balance & Predictability Section */}
         <Card className="bg-card border-border">
           <CardHeader className="pb-4">
             <CardTitle className="flex items-center gap-2 text-lg">
               <Wallet className="h-5 w-5 text-primary" />
-              Análise de Cobertura
+              Previsibilidade
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -107,18 +124,38 @@ const PersonalFixedExpensesPage = () => {
               <label className="text-sm font-medium text-foreground">
                 Saldo total em suas contas bancárias
               </label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
-                  R$
-                </span>
-                <Input
-                  type="text"
-                  placeholder="0,00"
-                  value={bankBalance}
-                  onChange={handleBalanceChange}
-                  className="pl-10 text-lg font-semibold"
-                />
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                    R$
+                  </span>
+                  <Input
+                    type="text"
+                    placeholder="0,00"
+                    value={bankBalance}
+                    onChange={handleBalanceChange}
+                    className="pl-10 text-lg font-semibold"
+                    disabled={isLoadingBalance}
+                  />
+                </div>
+                <Button
+                  onClick={handleSaveBalance}
+                  disabled={isSaving || !hasChanges || parsedBalance === 0}
+                  className="shrink-0"
+                >
+                  {isSaving ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Save className="h-4 w-4" />
+                  )}
+                  <span className="ml-2 hidden sm:inline">Salvar</span>
+                </Button>
               </div>
+              {savedBalance > 0 && hasChanges && (
+                <p className="text-xs text-muted-foreground">
+                  Último saldo salvo: {formatCurrency(savedBalance)}
+                </p>
+              )}
             </div>
 
             {parsedBalance > 0 && totalMonthlyExpenses > 0 && (
@@ -178,7 +215,7 @@ const PersonalFixedExpensesPage = () => {
 
             {parsedBalance === 0 && (
               <p className="text-sm text-muted-foreground text-center py-4">
-                Informe seu saldo bancário para ver a análise de cobertura
+                Informe seu saldo bancário para ver sua previsibilidade financeira
               </p>
             )}
           </CardContent>
