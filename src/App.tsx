@@ -29,6 +29,7 @@ import NotFound from "./pages/NotFound";
 import ModuleSelector from "./pages/ModuleSelector";
 import PersonalDashboard from "./pages/personal/PersonalDashboard";
 import PersonalProfileSetup from "./pages/personal/PersonalProfileSetup";
+import PersonalSavingsPage from "./pages/personal/PersonalSavingsPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -204,6 +205,11 @@ const App = () => {
           <Route path="/personal/setup" element={
             <ProtectedRoute>
               <PersonalProfileSetup />
+            </ProtectedRoute>
+          } />
+          <Route path="/personal/savings" element={
+            <ProtectedRoute>
+              <PersonalSavingsPage />
             </ProtectedRoute>
           } />
 
