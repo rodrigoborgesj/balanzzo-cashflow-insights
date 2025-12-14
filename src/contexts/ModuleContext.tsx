@@ -63,8 +63,7 @@ export function ModuleProvider({ children }: { children: React.ReactNode }) {
 
       // Free access grants both subscriptions
       setHasCompanySubscription(!!companyData || isFreeAccess);
-      // Personal module is free during development - TODO: enable subscription check when ready
-      setHasPersonalSubscription(true);
+      setHasPersonalSubscription(!!personalData || isFreeAccess);
       setIsPersonalProfileComplete(!!profileComplete);
       setCurrentContextState(contextData as SubscriptionType || null);
     } catch (error) {
