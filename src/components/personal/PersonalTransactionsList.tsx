@@ -51,8 +51,18 @@ export default function PersonalTransactionsList() {
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
-      currency: 'BRL'
-    }).format(Math.abs(value));
+      currency: 'BRL',
+    }).format(Math.abs(Number(value) || 0));
+  };
+
+  const formatTransactionDate = (dateStr: string) => {
+    if (!dateStr) return '-';
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) {
+      console.error('Data de transação inválida encontrada:', dateStr);
+      return dateStr;
+    }
+    return format(date, 'dd/MM/yyyy');
   };
 
   const handleDeleteConfirm = () => {
@@ -132,7 +142,7 @@ export default function PersonalTransactionsList() {
                 {transactions.map((transaction) => (
                   <TableRow key={transaction.id}>
                     <TableCell className="whitespace-nowrap">
-                      {format(new Date(transaction.transaction_date), 'dd/MM/yyyy')}
+                      {formatTransactionDate(transaction.transaction_date)}
                     </TableCell>
                     <TableCell className="max-w-xs truncate">
                       {transaction.description || '-'}
