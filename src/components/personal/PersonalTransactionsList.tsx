@@ -34,9 +34,7 @@ import { usePersonalTransactions, PersonalTransaction } from '@/hooks/usePersona
 import { usePersonalCategories } from '@/hooks/usePersonalCategories';
 
 export default function PersonalTransactionsList() {
-  const [selectedMonth, setSelectedMonth] = useState<string>(
-    format(new Date(), 'yyyy-MM')
-  );
+  const [selectedMonth, setSelectedMonth] = useState<string>('');
   const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null);
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
 
@@ -46,7 +44,7 @@ export default function PersonalTransactionsList() {
     deleteTransaction, 
     updateTransaction,
     isDeleting 
-  } = usePersonalTransactions(selectedMonth);
+  } = usePersonalTransactions(selectedMonth || undefined);
   
   const { categories } = usePersonalCategories();
 
@@ -69,15 +67,18 @@ export default function PersonalTransactionsList() {
     setEditingCategory(null);
   };
 
-  // Generate month options (last 12 months)
-  const monthOptions = Array.from({ length: 12 }, (_, i) => {
-    const date = new Date();
-    date.setMonth(date.getMonth() - i);
-    return {
-      value: format(date, 'yyyy-MM'),
-      label: format(date, 'MMMM yyyy', { locale: ptBR })
-    };
-  });
+  // Generate month options (last 24 months + option for all)
+  const monthOptions = [
+    { value: '', label: 'Todos os meses' },
+    ...Array.from({ length: 24 }, (_, i) => {
+      const date = new Date();
+      date.setMonth(date.getMonth() - i);
+      return {
+        value: format(date, 'yyyy-MM'),
+        label: format(date, 'MMMM yyyy', { locale: ptBR })
+      };
+    })
+  ];
 
   if (isLoading) {
     return (
