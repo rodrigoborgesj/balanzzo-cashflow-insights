@@ -321,27 +321,49 @@ export default function PersonalMovimentacoesPage() {
                   </div>
                 </div>
 
-                {/* Category Filter - Multi-select */}
+                {/* Category Filter - Multi-select Dropdown */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-foreground">Categorias</label>
-                  <div className="flex flex-wrap gap-3">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <Checkbox
-                        checked={selectedCategories.includes('uncategorized')}
-                        onCheckedChange={() => toggleCategory('uncategorized')}
-                      />
-                      <span className="text-sm text-foreground">Sem categoria</span>
-                    </label>
-                    {categories?.map(cat => (
-                      <label key={cat.id} className="flex items-center gap-2 cursor-pointer">
-                        <Checkbox
-                          checked={selectedCategories.includes(cat.id)}
-                          onCheckedChange={() => toggleCategory(cat.id)}
-                        />
-                        <span className="text-sm text-foreground">{cat.name}</span>
-                      </label>
-                    ))}
-                  </div>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-[200px] h-9 justify-between text-left font-normal bg-background"
+                      >
+                        <span className="truncate">
+                          {selectedCategories.length === 0 
+                            ? "Todas" 
+                            : selectedCategories.length === 1
+                              ? selectedCategories.includes('uncategorized')
+                                ? "Sem categoria"
+                                : categories?.find(c => c.id === selectedCategories[0])?.name || "1 selecionada"
+                              : `${selectedCategories.length} selecionadas`
+                          }
+                        </span>
+                        <ChevronLeft className="h-4 w-4 shrink-0 opacity-50 rotate-[-90deg]" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[200px] p-0 bg-background border border-border" align="start">
+                      <div className="max-h-[300px] overflow-y-auto p-2 space-y-1">
+                        <label className="flex items-center gap-2 cursor-pointer p-2 rounded hover:bg-muted">
+                          <Checkbox
+                            checked={selectedCategories.includes('uncategorized')}
+                            onCheckedChange={() => toggleCategory('uncategorized')}
+                          />
+                          <span className="text-sm text-foreground">Sem categoria</span>
+                        </label>
+                        {categories?.map(cat => (
+                          <label key={cat.id} className="flex items-center gap-2 cursor-pointer p-2 rounded hover:bg-muted">
+                            <Checkbox
+                              checked={selectedCategories.includes(cat.id)}
+                              onCheckedChange={() => toggleCategory(cat.id)}
+                            />
+                            <span className="text-sm text-foreground">{cat.name}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                 </div>
               </div>
 
