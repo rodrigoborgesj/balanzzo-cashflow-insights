@@ -59,12 +59,14 @@ export function usePersonalTransactions(month?: string) {
         .eq('user_id', user.id)
         .order('transaction_date', { ascending: false });
 
-      if (month) {
+      if (month && month.length > 0) {
         const startDate = new Date(month + '-01');
-        const endDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, 0);
-        query = query
-          .gte('transaction_date', startDate.toISOString().split('T')[0])
-          .lte('transaction_date', endDate.toISOString().split('T')[0]);
+        if (!isNaN(startDate.getTime())) {
+          const endDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, 0);
+          query = query
+            .gte('transaction_date', startDate.toISOString().split('T')[0])
+            .lte('transaction_date', endDate.toISOString().split('T')[0]);
+        }
       }
 
       const { data, error } = await query;
