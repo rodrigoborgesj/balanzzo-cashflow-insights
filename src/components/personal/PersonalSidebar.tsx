@@ -4,7 +4,9 @@ import {
   ArrowUpDown,
   LogOut,
   Building2,
-  Receipt
+  Receipt,
+  BarChart3,
+  FileText
 } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -15,14 +17,19 @@ import {
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
 
-const personalItems = [
-  { title: "Transações", url: "/personal", icon: ArrowUpDown },
+const conciliacaoItems = [
+  { title: "Transações", url: "/personal/transactions", icon: ArrowUpDown },
+];
+
+const analiseItems = [
+  { title: "Dashboard", url: "/personal", icon: BarChart3 },
   { title: "Caixinhas", url: "/personal/savings", icon: PiggyBank },
   { title: "Contas Fixas", url: "/personal/fixed-expenses", icon: Receipt },
 ];
@@ -83,11 +90,34 @@ export function PersonalSidebar() {
           )}
         </div>
 
-        {/* Main Navigation */}
+        {/* Conciliação Section */}
         <SidebarGroup>
+          {!collapsed && <SidebarGroupLabel className="text-xs text-muted-foreground uppercase tracking-wider">Conciliação</SidebarGroupLabel>}
           <SidebarGroupContent>
             <SidebarMenu className="space-y-1">
-              {personalItems.map((item) => (
+              {conciliacaoItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild>
+                    <NavLink 
+                      to={item.url} 
+                      className={getNavClass(item.url)}
+                    >
+                      <item.icon className="h-5 w-5 flex-shrink-0" />
+                      {!collapsed && <span className="ml-3">{item.title}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* Análise Section */}
+        <SidebarGroup>
+          {!collapsed && <SidebarGroupLabel className="text-xs text-muted-foreground uppercase tracking-wider">Análise</SidebarGroupLabel>}
+          <SidebarGroupContent>
+            <SidebarMenu className="space-y-1">
+              {analiseItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <NavLink 
