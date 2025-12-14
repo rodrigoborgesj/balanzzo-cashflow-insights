@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Upload, Loader2, FileText, X } from 'lucide-react';
+import { Upload, Loader2, FileText, X, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -11,14 +11,17 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { usePersonalTransactions, PersonalTransactionInput } from '@/hooks/usePersonalTransactions';
-import { FileParser } from '@/utils/fileParser';
+import { StandardizedBankStatementParser } from '@/utils/standardizedBankStatementParser';
 import { toast } from 'sonner';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export default function PersonalFileUploader() {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [parsedTransactions, setParsedTransactions] = useState<PersonalTransactionInput[]>([]);
   const [isParsing, setIsParsing] = useState(false);
+  const [parseWarnings, setParseWarnings] = useState<string[]>([]);
+  const [parseErrors, setParseErrors] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { createBulkTransactions, isBulkCreating } = usePersonalTransactions();
@@ -28,39 +31,57 @@ export default function PersonalFileUploader() {
     if (!file) return;
 
     const extension = file.name.split('.').pop()?.toLowerCase();
-    if (!['csv', 'ofx'].includes(extension || '')) {
-      toast.error('Formato não suportado. Use arquivos CSV ou OFX.');
+    if (!['csv', 'ofx', 'pdf'].includes(extension || '')) {
+      toast.error('Formato não suportado. Use arquivos CSV, OFX ou PDF.');
       return;
     }
 
     setSelectedFile(file);
     setIsParsing(true);
+    setParseWarnings([]);
+    setParseErrors([]);
 
     try {
-      const text = await file.text();
-      let transactions: any[] = [];
+      console.log('📄 Parsing personal bank statement:', file.name);
+      
+      // Use standardized parser that supports CSV, OFX and PDF
+      const result = await StandardizedBankStatementParser.parseFile(file);
+      
+      console.log('📊 Parse result:', {
+        transactions: result.transactions.length,
+        errors: result.errors.length,
+        warnings: result.warnings.length
+      });
 
-      if (extension === 'csv') {
-        transactions = FileParser.parseCSV(text);
-      } else if (extension === 'ofx') {
-        transactions = FileParser.parseOFX(text);
+      if (result.errors.length > 0) {
+        setParseErrors(result.errors);
+      }
+      
+      if (result.warnings.length > 0) {
+        setParseWarnings(result.warnings.slice(0, 5)); // Show max 5 warnings
       }
 
       // Convert to PersonalTransactionInput format
-      const personalTransactions: PersonalTransactionInput[] = transactions.map(t => ({
-        transaction_date: t.data || t.date,
-        description: t.descricao || t.description || '',
-        amount: Math.abs(Number(t.valor || t.value || 0)),
-        type: (Number(t.valor || t.value || 0) >= 0 ? 'income' : 'expense') as 'income' | 'expense',
+      const personalTransactions: PersonalTransactionInput[] = result.transactions.map(t => ({
+        transaction_date: t.date,
+        description: t.description || '',
+        amount: Math.abs(t.value),
+        type: (t.value >= 0 ? 'income' : 'expense') as 'income' | 'expense',
         source_file: file.name,
         reconciled: false
       }));
 
       setParsedTransactions(personalTransactions);
-      toast.success(`${personalTransactions.length} transações encontradas`);
+      
+      if (personalTransactions.length > 0) {
+        toast.success(`${personalTransactions.length} transações encontradas`);
+      } else if (result.errors.length === 0) {
+        toast.warning('Nenhuma transação encontrada no arquivo.');
+      }
     } catch (error) {
       console.error('Error parsing file:', error);
       toast.error('Erro ao processar arquivo. Verifique o formato.');
+      setParseErrors([error instanceof Error ? error.message : 'Erro desconhecido']);
     } finally {
       setIsParsing(false);
     }
@@ -81,13 +102,29 @@ export default function PersonalFileUploader() {
   const handleClear = () => {
     setSelectedFile(null);
     setParsedTransactions([]);
+    setParseWarnings([]);
+    setParseErrors([]);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   };
 
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open);
+    if (!open) {
+      // Reset state when dialog closes
+      setSelectedFile(null);
+      setParsedTransactions([]);
+      setParseWarnings([]);
+      setParseErrors([]);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button variant="outline">
           <Upload className="h-4 w-4 mr-2" />
@@ -98,7 +135,7 @@ export default function PersonalFileUploader() {
         <DialogHeader>
           <DialogTitle>Importar Extrato Bancário</DialogTitle>
           <DialogDescription>
-            Selecione um arquivo CSV ou OFX do seu extrato bancário
+            Selecione um arquivo CSV, OFX ou PDF do seu extrato bancário pessoal
           </DialogDescription>
         </DialogHeader>
 
@@ -113,7 +150,7 @@ export default function PersonalFileUploader() {
                 Clique para selecionar ou arraste um arquivo
               </p>
               <p className="text-xs text-muted-foreground mt-2">
-                Formatos aceitos: CSV, OFX
+                Formatos aceitos: CSV, OFX, PDF
               </p>
             </div>
           ) : (
@@ -141,10 +178,37 @@ export default function PersonalFileUploader() {
           <input
             ref={fileInputRef}
             type="file"
-            accept=".csv,.ofx"
+            accept=".csv,.ofx,.pdf"
             onChange={handleFileSelect}
             className="hidden"
           />
+
+          {parseErrors.length > 0 && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                <ul className="list-disc list-inside">
+                  {parseErrors.map((error, idx) => (
+                    <li key={idx}>{error}</li>
+                  ))}
+                </ul>
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {parseWarnings.length > 0 && (
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                <p className="font-medium mb-1">Avisos:</p>
+                <ul className="list-disc list-inside text-xs">
+                  {parseWarnings.map((warning, idx) => (
+                    <li key={idx}>{warning}</li>
+                  ))}
+                </ul>
+              </AlertDescription>
+            </Alert>
+          )}
 
           {parsedTransactions.length > 0 && (
             <div className="text-sm text-muted-foreground">
