@@ -400,19 +400,34 @@ export class StandardizedBankStatementParser {
       cleaned = cleaned.split(' às ')[0];
     }
     
-    // Remove non-date characters
+    // Remove any time portion (e.g., "2025-11-05 10:30:00" -> "2025-11-05")
+    cleaned = cleaned.split(' ')[0];
+    
+    // Remove non-date characters except separators
     cleaned = cleaned.replace(/[^\d\/\-\.]/g, '');
     
+    // Check for YYYY-MM-DD format first (ISO format)
+    const isoMatch = cleaned.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+    if (isoMatch) {
+      const [, year, month, day] = isoMatch;
+      const fullYear = parseInt(year);
+      const dateObj = new Date(fullYear, parseInt(month) - 1, parseInt(day));
+      if (dateObj.getFullYear() === fullYear && 
+          dateObj.getMonth() === parseInt(month) - 1 && 
+          dateObj.getDate() === parseInt(day)) {
+        return `${fullYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+      }
+    }
+    
+    // Check other date formats (DD/MM/YYYY, DD-MM-YYYY, etc.)
     for (const format of this.DATE_FORMATS) {
+      // Skip the ISO format as we already checked it
+      if (format.source.includes('\\d{4})-')) continue;
+      
       const match = cleaned.match(format);
       if (match) {
         let day: string, month: string, year: string;
-        
-        if (format === this.DATE_FORMATS[1]) { // YYYY-MM-DD
-          [, year, month, day] = match;
-        } else { // DD/MM/YYYY variants
-          [, day, month, year] = match;
-        }
+        [, day, month, year] = match;
 
         // Handle 2-digit year format (YY)
         let fullYear = parseInt(year);
