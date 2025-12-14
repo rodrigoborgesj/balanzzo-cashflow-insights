@@ -1,12 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  TrendingUp, 
-  TrendingDown, 
   ArrowUpDown,
   Loader2
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tags } from 'lucide-react';
 import { useModule } from '@/contexts/ModuleContext';
@@ -14,11 +11,17 @@ import { useAuth } from '@/hooks/useAuth';
 import { usePersonalProfile } from '@/hooks/usePersonalProfile';
 import { usePersonalTransactions } from '@/hooks/usePersonalTransactions';
 import { usePersonalCategories } from '@/hooks/usePersonalCategories';
+import { usePersonalFixedExpenses } from '@/hooks/usePersonalFixedExpenses';
+import { usePersonalDashboard } from '@/hooks/usePersonalDashboard';
 import { PersonalLayout } from '@/components/personal/PersonalLayout';
 import PersonalTransactionsList from '@/components/personal/PersonalTransactionsList';
 import PersonalCategoriesManager from '@/components/personal/PersonalCategoriesManager';
 import PersonalFileUploader from '@/components/personal/PersonalFileUploader';
 import PersonalTransactionForm from '@/components/personal/PersonalTransactionForm';
+import { PersonalDashboardMetrics } from '@/components/personal/PersonalDashboardMetrics';
+import { PersonalMonthlyChart } from '@/components/personal/PersonalMonthlyChart';
+import { PersonalCategoryRanking } from '@/components/personal/PersonalCategoryRanking';
+import { MonthSelector } from '@/components/MonthSelector';
 
 export default function PersonalDashboard() {
   const navigate = useNavigate();
@@ -31,10 +34,17 @@ export default function PersonalDashboard() {
     isLoading: moduleLoading 
   } = useModule();
   const { isLoading: profileLoading } = usePersonalProfile();
-  const { transactions, totals, balance, isLoading: transactionsLoading } = usePersonalTransactions();
   const { initializeDefaultCategories } = usePersonalCategories();
+  const { totalMonthlyExpenses } = usePersonalFixedExpenses();
 
   const [activeTab, setActiveTab] = useState('transactions');
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  });
+
+  const { transactions, isLoading: transactionsLoading } = usePersonalTransactions(selectedMonth);
+  const { monthlyTotals, categoryRankings, monthlyEvolution, isLoading: dashboardLoading } = usePersonalDashboard(selectedMonth);
 
   // Wait for auth, module, and profile to finish loading before making decisions
   const isLoading = authLoading || moduleLoading || profileLoading;
@@ -61,13 +71,6 @@ export default function PersonalDashboard() {
     }
   }, [isLoading, user, isPersonalProfileComplete]);
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(value);
-  };
-
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -78,54 +81,46 @@ export default function PersonalDashboard() {
 
   return (
     <PersonalLayout>
-      <div className="container mx-auto px-4 py-6">
-        {/* Summary Cards */}
-        <div className="grid md:grid-cols-3 gap-4 mb-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Receitas
-              </CardTitle>
-              <TrendingUp className="h-4 w-4 text-green-500" />
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold text-green-600">
-                {formatCurrency(totals.income)}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Despesas
-              </CardTitle>
-              <TrendingDown className="h-4 w-4 text-red-500" />
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold text-red-600">
-                {formatCurrency(totals.expense)}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Saldo
-              </CardTitle>
-              <ArrowUpDown className="h-4 w-4 text-primary" />
-            </CardHeader>
-            <CardContent>
-              <p className={`text-2xl font-bold ${balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {formatCurrency(balance)}
-              </p>
-            </CardContent>
-          </Card>
+      <div className="container mx-auto px-4 py-6 space-y-6">
+        {/* Month Selector */}
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold">Dashboard Pessoal</h1>
+          <MonthSelector
+            value={selectedMonth}
+            onChange={setSelectedMonth}
+          />
         </div>
 
+        {/* Summary Metrics */}
+        <PersonalDashboardMetrics 
+          income={monthlyTotals.income}
+          expense={monthlyTotals.expense}
+          balance={monthlyTotals.balance}
+          fixedExpenses={totalMonthlyExpenses}
+        />
+
+        {/* Rankings and Chart */}
+        <div className="grid lg:grid-cols-3 gap-4">
+          <PersonalCategoryRanking
+            title="Top Receitas"
+            data={categoryRankings.topIncome}
+            type="income"
+          />
+          <PersonalCategoryRanking
+            title="Top Despesas"
+            data={categoryRankings.topExpense}
+            type="expense"
+          />
+          <div className="lg:col-span-1">
+            {/* Empty space or additional insight */}
+          </div>
+        </div>
+
+        {/* Monthly Evolution Chart */}
+        <PersonalMonthlyChart data={monthlyEvolution} />
+
         {/* Action Buttons */}
-        <div className="flex flex-wrap gap-2 mb-6">
+        <div className="flex flex-wrap gap-2">
           <PersonalFileUploader />
           <PersonalTransactionForm />
         </div>
