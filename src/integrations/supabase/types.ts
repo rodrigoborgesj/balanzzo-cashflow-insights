@@ -352,6 +352,42 @@ export type Database = {
         }
         Relationships: []
       }
+      personal_fixed_expenses: {
+        Row: {
+          active: boolean
+          amount: number
+          category: string | null
+          created_at: string | null
+          description: string
+          id: string
+          payment_day: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          amount: number
+          category?: string | null
+          created_at?: string | null
+          description: string
+          id?: string
+          payment_day: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          amount?: number
+          category?: string | null
+          created_at?: string | null
+          description?: string
+          id?: string
+          payment_day?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       personal_profiles: {
         Row: {
           address_city: string
