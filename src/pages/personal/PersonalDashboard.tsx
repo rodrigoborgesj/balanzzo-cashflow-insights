@@ -1,26 +1,20 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { 
-  Wallet, 
   TrendingUp, 
   TrendingDown, 
-  Upload, 
-  Plus,
   ArrowUpDown,
-  Tags,
-  LogOut,
-  Building2,
-  Loader2,
-  PiggyBank
+  Loader2
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tags } from 'lucide-react';
 import { useModule } from '@/contexts/ModuleContext';
 import { useAuth } from '@/hooks/useAuth';
 import { usePersonalProfile } from '@/hooks/usePersonalProfile';
 import { usePersonalTransactions } from '@/hooks/usePersonalTransactions';
 import { usePersonalCategories } from '@/hooks/usePersonalCategories';
+import { PersonalLayout } from '@/components/personal/PersonalLayout';
 import PersonalTransactionsList from '@/components/personal/PersonalTransactionsList';
 import PersonalCategoriesManager from '@/components/personal/PersonalCategoriesManager';
 import PersonalFileUploader from '@/components/personal/PersonalFileUploader';
@@ -28,13 +22,12 @@ import PersonalTransactionForm from '@/components/personal/PersonalTransactionFo
 
 export default function PersonalDashboard() {
   const navigate = useNavigate();
-  const { user, logout, isLoading: authLoading } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const { 
     hasPersonalSubscription, 
     isPersonalProfileComplete,
     hasCompanySubscription,
     hasFreeAccess,
-    setCurrentContext,
     isLoading: moduleLoading 
   } = useModule();
   const { isLoading: profileLoading } = usePersonalProfile();
@@ -68,16 +61,6 @@ export default function PersonalDashboard() {
     }
   }, [isLoading, user, isPersonalProfileComplete]);
 
-  const handleSwitchToCompany = async () => {
-    await setCurrentContext('company');
-    navigate('/dashboard', { replace: true });
-  };
-
-  const handleLogout = async () => {
-    await logout();
-    navigate('/login', { replace: true });
-  };
-
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
@@ -94,36 +77,8 @@ export default function PersonalDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Wallet className="h-8 w-8 text-primary" />
-              <div>
-                <h1 className="text-xl font-bold">Balanzzo Pessoal</h1>
-                <p className="text-sm text-muted-foreground">Finanças Pessoais</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              {hasCompanySubscription && (
-                <Button variant="outline" size="sm" onClick={handleSwitchToCompany}>
-                  <Building2 className="h-4 w-4 mr-2" />
-                  Conta Empresarial
-                </Button>
-              )}
-              <Button variant="ghost" size="sm" onClick={handleLogout}>
-                <LogOut className="h-4 w-4 mr-2" />
-                Sair
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <main className="container mx-auto px-4 py-6">
+    <PersonalLayout>
+      <div className="container mx-auto px-4 py-6">
         {/* Summary Cards */}
         <div className="grid md:grid-cols-3 gap-4 mb-6">
           <Card>
@@ -169,25 +124,6 @@ export default function PersonalDashboard() {
           </Card>
         </div>
 
-        {/* Quick Access Cards */}
-        <div className="mb-6">
-          <Link to="/personal/savings">
-            <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20 hover:shadow-md transition-shadow cursor-pointer">
-              <CardContent className="flex items-center gap-4 py-4">
-                <div className="p-3 rounded-full bg-primary/20">
-                  <PiggyBank className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <h3 className="font-semibold">Caixinhas</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Organize suas metas de economia e reservas de emergência
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-        </div>
-
         {/* Action Buttons */}
         <div className="flex flex-wrap gap-2 mb-6">
           <PersonalFileUploader />
@@ -215,7 +151,7 @@ export default function PersonalDashboard() {
             <PersonalCategoriesManager />
           </TabsContent>
         </Tabs>
-      </main>
-    </div>
+      </div>
+    </PersonalLayout>
   );
 }

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useModule } from '@/contexts/ModuleContext';
 import { usePersonalSavingsGoals, usePersonalSavingsContributions } from '@/hooks/usePersonalSavingsGoals';
-import { AppLayout } from '@/components/AppLayout';
+import { PersonalLayout } from '@/components/personal/PersonalLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -13,8 +13,7 @@ import {
   Target, 
   PiggyBank, 
   TrendingUp, 
-  CheckCircle2,
-  ArrowLeft 
+  CheckCircle2
 } from 'lucide-react';
 import { SavingsGoalCard } from '@/components/personal/SavingsGoalCard';
 import { CreateSavingsGoalDialog } from '@/components/personal/CreateSavingsGoalDialog';
@@ -74,7 +73,7 @@ export default function PersonalSavingsPage() {
 
   if (isLoading) {
     return (
-      <AppLayout>
+      <PersonalLayout>
         <div className="container py-8 space-y-6">
           <Skeleton className="h-10 w-64" />
           <div className="grid gap-4 md:grid-cols-3">
@@ -87,32 +86,23 @@ export default function PersonalSavingsPage() {
             <Skeleton className="h-64" />
           </div>
         </div>
-      </AppLayout>
+      </PersonalLayout>
     );
   }
 
   return (
-    <AppLayout>
+    <PersonalLayout>
       <div className="container py-8 space-y-6">
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate('/personal')}
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div>
-              <h1 className="text-2xl font-bold flex items-center gap-2">
-                <PiggyBank className="h-7 w-7 text-primary" />
-                Minhas Caixinhas
-              </h1>
-              <p className="text-muted-foreground">
-                Organize suas metas de economia
-              </p>
-            </div>
+          <div>
+            <h1 className="text-2xl font-bold flex items-center gap-2">
+              <PiggyBank className="h-7 w-7 text-primary" />
+              Minhas Caixinhas
+            </h1>
+            <p className="text-muted-foreground">
+              Organize suas metas de economia
+            </p>
           </div>
           <Button onClick={() => setShowCreateDialog(true)} className="gap-2">
             <Plus className="h-4 w-4" />
@@ -245,6 +235,6 @@ export default function PersonalSavingsPage() {
         open={showCreateDialog}
         onOpenChange={setShowCreateDialog}
       />
-    </AppLayout>
+    </PersonalLayout>
   );
 }
