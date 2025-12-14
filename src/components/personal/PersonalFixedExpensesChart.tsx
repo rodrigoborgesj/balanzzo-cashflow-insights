@@ -32,15 +32,16 @@ export function PersonalFixedExpensesChart({ fixedExpenses }: PersonalFixedExpen
     }).format(value);
   };
 
+  // Brand colors: dark green #1A3423, light green #E4F8CA, gray #E9E9E9
   const colors = [
-    'hsl(var(--primary))',
-    'hsl(var(--chart-2))',
-    'hsl(var(--chart-3))',
-    'hsl(var(--chart-4))',
-    'hsl(var(--chart-5))',
-    'hsl(220, 70%, 50%)',
-    'hsl(280, 60%, 55%)',
-    'hsl(320, 60%, 50%)'
+    '#1A3423',
+    '#2D5A3D',
+    '#3E7A52',
+    '#4F9A67',
+    '#6B7280',
+    '#9CA3AF',
+    '#D1D5DB',
+    '#E9E9E9'
   ];
 
   if (fixedExpenses.length === 0) {
