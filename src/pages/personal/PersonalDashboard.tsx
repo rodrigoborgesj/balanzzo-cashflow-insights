@@ -10,7 +10,8 @@ import {
   Tags,
   LogOut,
   Building2,
-  Loader2
+  Loader2,
+  PiggyBank
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -166,6 +167,25 @@ export default function PersonalDashboard() {
               </p>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Quick Access Cards */}
+        <div className="mb-6">
+          <Link to="/personal/savings">
+            <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20 hover:shadow-md transition-shadow cursor-pointer">
+              <CardContent className="flex items-center gap-4 py-4">
+                <div className="p-3 rounded-full bg-primary/20">
+                  <PiggyBank className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">Caixinhas</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Organize suas metas de economia e reservas de emergência
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
         </div>
 
         {/* Action Buttons */}

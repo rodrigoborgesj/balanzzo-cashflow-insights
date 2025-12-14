@@ -406,6 +406,104 @@ export type Database = {
         }
         Relationships: []
       }
+      personal_savings_contributions: {
+        Row: {
+          amount: number
+          contribution_date: string
+          created_at: string | null
+          goal_id: string
+          id: string
+          notes: string | null
+          proof_file_name: string | null
+          proof_file_url: string
+          reference_month: string
+          status: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          contribution_date: string
+          created_at?: string | null
+          goal_id: string
+          id?: string
+          notes?: string | null
+          proof_file_name?: string | null
+          proof_file_url: string
+          reference_month: string
+          status?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          contribution_date?: string
+          created_at?: string | null
+          goal_id?: string
+          id?: string
+          notes?: string | null
+          proof_file_name?: string | null
+          proof_file_url?: string
+          reference_month?: string
+          status?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personal_savings_contributions_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "personal_savings_goals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      personal_savings_goals: {
+        Row: {
+          bank_name: string | null
+          contribution_day: number | null
+          created_at: string | null
+          goal_name: string
+          id: string
+          monthly_amount: number | null
+          start_date: string
+          status: string
+          timeframe_months: number
+          total_target_amount: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          bank_name?: string | null
+          contribution_day?: number | null
+          created_at?: string | null
+          goal_name: string
+          id?: string
+          monthly_amount?: number | null
+          start_date?: string
+          status?: string
+          timeframe_months: number
+          total_target_amount: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          bank_name?: string | null
+          contribution_day?: number | null
+          created_at?: string | null
+          goal_name?: string
+          id?: string
+          monthly_amount?: number | null
+          start_date?: string
+          status?: string
+          timeframe_months?: number
+          total_target_amount?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       personal_transactions: {
         Row: {
           amount: number
