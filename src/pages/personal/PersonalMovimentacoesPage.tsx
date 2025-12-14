@@ -1,0 +1,355 @@
+import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { useModule } from "@/contexts/ModuleContext";
+import { usePersonalTransactions } from "@/hooks/usePersonalTransactions";
+import { PersonalLayout } from "@/components/personal/PersonalLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Loader2, CalendarIcon, ArrowUpCircle, ArrowDownCircle } from "lucide-react";
+import { format, parseISO } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
+
+export default function PersonalMovimentacoesPage() {
+  const navigate = useNavigate();
+  const { user, isLoading: authLoading } = useAuth();
+  const { hasPersonalSubscription, hasFreeAccess, hasCompanySubscription } = useModule();
+
+  // Filter states
+  const [typeFilter, setTypeFilter] = useState<'all' | 'income' | 'expense'>('all');
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  const [appliedStartDate, setAppliedStartDate] = useState<Date | undefined>(undefined);
+  const [appliedEndDate, setAppliedEndDate] = useState<Date | undefined>(undefined);
+
+  // Get all transactions without month filter
+  const { transactions, isLoading } = usePersonalTransactions();
+
+  // Check access
+  const hasAccess = hasPersonalSubscription || hasFreeAccess || hasCompanySubscription;
+
+  // Filter transactions
+  const filteredTransactions = useMemo(() => {
+    if (!transactions) return [];
+
+    return transactions.filter(t => {
+      // Type filter
+      if (typeFilter !== 'all' && t.type !== typeFilter) return false;
+
+      // Date range filter (only if applied)
+      if (appliedStartDate || appliedEndDate) {
+        const transactionDate = parseISO(t.transaction_date);
+        
+        if (appliedStartDate && transactionDate < appliedStartDate) return false;
+        if (appliedEndDate && transactionDate > appliedEndDate) return false;
+      }
+
+      return true;
+    });
+  }, [transactions, typeFilter, appliedStartDate, appliedEndDate]);
+
+  // Calculate totals
+  const totals = useMemo(() => {
+    return filteredTransactions.reduce(
+      (acc, t) => {
+        if (t.type === 'income') {
+          acc.income += Number(t.amount);
+        } else {
+          acc.expense += Number(t.amount);
+        }
+        return acc;
+      },
+      { income: 0, expense: 0 }
+    );
+  }, [filteredTransactions]);
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(value);
+  };
+
+  const handleApplyPeriod = () => {
+    setAppliedStartDate(startDate);
+    setAppliedEndDate(endDate);
+  };
+
+  const handleClearPeriod = () => {
+    setStartDate(undefined);
+    setEndDate(undefined);
+    setAppliedStartDate(undefined);
+    setAppliedEndDate(undefined);
+  };
+
+  if (authLoading || isLoading) {
+    return (
+      <PersonalLayout>
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      </PersonalLayout>
+    );
+  }
+
+  if (!user) {
+    navigate('/login');
+    return null;
+  }
+
+  if (!hasAccess) {
+    navigate('/checkout');
+    return null;
+  }
+
+  return (
+    <PersonalLayout>
+      <div className="space-y-6">
+        {/* Header */}
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground">Suas Movimentações</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Visualize e analise todas as suas entradas e saídas
+          </p>
+        </div>
+
+        {/* Filters */}
+        <Card className="border-border/50">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-base font-medium text-foreground">Filtros</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Type Filter */}
+            <div className="flex flex-wrap gap-4 items-center">
+              <div className="space-y-1.5">
+                <label className="text-sm text-muted-foreground">Tipo</label>
+                <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as 'all' | 'income' | 'expense')}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas</SelectItem>
+                    <SelectItem value="income">Entradas</SelectItem>
+                    <SelectItem value="expense">Saídas</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Date Range Filter */}
+              <div className="space-y-1.5">
+                <label className="text-sm text-muted-foreground">Data Inicial</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-[180px] justify-start text-left font-normal",
+                        !startDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {startDate ? format(startDate, "dd/MM/yyyy") : "Selecionar"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={startDate}
+                      onSelect={setStartDate}
+                      locale={ptBR}
+                      className="pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-sm text-muted-foreground">Data Final</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-[180px] justify-start text-left font-normal",
+                        !endDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {endDate ? format(endDate, "dd/MM/yyyy") : "Selecionar"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={endDate}
+                      onSelect={setEndDate}
+                      locale={ptBR}
+                      className="pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              {/* Apply Button */}
+              <div className="space-y-1.5">
+                <label className="text-sm text-transparent">Ação</label>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={handleApplyPeriod}
+                    disabled={!startDate && !endDate}
+                    className="bg-[#1A3423] hover:bg-[#1A3423]/90 text-white"
+                  >
+                    Aplicar
+                  </Button>
+                  {(appliedStartDate || appliedEndDate) && (
+                    <Button
+                      variant="outline"
+                      onClick={handleClearPeriod}
+                    >
+                      Limpar
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Summary Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card className="border-border/50">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-[#E4F8CA]">
+                  <ArrowUpCircle className="h-5 w-5 text-[#1A3423]" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Total Entradas</p>
+                  <p className="text-xl font-semibold text-foreground">{formatCurrency(totals.income)}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/50">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-gray-100">
+                  <ArrowDownCircle className="h-5 w-5 text-gray-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Total Saídas</p>
+                  <p className="text-xl font-semibold text-foreground">{formatCurrency(totals.expense)}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/50">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-3">
+                <div className={cn(
+                  "p-2 rounded-lg",
+                  totals.income - totals.expense >= 0 ? "bg-[#E4F8CA]" : "bg-red-50"
+                )}>
+                  {totals.income - totals.expense >= 0 ? (
+                    <ArrowUpCircle className="h-5 w-5 text-[#1A3423]" />
+                  ) : (
+                    <ArrowDownCircle className="h-5 w-5 text-red-500" />
+                  )}
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Saldo</p>
+                  <p className={cn(
+                    "text-xl font-semibold",
+                    totals.income - totals.expense >= 0 ? "text-foreground" : "text-red-500"
+                  )}>
+                    {formatCurrency(totals.income - totals.expense)}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Transactions Table */}
+        <Card className="border-border/50">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-base font-medium text-foreground">
+              Movimentações ({filteredTransactions.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {filteredTransactions.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">Nenhuma movimentação encontrada</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-muted-foreground">Data</TableHead>
+                      <TableHead className="text-muted-foreground">Descrição</TableHead>
+                      <TableHead className="text-muted-foreground">Categoria</TableHead>
+                      <TableHead className="text-muted-foreground">Tipo</TableHead>
+                      <TableHead className="text-right text-muted-foreground">Valor</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredTransactions.map((transaction) => (
+                      <TableRow key={transaction.id}>
+                        <TableCell className="text-foreground">
+                          {format(parseISO(transaction.transaction_date), "dd/MM/yyyy")}
+                        </TableCell>
+                        <TableCell className="text-foreground max-w-[300px] truncate">
+                          {transaction.description || '-'}
+                        </TableCell>
+                        <TableCell>
+                          {transaction.category ? (
+                            <span 
+                              className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                              style={{ 
+                                backgroundColor: `${transaction.category.color}20`,
+                                color: transaction.category.color 
+                              }}
+                            >
+                              {transaction.category.name}
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground text-sm">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <span className={cn(
+                            "inline-flex items-center px-2 py-1 rounded-full text-xs font-medium",
+                            transaction.type === 'income' 
+                              ? "bg-[#E4F8CA] text-[#1A3423]" 
+                              : "bg-gray-100 text-gray-600"
+                          )}>
+                            {transaction.type === 'income' ? 'Entrada' : 'Saída'}
+                          </span>
+                        </TableCell>
+                        <TableCell className={cn(
+                          "text-right font-medium",
+                          transaction.type === 'income' ? "text-[#1A3423]" : "text-foreground"
+                        )}>
+                          {transaction.type === 'income' ? '+' : '-'} {formatCurrency(Math.abs(Number(transaction.amount)))}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </PersonalLayout>
+  );
+}
