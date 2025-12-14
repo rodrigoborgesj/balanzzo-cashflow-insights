@@ -54,8 +54,15 @@ export function usePersonalDashboard(selectedMonth?: string) {
     queryFn: async () => {
       if (!user || !selectedMonth) return [];
 
-      const startDate = new Date(selectedMonth + '-01');
-      const endDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, 0);
+      // Parse month correctly - selectedMonth is in format "YYYY-MM"
+      const [year, month] = selectedMonth.split('-').map(Number);
+      const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
+      
+      // Calculate last day of month
+      const lastDay = new Date(year, month, 0).getDate();
+      const endDate = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+
+      console.log('Fetching transactions for month:', { selectedMonth, startDate, endDate });
 
       const { data, error } = await supabase
         .from('personal_transactions')
@@ -64,10 +71,11 @@ export function usePersonalDashboard(selectedMonth?: string) {
           category:personal_categories(id, name, color, type)
         `)
         .eq('user_id', user.id)
-        .gte('transaction_date', startDate.toISOString().split('T')[0])
-        .lte('transaction_date', endDate.toISOString().split('T')[0]);
+        .gte('transaction_date', startDate)
+        .lte('transaction_date', endDate);
 
       if (error) throw error;
+      console.log('Found transactions:', data?.length);
       return data;
     },
     enabled: !!user && !!selectedMonth,
