@@ -1,12 +1,10 @@
 import { 
-  Wallet, 
   PiggyBank,
   ArrowUpDown,
   LogOut,
   Building2,
   Receipt,
-  BarChart3,
-  FileText
+  BarChart3
 } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -73,20 +71,17 @@ export function PersonalSidebar() {
       <SidebarContent className="px-3 py-6">
         {/* Logo */}
         <div className="mb-6">
-          <div className="flex items-center gap-2">
-            <Wallet className="h-6 w-6 text-primary" />
-            <h1 
-              className="text-foreground font-bold text-lg"
-              style={{ 
-                fontFamily: 'Montserrat, sans-serif',
-                fontWeight: '700'
-              }}
-            >
-              {!collapsed && "BALANZZO"}
-            </h1>
-          </div>
+          <h1 
+            className="text-foreground font-bold text-lg"
+            style={{ 
+              fontFamily: 'Montserrat, sans-serif',
+              fontWeight: '700'
+            }}
+          >
+            {!collapsed && "BALANZZO"}
+          </h1>
           {!collapsed && (
-            <p className="text-xs text-muted-foreground mt-1 ml-8">Finanças Pessoais</p>
+            <p className="text-xs text-muted-foreground mt-1">Finanças Pessoais</p>
           )}
         </div>
 
