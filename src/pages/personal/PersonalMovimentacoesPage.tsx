@@ -1,8 +1,9 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useModule } from "@/contexts/ModuleContext";
 import { usePersonalTransactions } from "@/hooks/usePersonalTransactions";
+import { usePersonalCategories } from "@/hooks/usePersonalCategories";
 import { PersonalLayout } from "@/components/personal/PersonalLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,9 +22,11 @@ export default function PersonalMovimentacoesPage() {
   const navigate = useNavigate();
   const { user, isLoading: authLoading } = useAuth();
   const { hasPersonalSubscription, hasFreeAccess, hasCompanySubscription } = useModule();
+  const { categories } = usePersonalCategories();
 
   // Filter states
   const [typeFilter, setTypeFilter] = useState<'all' | 'income' | 'expense'>('all');
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [appliedStartDate, setAppliedStartDate] = useState<Date | undefined>(undefined);
@@ -46,6 +49,15 @@ export default function PersonalMovimentacoesPage() {
       // Type filter
       if (typeFilter !== 'all' && t.type !== typeFilter) return false;
 
+      // Category filter
+      if (categoryFilter !== 'all') {
+        if (categoryFilter === 'uncategorized') {
+          if (t.category_id) return false;
+        } else {
+          if (t.category_id !== categoryFilter) return false;
+        }
+      }
+
       // Date range filter (only if applied)
       if (appliedStartDate || appliedEndDate) {
         const transactionDate = parseISO(t.transaction_date);
@@ -56,7 +68,7 @@ export default function PersonalMovimentacoesPage() {
 
       return true;
     });
-  }, [transactions, typeFilter, appliedStartDate, appliedEndDate]);
+  }, [transactions, typeFilter, categoryFilter, appliedStartDate, appliedEndDate]);
 
   // Pagination calculations
   const totalPages = Math.ceil(filteredTransactions.length / ITEMS_PER_PAGE);
@@ -66,11 +78,11 @@ export default function PersonalMovimentacoesPage() {
   }, [filteredTransactions, currentPage]);
 
   // Reset page when filters change
-  useMemo(() => {
+  useEffect(() => {
     setCurrentPage(1);
-  }, [typeFilter, appliedStartDate, appliedEndDate]);
+  }, [typeFilter, categoryFilter, appliedStartDate, appliedEndDate]);
 
-  // Calculate totals
+  // Calculate totals based on filtered transactions
   const totals = useMemo(() => {
     return filteredTransactions.reduce(
       (acc, t) => {
@@ -98,13 +110,17 @@ export default function PersonalMovimentacoesPage() {
     setCurrentPage(1);
   };
 
-  const handleClearPeriod = () => {
+  const handleClearFilters = () => {
+    setTypeFilter('all');
+    setCategoryFilter('all');
     setStartDate(undefined);
     setEndDate(undefined);
     setAppliedStartDate(undefined);
     setAppliedEndDate(undefined);
     setCurrentPage(1);
   };
+
+  const hasActiveFilters = typeFilter !== 'all' || categoryFilter !== 'all' || appliedStartDate || appliedEndDate;
 
   if (authLoading || isLoading) {
     return (
@@ -137,108 +153,6 @@ export default function PersonalMovimentacoesPage() {
           </p>
         </div>
 
-        {/* Filters */}
-        <Card className="border-border/50">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-base font-medium text-foreground">Filtros</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Type Filter */}
-            <div className="flex flex-wrap gap-4 items-center">
-              <div className="space-y-1.5">
-                <label className="text-sm text-muted-foreground">Tipo</label>
-                <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as 'all' | 'income' | 'expense')}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todas</SelectItem>
-                    <SelectItem value="income">Entradas</SelectItem>
-                    <SelectItem value="expense">Saídas</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Date Range Filter */}
-              <div className="space-y-1.5">
-                <label className="text-sm text-muted-foreground">Data Inicial</label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-[180px] justify-start text-left font-normal",
-                        !startDate && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {startDate ? format(startDate, "dd/MM/yyyy") : "Selecionar"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={startDate}
-                      onSelect={setStartDate}
-                      locale={ptBR}
-                      className="pointer-events-auto"
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-sm text-muted-foreground">Data Final</label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-[180px] justify-start text-left font-normal",
-                        !endDate && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {endDate ? format(endDate, "dd/MM/yyyy") : "Selecionar"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={endDate}
-                      onSelect={setEndDate}
-                      locale={ptBR}
-                      className="pointer-events-auto"
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              {/* Apply Button */}
-              <div className="space-y-1.5">
-                <label className="text-sm text-transparent">Ação</label>
-                <div className="flex gap-2">
-                  <Button
-                    onClick={handleApplyPeriod}
-                    disabled={!startDate && !endDate}
-                    className="bg-[#1A3423] hover:bg-[#1A3423]/90 text-white"
-                  >
-                    Aplicar
-                  </Button>
-                  {(appliedStartDate || appliedEndDate) && (
-                    <Button
-                      variant="outline"
-                      onClick={handleClearPeriod}
-                    >
-                      Limpar
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card className="border-border/50">
@@ -258,7 +172,7 @@ export default function PersonalMovimentacoesPage() {
           <Card className="border-border/50">
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-gray-100">
+                <div className="p-2 rounded-lg bg-[#E9E9E9]">
                   <ArrowDownCircle className="h-5 w-5 text-gray-600" />
                 </div>
                 <div>
@@ -296,14 +210,128 @@ export default function PersonalMovimentacoesPage() {
           </Card>
         </div>
 
-        {/* Transactions Table */}
+        {/* Transactions Card with Filters */}
         <Card className="border-border/50">
           <CardHeader className="pb-4">
-            <CardTitle className="text-base font-medium text-foreground">
-              Movimentações ({filteredTransactions.length})
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base font-medium text-foreground">
+                Movimentações ({filteredTransactions.length})
+              </CardTitle>
+              {hasActiveFilters && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleClearFilters}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  Limpar filtros
+                </Button>
+              )}
+            </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-6">
+            {/* Filters Row */}
+            <div className="flex flex-wrap items-end gap-3 pb-4 border-b border-border/50">
+              {/* Type Filter */}
+              <div className="space-y-1.5">
+                <label className="text-xs text-muted-foreground">Tipo</label>
+                <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as 'all' | 'income' | 'expense')}>
+                  <SelectTrigger className="w-[140px] h-9 bg-background">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background border border-border">
+                    <SelectItem value="all">Todas</SelectItem>
+                    <SelectItem value="income">Entradas</SelectItem>
+                    <SelectItem value="expense">Saídas</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Category Filter */}
+              <div className="space-y-1.5">
+                <label className="text-xs text-muted-foreground">Categoria</label>
+                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                  <SelectTrigger className="w-[160px] h-9 bg-background">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background border border-border">
+                    <SelectItem value="all">Todas</SelectItem>
+                    <SelectItem value="uncategorized">Sem categoria</SelectItem>
+                    {categories?.map(cat => (
+                      <SelectItem key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Date Range Filter */}
+              <div className="space-y-1.5">
+                <label className="text-xs text-muted-foreground">Data Inicial</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-[140px] h-9 justify-start text-left font-normal bg-background",
+                        !startDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {startDate ? format(startDate, "dd/MM/yyyy") : "Selecionar"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 bg-background border border-border" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={startDate}
+                      onSelect={setStartDate}
+                      locale={ptBR}
+                      className="pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs text-muted-foreground">Data Final</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-[140px] h-9 justify-start text-left font-normal bg-background",
+                        !endDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {endDate ? format(endDate, "dd/MM/yyyy") : "Selecionar"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 bg-background border border-border" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={endDate}
+                      onSelect={setEndDate}
+                      locale={ptBR}
+                      className="pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              {/* Apply Button */}
+              <Button
+                onClick={handleApplyPeriod}
+                disabled={!startDate && !endDate}
+                className="h-9 bg-[#1A3423] hover:bg-[#1A3423]/90 text-white"
+              >
+                Aplicar
+              </Button>
+            </div>
+
+            {/* Table */}
             {filteredTransactions.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-muted-foreground">Nenhuma movimentação encontrada</p>
@@ -350,7 +378,7 @@ export default function PersonalMovimentacoesPage() {
                               "inline-flex items-center px-2 py-1 rounded-full text-xs font-medium",
                               transaction.type === 'income' 
                                 ? "bg-[#E4F8CA] text-[#1A3423]" 
-                                : "bg-gray-100 text-gray-600"
+                                : "bg-[#E9E9E9] text-gray-600"
                             )}>
                               {transaction.type === 'income' ? 'Entrada' : 'Saída'}
                             </span>
@@ -369,7 +397,7 @@ export default function PersonalMovimentacoesPage() {
 
                 {/* Pagination */}
                 {totalPages > 1 && (
-                  <div className="flex items-center justify-between mt-6 pt-4 border-t border-border/50">
+                  <div className="flex items-center justify-between pt-4 border-t border-border/50">
                     <p className="text-sm text-muted-foreground">
                       Mostrando {((currentPage - 1) * ITEMS_PER_PAGE) + 1} - {Math.min(currentPage * ITEMS_PER_PAGE, filteredTransactions.length)} de {filteredTransactions.length}
                     </p>
