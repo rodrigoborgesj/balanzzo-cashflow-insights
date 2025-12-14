@@ -27,6 +27,8 @@ export function ModuleProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   const checkSubscriptions = useCallback(async () => {
+    setIsLoading(true);
+
     if (!user) {
       setHasCompanySubscription(false);
       setHasPersonalSubscription(false);
