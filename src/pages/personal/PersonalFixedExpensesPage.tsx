@@ -1,12 +1,17 @@
+import { useState, useMemo } from 'react';
 import { PersonalLayout } from '@/components/personal/PersonalLayout';
 import { CreateFixedExpenseDialog } from '@/components/personal/CreateFixedExpenseDialog';
 import { FixedExpenseCard } from '@/components/personal/FixedExpenseCard';
 import { usePersonalFixedExpenses } from '@/hooks/usePersonalFixedExpenses';
-import { Receipt } from 'lucide-react';
+import { Receipt, Wallet, TrendingUp, AlertTriangle, CheckCircle } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Progress } from '@/components/ui/progress';
 
 const PersonalFixedExpensesPage = () => {
   const { expenses, isLoading, totalMonthlyExpenses } = usePersonalFixedExpenses();
+  const [bankBalance, setBankBalance] = useState<string>('');
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -14,6 +19,65 @@ const PersonalFixedExpensesPage = () => {
       currency: 'BRL',
     }).format(value);
   };
+
+  const handleBalanceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/[^\d,]/g, '');
+    setBankBalance(value);
+  };
+
+  const parsedBalance = useMemo(() => {
+    if (!bankBalance) return 0;
+    return parseFloat(bankBalance.replace(',', '.')) || 0;
+  }, [bankBalance]);
+
+  const monthsCovered = useMemo(() => {
+    if (totalMonthlyExpenses === 0 || parsedBalance === 0) return 0;
+    return Math.floor(parsedBalance / totalMonthlyExpenses);
+  }, [parsedBalance, totalMonthlyExpenses]);
+
+  const remainderAfterMonths = useMemo(() => {
+    if (totalMonthlyExpenses === 0 || parsedBalance === 0) return 0;
+    return parsedBalance - (monthsCovered * totalMonthlyExpenses);
+  }, [parsedBalance, totalMonthlyExpenses, monthsCovered]);
+
+  const getThermometerStatus = () => {
+    if (monthsCovered >= 6) return { color: 'bg-green-500', status: 'Excelente', icon: CheckCircle, message: 'Você tem reserva para mais de 6 meses!' };
+    if (monthsCovered >= 3) return { color: 'bg-emerald-500', status: 'Bom', icon: TrendingUp, message: 'Boa reserva! Continue economizando.' };
+    if (monthsCovered >= 1) return { color: 'bg-yellow-500', status: 'Atenção', icon: AlertTriangle, message: 'Reserva curta. Considere aumentar.' };
+    return { color: 'bg-red-500', status: 'Crítico', icon: AlertTriangle, message: 'Saldo insuficiente para cobrir 1 mês.' };
+  };
+
+  const thermometerStatus = getThermometerStatus();
+  const progressValue = Math.min((monthsCovered / 12) * 100, 100);
+
+  const futureMonths = useMemo(() => {
+    const months = [];
+    const now = new Date();
+    let remainingBalance = parsedBalance;
+
+    for (let i = 0; i < 12; i++) {
+      const futureDate = new Date(now.getFullYear(), now.getMonth() + i, 1);
+      const monthName = futureDate.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
+      
+      const canCover = remainingBalance >= totalMonthlyExpenses;
+      const balanceAfter = remainingBalance - totalMonthlyExpenses;
+      
+      months.push({
+        name: monthName,
+        canCover,
+        balanceAfter: canCover ? balanceAfter : remainingBalance,
+        deficit: !canCover ? totalMonthlyExpenses - remainingBalance : 0
+      });
+
+      if (canCover) {
+        remainingBalance = balanceAfter;
+      } else {
+        remainingBalance = 0;
+      }
+    }
+
+    return months;
+  }, [parsedBalance, totalMonthlyExpenses]);
 
   return (
     <PersonalLayout>
@@ -29,9 +93,100 @@ const PersonalFixedExpensesPage = () => {
           <CreateFixedExpenseDialog />
         </div>
 
-        {/* Total Summary - Minimal */}
+        {/* Bank Balance & Thermometer Section */}
+        <Card className="bg-card border-border">
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Wallet className="h-5 w-5 text-primary" />
+              Análise de Cobertura
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Balance Input */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">
+                Saldo total em suas contas bancárias
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                  R$
+                </span>
+                <Input
+                  type="text"
+                  placeholder="0,00"
+                  value={bankBalance}
+                  onChange={handleBalanceChange}
+                  className="pl-10 text-lg font-semibold"
+                />
+              </div>
+            </div>
+
+            {parsedBalance > 0 && totalMonthlyExpenses > 0 && (
+              <>
+                {/* Thermometer */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <thermometerStatus.icon className={`h-5 w-5 ${monthsCovered >= 3 ? 'text-green-500' : monthsCovered >= 1 ? 'text-yellow-500' : 'text-red-500'}`} />
+                      <span className="font-medium text-foreground">{thermometerStatus.status}</span>
+                    </div>
+                    <span className="text-2xl font-bold text-foreground">
+                      {monthsCovered} {monthsCovered === 1 ? 'mês' : 'meses'}
+                    </span>
+                  </div>
+                  
+                  <Progress value={progressValue} className="h-3" />
+                  
+                  <p className="text-sm text-muted-foreground">
+                    {thermometerStatus.message}
+                  </p>
+
+                  {monthsCovered > 0 && remainderAfterMonths > 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      Após {monthsCovered} meses, sobram {formatCurrency(remainderAfterMonths)}
+                    </p>
+                  )}
+                </div>
+
+                {/* Future Months Preview */}
+                <div className="space-y-3">
+                  <h4 className="text-sm font-medium text-foreground">Projeção dos próximos meses</h4>
+                  <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-12 gap-2">
+                    {futureMonths.map((month, index) => (
+                      <div
+                        key={index}
+                        className={`flex flex-col items-center p-2 rounded-lg text-center ${
+                          month.canCover 
+                            ? 'bg-green-500/10 border border-green-500/20' 
+                            : 'bg-red-500/10 border border-red-500/20'
+                        }`}
+                      >
+                        <span className="text-xs font-medium text-foreground capitalize">
+                          {month.name}
+                        </span>
+                        {month.canCover ? (
+                          <CheckCircle className="h-4 w-4 text-green-500 mt-1" />
+                        ) : (
+                          <AlertTriangle className="h-4 w-4 text-red-500 mt-1" />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+
+            {parsedBalance === 0 && (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                Informe seu saldo bancário para ver a análise de cobertura
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Total Summary */}
         <div className="flex items-center justify-between py-4 border-b border-border">
-          <span className="text-muted-foreground">Total mensal</span>
+          <span className="text-muted-foreground">Total mensal em contas fixas</span>
           <span className="text-2xl font-semibold text-foreground">
             {formatCurrency(totalMonthlyExpenses)}
           </span>
