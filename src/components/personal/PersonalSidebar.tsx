@@ -4,7 +4,8 @@ import {
   LogOut,
   Building2,
   Receipt,
-  BarChart3
+  BarChart3,
+  List
 } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -24,6 +25,7 @@ import {
 
 const conciliacaoItems = [
   { title: "Transações", url: "/personal/transactions", icon: ArrowUpDown },
+  { title: "Suas Movimentações", url: "/personal/movimentacoes", icon: List },
 ];
 
 const analiseItems = [
