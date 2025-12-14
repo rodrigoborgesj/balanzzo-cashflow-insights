@@ -35,7 +35,7 @@ export function usePersonalDashboard(selectedMonth?: string) {
         .from('personal_transactions')
         .select(`
           *,
-          category:personal_categories(*)
+          category:personal_categories(id, name, color, type)
         `)
         .eq('user_id', user.id)
         .gte('transaction_date', startDate)
@@ -45,6 +45,7 @@ export function usePersonalDashboard(selectedMonth?: string) {
       return data;
     },
     enabled: !!user,
+    staleTime: 0, // Always refetch to get latest category data
   });
 
   // Fetch transactions for the selected month
@@ -60,7 +61,7 @@ export function usePersonalDashboard(selectedMonth?: string) {
         .from('personal_transactions')
         .select(`
           *,
-          category:personal_categories(*)
+          category:personal_categories(id, name, color, type)
         `)
         .eq('user_id', user.id)
         .gte('transaction_date', startDate.toISOString().split('T')[0])
@@ -70,6 +71,7 @@ export function usePersonalDashboard(selectedMonth?: string) {
       return data;
     },
     enabled: !!user && !!selectedMonth,
+    staleTime: 0, // Always refetch to get latest category data
   });
 
   // Calculate monthly totals for the selected month
