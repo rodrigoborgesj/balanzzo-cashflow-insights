@@ -34,7 +34,7 @@ import { usePersonalTransactions, PersonalTransaction } from '@/hooks/usePersona
 import { usePersonalCategories } from '@/hooks/usePersonalCategories';
 
 export default function PersonalTransactionsList() {
-  const [selectedMonth, setSelectedMonth] = useState<string>('');
+  const [selectedMonth, setSelectedMonth] = useState<string>('all');
   const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null);
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
 
@@ -44,7 +44,7 @@ export default function PersonalTransactionsList() {
     deleteTransaction, 
     updateTransaction,
     isDeleting 
-  } = usePersonalTransactions(selectedMonth || undefined);
+  } = usePersonalTransactions(selectedMonth === 'all' ? undefined : selectedMonth);
   
   const { categories } = usePersonalCategories();
 
@@ -79,7 +79,7 @@ export default function PersonalTransactionsList() {
 
   // Generate month options (last 24 months + option for all)
   const monthOptions = [
-    { value: '', label: 'Todos os meses' },
+    { value: 'all', label: 'Todos os meses' },
     ...Array.from({ length: 24 }, (_, i) => {
       const date = new Date();
       date.setMonth(date.getMonth() - i);
