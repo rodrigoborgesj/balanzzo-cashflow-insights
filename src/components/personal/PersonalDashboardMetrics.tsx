@@ -1,5 +1,4 @@
-import { TrendingUp, TrendingDown, Wallet, Receipt } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface PersonalDashboardMetricsProps {
   income: number;
@@ -23,57 +22,37 @@ export function PersonalDashboardMetrics({
 }: PersonalDashboardMetricsProps) {
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground">
-            Receitas
-          </CardTitle>
-          <TrendingUp className="h-4 w-4 text-green-500" />
-        </CardHeader>
-        <CardContent>
-          <p className="text-2xl font-bold text-green-600">
+      <Card className="border-border/50 bg-card">
+        <CardContent className="pt-4 pb-4">
+          <p className="text-sm text-muted-foreground mb-1">Receitas</p>
+          <p className="text-2xl font-semibold text-foreground">
             {formatCurrency(income)}
           </p>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground">
-            Despesas
-          </CardTitle>
-          <TrendingDown className="h-4 w-4 text-red-500" />
-        </CardHeader>
-        <CardContent>
-          <p className="text-2xl font-bold text-red-600">
+      <Card className="border-border/50 bg-card">
+        <CardContent className="pt-4 pb-4">
+          <p className="text-sm text-muted-foreground mb-1">Despesas</p>
+          <p className="text-2xl font-semibold text-foreground">
             {formatCurrency(expense)}
           </p>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground">
-            Saldo
-          </CardTitle>
-          <Wallet className="h-4 w-4 text-primary" />
-        </CardHeader>
-        <CardContent>
-          <p className={`text-2xl font-bold ${balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+      <Card className="border-border/50 bg-card">
+        <CardContent className="pt-4 pb-4">
+          <p className="text-sm text-muted-foreground mb-1">Saldo</p>
+          <p className={`text-2xl font-semibold ${balance >= 0 ? 'text-foreground' : 'text-destructive'}`}>
             {formatCurrency(balance)}
           </p>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground">
-            Contas Fixas
-          </CardTitle>
-          <Receipt className="h-4 w-4 text-orange-500" />
-        </CardHeader>
-        <CardContent>
-          <p className="text-2xl font-bold text-orange-600">
+      <Card className="border-border/50 bg-card">
+        <CardContent className="pt-4 pb-4">
+          <p className="text-sm text-muted-foreground mb-1">Contas Fixas</p>
+          <p className="text-2xl font-semibold text-foreground">
             {formatCurrency(fixedExpenses)}
           </p>
           <p className="text-xs text-muted-foreground mt-1">mensal</p>
