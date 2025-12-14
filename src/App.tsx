@@ -11,6 +11,7 @@ import { AppLayout } from "./components/AppLayout";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { SubscriptionGuard } from "./components/SubscriptionGuard";
 import LandingPage from "./pages/LandingPage";
+import PersonalLandingPage from "./pages/PersonalLandingPage";
 import Dashboard from "./pages/Dashboard";
 import Conciliacao from "./pages/Conciliacao";
 import FluxoCaixa from "./pages/FluxoCaixa";
@@ -97,8 +98,9 @@ const App = () => {
               <Sonner />
               <BrowserRouter>
           <Routes>
-          {/* Public landing page */}
+          {/* Public landing pages */}
           <Route path="/" element={<LandingPage />} />
+          <Route path="/pessoal" element={<PersonalLandingPage />} />
           
           {/* Auth routes */}
           <Route path="/login" element={<Login />} />
