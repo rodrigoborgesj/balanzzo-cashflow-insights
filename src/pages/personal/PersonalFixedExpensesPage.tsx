@@ -4,7 +4,8 @@ import { CreateFixedExpenseDialog } from '@/components/personal/CreateFixedExpen
 import { FixedExpenseCard } from '@/components/personal/FixedExpenseCard';
 import { usePersonalFixedExpenses } from '@/hooks/usePersonalFixedExpenses';
 import { usePersonalBankBalance } from '@/hooks/usePersonalBankBalance';
-import { Receipt, Wallet, TrendingUp, AlertTriangle, CheckCircle, Save, Loader2 } from 'lucide-react';
+import { usePersonalSavingsGoals } from '@/hooks/usePersonalSavingsGoals';
+import { Receipt, Wallet, TrendingUp, AlertTriangle, CheckCircle, Save, Loader2, PiggyBank } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -14,8 +15,19 @@ import { Button } from '@/components/ui/button';
 const PersonalFixedExpensesPage = () => {
   const { expenses, isLoading, totalMonthlyExpenses } = usePersonalFixedExpenses();
   const { balance: savedBalance, isLoading: isLoadingBalance, isSaving, saveBalance } = usePersonalBankBalance();
+  const { activeGoals, isLoading: isLoadingGoals } = usePersonalSavingsGoals();
   const [bankBalance, setBankBalance] = useState<string>('');
   const [hasChanges, setHasChanges] = useState(false);
+  
+  // Calculate total monthly savings from active goals
+  const totalMonthlySavings = useMemo(() => {
+    return activeGoals.reduce((sum, goal) => sum + Number(goal.monthly_amount || 0), 0);
+  }, [activeGoals]);
+  
+  // Total current expenses = fixed expenses + savings goals monthly amounts
+  const totalCurrentExpenses = useMemo(() => {
+    return totalMonthlyExpenses + totalMonthlySavings;
+  }, [totalMonthlyExpenses, totalMonthlySavings]);
 
   // Load saved balance when available
   useEffect(() => {
@@ -48,14 +60,14 @@ const PersonalFixedExpensesPage = () => {
   }, [bankBalance]);
 
   const monthsCovered = useMemo(() => {
-    if (totalMonthlyExpenses === 0 || parsedBalance === 0) return 0;
-    return Math.floor(parsedBalance / totalMonthlyExpenses);
-  }, [parsedBalance, totalMonthlyExpenses]);
+    if (totalCurrentExpenses === 0 || parsedBalance === 0) return 0;
+    return Math.floor(parsedBalance / totalCurrentExpenses);
+  }, [parsedBalance, totalCurrentExpenses]);
 
   const remainderAfterMonths = useMemo(() => {
-    if (totalMonthlyExpenses === 0 || parsedBalance === 0) return 0;
-    return parsedBalance - (monthsCovered * totalMonthlyExpenses);
-  }, [parsedBalance, totalMonthlyExpenses, monthsCovered]);
+    if (totalCurrentExpenses === 0 || parsedBalance === 0) return 0;
+    return parsedBalance - (monthsCovered * totalCurrentExpenses);
+  }, [parsedBalance, totalCurrentExpenses, monthsCovered]);
 
   const getThermometerStatus = () => {
     if (monthsCovered >= 6) return { color: 'bg-green-500', status: 'Excelente', icon: CheckCircle, message: 'Você tem reserva para mais de 6 meses!' };
@@ -76,14 +88,14 @@ const PersonalFixedExpensesPage = () => {
       const futureDate = new Date(now.getFullYear(), now.getMonth() + i, 1);
       const monthName = futureDate.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
       
-      const canCover = remainingBalance >= totalMonthlyExpenses;
-      const balanceAfter = remainingBalance - totalMonthlyExpenses;
+      const canCover = remainingBalance >= totalCurrentExpenses;
+      const balanceAfter = remainingBalance - totalCurrentExpenses;
       
       months.push({
         name: monthName,
         canCover,
         balanceAfter: canCover ? balanceAfter : remainingBalance,
-        deficit: !canCover ? totalMonthlyExpenses - remainingBalance : 0
+        deficit: !canCover ? totalCurrentExpenses - remainingBalance : 0
       });
 
       if (canCover) {
@@ -94,7 +106,7 @@ const PersonalFixedExpensesPage = () => {
     }
 
     return months;
-  }, [parsedBalance, totalMonthlyExpenses]);
+  }, [parsedBalance, totalCurrentExpenses]);
 
   return (
     <PersonalLayout>
@@ -158,7 +170,7 @@ const PersonalFixedExpensesPage = () => {
               )}
             </div>
 
-            {parsedBalance > 0 && totalMonthlyExpenses > 0 && (
+            {parsedBalance > 0 && totalCurrentExpenses > 0 && (
               <>
                 {/* Thermometer */}
                 <div className="space-y-3">
@@ -221,13 +233,42 @@ const PersonalFixedExpensesPage = () => {
           </CardContent>
         </Card>
 
-        {/* Total Summary */}
-        <div className="flex items-center justify-between py-4 border-b border-border">
-          <span className="text-muted-foreground">Total mensal em contas fixas</span>
-          <span className="text-2xl font-semibold text-foreground">
-            {formatCurrency(totalMonthlyExpenses)}
-          </span>
-        </div>
+        {/* Current Expenses Summary */}
+        <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <Wallet className="h-5 w-5 text-primary" />
+                </div>
+                <span className="font-medium text-foreground">Despesas Mensais Atuais</span>
+              </div>
+              <span className="text-2xl font-bold text-primary">
+                {formatCurrency(totalCurrentExpenses)}
+              </span>
+            </div>
+            
+            <div className="space-y-2 text-sm">
+              <div className="flex items-center justify-between text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <Receipt className="h-4 w-4" />
+                  <span>Contas Fixas</span>
+                </div>
+                <span>{formatCurrency(totalMonthlyExpenses)}</span>
+              </div>
+              
+              {totalMonthlySavings > 0 && (
+                <div className="flex items-center justify-between text-muted-foreground">
+                  <div className="flex items-center gap-2">
+                    <PiggyBank className="h-4 w-4" />
+                    <span>Caixinhas ({activeGoals.length} {activeGoals.length === 1 ? 'meta' : 'metas'})</span>
+                  </div>
+                  <span>{formatCurrency(totalMonthlySavings)}</span>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Expenses List */}
         <div className="space-y-3">
