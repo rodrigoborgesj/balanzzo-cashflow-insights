@@ -11,6 +11,7 @@ import { useSecureAuth } from "@/hooks/useSecureAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { useModule } from "@/contexts/ModuleContext";
 import { SignupForm } from "@/components/SignupForm";
+import { PersonalSignupForm } from "@/components/PersonalSignupForm";
 import financialHero from "@/assets/financial-hero.png";
 
 export default function Login() {
@@ -150,10 +151,18 @@ export default function Login() {
     );
   }
 
+  // Check if redirect is for personal module to show appropriate signup form
+  const redirectTo = searchParams.get('redirect');
+  const isPersonalSignup = redirectTo?.startsWith('/personal');
+
   if (mode === 'signup') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5 flex items-center justify-center p-4">
-        <SignupForm onBack={() => setMode('login')} />
+        {isPersonalSignup ? (
+          <PersonalSignupForm onBack={() => setMode('login')} />
+        ) : (
+          <SignupForm onBack={() => setMode('login')} />
+        )}
       </div>
     );
   }
