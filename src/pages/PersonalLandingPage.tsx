@@ -546,10 +546,10 @@ export default function PersonalLandingPage() {
             <Button 
               onClick={handleLogin}
               size="lg"
-              className="bg-brand-dark-green hover:bg-brand-dark-green/90 text-brand-white px-10 py-6 h-16 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 text-lg"
+              className="bg-brand-dark-green hover:bg-brand-dark-green/90 text-brand-white px-6 sm:px-10 py-3 sm:py-6 h-auto min-h-[48px] sm:min-h-[64px] rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 text-sm sm:text-lg"
             >
               Tenha clareza sobre seu dinheiro
-              <ArrowRight className="ml-2 w-5 h-5" />
+              <ArrowRight className="ml-2 w-4 h-4 sm:w-5 sm:h-5" />
             </Button>
           </div>
         </div>
