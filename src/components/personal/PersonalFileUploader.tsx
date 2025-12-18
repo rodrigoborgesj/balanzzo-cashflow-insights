@@ -31,8 +31,8 @@ export default function PersonalFileUploader() {
     if (!file) return;
 
     const extension = file.name.split('.').pop()?.toLowerCase();
-    if (!['csv', 'ofx', 'pdf'].includes(extension || '')) {
-      toast.error('Formato não suportado. Use arquivos CSV, OFX ou PDF.');
+    if (!['csv', 'ofx'].includes(extension || '')) {
+      toast.error('Formato não suportado. Use arquivos CSV ou OFX.');
       return;
     }
 
@@ -135,7 +135,7 @@ export default function PersonalFileUploader() {
         <DialogHeader>
           <DialogTitle>Importar Extrato Bancário</DialogTitle>
           <DialogDescription>
-            Selecione um arquivo CSV, OFX ou PDF do seu extrato bancário pessoal
+            Selecione um arquivo CSV ou OFX do seu extrato bancário pessoal
           </DialogDescription>
         </DialogHeader>
 
@@ -150,7 +150,7 @@ export default function PersonalFileUploader() {
                 Clique para selecionar ou arraste um arquivo
               </p>
               <p className="text-xs text-muted-foreground mt-2">
-                Formatos aceitos: CSV, OFX, PDF
+                Formatos aceitos: CSV, OFX
               </p>
             </div>
           ) : (
@@ -178,7 +178,7 @@ export default function PersonalFileUploader() {
           <input
             ref={fileInputRef}
             type="file"
-            accept=".csv,.ofx,.pdf"
+            accept=".csv,.ofx"
             onChange={handleFileSelect}
             className="hidden"
           />

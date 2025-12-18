@@ -58,7 +58,7 @@ export default function PersonalLandingPage() {
     {
       step: 1,
       title: "Importe seu extrato",
-      description: "Baixe o extrato do seu banco e faça upload na plataforma. Aceitamos CSV, OFX e PDF.",
+      description: "Baixe o extrato do seu banco e faça upload na plataforma. Aceitamos CSV e OFX.",
       icon: <Upload className="w-6 h-6" />
     },
     {
@@ -112,7 +112,7 @@ export default function PersonalLandingPage() {
     },
     {
       question: "Como funciona a importação do extrato?",
-      answer: "Você baixa o extrato do seu banco (em CSV, OFX ou PDF) e faz upload no Balanzzo. O sistema lê automaticamente suas transações e você categoriza cada uma do seu jeito."
+      answer: "Você baixa o extrato do seu banco (em CSV ou OFX) e faz upload no Balanzzo. O sistema lê automaticamente suas transações e você categoriza cada uma do seu jeito."
     },
     {
       question: "O que são as Caixinhas?",
@@ -238,12 +238,12 @@ export default function PersonalLandingPage() {
                 Importe seu extrato e veja tudo organizado
               </h3>
               <p className="text-lg text-brand-dark-green/70 leading-relaxed">
-                Baixe o extrato do seu banco (CSV, OFX ou PDF) e faça upload na plataforma. 
+                Baixe o extrato do seu banco (CSV ou OFX) e faça upload na plataforma. 
                 <strong> O Balanzzo extrai automaticamente todas as suas movimentações</strong> — entradas e saídas — 
                 para você categorizar do seu jeito e entender exatamente o que aconteceu no mês.
               </p>
               <ul className="space-y-3">
-                {["Importação automática de extratos", "Suporte a CSV, OFX e PDF", "Categorias personalizadas", "Histórico completo de transações"].map((item, i) => (
+                {["Importação automática de extratos", "Suporte a CSV e OFX", "Categorias personalizadas", "Histórico completo de transações"].map((item, i) => (
                   <li key={i} className="flex items-center gap-3 text-brand-dark-green/80">
                     <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
                     {item}
