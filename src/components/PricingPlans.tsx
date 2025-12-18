@@ -80,34 +80,34 @@ export function PricingPlans({ showTitle = true }: PricingPlansProps) {
 
   if (isLoading) {
     return (
-      <section className="py-20 px-4 bg-gradient-to-b from-background to-muted/20">
+      <section className="py-10 sm:py-16 md:py-20 px-4 bg-gradient-to-b from-background to-muted/20">
         <div className="container mx-auto max-w-6xl">
           {showTitle && (
-            <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            <div className="text-center mb-8 sm:mb-12">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4 px-2">
                 Escolha o Plano Ideal para Seu Negócio
               </h2>
-              <p className="text-muted-foreground text-lg">
+              <p className="text-muted-foreground text-sm sm:text-base md:text-lg px-2">
                 Comece a gerenciar suas finanças de forma profissional
               </p>
             </div>
           )}
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
             {[1, 2, 3].map((i) => (
-              <Card key={i}>
-                <CardHeader>
-                  <Skeleton className="h-8 w-3/4" />
-                  <Skeleton className="h-6 w-1/2 mt-2" />
+              <Card key={i} className="p-4 sm:p-6">
+                <CardHeader className="p-0 pb-4">
+                  <Skeleton className="h-6 sm:h-8 w-3/4" />
+                  <Skeleton className="h-5 sm:h-6 w-1/2 mt-2" />
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-0 py-4">
                   <div className="space-y-2">
                     <Skeleton className="h-4 w-full" />
                     <Skeleton className="h-4 w-full" />
                     <Skeleton className="h-4 w-full" />
                   </div>
                 </CardContent>
-                <CardFooter>
-                  <Skeleton className="h-10 w-full" />
+                <CardFooter className="p-0 pt-4">
+                  <Skeleton className="h-10 sm:h-11 w-full" />
                 </CardFooter>
               </Card>
             ))}
@@ -118,71 +118,71 @@ export function PricingPlans({ showTitle = true }: PricingPlansProps) {
   }
 
   return (
-    <section className="py-20 px-4 bg-gradient-to-b from-background to-muted/20">
+    <section className="py-10 sm:py-16 md:py-20 px-4 bg-gradient-to-b from-background to-muted/20">
       <div className="container mx-auto max-w-6xl">
         {showTitle && (
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+          <div className="text-center mb-8 sm:mb-12">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4 px-2">
               Escolha o Plano Ideal para Seu Negócio
             </h2>
-            <p className="text-muted-foreground text-lg">
+            <p className="text-muted-foreground text-sm sm:text-base md:text-lg px-2">
               Comece a gerenciar suas finanças de forma profissional
             </p>
           </div>
         )}
 
         {plansToRender.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground">
+          <div className="text-center py-8 sm:py-12">
+            <p className="text-muted-foreground text-sm sm:text-base">
               Carregando planos...
             </p>
           </div>
         ) : (
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
             {plansToRender.map((plan) => (
               <Card 
                 key={plan.id}
-                className={`relative ${plan.popular ? 'border-primary shadow-lg scale-105' : ''}`}
+                className={`relative ${plan.popular ? 'border-primary shadow-lg md:scale-105' : ''}`}
               >
                 {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                    <span className="bg-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-semibold">
+                  <div className="absolute -top-3 sm:-top-4 left-1/2 -translate-x-1/2">
+                    <span className="bg-primary text-primary-foreground px-3 sm:px-4 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm font-semibold whitespace-nowrap">
                       Mais Popular
                     </span>
                   </div>
                 )}
                 
-                <CardHeader>
-                  <CardTitle className="text-2xl">{plan.name}</CardTitle>
+                <CardHeader className="p-4 sm:p-6 pb-2 sm:pb-4">
+                  <CardTitle className="text-lg sm:text-xl md:text-2xl">{plan.name}</CardTitle>
                   <CardDescription>
-                    <span className="text-3xl font-bold text-foreground">
+                    <span className="text-2xl sm:text-3xl font-bold text-foreground">
                       {formatPrice(plan.price_cents)}
                     </span>
-                    <span className="text-muted-foreground ml-2">
+                    <span className="text-muted-foreground text-xs sm:text-sm ml-1 sm:ml-2">
                       {getBillingText(plan.billing_cycle)}
                     </span>
                   </CardDescription>
                 </CardHeader>
 
-                <CardContent>
-                  <ul className="space-y-3">
+                <CardContent className="p-4 sm:p-6 pt-2 sm:pt-4">
+                  <ul className="space-y-2 sm:space-y-3">
                     {plan.features.map((feature, index) => (
                       <li key={index} className="flex items-start gap-2">
-                        <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                        <span className="text-sm">{feature}</span>
+                        <Check className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0 mt-0.5" />
+                        <span className="text-xs sm:text-sm">{feature}</span>
                       </li>
                     ))}
                   </ul>
-                  <div className="mt-4 pt-4 border-t border-border">
-                    <p className="text-xs text-muted-foreground text-center">
+                  <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-border">
+                    <p className="text-[10px] sm:text-xs text-muted-foreground text-center">
                       💳 {getRecurringText(plan.billing_cycle)}
                     </p>
                   </div>
                 </CardContent>
 
-                <CardFooter>
+                <CardFooter className="p-4 sm:p-6 pt-0">
                   <Button 
-                    className="w-full"
+                    className="w-full h-10 sm:h-11 text-sm sm:text-base"
                     variant={plan.popular ? 'default' : 'outline'}
                     size="lg"
                     disabled={plan.id.startsWith('fallback-')}
@@ -196,11 +196,11 @@ export function PricingPlans({ showTitle = true }: PricingPlansProps) {
           </div>
         )}
 
-        <div className="text-center mt-8 space-y-2">
-          <p className="text-sm text-muted-foreground">
+        <div className="text-center mt-6 sm:mt-8 space-y-1.5 sm:space-y-2 px-2">
+          <p className="text-xs sm:text-sm text-muted-foreground">
             💳 Pagamento exclusivo via cartão de crédito com cobrança recorrente automática
           </p>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs sm:text-sm text-muted-foreground">
             Todos os planos incluem 7 dias de garantia de reembolso
           </p>
         </div>
