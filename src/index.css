@@ -334,6 +334,69 @@ All colors MUST be HSL.
     }
   }
   
+  /* Extra small mobile devices (max-width: 480px) */
+  @media (max-width: 480px) {
+    /* Header mobile button fixes */
+    .mobile-header-btn {
+      @apply px-3 py-2 text-xs min-h-[36px] whitespace-nowrap;
+    }
+    
+    .mobile-header-btn-primary {
+      @apply px-3 py-2 text-xs min-h-[36px] whitespace-nowrap;
+    }
+    
+    /* Landing page mobile fixes */
+    .landing-hero-title {
+      @apply text-2xl leading-tight;
+    }
+    
+    .landing-section {
+      @apply px-4 py-8;
+    }
+    
+    .landing-section-title {
+      @apply text-xl px-2;
+    }
+    
+    /* Mobile cards with proper padding */
+    .mobile-card {
+      @apply p-4 rounded-xl;
+    }
+    
+    /* Feature cards mobile */
+    .mobile-feature-card {
+      @apply p-4;
+    }
+    
+    .mobile-feature-card h4 {
+      @apply text-base;
+    }
+    
+    .mobile-feature-card p {
+      @apply text-sm;
+    }
+    
+    /* Mobile pricing cards */
+    .mobile-pricing-card {
+      @apply p-4;
+    }
+    
+    /* Mobile footer */
+    .mobile-footer {
+      @apply px-4 py-6;
+    }
+    
+    /* Mobile inputs */
+    .mobile-input {
+      @apply h-11 text-sm;
+    }
+    
+    /* Mobile CTA buttons */
+    .mobile-cta-btn {
+      @apply h-11 text-sm font-semibold;
+    }
+  }
+  
   /* Touch-friendly mobile interactions */
   @media (hover: none) and (pointer: coarse) {
     .hover\:scale-105:hover {
@@ -348,6 +411,19 @@ All colors MUST be HSL.
     .btn-modern:active {
       transform: scale(0.98);
       transition: transform 0.1s ease;
+    }
+    
+    /* Ensure minimum touch target size */
+    button, 
+    a, 
+    [role="button"] {
+      min-height: 44px;
+      min-width: 44px;
+    }
+    
+    /* Better tap feedback */
+    .tap-highlight {
+      -webkit-tap-highlight-color: hsl(var(--primary) / 0.1);
     }
   }
 }

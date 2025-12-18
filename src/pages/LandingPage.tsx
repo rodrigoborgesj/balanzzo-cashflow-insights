@@ -84,38 +84,38 @@ export default function LandingPage() {
     <div className="min-h-screen bg-brand-white font-sans">
       {/* Header */}
       <header className="bg-brand-white border-b border-brand-dark-green/10 sticky top-0 z-50 backdrop-blur-sm bg-brand-white/95">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-14 sm:h-16 md:h-20">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-14 sm:h-16 md:h-20 gap-2">
             {/* Brand */}
-            <div className="flex items-center">
-              <span className="text-xl sm:text-2xl md:text-3xl font-bold text-brand-dark-green">
+            <div className="flex items-center flex-shrink-0">
+              <span className="text-lg sm:text-2xl md:text-3xl font-bold text-brand-dark-green">
                 Balanzzo
               </span>
             </div>
 
-            {/* Navigation - Mobile Menu */}
+            {/* Navigation - Desktop Only */}
             <nav className="hidden lg:flex items-center gap-8 text-brand-dark-green/80">
               <a href="#recursos" className="hover:text-brand-dark-green transition-colors">Recursos</a>
               <a href="#precos" className="hover:text-brand-dark-green transition-colors">Preços</a>
               <a href="#sobre" className="hover:text-brand-dark-green transition-colors">Sobre</a>
             </nav>
 
-            {/* Header CTAs */}
-            <div className="flex items-center gap-2 sm:gap-3">
+            {/* Header CTAs - Mobile Optimized */}
+            <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
               <Button 
                 variant="ghost" 
                 onClick={() => navigate("/login")}
-                className="text-brand-dark-green hover:bg-brand-light-green/50 text-xs sm:text-base px-2 sm:px-4"
+                className="text-brand-dark-green hover:bg-brand-light-green/50 text-xs sm:text-base px-2 sm:px-4 h-9 sm:h-10 min-w-[52px] sm:min-w-0"
               >
                 Entrar
               </Button>
               <Button 
-              onClick={() => window.open('https://wa.me/5551994876689', '_blank')}
-                className="bg-brand-dark-green hover:bg-brand-dark-green/90 text-brand-white px-3 sm:px-4 md:px-6 py-2 rounded-lg transition-all duration-200 text-sm sm:text-base"
+                onClick={() => window.open('https://wa.me/5551994876689', '_blank')}
+                className="bg-brand-dark-green hover:bg-brand-dark-green/90 text-brand-white px-2.5 sm:px-4 md:px-6 h-9 sm:h-10 rounded-lg transition-all duration-200 text-[11px] sm:text-sm md:text-base whitespace-nowrap"
                 aria-label="Agendar reunião no WhatsApp"
                 title="Abre o WhatsApp em uma nova aba."
               >
-                Agende uma reunião
+                <span className="hidden xs:inline">Agende uma </span>reunião
               </Button>
             </div>
           </div>
@@ -125,46 +125,46 @@ export default function LandingPage() {
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-brand-cream via-brand-white to-brand-light-green/20 overflow-hidden">
         <div className="absolute inset-0">
-          <div className="absolute top-0 left-1/4 w-64 sm:w-96 h-64 sm:h-96 bg-brand-light-green/20 rounded-full mix-blend-multiply filter blur-xl animate-float"></div>
-          <div className="absolute top-1/3 right-1/4 w-48 sm:w-72 h-48 sm:h-72 bg-brand-dark-green/10 rounded-full mix-blend-multiply filter blur-xl animate-float" style={{ animationDelay: '2s' }}></div>
+          <div className="absolute top-0 left-1/4 w-48 sm:w-64 md:w-96 h-48 sm:h-64 md:h-96 bg-brand-light-green/20 rounded-full mix-blend-multiply filter blur-xl animate-float"></div>
+          <div className="absolute top-1/3 right-1/4 w-36 sm:w-48 md:w-72 h-36 sm:h-48 md:h-72 bg-brand-dark-green/10 rounded-full mix-blend-multiply filter blur-xl animate-float" style={{ animationDelay: '2s' }}></div>
         </div>
         
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 md:py-20 lg:py-32">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 md:py-16 lg:py-32">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12 items-center">
             {/* Left Content */}
-            <div className={`space-y-6 sm:space-y-8 order-2 lg:order-1 ${isVisible ? 'animate-fade-in' : 'opacity-0'}`}>
-              <div className="space-y-4 sm:space-y-6">
-                <div className="inline-flex items-center gap-2 bg-brand-light-green/50 px-4 py-2 rounded-full text-sm font-medium text-brand-dark-green mb-4">
-                  <Zap className="w-4 h-4" />
+            <div className={`space-y-5 sm:space-y-6 md:space-y-8 order-2 lg:order-1 ${isVisible ? 'animate-fade-in' : 'opacity-0'}`}>
+              <div className="space-y-3 sm:space-y-4 md:space-y-6">
+                <div className="inline-flex items-center gap-2 bg-brand-light-green/50 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium text-brand-dark-green">
+                  <Zap className="w-3 h-3 sm:w-4 sm:h-4" />
                   Teste grátis — sem cartão
                 </div>
                 
-                <h1 className="text-3xl sm:text-4xl md:text-5xl xl:text-6xl font-bold text-brand-dark-green leading-tight">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-brand-dark-green leading-tight">
                   Tudo que sua empresa precisa 
                   <span className="block">para crescer financeiramente</span>
                 </h1>
                 
-                <p className="text-lg sm:text-xl md:text-2xl text-brand-dark-green/70 leading-relaxed max-w-lg">
+                <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-brand-dark-green/70 leading-relaxed max-w-lg">
                   Ferramentas que automatizam processos e fornecem insights valiosos para decisões estratégicas.
                 </p>
               </div>
 
               {/* CTA Section */}
-              <div className="space-y-4">
-                <div className="flex flex-col gap-3 max-w-md">
+              <div className="space-y-3 sm:space-y-4">
+                <div className="flex flex-col gap-2.5 sm:gap-3 max-w-md">
                   <Input 
                     placeholder="Nome completo"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full h-12 sm:h-12 border-brand-dark-green/20 focus:border-brand-dark-green focus:ring-brand-dark-green/20 text-base"
+                    className="w-full h-11 sm:h-12 border-brand-dark-green/20 focus:border-brand-dark-green focus:ring-brand-dark-green/20 text-sm sm:text-base"
                   />
                   <Input 
                     placeholder="Celular (opcional)"
-                    className="w-full h-12 sm:h-12 border-brand-dark-green/20 focus:border-brand-dark-green focus:ring-brand-dark-green/20 text-base"
+                    className="w-full h-11 sm:h-12 border-brand-dark-green/20 focus:border-brand-dark-green focus:ring-brand-dark-green/20 text-sm sm:text-base"
                   />
                   <Button 
                     onClick={() => window.open('https://wa.me/5551994876689', '_blank')}
-                    className="w-full bg-brand-dark-green hover:bg-brand-dark-green/90 text-brand-white px-6 py-3 h-12 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+                    className="w-full bg-brand-dark-green hover:bg-brand-dark-green/90 text-brand-white px-4 sm:px-6 py-2.5 sm:py-3 h-11 sm:h-12 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200 text-sm sm:text-base"
                     aria-label="Agendar reunião no WhatsApp"
                     title="Abre o WhatsApp em uma nova aba."
                   >
@@ -173,34 +173,34 @@ export default function LandingPage() {
                   </Button>
                 </div>
                 
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-brand-dark-green/60">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs sm:text-sm text-brand-dark-green/60">
                   <span className="flex items-center gap-1">
-                    <Shield className="w-4 h-4" />
-                    Respeitamos sua privacidade. Seus dados não são compartilhados.
+                    <Shield className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+                    <span>Respeitamos sua privacidade. Seus dados não são compartilhados.</span>
                   </span>
                 </div>
                 
-                <p className="text-sm text-brand-dark-green/60 max-w-md">
+                <p className="text-xs sm:text-sm text-brand-dark-green/60 max-w-md">
                   Se preferir, clique em 'Agende uma reunião' e fale direto pelo WhatsApp.
                 </p>
                 
-                <p className="text-sm text-brand-dark-green/60 max-w-md">
+                <p className="text-xs sm:text-sm text-brand-dark-green/60 max-w-md">
                   Prefere falar por e-mail? contato@balanzzo.com.br
                 </p>
                 
-                <p className="text-xs text-brand-dark-green/40 max-w-md">
+                <p className="text-[10px] sm:text-xs text-brand-dark-green/40 max-w-md">
                   Sem cobranças automáticas. Cancele a qualquer momento.
                 </p>
               </div>
 
               {/* Social Proof */}
-              <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 pt-2">
                 <div className="flex -space-x-2">
                   {[1, 2, 3, 4].map((i) => (
-                    <div key={i} className="w-8 h-8 bg-gradient-to-br from-brand-dark-green to-brand-light-green rounded-full border-2 border-brand-white"></div>
+                    <div key={i} className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-brand-dark-green to-brand-light-green rounded-full border-2 border-brand-white"></div>
                   ))}
                 </div>
-                <div className="text-sm text-brand-dark-green/70">
+                <div className="text-xs sm:text-sm text-brand-dark-green/70">
                   <span className="font-semibold">Empresas que confiam na Balanzzo</span>
                 </div>
               </div>
@@ -301,41 +301,43 @@ export default function LandingPage() {
 
 
       {/* Features Section */}
-      <section id="recursos" className="py-16 sm:py-20 lg:py-24 bg-gradient-to-b from-brand-white to-brand-cream/30">
+      <section id="recursos" className="py-10 sm:py-16 md:py-20 lg:py-24 bg-gradient-to-b from-brand-white to-brand-cream/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12 sm:mb-16 lg:mb-20">
-            <div className="inline-flex items-center gap-2 bg-brand-light-green/50 px-4 py-2 rounded-full text-sm font-medium text-brand-dark-green mb-4 sm:mb-6">
-              <Zap className="w-4 h-4" />
+          <div className="text-center mb-8 sm:mb-12 md:mb-16 lg:mb-20">
+            <div className="inline-flex items-center gap-2 bg-brand-light-green/50 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium text-brand-dark-green mb-3 sm:mb-4 md:mb-6">
+              <Zap className="w-3 h-3 sm:w-4 sm:h-4" />
               Recursos completos
             </div>
-            <h3 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-brand-dark-green mb-4 sm:mb-6 leading-tight px-4">
+            <h3 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-brand-dark-green mb-3 sm:mb-4 md:mb-6 leading-tight px-2 sm:px-4">
               Teste grátis por 7 dias — sem cartão
             </h3>
-            <p className="text-lg sm:text-xl text-brand-dark-green/70 max-w-3xl mx-auto leading-relaxed px-4">
+            <p className="text-sm sm:text-base md:text-lg lg:text-xl text-brand-dark-green/70 max-w-3xl mx-auto leading-relaxed px-2 sm:px-4">
               Experimente todas as funções sem precisar cadastrar cartão.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
             {features.map((feature, index) => (
               <Card 
                 key={index} 
                 className="bg-brand-white border border-brand-dark-green/10 hover:border-brand-dark-green/20 hover:shadow-xl transition-all duration-300 group relative overflow-hidden h-full"
               >
-                <CardContent className="p-6 sm:p-8 relative h-full flex flex-col">
+                <CardContent className="p-5 sm:p-6 md:p-8 relative h-full flex flex-col">
                   <div className="absolute inset-0 bg-gradient-to-br from-transparent to-brand-light-green/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   <div className="relative flex-1">
-                    <div className="w-12 sm:w-14 h-12 sm:h-14 bg-gradient-to-br from-brand-light-green to-brand-light-green/50 rounded-2xl flex items-center justify-center text-brand-dark-green mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-200">
-                      {feature.icon}
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 bg-gradient-to-br from-brand-light-green to-brand-light-green/50 rounded-xl sm:rounded-2xl flex items-center justify-center text-brand-dark-green mb-3 sm:mb-4 md:mb-6 group-hover:scale-110 transition-transform duration-200">
+                      <div className="[&>svg]:w-5 [&>svg]:h-5 sm:[&>svg]:w-6 sm:[&>svg]:h-6 md:[&>svg]:w-8 md:[&>svg]:h-8">
+                        {feature.icon}
+                      </div>
                     </div>
-                    <h4 className="text-lg sm:text-xl font-bold text-brand-dark-green mb-3 sm:mb-4 leading-tight">
+                    <h4 className="text-base sm:text-lg md:text-xl font-bold text-brand-dark-green mb-2 sm:mb-3 md:mb-4 leading-tight">
                       {feature.title}
                     </h4>
-                    <p className="text-brand-dark-green/70 leading-relaxed mb-4 text-sm sm:text-base flex-1">
+                    <p className="text-brand-dark-green/70 leading-relaxed mb-3 sm:mb-4 text-sm sm:text-base flex-1">
                       {feature.description}
                     </p>
-                    <div className="flex items-center text-brand-dark-green font-medium text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      Saiba mais <ArrowRight className="ml-1 w-4 h-4" />
+                    <div className="flex items-center text-brand-dark-green font-medium text-xs sm:text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      Saiba mais <ArrowRight className="ml-1 w-3 h-3 sm:w-4 sm:h-4" />
                     </div>
                   </div>
                 </CardContent>
@@ -344,13 +346,13 @@ export default function LandingPage() {
           </div>
 
           {/* CTA in Features */}
-          <div className="text-center mt-12 sm:mt-16">
+          <div className="text-center mt-8 sm:mt-12 md:mt-16">
             <Button 
               onClick={() => window.open('https://wa.me/5551994876689', '_blank')}
               variant="outline"
-              className="border-2 border-brand-dark-green text-brand-dark-green hover:bg-brand-dark-green hover:text-brand-white px-6 sm:px-8 py-3 rounded-lg font-semibold transition-all duration-200"
+              className="border-2 border-brand-dark-green text-brand-dark-green hover:bg-brand-dark-green hover:text-brand-white px-4 sm:px-6 md:px-8 py-2.5 sm:py-3 rounded-lg font-semibold transition-all duration-200 text-sm sm:text-base"
             >
-              <Play className="mr-2 w-4 h-4" />
+              <Play className="mr-2 w-3.5 h-3.5 sm:w-4 sm:h-4" />
               Ver demonstração
             </Button>
           </div>
@@ -364,52 +366,52 @@ export default function LandingPage() {
       </div>
 
       {/* About Us Section */}
-      <section id="sobre" className="py-16 sm:py-20 lg:py-24 bg-gradient-to-b from-brand-cream/30 to-brand-white">
+      <section id="sobre" className="py-10 sm:py-16 md:py-20 lg:py-24 bg-gradient-to-b from-brand-cream/30 to-brand-white">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-            <div className="space-y-6 sm:space-y-8 order-2 lg:order-1">
-              <div className="space-y-4 sm:space-y-6">
-                <div className="inline-flex items-center gap-2 bg-brand-light-green/50 px-4 py-2 rounded-full text-sm font-medium text-brand-dark-green">
-                  <Users className="w-4 h-4" />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-10 lg:gap-16 items-center">
+            <div className="space-y-5 sm:space-y-6 md:space-y-8 order-2 lg:order-1">
+              <div className="space-y-3 sm:space-y-4 md:space-y-6">
+                <div className="inline-flex items-center gap-2 bg-brand-light-green/50 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium text-brand-dark-green">
+                  <Users className="w-3 h-3 sm:w-4 sm:h-4" />
                   Nossa história
                 </div>
-                <h3 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-brand-dark-green leading-tight">
+                <h3 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-brand-dark-green leading-tight">
                   Especialistas em 
                   <span className="block">gestão financeira</span>
                 </h3>
                 
-                <p className="text-lg sm:text-xl text-brand-dark-green/70 leading-relaxed">
+                <p className="text-sm sm:text-base md:text-lg lg:text-xl text-brand-dark-green/70 leading-relaxed">
                   Somos uma empresa gaúcha especializada em soluções financeiras para pequenas e médias empresas. 
                   Nossa missão é democratizar o acesso a ferramentas profissionais de gestão financeira.
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-6 sm:gap-8">
-                <div className="space-y-2">
-                  <div className="text-2xl sm:text-3xl font-bold text-brand-dark-green">5+</div>
-                  <div className="text-sm sm:text-base text-brand-dark-green/70">Anos no mercado</div>
+              <div className="grid grid-cols-2 gap-4 sm:gap-6 md:gap-8">
+                <div className="space-y-1 sm:space-y-2">
+                  <div className="text-xl sm:text-2xl md:text-3xl font-bold text-brand-dark-green">5+</div>
+                  <div className="text-xs sm:text-sm md:text-base text-brand-dark-green/70">Anos no mercado</div>
                 </div>
-                <div className="space-y-2">
-                  <div className="text-2xl sm:text-3xl font-bold text-brand-dark-green">4.9/5</div>
-                  <div className="text-sm sm:text-base text-brand-dark-green/70">Satisfação dos clientes</div>
+                <div className="space-y-1 sm:space-y-2">
+                  <div className="text-xl sm:text-2xl md:text-3xl font-bold text-brand-dark-green">4.9/5</div>
+                  <div className="text-xs sm:text-sm md:text-base text-brand-dark-green/70">Satisfação dos clientes</div>
                 </div>
-                <div className="space-y-2">
-                  <div className="text-2xl sm:text-3xl font-bold text-brand-dark-green">99.9%</div>
-                  <div className="text-sm sm:text-base text-brand-dark-green/70">Uptime garantido</div>
+                <div className="space-y-1 sm:space-y-2">
+                  <div className="text-xl sm:text-2xl md:text-3xl font-bold text-brand-dark-green">99.9%</div>
+                  <div className="text-xs sm:text-sm md:text-base text-brand-dark-green/70">Uptime garantido</div>
                 </div>
-                <div className="space-y-2">
-                  <div className="text-2xl sm:text-3xl font-bold text-brand-dark-green">24/7</div>
-                  <div className="text-sm sm:text-base text-brand-dark-green/70">Suporte técnico</div>
+                <div className="space-y-1 sm:space-y-2">
+                  <div className="text-xl sm:text-2xl md:text-3xl font-bold text-brand-dark-green">24/7</div>
+                  <div className="text-xs sm:text-sm md:text-base text-brand-dark-green/70">Suporte técnico</div>
                 </div>
               </div>
 
-              <div className="flex flex-col gap-4 sm:gap-6 pt-4">
-                <div className="flex items-center gap-3 text-brand-dark-green text-sm sm:text-base">
-                  <MapPin className="w-4 sm:w-5 h-4 sm:h-5 text-brand-dark-green/60 flex-shrink-0" />
+              <div className="flex flex-col gap-3 sm:gap-4 md:gap-6 pt-2 sm:pt-4">
+                <div className="flex items-center gap-2 sm:gap-3 text-brand-dark-green text-xs sm:text-sm md:text-base">
+                  <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-brand-dark-green/60 flex-shrink-0" />
                   <span>Porto Alegre, Rio Grande do Sul</span>
                 </div>
-                <div className="flex items-center gap-3 text-brand-dark-green text-sm sm:text-base">
-                  <Phone className="w-4 sm:w-5 h-4 sm:h-5 text-brand-dark-green/60 flex-shrink-0" />
+                <div className="flex items-center gap-2 sm:gap-3 text-brand-dark-green text-xs sm:text-sm md:text-base">
+                  <Phone className="w-4 h-4 sm:w-5 sm:h-5 text-brand-dark-green/60 flex-shrink-0" />
                   <span>(51) 99487-6689</span>
                 </div>
               </div>
@@ -465,47 +467,47 @@ export default function LandingPage() {
 
 
       {/* Final CTA Section */}
-      <section className="py-16 sm:py-20 lg:py-24 bg-gradient-to-br from-brand-dark-green via-brand-dark-green to-brand-dark-green/90 relative overflow-hidden">
+      <section className="py-10 sm:py-16 md:py-20 lg:py-24 bg-gradient-to-br from-brand-dark-green via-brand-dark-green to-brand-dark-green/90 relative overflow-hidden">
         <div className="absolute inset-0">
-          <div className="absolute top-1/4 left-1/4 w-64 sm:w-96 h-64 sm:h-96 bg-brand-light-green/10 rounded-full mix-blend-multiply filter blur-xl"></div>
-          <div className="absolute bottom-1/4 right-1/4 w-48 sm:w-64 h-48 sm:h-64 bg-brand-white/5 rounded-full mix-blend-multiply filter blur-xl"></div>
+          <div className="absolute top-1/4 left-1/4 w-48 sm:w-64 md:w-96 h-48 sm:h-64 md:h-96 bg-brand-light-green/10 rounded-full mix-blend-multiply filter blur-xl"></div>
+          <div className="absolute bottom-1/4 right-1/4 w-36 sm:w-48 md:w-64 h-36 sm:h-48 md:h-64 bg-brand-white/5 rounded-full mix-blend-multiply filter blur-xl"></div>
         </div>
         
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="space-y-6 sm:space-y-8">
-            <h3 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-brand-white leading-tight">
+          <div className="space-y-5 sm:space-y-6 md:space-y-8">
+            <h3 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-brand-white leading-tight">
               Pronto para transformar 
               <span className="block">suas finanças?</span>
             </h3>
             
-            <p className="text-lg sm:text-xl text-brand-white/80 max-w-2xl mx-auto px-4">
+            <p className="text-sm sm:text-base md:text-lg lg:text-xl text-brand-white/80 max-w-2xl mx-auto px-2 sm:px-4">
               Junte-se às empresas que já simplificaram sua gestão financeira com o Balanzzo.
             </p>
 
-            <div className="flex flex-col gap-3 sm:gap-4 justify-center items-center max-w-md mx-auto">
+            <div className="flex flex-col gap-2.5 sm:gap-3 md:gap-4 justify-center items-center max-w-md mx-auto">
               <Input 
-                placeholder="Full name"
-                className="w-full h-12 sm:h-14 bg-brand-white/10 border-brand-white/20 text-brand-white placeholder:text-brand-white/60 focus:bg-brand-white focus:text-brand-dark-green"
+                placeholder="Nome completo"
+                className="w-full h-11 sm:h-12 md:h-14 bg-brand-white/10 border-brand-white/20 text-brand-white placeholder:text-brand-white/60 focus:bg-brand-white focus:text-brand-dark-green text-sm sm:text-base"
               />
               <Input 
-                placeholder="Phone (optional)"
-                className="w-full h-12 sm:h-14 bg-brand-white/10 border-brand-white/20 text-brand-white placeholder:text-brand-white/60 focus:bg-brand-white focus:text-brand-dark-green"
+                placeholder="Celular (opcional)"
+                className="w-full h-11 sm:h-12 md:h-14 bg-brand-white/10 border-brand-white/20 text-brand-white placeholder:text-brand-white/60 focus:bg-brand-white focus:text-brand-dark-green text-sm sm:text-base"
               />
               <Button 
                 onClick={() => window.open('https://wa.me/5551994876689', '_blank')}
-                className="w-full bg-brand-white text-brand-dark-green hover:bg-brand-light-green px-6 sm:px-8 py-3 sm:py-4 h-12 sm:h-14 font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
-                aria-label="Schedule a meeting on WhatsApp"
-                title="Opens WhatsApp in a new tab"
+                className="w-full bg-brand-white text-brand-dark-green hover:bg-brand-light-green px-4 sm:px-6 md:px-8 py-2.5 sm:py-3 md:py-4 h-11 sm:h-12 md:h-14 font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 text-sm sm:text-base"
+                aria-label="Agendar reunião no WhatsApp"
+                title="Abre o WhatsApp em uma nova aba."
               >
-                Schedule a meeting
-                <ArrowRight className="ml-2 w-4 sm:w-5 h-4 sm:h-5" />
+                Agende uma reunião
+                <ArrowRight className="ml-2 w-4 h-4 sm:w-5 sm:h-5" />
               </Button>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 text-sm text-brand-white/70">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 md:gap-6 text-xs sm:text-sm text-brand-white/70">
               <span className="flex items-center gap-1">
-                <Shield className="w-4 h-4" />
-                We respect your privacy. We never share your data.
+                <Shield className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                Respeitamos sua privacidade. Seus dados não são compartilhados.
               </span>
             </div>
           </div>
