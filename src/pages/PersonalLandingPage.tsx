@@ -189,10 +189,12 @@ export default function PersonalLandingPage() {
                 <Button 
                   onClick={handleLogin}
                   size="lg"
-                  className="w-full sm:w-auto bg-brand-dark-green hover:bg-brand-dark-green/90 text-brand-white px-10 py-6 h-16 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 text-lg"
+                  className="w-full sm:w-auto bg-brand-dark-green hover:bg-brand-dark-green/90 text-brand-white px-6 sm:px-10 py-4 sm:py-6 h-auto min-h-[56px] sm:min-h-[64px] rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 text-base sm:text-lg whitespace-normal text-center leading-tight"
                 >
-                  Comece a organizar sua vida financeira
-                  <ArrowRight className="ml-2 w-5 h-5" />
+                  <span className="flex items-center justify-center gap-2">
+                    <span>Comece a organizar sua vida financeira</span>
+                    <ArrowRight className="w-5 h-5 flex-shrink-0" />
+                  </span>
                 </Button>
               </div>
 
