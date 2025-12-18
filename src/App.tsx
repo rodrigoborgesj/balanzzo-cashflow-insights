@@ -34,6 +34,7 @@ import PersonalProfileSetup from "./pages/personal/PersonalProfileSetup";
 import PersonalSavingsPage from "./pages/personal/PersonalSavingsPage";
 import PersonalFixedExpensesPage from "./pages/personal/PersonalFixedExpensesPage";
 import PersonalMovimentacoesPage from "./pages/personal/PersonalMovimentacoesPage";
+import PersonalComoUsar from "./pages/personal/PersonalComoUsar";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -230,6 +231,11 @@ const App = () => {
           <Route path="/personal/movimentacoes" element={
             <ProtectedRoute>
               <PersonalMovimentacoesPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/personal/como-usar" element={
+            <ProtectedRoute>
+              <PersonalComoUsar />
             </ProtectedRoute>
           } />
 

@@ -5,7 +5,8 @@ import {
   Building2,
   Receipt,
   BarChart3,
-  List
+  List,
+  HelpCircle
 } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -32,6 +33,10 @@ const analiseItems = [
   { title: "Dashboard", url: "/personal", icon: BarChart3 },
   { title: "Caixinhas", url: "/personal/savings", icon: PiggyBank },
   { title: "Contas Fixas", url: "/personal/fixed-expenses", icon: Receipt },
+];
+
+const suporteItems = [
+  { title: "Como Usar", url: "/personal/como-usar", icon: HelpCircle },
 ];
 
 export function PersonalSidebar() {
@@ -115,6 +120,28 @@ export function PersonalSidebar() {
           <SidebarGroupContent>
             <SidebarMenu className="space-y-1">
               {analiseItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild>
+                    <NavLink 
+                      to={item.url} 
+                      className={getNavClass(item.url)}
+                    >
+                      <item.icon className="h-5 w-5 flex-shrink-0" />
+                      {!collapsed && <span className="ml-3">{item.title}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* Suporte Section */}
+        <SidebarGroup>
+          {!collapsed && <SidebarGroupLabel className="text-xs text-muted-foreground uppercase tracking-wider">Suporte</SidebarGroupLabel>}
+          <SidebarGroupContent>
+            <SidebarMenu className="space-y-1">
+              {suporteItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <NavLink 
