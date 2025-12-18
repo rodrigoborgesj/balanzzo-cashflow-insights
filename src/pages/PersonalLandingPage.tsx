@@ -428,7 +428,7 @@ export default function PersonalLandingPage() {
                 prazos realistas</strong> e guardar dinheiro de forma organizada e funcional.
               </p>
               <ul className="space-y-3">
-                {["Crie quantas metas quiser", "O sistema calcula quanto guardar por mês", "Anexe comprovantes de cada depósito", "Acompanhe seu progresso visualmente"].map((item, i) => (
+                {["Crie metas de poupança", "O sistema calcula quanto guardar por mês", "Anexe comprovantes de cada depósito", "Acompanhe seu progresso visualmente"].map((item, i) => (
                   <li key={i} className="flex items-center gap-3 text-brand-dark-green/80">
                     <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
                     {item}
@@ -618,8 +618,8 @@ export default function PersonalLandingPage() {
                 <ul className="space-y-4 mb-8">
                   {[
                     "Dashboard completo com métricas",
-                    "Conciliação bancária (CSV, OFX, PDF)",
-                    "Caixinhas ilimitadas",
+                    "Conciliação bancária (CSV e OFX)",
+                    "Caixinhas para suas metas",
                     "Contas fixas mensais",
                     "Previsibilidade financeira",
                     "Categorias personalizadas",
