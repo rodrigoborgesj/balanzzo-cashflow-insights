@@ -190,10 +190,10 @@ export default function Checkout() {
               <div className="border-t pt-4">
                 <h4 className="font-semibold mb-2">Inclui:</h4>
                 <ul className="space-y-2">
-                  {selectedPlan.features.map((feature, index) => (
+                  {(Array.isArray(selectedPlan.features) ? selectedPlan.features : []).map((feature, index) => (
                     <li key={index} className="text-sm flex items-start gap-2">
                       <span className="text-primary">✓</span>
-                      {feature}
+                      {String(feature)}
                     </li>
                   ))}
                 </ul>
