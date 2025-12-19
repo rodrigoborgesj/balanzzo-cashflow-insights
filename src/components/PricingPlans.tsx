@@ -166,10 +166,10 @@ export function PricingPlans({ showTitle = true }: PricingPlansProps) {
 
                 <CardContent className="p-4 sm:p-6 pt-2 sm:pt-4">
                   <ul className="space-y-2 sm:space-y-3">
-                    {plan.features.map((feature, index) => (
+                    {(Array.isArray(plan.features) ? plan.features : []).map((feature, index) => (
                       <li key={index} className="flex items-start gap-2">
                         <Check className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0 mt-0.5" />
-                        <span className="text-xs sm:text-sm">{feature}</span>
+                        <span className="text-xs sm:text-sm">{String(feature)}</span>
                       </li>
                     ))}
                   </ul>
