@@ -108,8 +108,8 @@ serve(async (req) => {
             payment_method: 'checkout',
             checkout: {
               accepted_payment_methods: ['credit_card'],
-              success_url: 'https://hbjobpbiordnwflfhjnu.supabase.co/dashboard?payment=success',
-              cancel_url: 'https://hbjobpbiordnwflfhjnu.supabase.co/checkout?payment=canceled',
+              success_url: 'https://balanzzo.com.br/select-module?payment=success',
+              cancel_url: 'https://balanzzo.com.br/checkout?payment=canceled',
               customer_editable: true,
               skip_checkout_success_page: false,
               expires_in: 3600,
@@ -122,6 +122,7 @@ serve(async (req) => {
           user_id: user.id,
           plan_id: planId,
           plan_name: plan.name,
+          subscription_type: plan.subscription_type,
         }
       }),
     });
