@@ -376,6 +376,83 @@ export type Database = {
         }
         Relationships: []
       }
+      personal_debt_renegotiations: {
+        Row: {
+          created_at: string | null
+          debt_id: string
+          first_due_date: string
+          id: string
+          installment_amount: number
+          total_installments: number
+          total_renegotiated: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          debt_id: string
+          first_due_date: string
+          id?: string
+          installment_amount: number
+          total_installments: number
+          total_renegotiated?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          debt_id?: string
+          first_due_date?: string
+          id?: string
+          installment_amount?: number
+          total_installments?: number
+          total_renegotiated?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personal_debt_renegotiations_debt_id_fkey"
+            columns: ["debt_id"]
+            isOneToOne: false
+            referencedRelation: "personal_debts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      personal_debts: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+          status: string
+          total_amount: number
+          type: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+          status?: string
+          total_amount: number
+          type: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          status?: string
+          total_amount?: number
+          type?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       personal_fixed_expenses: {
         Row: {
           active: boolean
@@ -407,6 +484,36 @@ export type Database = {
           description?: string
           id?: string
           payment_day?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      personal_fixed_income: {
+        Row: {
+          active: boolean
+          amount: number
+          created_at: string | null
+          id: string
+          source: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          amount: number
+          created_at?: string | null
+          id?: string
+          source: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          amount?: number
+          created_at?: string | null
+          id?: string
+          source?: string
           updated_at?: string | null
           user_id?: string
         }

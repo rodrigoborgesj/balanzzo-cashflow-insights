@@ -6,7 +6,8 @@ import {
   Receipt,
   BarChart3,
   List,
-  HelpCircle
+  HelpCircle,
+  CreditCard
 } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -33,6 +34,7 @@ const analiseItems = [
   { title: "Dashboard", url: "/personal", icon: BarChart3 },
   { title: "Caixinhas", url: "/personal/savings", icon: PiggyBank },
   { title: "Contas Fixas", url: "/personal/fixed-expenses", icon: Receipt },
+  { title: "Planejamento de Dívidas", url: "/personal/debt-planning", icon: CreditCard },
 ];
 
 const suporteItems = [
