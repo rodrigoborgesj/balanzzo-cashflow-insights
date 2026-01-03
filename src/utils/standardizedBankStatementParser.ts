@@ -143,9 +143,12 @@ export class StandardizedBankStatementParser {
       }
 
       // Find the actual header row (Sicredi has metadata lines before the header)
+      // Look for rows containing date/description/value headers
       let headerIndex = -1;
-      for (let i = 0; i < Math.min(rows.length, 15); i++) {
-        if (this.hasHeaderRow(rows[i])) {
+      for (let i = 0; i < Math.min(rows.length, 25); i++) {
+        // Clean the row cells before checking for header
+        const cleanedRow = rows[i].map(cell => cell.trim());
+        if (this.hasHeaderRow(cleanedRow)) {
           headerIndex = i;
           console.log(`📋 Header found at line ${i + 1}:`, rows[i]);
           break;
@@ -250,7 +253,13 @@ export class StandardizedBankStatementParser {
     const hasDateValue = firstRow.some(cell => this.parseDate(cell) !== null);
     
     // Header if has keywords and no valid date values
-    return keywordMatches >= 2 && !hasDateValue;
+    const isHeader = keywordMatches >= 2 && !hasDateValue;
+    
+    if (isHeader) {
+      console.log(`📋 Header row detected with ${keywordMatches} keyword matches:`, firstRow);
+    }
+    
+    return isHeader;
   }
 
   private static determineColumnMapping(firstRow: string[], hasHeader: boolean): Record<string, number> {
@@ -261,10 +270,18 @@ export class StandardizedBankStatementParser {
       firstRow.forEach((header, index) => {
         const normalized = header.toLowerCase().trim();
 
-        // Date columns
-        if ((normalized.includes('data') || normalized.includes('date')) && mapping.date === undefined) {
-          mapping.date = index;
-          return;
+        // Date columns - must be exact "data" or start with "data de" but NOT "data de vencimento"
+        if (mapping.date === undefined) {
+          const isDateColumn = 
+            normalized === 'data' || 
+            normalized === 'date' ||
+            (normalized.startsWith('data') && !normalized.includes('vencimento'));
+          
+          if (isDateColumn) {
+            mapping.date = index;
+            console.log(`📅 Date column found at index ${index}: "${header}"`);
+            return;
+          }
         }
 
         // Skip "saldo" column completely (XP Investimentos and other banks)
@@ -273,25 +290,47 @@ export class StandardizedBankStatementParser {
           return;
         }
 
-        // Skip "valor em dólar" / "valor em dolar" when choosing main value column
+        // Skip foreign currency value columns
         const isForeignValue =
           normalized.includes('valor em dólar') ||
           normalized.includes('valor em dolar') ||
           normalized.includes('dólar') ||
           normalized.includes('dolar');
 
-        // Main value column (use the first valid match only)
-        if (!isForeignValue && (normalized.includes('valor') || normalized.includes('value') || normalized.includes('amount'))) {
-          if (mapping.value === undefined) {
-            mapping.value = index;
-          }
+        if (isForeignValue) {
+          console.log(`💵 Ignoring foreign value column at index ${index}: "${header}"`);
           return;
         }
 
-        // Description columns
-        if ((normalized.includes('descricao') || normalized.includes('descrição') || normalized.includes('description')) && mapping.description === undefined) {
-          mapping.description = index;
-          return;
+        // Main value column (use the first valid match only)
+        // Must be exactly "valor" or "value" or "amount", not compound terms
+        if (mapping.value === undefined) {
+          const isValueColumn = 
+            normalized === 'valor' || 
+            normalized === 'value' || 
+            normalized === 'amount' ||
+            (normalized.includes('valor') && !normalized.includes('dólar') && !normalized.includes('dolar'));
+          
+          if (isValueColumn) {
+            mapping.value = index;
+            console.log(`💰 Value column found at index ${index}: "${header}"`);
+            return;
+          }
+        }
+
+        // Description columns - must contain "descri" (covers descrição, descricao, description)
+        if (mapping.description === undefined) {
+          const isDescriptionColumn = 
+            normalized.includes('descricao') || 
+            normalized.includes('descrição') || 
+            normalized.includes('description') ||
+            normalized === 'descri';
+          
+          if (isDescriptionColumn) {
+            mapping.description = index;
+            console.log(`📝 Description column found at index ${index}: "${header}"`);
+            return;
+          }
         }
 
         // Optional identifier column
@@ -299,27 +338,34 @@ export class StandardizedBankStatementParser {
           mapping.identifier = index;
         }
       });
+
+      // Log the final mapping found from headers
+      console.log('📋 Column mapping from headers:', mapping);
     }
     
     // Default mapping if no header or incomplete mapping
     if (mapping.date === undefined || mapping.value === undefined || mapping.description === undefined) {
+      console.log('⚠️ Incomplete mapping, applying defaults. Current:', mapping, 'Row length:', firstRow.length);
+      
       if (firstRow.length >= 4) {
         // Standard 4-column format: Date, Value, Identifier, Description  
-        mapping.date = 0;
-        mapping.value = 1;
-        mapping.identifier = 2; // Now we capture the identifier
-        mapping.description = 3;
+        if (mapping.date === undefined) mapping.date = 0;
+        if (mapping.value === undefined) mapping.value = 1;
+        if (mapping.identifier === undefined) mapping.identifier = 2;
+        if (mapping.description === undefined) mapping.description = 3;
       } else if (firstRow.length === 3) {
         // 3-column format without identifier: Date, Value, Description
-        mapping.date = 0;
-        mapping.value = 1; 
-        mapping.description = 2;
+        if (mapping.date === undefined) mapping.date = 0;
+        if (mapping.value === undefined) mapping.value = 1; 
+        if (mapping.description === undefined) mapping.description = 2;
       } else {
         // Fallback for any other format
-        mapping.date = 0;
-        mapping.value = firstRow.length > 1 ? 1 : 0;
-        mapping.description = firstRow.length > 2 ? 2 : 1;
+        if (mapping.date === undefined) mapping.date = 0;
+        if (mapping.value === undefined) mapping.value = firstRow.length > 1 ? 1 : 0;
+        if (mapping.description === undefined) mapping.description = firstRow.length > 2 ? 2 : 1;
       }
+      
+      console.log('📋 Final column mapping with defaults:', mapping);
     }
     
     return mapping;
