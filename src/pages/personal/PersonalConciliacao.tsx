@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { 
   ArrowUpDown,
   Loader2,
-  Tags
+  Tags,
+  Settings
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useModule } from '@/contexts/ModuleContext';
@@ -15,6 +16,7 @@ import PersonalTransactionsList from '@/components/personal/PersonalTransactions
 import PersonalCategoriesManager from '@/components/personal/PersonalCategoriesManager';
 import PersonalFileUploader from '@/components/personal/PersonalFileUploader';
 import PersonalTransactionForm from '@/components/personal/PersonalTransactionForm';
+import PersonalTransactionRemover from '@/components/personal/PersonalTransactionRemover';
 
 export default function PersonalConciliacao() {
   const navigate = useNavigate();
@@ -82,6 +84,10 @@ export default function PersonalConciliacao() {
               <Tags className="h-4 w-4" />
               Categorias
             </TabsTrigger>
+            <TabsTrigger value="settings" className="flex items-center gap-2">
+              <Settings className="h-4 w-4" />
+              Configurações
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="transactions">
@@ -90,6 +96,10 @@ export default function PersonalConciliacao() {
 
           <TabsContent value="categories">
             <PersonalCategoriesManager />
+          </TabsContent>
+
+          <TabsContent value="settings">
+            <PersonalTransactionRemover />
           </TabsContent>
         </Tabs>
       </div>
