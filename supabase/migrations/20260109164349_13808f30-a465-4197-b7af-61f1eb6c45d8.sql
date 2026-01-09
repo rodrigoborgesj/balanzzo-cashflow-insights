@@ -1,0 +1,1 @@
+INSERT INTO free_access_users (email) VALUES ('andylima2021@outlook.com');
