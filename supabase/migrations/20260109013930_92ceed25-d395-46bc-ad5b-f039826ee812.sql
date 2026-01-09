@@ -1,0 +1,1 @@
+DELETE FROM free_access_users WHERE LOWER(email) = 'bilu.neto13@gmail.com';
