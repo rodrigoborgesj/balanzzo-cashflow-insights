@@ -43,7 +43,7 @@ serve(async (req) => {
 
     const { planId, customer }: CreateSubscriptionRequest = await req.json();
     
-    console.log('Creating checkout session for user:', user.id, 'plan:', planId);
+    console.log('Creating subscription for user:', user.id, 'plan:', planId);
 
     // Get plan details
     const { data: plan, error: planError } = await supabase
@@ -60,90 +60,205 @@ serve(async (req) => {
       );
     }
 
+    if (!plan.pagarme_plan_id) {
+      console.error('Plan does not have pagarme_plan_id:', plan.id);
+      return new Response(
+        JSON.stringify({ error: 'Plano não configurado para pagamento' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Format phone number
     const phoneDigits = customer.phone.replace(/\D/g, '');
     const areaCode = phoneDigits.substring(0, 2);
     const phoneNumber = phoneDigits.substring(2);
-
-    console.log('Creating Pagar.me order with checkout...');
+    const documentClean = customer.document.replace(/\D/g, '');
 
     const basicAuth = 'Basic ' + btoa(`${pagarmeKey}:`);
 
-    // Create Pagar.me Order with Checkout
-    const orderResponse = await fetch('https://api.pagar.me/core/v5/orders', {
+    // Step 1: Create or get customer in Pagar.me
+    console.log('Creating/updating customer in Pagar.me...');
+    
+    const customerPayload = {
+      name: customer.name,
+      email: customer.email,
+      document: documentClean,
+      document_type: documentClean.length > 11 ? 'CNPJ' : 'CPF',
+      type: documentClean.length > 11 ? 'company' : 'individual',
+      phones: {
+        mobile_phone: {
+          country_code: '55',
+          area_code: areaCode,
+          number: phoneNumber,
+        }
+      },
+      metadata: {
+        user_id: user.id,
+      }
+    };
+
+    const customerResponse = await fetch('https://api.pagar.me/core/v5/customers', {
       method: 'POST',
       headers: {
         'Authorization': basicAuth,
         'Content-Type': 'application/json',
         'Accept': 'application/json',
       },
-      body: JSON.stringify({
-        customer: {
-          name: customer.name,
-          email: customer.email,
-          document: customer.document.replace(/\D/g, ''),
-          type: 'individual',
-          phones: {
-            mobile_phone: {
-              country_code: '55',
-              area_code: areaCode,
-              number: phoneNumber,
-            }
-          }
-        },
-        items: [
-          {
-            amount: plan.price_cents,
-            description: `Assinatura ${plan.name}`,
-            quantity: 1,
-            code: plan.pagarme_plan_id,
-          }
-        ],
-        // Vincula o pedido a um plano para criar assinatura recorrente
-        subscription: {
-          plan_id: plan.pagarme_plan_id,
-        },
-        payments: [
-          {
-            payment_method: 'checkout',
-            checkout: {
-              accepted_payment_methods: ['credit_card'],
-              success_url: 'https://balanzzo.com.br/select-module?payment=success',
-              cancel_url: 'https://balanzzo.com.br/checkout?payment=canceled',
-              customer_editable: true,
-              skip_checkout_success_page: false,
-              expires_in: 3600,
-              billing_address_editable: false,
-            }
-          }
-        ],
-        closed: false,
-        metadata: {
-          user_id: user.id,
-          plan_id: planId,
-          plan_name: plan.name,
-          subscription_type: plan.subscription_type,
-        }
-      }),
+      body: JSON.stringify(customerPayload),
     });
 
-    if (!orderResponse.ok) {
-      const errorText = await orderResponse.text();
-      console.error('Pagar.me order creation error:', orderResponse.status, errorText);
+    let customerId: string;
+    
+    if (customerResponse.status === 409) {
+      // Customer already exists, search for it
+      console.log('Customer exists, searching...');
+      const searchResponse = await fetch(
+        `https://api.pagar.me/core/v5/customers?email=${encodeURIComponent(customer.email)}`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': basicAuth,
+            'Accept': 'application/json',
+          },
+        }
+      );
+      
+      if (!searchResponse.ok) {
+        const errorText = await searchResponse.text();
+        console.error('Error searching customer:', errorText);
+        return new Response(
+          JSON.stringify({ error: 'Erro ao buscar cliente' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      const searchData = await searchResponse.json();
+      if (!searchData.data || searchData.data.length === 0) {
+        console.error('Customer not found after 409');
+        return new Response(
+          JSON.stringify({ error: 'Cliente não encontrado' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      customerId = searchData.data[0].id;
+      console.log('Found existing customer:', customerId);
+    } else if (!customerResponse.ok) {
+      const errorText = await customerResponse.text();
+      console.error('Error creating customer:', customerResponse.status, errorText);
+      
+      let errorMessage = 'Erro ao criar cliente';
+      try {
+        const errorData = JSON.parse(errorText);
+        if (errorData.message) {
+          errorMessage = errorData.message;
+        } else if (errorData.errors && Array.isArray(errorData.errors)) {
+          errorMessage = errorData.errors.map((e: { message?: string }) => e.message || JSON.stringify(e)).join(', ');
+        }
+      } catch {
+        // Keep default error message
+      }
+      
       return new Response(
-        JSON.stringify({ error: 'Erro ao criar pedido de pagamento' }),
+        JSON.stringify({ error: errorMessage }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    } else {
+      const customerData = await customerResponse.json();
+      customerId = customerData.id;
+      console.log('Created new customer:', customerId);
+    }
+
+    // Step 2: Create Checkout Link for subscription
+    console.log('Creating checkout link for subscription...');
+    
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 24); // Expires in 24 hours
+
+    const checkoutPayload = {
+      is_building: false,
+      type: 'subscription',
+      name: `Assinatura ${plan.name} - ${customer.name}`,
+      max_paid_sessions: 1,
+      expires_at: expiresAt.toISOString(),
+      payment_settings: {
+        accepted_payment_methods: ['credit_card'],
+        credit_card_settings: {
+          operation_type: 'auth_and_capture',
+          installments: [
+            {
+              number: 1,
+              total: plan.price_cents,
+            }
+          ]
+        }
+      },
+      customer_settings: {
+        customer_id: customerId,
+      },
+      cart_settings: {
+        recurrences: [
+          {
+            start_in: 1,
+            plan_id: plan.pagarme_plan_id,
+          }
+        ]
+      },
+      layout_settings: {
+        background_color: '#1a1a2e',
+        primary_color: '#4f46e5',
+        logo_url: 'https://balanzzo.com.br/logo.png',
+      },
+      metadata: {
+        user_id: user.id,
+        plan_id: planId,
+        plan_name: plan.name,
+        subscription_type: plan.subscription_type,
+      }
+    };
+
+    console.log('Checkout payload:', JSON.stringify(checkoutPayload, null, 2));
+
+    const checkoutResponse = await fetch('https://api.pagar.me/core/v5/checkout', {
+      method: 'POST',
+      headers: {
+        'Authorization': basicAuth,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify(checkoutPayload),
+    });
+
+    const checkoutText = await checkoutResponse.text();
+    console.log('Checkout response status:', checkoutResponse.status);
+    console.log('Checkout response:', checkoutText);
+
+    if (!checkoutResponse.ok) {
+      console.error('Pagar.me checkout creation error:', checkoutResponse.status, checkoutText);
+      
+      let errorMessage = 'Erro ao criar link de pagamento';
+      try {
+        const errorData = JSON.parse(checkoutText);
+        if (errorData.message) {
+          errorMessage = errorData.message;
+        } else if (errorData.errors && Array.isArray(errorData.errors)) {
+          errorMessage = errorData.errors.map((e: { message?: string }) => e.message || JSON.stringify(e)).join(', ');
+        }
+      } catch {
+        // Keep default error message
+      }
+      
+      return new Response(
+        JSON.stringify({ error: errorMessage, details: checkoutText }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const order = await orderResponse.json();
-    console.log('Order created:', order.id);
+    const checkout = JSON.parse(checkoutText);
+    console.log('Checkout created:', checkout.id, 'URL:', checkout.url);
 
-    // Extract checkout URL from order
-    const checkoutUrl = order.checkouts?.[0]?.payment_url;
-    
-    if (!checkoutUrl) {
-      console.error('No checkout URL in order response:', order);
+    if (!checkout.url) {
+      console.error('No URL in checkout response:', checkout);
       return new Response(
         JSON.stringify({ error: 'URL de pagamento não disponível' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -153,8 +268,9 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: true, 
-        checkout_url: checkoutUrl,
-        order_id: order.id,
+        checkout_url: checkout.url,
+        checkout_id: checkout.id,
+        customer_id: customerId,
         message: 'Redirecionando para pagamento...' 
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
