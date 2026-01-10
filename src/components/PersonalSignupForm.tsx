@@ -11,7 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { Eye, EyeOff, Mail, Chrome, MapPin, User, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useSecureAuth } from "@/hooks/useSecureAuth";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { validatePasswordAsync } from "@/utils/passwordValidationAsync";
 import { PasswordValidationDisplay } from "@/components/PasswordValidationDisplay";
 import { PasswordValidationResult } from "@/utils/passwordValidation";
@@ -39,8 +39,13 @@ export function PersonalSignupForm({ onBack }: PersonalSignupFormProps) {
   const [acceptedPrivacyPolicy, setAcceptedPrivacyPolicy] = useState(false);
   const [passwordValidation, setPasswordValidation] = useState<PasswordValidationResult | null>(null);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const { signUp, signInWithGoogle } = useSecureAuth();
+  
+  // Get redirect URL and plan from query params
+  const redirectTo = searchParams.get('redirect');
+  const planId = searchParams.get('plan');
 
   const form = useForm<PersonalSignupFormData>({
     resolver: zodResolver(personalSignupSchema),
@@ -143,12 +148,19 @@ export function PersonalSignupForm({ onBack }: PersonalSignupFormProps) {
 
       toast({
         title: "Conta criada com sucesso!",
-        description: "Verifique seu email para confirmar sua conta.",
+        description: redirectTo ? "Você será redirecionado..." : "Verifique seu email para confirmar sua conta.",
       });
 
       setTimeout(() => {
-        navigate('/pessoal', { replace: true });
-      }, 2000);
+        if (redirectTo) {
+          navigate(redirectTo, { replace: true });
+        } else if (planId) {
+          navigate(`/checkout?plan=${planId}`, { replace: true });
+        } else {
+          // Default: go to personal landing page
+          navigate('/pessoal', { replace: true });
+        }
+      }, 1500);
     } catch (error: any) {
       toast({
         title: "Erro no cadastro",

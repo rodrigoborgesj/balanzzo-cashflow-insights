@@ -14,11 +14,10 @@ import { useToast } from "@/hooks/use-toast";
 import { useSecureAuth } from "@/hooks/useSecureAuth";
 import { useProfile, ProfileData } from "@/hooks/useProfile";
 import { secureStorage } from "@/utils/secureStorage";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { validatePasswordAsync } from "@/utils/passwordValidationAsync";
 import { PasswordValidationDisplay } from "@/components/PasswordValidationDisplay";
 import { PasswordValidationResult } from "@/utils/passwordValidation";
-
 const revenueRanges = [
   "Até R$ 360.000/ano (MEI)",
   "R$ 360.001 a R$ 4.800.000/ano (Micro)",
@@ -62,9 +61,14 @@ export function SignupForm({ onBack }: SignupFormProps) {
   const [acceptedPrivacyPolicy, setAcceptedPrivacyPolicy] = useState(false);
   const [passwordValidation, setPasswordValidation] = useState<PasswordValidationResult | null>(null);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const { signUp, signInWithGoogle } = useSecureAuth();
   const { createProfile } = useProfile();
+  
+  // Get redirect URL and plan from query params
+  const redirectTo = searchParams.get('redirect');
+  const planId = searchParams.get('plan');
 
   const form = useForm<SignupFormData>({
     resolver: zodResolver(signupSchema),
@@ -165,13 +169,20 @@ export function SignupForm({ onBack }: SignupFormProps) {
 
       toast({
         title: "Conta criada com sucesso!",
-        description: "Agora você será redirecionado para escolher um plano de assinatura.",
+        description: redirectTo ? "Você será redirecionado..." : "Agora você será redirecionado para escolher um plano de assinatura.",
       });
 
-      // Redireciona para a landing page (página de vendas) para escolher um plano
+      // Redireciona para o checkout se houver redirect/planId, caso contrário vai para checkout
       setTimeout(() => {
-        navigate('/', { replace: true });
-      }, 2000);
+        if (redirectTo) {
+          navigate(redirectTo, { replace: true });
+        } else if (planId) {
+          navigate(`/checkout?plan=${planId}`, { replace: true });
+        } else {
+          // Default: go to checkout to select a plan
+          navigate('/checkout', { replace: true });
+        }
+      }, 1500);
     } catch (error: any) {
       toast({
         title: "Erro no cadastro",
