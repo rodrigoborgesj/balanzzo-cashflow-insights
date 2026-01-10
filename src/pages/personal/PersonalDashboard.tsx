@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { usePersonalProfile } from '@/hooks/usePersonalProfile';
 import { usePersonalFixedExpenses } from '@/hooks/usePersonalFixedExpenses';
 import { usePersonalDashboard } from '@/hooks/usePersonalDashboard';
+import { usePersonalCategories } from '@/hooks/usePersonalCategories';
 import { PersonalLayout } from '@/components/personal/PersonalLayout';
 import { PersonalDashboardMetrics } from '@/components/personal/PersonalDashboardMetrics';
 import { PersonalMonthlyChart } from '@/components/personal/PersonalMonthlyChart';
@@ -25,6 +26,7 @@ export default function PersonalDashboard() {
   } = useModule();
   const { isLoading: profileLoading } = usePersonalProfile();
   const { totalMonthlyExpenses, fixedExpenses } = usePersonalFixedExpenses();
+  const { initializeDefaultCategories, isLoading: categoriesLoading } = usePersonalCategories();
 
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date();
@@ -33,7 +35,7 @@ export default function PersonalDashboard() {
 
   const { monthlyTotals, categoryRankings, monthlyEvolution, isLoading: dashboardLoading } = usePersonalDashboard(selectedMonth);
 
-  const isLoading = authLoading || moduleLoading || profileLoading;
+  const isLoading = authLoading || moduleLoading || profileLoading || categoriesLoading;
   const hasAnyAccess = hasPersonalSubscription || hasCompanySubscription || hasFreeAccess;
   
   useEffect(() => {
@@ -47,6 +49,13 @@ export default function PersonalDashboard() {
       }
     }
   }, [isLoading, user, hasAnyAccess, isPersonalProfileComplete, navigate]);
+
+  // Initialize default categories if not exists
+  useEffect(() => {
+    if (!isLoading && user && isPersonalProfileComplete) {
+      initializeDefaultCategories();
+    }
+  }, [isLoading, user, isPersonalProfileComplete]);
 
   if (isLoading) {
     return (
