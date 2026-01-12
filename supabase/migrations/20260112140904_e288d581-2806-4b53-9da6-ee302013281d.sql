@@ -1,0 +1,1 @@
+DELETE FROM free_access_users WHERE email = 'b5lavagemautomotivasls@gmail.com';
