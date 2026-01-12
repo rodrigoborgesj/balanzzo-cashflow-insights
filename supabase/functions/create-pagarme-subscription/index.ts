@@ -169,76 +169,56 @@ serve(async (req) => {
       console.log('Created new customer:', customerId);
     }
 
-    // Step 2: Create Checkout Link for subscription
-    console.log('Creating checkout link for subscription...');
-    
-    const expiresAt = new Date();
-    expiresAt.setHours(expiresAt.getHours() + 24); // Expires in 24 hours
+    // Step 2: Create Payment Link for subscription using the correct endpoint
+    console.log('Creating payment link for subscription...');
 
-    const checkoutPayload = {
-      is_building: false,
+    // Use paymentlinks endpoint for subscription checkout
+    const paymentLinkPayload = {
+      name: `Assinatura ${plan.name}`,
       type: 'subscription',
-      name: `Assinatura ${plan.name} - ${customer.name}`,
-      max_paid_sessions: 1,
-      expires_at: expiresAt.toISOString(),
+      is_payment_link: true,
       payment_settings: {
         accepted_payment_methods: ['credit_card'],
         credit_card_settings: {
-          operation_type: 'auth_and_capture',
-          installments: [
-            {
-              number: 1,
-              total: plan.price_cents,
-            }
-          ]
+          operation_type: 'auth_and_capture'
         }
       },
       customer_settings: {
-        customer_id: customerId,
+        customer_id: customerId
       },
-      cart_settings: {
-        recurrences: [
-          {
-            start_in: 1,
-            plan_id: plan.pagarme_plan_id,
-          }
-        ]
-      },
-      layout_settings: {
-        background_color: '#1a1a2e',
-        primary_color: '#4f46e5',
-        logo_url: 'https://balanzzo.com.br/logo.png',
+      recurrence_settings: {
+        plan_id: plan.pagarme_plan_id
       },
       metadata: {
         user_id: user.id,
         plan_id: planId,
         plan_name: plan.name,
-        subscription_type: plan.subscription_type,
+        subscription_type: plan.subscription_type
       }
     };
 
-    console.log('Checkout payload:', JSON.stringify(checkoutPayload, null, 2));
+    console.log('Payment link payload:', JSON.stringify(paymentLinkPayload, null, 2));
 
-    const checkoutResponse = await fetch('https://api.pagar.me/core/v5/checkout', {
+    const paymentLinkResponse = await fetch('https://api.pagar.me/core/v5/paymentlinks', {
       method: 'POST',
       headers: {
         'Authorization': basicAuth,
         'Content-Type': 'application/json',
         'Accept': 'application/json',
       },
-      body: JSON.stringify(checkoutPayload),
+      body: JSON.stringify(paymentLinkPayload),
     });
 
-    const checkoutText = await checkoutResponse.text();
-    console.log('Checkout response status:', checkoutResponse.status);
-    console.log('Checkout response:', checkoutText);
+    const paymentLinkText = await paymentLinkResponse.text();
+    console.log('Payment link response status:', paymentLinkResponse.status);
+    console.log('Payment link response:', paymentLinkText);
 
-    if (!checkoutResponse.ok) {
-      console.error('Pagar.me checkout creation error:', checkoutResponse.status, checkoutText);
+    if (!paymentLinkResponse.ok) {
+      console.error('Pagar.me payment link creation error:', paymentLinkResponse.status, paymentLinkText);
       
       let errorMessage = 'Erro ao criar link de pagamento';
       try {
-        const errorData = JSON.parse(checkoutText);
+        const errorData = JSON.parse(paymentLinkText);
         if (errorData.message) {
           errorMessage = errorData.message;
         } else if (errorData.errors && Array.isArray(errorData.errors)) {
@@ -249,16 +229,16 @@ serve(async (req) => {
       }
       
       return new Response(
-        JSON.stringify({ error: errorMessage, details: checkoutText }),
+        JSON.stringify({ error: errorMessage, details: paymentLinkText }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const checkout = JSON.parse(checkoutText);
-    console.log('Checkout created:', checkout.id, 'URL:', checkout.url);
+    const paymentLink = JSON.parse(paymentLinkText);
+    console.log('Payment link created:', paymentLink.id, 'URL:', paymentLink.url);
 
-    if (!checkout.url) {
-      console.error('No URL in checkout response:', checkout);
+    if (!paymentLink.url) {
+      console.error('No URL in payment link response:', paymentLink);
       return new Response(
         JSON.stringify({ error: 'URL de pagamento não disponível' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -268,8 +248,8 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: true, 
-        checkout_url: checkout.url,
-        checkout_id: checkout.id,
+        checkout_url: paymentLink.url,
+        checkout_id: paymentLink.id,
         customer_id: customerId,
         message: 'Redirecionando para pagamento...' 
       }),
