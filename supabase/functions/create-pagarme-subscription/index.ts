@@ -186,8 +186,13 @@ serve(async (req) => {
       customer_settings: {
         customer_id: customerId
       },
-      recurrence_settings: {
-        plan_id: plan.pagarme_plan_id
+      cart_settings: {
+        recurrences: [
+          {
+            plan_id: plan.pagarme_plan_id,
+            start_in: 0
+          }
+        ]
       },
       metadata: {
         user_id: user.id,
