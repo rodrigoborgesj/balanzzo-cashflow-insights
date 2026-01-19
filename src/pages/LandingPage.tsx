@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { PricingPlans } from "@/components/PricingPlans";
@@ -18,7 +17,6 @@ import {
   Shield,
   FileText,
   ArrowRight,
-  Play,
   Star,
   Users,
   Zap,
@@ -28,7 +26,6 @@ import {
 
 export default function LandingPage() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
   const [isVisible, setIsVisible] = useState(false);
   const { isAuthenticated, isLoading } = useAuth();
 
@@ -99,24 +96,23 @@ export default function LandingPage() {
               <a href="#precos" className="hover:text-brand-dark-green transition-colors">Preços</a>
               <a href="#sobre" className="hover:text-brand-dark-green transition-colors">Sobre</a>
               <button onClick={() => navigate("/blog")} className="hover:text-brand-dark-green transition-colors">Blog</button>
+              <button onClick={() => navigate("/pessoal")} className="hover:text-brand-dark-green transition-colors">Pessoal</button>
             </nav>
 
             {/* Header CTAs - Mobile Optimized */}
             <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
               <Button 
                 variant="ghost" 
-                onClick={() => navigate("/login")}
+                onClick={() => navigate("/pessoal")}
                 className="text-brand-dark-green hover:bg-brand-light-green/50 text-xs sm:text-base px-2 sm:px-4 h-9 sm:h-10 min-w-[52px] sm:min-w-0"
               >
-                Entrar
+                Pessoal
               </Button>
               <Button 
-                onClick={() => window.open('https://wa.me/5551994876689', '_blank')}
+                onClick={() => navigate("/login")}
                 className="bg-brand-dark-green hover:bg-brand-dark-green/90 text-brand-white px-2.5 sm:px-4 md:px-6 h-9 sm:h-10 rounded-lg transition-all duration-200 text-[11px] sm:text-sm md:text-base whitespace-nowrap"
-                aria-label="Agendar reunião no WhatsApp"
-                title="Abre o WhatsApp em uma nova aba."
               >
-                <span className="hidden xs:inline">Agende uma </span>reunião
+                Entrar
               </Button>
             </div>
           </div>
@@ -137,7 +133,7 @@ export default function LandingPage() {
               <div className="space-y-3 sm:space-y-4 md:space-y-6">
                 <div className="inline-flex items-center gap-2 bg-brand-light-green/50 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium text-brand-dark-green">
                   <Zap className="w-3 h-3 sm:w-4 sm:h-4" />
-                  Teste grátis — sem cartão
+                  Gestão financeira simplificada
                 </div>
                 
                 <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-brand-dark-green leading-tight">
@@ -152,45 +148,25 @@ export default function LandingPage() {
 
               {/* CTA Section */}
               <div className="space-y-3 sm:space-y-4">
-                <div className="flex flex-col gap-2.5 sm:gap-3 max-w-md">
-                  <Input 
-                    placeholder="Nome completo"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full h-11 sm:h-12 border-brand-dark-green/20 focus:border-brand-dark-green focus:ring-brand-dark-green/20 text-sm sm:text-base"
-                  />
-                  <Input 
-                    placeholder="Celular (opcional)"
-                    className="w-full h-11 sm:h-12 border-brand-dark-green/20 focus:border-brand-dark-green focus:ring-brand-dark-green/20 text-sm sm:text-base"
-                  />
+                <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-3 max-w-md">
                   <Button 
-                    onClick={() => window.open('https://wa.me/5551994876689', '_blank')}
-                    className="w-full bg-brand-dark-green hover:bg-brand-dark-green/90 text-brand-white px-4 sm:px-6 py-2.5 sm:py-3 h-11 sm:h-12 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200 text-sm sm:text-base"
-                    aria-label="Agendar reunião no WhatsApp"
-                    title="Abre o WhatsApp em uma nova aba."
+                    onClick={() => navigate("/login")}
+                    className="w-full sm:w-auto bg-brand-dark-green hover:bg-brand-dark-green/90 text-brand-white px-4 sm:px-6 py-2.5 sm:py-3 h-11 sm:h-12 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200 text-sm sm:text-base"
                   >
-                    Agende uma reunião
+                    Começar agora
                     <ArrowRight className="ml-2 w-4 h-4" />
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={() => navigate("/pessoal")}
+                    className="w-full sm:w-auto border-brand-dark-green text-brand-dark-green hover:bg-brand-light-green/50 px-4 sm:px-6 py-2.5 sm:py-3 h-11 sm:h-12 rounded-lg font-semibold transition-all duration-200 text-sm sm:text-base"
+                  >
+                    Versão Pessoal
                   </Button>
                 </div>
                 
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs sm:text-sm text-brand-dark-green/60">
-                  <span className="flex items-center gap-1">
-                    <Shield className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
-                    <span>Respeitamos sua privacidade. Seus dados não são compartilhados.</span>
-                  </span>
-                </div>
-                
                 <p className="text-xs sm:text-sm text-brand-dark-green/60 max-w-md">
-                  Se preferir, clique em 'Agende uma reunião' e fale direto pelo WhatsApp.
-                </p>
-                
-                <p className="text-xs sm:text-sm text-brand-dark-green/60 max-w-md">
-                  Prefere falar por e-mail? contato@balanzzo.com.br
-                </p>
-                
-                <p className="text-[10px] sm:text-xs text-brand-dark-green/40 max-w-md">
-                  Sem cobranças automáticas. Cancele a qualquer momento.
+                  Dúvidas? Entre em contato: contato@balanzzo.com.br
                 </p>
               </div>
 
@@ -310,10 +286,10 @@ export default function LandingPage() {
               Recursos completos
             </div>
             <h3 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-brand-dark-green mb-3 sm:mb-4 md:mb-6 leading-tight px-2 sm:px-4">
-              Teste grátis por 7 dias — sem cartão
+              Tudo que você precisa para gerenciar suas finanças
             </h3>
             <p className="text-sm sm:text-base md:text-lg lg:text-xl text-brand-dark-green/70 max-w-3xl mx-auto leading-relaxed px-2 sm:px-4">
-              Experimente todas as funções sem precisar cadastrar cartão.
+              Ferramentas completas para organizar e controlar as finanças da sua empresa.
             </p>
           </div>
 
@@ -349,12 +325,12 @@ export default function LandingPage() {
           {/* CTA in Features */}
           <div className="text-center mt-8 sm:mt-12 md:mt-16">
             <Button 
-              onClick={() => window.open('https://wa.me/5551994876689', '_blank')}
+              onClick={() => navigate("/login")}
               variant="outline"
               className="border-2 border-brand-dark-green text-brand-dark-green hover:bg-brand-dark-green hover:text-brand-white px-4 sm:px-6 md:px-8 py-2.5 sm:py-3 rounded-lg font-semibold transition-all duration-200 text-sm sm:text-base"
             >
-              <Play className="mr-2 w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              Ver demonstração
+              Começar agora
+              <ArrowRight className="ml-2 w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </Button>
           </div>
         </div>
@@ -536,31 +512,21 @@ export default function LandingPage() {
               Junte-se às empresas que já simplificaram sua gestão financeira com o Balanzzo.
             </p>
 
-            <div className="flex flex-col gap-2.5 sm:gap-3 md:gap-4 justify-center items-center max-w-md mx-auto">
-              <Input 
-                placeholder="Nome completo"
-                className="w-full h-11 sm:h-12 md:h-14 bg-brand-white/10 border-brand-white/20 text-brand-white placeholder:text-brand-white/60 focus:bg-brand-white focus:text-brand-dark-green text-sm sm:text-base"
-              />
-              <Input 
-                placeholder="Celular (opcional)"
-                className="w-full h-11 sm:h-12 md:h-14 bg-brand-white/10 border-brand-white/20 text-brand-white placeholder:text-brand-white/60 focus:bg-brand-white focus:text-brand-dark-green text-sm sm:text-base"
-              />
+            <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-3 md:gap-4 justify-center items-center max-w-md mx-auto">
               <Button 
-                onClick={() => window.open('https://wa.me/5551994876689', '_blank')}
-                className="w-full bg-brand-white text-brand-dark-green hover:bg-brand-light-green px-4 sm:px-6 md:px-8 py-2.5 sm:py-3 md:py-4 h-11 sm:h-12 md:h-14 font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 text-sm sm:text-base"
-                aria-label="Agendar reunião no WhatsApp"
-                title="Abre o WhatsApp em uma nova aba."
+                onClick={() => navigate("/login")}
+                className="w-full sm:w-auto bg-brand-white text-brand-dark-green hover:bg-brand-light-green px-4 sm:px-6 md:px-8 py-2.5 sm:py-3 md:py-4 h-11 sm:h-12 md:h-14 font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 text-sm sm:text-base"
               >
-                Agende uma reunião
+                Começar agora
                 <ArrowRight className="ml-2 w-4 h-4 sm:w-5 sm:h-5" />
               </Button>
-            </div>
-
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 md:gap-6 text-xs sm:text-sm text-brand-white/70">
-              <span className="flex items-center gap-1">
-                <Shield className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                Respeitamos sua privacidade. Seus dados não são compartilhados.
-              </span>
+              <Button 
+                variant="outline"
+                onClick={() => navigate("/pessoal")}
+                className="w-full sm:w-auto border-brand-white text-brand-white hover:bg-brand-white/10 px-4 sm:px-6 md:px-8 py-2.5 sm:py-3 md:py-4 h-11 sm:h-12 md:h-14 font-semibold rounded-lg transition-all duration-200 text-sm sm:text-base"
+              >
+                Versão Pessoal
+              </Button>
             </div>
           </div>
         </div>
