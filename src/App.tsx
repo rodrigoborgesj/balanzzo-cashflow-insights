@@ -36,6 +36,7 @@ import PersonalFixedExpensesPage from "./pages/personal/PersonalFixedExpensesPag
 import PersonalMovimentacoesPage from "./pages/personal/PersonalMovimentacoesPage";
 import PersonalComoUsar from "./pages/personal/PersonalComoUsar";
 import PersonalDebtPlanningPage from "./pages/personal/PersonalDebtPlanningPage";
+import Blog from "./pages/Blog";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -103,6 +104,7 @@ const App = () => {
           {/* Public landing pages */}
           <Route path="/" element={<LandingPage />} />
           <Route path="/pessoal" element={<PersonalLandingPage />} />
+          <Route path="/blog" element={<Blog />} />
           
           {/* Auth routes */}
           <Route path="/login" element={<Login />} />
