@@ -5,6 +5,11 @@ import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { PricingPlans } from "@/components/PricingPlans";
 import { ClientLogosCarousel } from "@/components/ClientLogosCarousel";
+import karuanaLogo from "@/assets/clients/karuana.jpeg";
+import podoSaudeLogo from "@/assets/clients/podo-saude.jpeg";
+import clinicaAlaniaLogo from "@/assets/clients/clinica-alania-vargas.jpeg";
+import b5AutomotivaLogo from "@/assets/clients/b5-automotiva.jpeg";
+import dinnyEstevezLogo from "@/assets/clients/dinny-estevez.jpeg";
 import { 
   CheckCircle, 
   Upload, 
@@ -174,9 +179,11 @@ export default function LandingPage() {
               {/* Social Proof */}
               <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 pt-2">
                 <div className="flex -space-x-2">
-                  {[1, 2, 3, 4].map((i) => (
-                    <div key={i} className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-brand-dark-green to-brand-light-green rounded-full border-2 border-brand-white"></div>
-                  ))}
+                  <img src={karuanaLogo} alt="Karuana" className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-brand-white object-cover grayscale" />
+                  <img src={podoSaudeLogo} alt="Podo Saúde" className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-brand-white object-cover grayscale" />
+                  <img src={clinicaAlaniaLogo} alt="Clínica Alânia Vargas" className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-brand-white object-cover grayscale" />
+                  <img src={b5AutomotivaLogo} alt="B5 Estética Automotiva" className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-brand-white object-cover grayscale" />
+                  <img src={dinnyEstevezLogo} alt="Dinny Estevez" className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-brand-white object-cover grayscale" />
                 </div>
                 <div className="text-xs sm:text-sm text-brand-dark-green/70">
                   <span className="font-semibold">Empresas que confiam na Balanzzo</span>
