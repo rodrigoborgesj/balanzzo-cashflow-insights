@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { PricingPlans } from "@/components/PricingPlans";
+import { ClientLogosCarousel } from "@/components/ClientLogosCarousel";
 import { 
   CheckCircle, 
   Upload, 
@@ -276,6 +277,8 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Client Logos Section */}
+      <ClientLogosCarousel />
 
       {/* Features Section */}
       <section id="recursos" className="py-10 sm:py-16 md:py-20 lg:py-24 bg-gradient-to-b from-brand-white to-brand-cream/30">
