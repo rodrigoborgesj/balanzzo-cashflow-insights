@@ -14,6 +14,7 @@ import {
   PiggyBank
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Helmet } from "react-helmet-async";
 
 interface BlogPost {
   id: string;
@@ -65,7 +66,54 @@ export default function Blog() {
   const regularPosts = filteredPosts.filter(post => !post.featured);
 
   return (
-    <div className="min-h-screen bg-brand-white font-sans">
+    <>
+      <Helmet>
+        {/* Meta Tags Básicas */}
+        <title>Blog Balanzzo | Dicas de Finanças Pessoais e Empresariais</title>
+        <meta name="description" content="Dicas práticas sobre organização financeira, controle de dívidas, empréstimos, investimentos e reserva de emergência. Conteúdos para melhorar sua vida financeira pessoal e empresarial." />
+        <meta name="keywords" content="blog finanças, dicas financeiras, organização financeira, finanças pessoais, finanças empresariais, controle de dívidas, empréstimos, investimentos, reserva de emergência, planejamento financeiro, educação financeira, gestão financeira, orçamento pessoal" />
+        <meta name="author" content="Equipe Balanzzo" />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href="https://balanzzo.lovable.app/blog" />
+
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://balanzzo.lovable.app/blog" />
+        <meta property="og:title" content="Blog Balanzzo | Dicas de Finanças Pessoais e Empresariais" />
+        <meta property="og:description" content="Dicas práticas sobre organização financeira, controle de dívidas, empréstimos, investimentos e reserva de emergência. Conteúdos para melhorar sua vida financeira." />
+        <meta property="og:image" content="https://balanzzo.lovable.app/lovable-uploads/6335b26d-ecb0-4039-ad1c-b4fd6bed66f1.png" />
+        <meta property="og:site_name" content="Balanzzo" />
+        <meta property="og:locale" content="pt_BR" />
+
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content="https://balanzzo.lovable.app/blog" />
+        <meta name="twitter:title" content="Blog Balanzzo | Dicas de Finanças Pessoais e Empresariais" />
+        <meta name="twitter:description" content="Dicas práticas sobre organização financeira, controle de dívidas, empréstimos, investimentos e reserva de emergência." />
+        <meta name="twitter:image" content="https://balanzzo.lovable.app/lovable-uploads/6335b26d-ecb0-4039-ad1c-b4fd6bed66f1.png" />
+
+        {/* Schema.org JSON-LD */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Blog",
+            "name": "Blog Balanzzo",
+            "description": "Dicas práticas sobre organização financeira, controle de dívidas, empréstimos, investimentos e reserva de emergência.",
+            "url": "https://balanzzo.lovable.app/blog",
+            "publisher": {
+              "@type": "Organization",
+              "name": "Balanzzo",
+              "logo": {
+                "@type": "ImageObject",
+                "url": "https://balanzzo.lovable.app/lovable-uploads/6335b26d-ecb0-4039-ad1c-b4fd6bed66f1.png"
+              }
+            },
+            "inLanguage": "pt-BR"
+          })}
+        </script>
+      </Helmet>
+
+      <div className="min-h-screen bg-brand-white font-sans">
       {/* Header - Mobile Optimized */}
       <header className="bg-brand-white border-b border-brand-dark-green/10 sticky top-0 z-50 backdrop-blur-sm bg-brand-white/95">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -340,5 +388,6 @@ export default function Blog() {
         </div>
       </footer>
     </div>
+    </>
   );
 }

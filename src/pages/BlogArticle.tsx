@@ -1,13 +1,94 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Calendar, Clock, User, Share2 } from "lucide-react";
+import { Helmet } from "react-helmet-async";
 
 export default function BlogArticle() {
   const navigate = useNavigate();
   const { slug } = useParams();
 
+  // SEO Meta Tags para o artigo
+  const articleTitle = "Organização Financeira em 2026: O Guia Definitivo para Começar o Ano com Clareza e Estratégia";
+  const articleDescription = "Aprenda como organizar suas finanças pessoais e empresariais em 2026. Guia completo sobre planejamento financeiro, reserva de emergência, controle de dívidas, empréstimos e investimentos. Dicas práticas para ter clareza e controle do seu dinheiro.";
+  const articleKeywords = "organização financeira, finanças pessoais, finanças empresariais, planejamento financeiro 2026, reserva de emergência, controle de dívidas, empréstimos, investimentos, gestão financeira, orçamento pessoal, conciliação bancária, fluxo de caixa, educação financeira, dicas financeiras, economia doméstica";
+  const articleUrl = "https://balanzzo.lovable.app/blog/organizacao-financeira-2026";
+  const articleImage = "https://balanzzo.lovable.app/lovable-uploads/6335b26d-ecb0-4039-ad1c-b4fd6bed66f1.png";
+  const publishDate = "2026-01-19";
+  const authorName = "Equipe Balanzzo";
+
   return (
-    <div className="min-h-screen bg-brand-white font-sans">
+    <>
+      <Helmet>
+        {/* Meta Tags Básicas */}
+        <title>{articleTitle} | Blog Balanzzo</title>
+        <meta name="description" content={articleDescription} />
+        <meta name="keywords" content={articleKeywords} />
+        <meta name="author" content={authorName} />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href={articleUrl} />
+
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="article" />
+        <meta property="og:url" content={articleUrl} />
+        <meta property="og:title" content={articleTitle} />
+        <meta property="og:description" content={articleDescription} />
+        <meta property="og:image" content={articleImage} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:site_name" content="Balanzzo" />
+        <meta property="og:locale" content="pt_BR" />
+        <meta property="article:published_time" content={publishDate} />
+        <meta property="article:author" content={authorName} />
+        <meta property="article:section" content="Finanças Pessoais" />
+        <meta property="article:tag" content="organização financeira" />
+        <meta property="article:tag" content="finanças pessoais" />
+        <meta property="article:tag" content="planejamento financeiro" />
+        <meta property="article:tag" content="reserva de emergência" />
+        <meta property="article:tag" content="controle de dívidas" />
+        <meta property="article:tag" content="investimentos" />
+
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content={articleUrl} />
+        <meta name="twitter:title" content={articleTitle} />
+        <meta name="twitter:description" content={articleDescription} />
+        <meta name="twitter:image" content={articleImage} />
+
+        {/* Schema.org JSON-LD */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Article",
+            "headline": articleTitle,
+            "description": articleDescription,
+            "image": articleImage,
+            "author": {
+              "@type": "Organization",
+              "name": authorName,
+              "url": "https://balanzzo.lovable.app"
+            },
+            "publisher": {
+              "@type": "Organization",
+              "name": "Balanzzo",
+              "logo": {
+                "@type": "ImageObject",
+                "url": "https://balanzzo.lovable.app/lovable-uploads/6335b26d-ecb0-4039-ad1c-b4fd6bed66f1.png"
+              }
+            },
+            "datePublished": publishDate,
+            "dateModified": publishDate,
+            "mainEntityOfPage": {
+              "@type": "WebPage",
+              "@id": articleUrl
+            },
+            "keywords": articleKeywords,
+            "articleSection": "Finanças Pessoais",
+            "inLanguage": "pt-BR"
+          })}
+        </script>
+      </Helmet>
+
+      <div className="min-h-screen bg-brand-white font-sans">
       {/* Header - Mobile Optimized */}
       <header className="bg-brand-white border-b border-brand-dark-green/10 sticky top-0 z-50 backdrop-blur-sm bg-brand-white/95">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -281,5 +362,6 @@ export default function BlogArticle() {
         </div>
       </footer>
     </div>
+    </>
   );
 }
