@@ -702,49 +702,27 @@ export default function PersonalLandingPage() {
             </p>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
-            {[
-              {
-                title: "Como Criar uma Reserva de Emergência",
-                excerpt: "Descubra o passo a passo para construir sua reserva financeira.",
-                category: "Finanças Pessoais",
-                readTime: "4 min"
-              },
-              {
-                title: "Como Categorizar suas Despesas",
-                excerpt: "Aprenda a organizar seus gastos e descubra onde economizar.",
-                category: "Finanças Pessoais",
-                readTime: "4 min"
-              },
-              {
-                title: "Planejamento Financeiro para Freelancers",
-                excerpt: "Dicas para quem trabalha por conta própria gerenciar renda variável.",
-                category: "Finanças Pessoais",
-                readTime: "5 min"
-              }
-            ].map((post, index) => (
-              <Card 
-                key={index}
-                className="bg-brand-white border border-brand-dark-green/10 hover:border-brand-dark-green/20 hover:shadow-lg transition-all duration-300 cursor-pointer group"
-                onClick={() => navigate("/blog")}
-              >
-                <CardContent className="p-6">
-                  <div className="inline-flex items-center gap-2 bg-brand-light-green/50 px-3 py-1 rounded-full text-xs font-medium text-brand-dark-green mb-4">
-                    {post.category}
-                  </div>
-                  <h3 className="text-lg font-bold text-brand-dark-green mb-3 group-hover:text-brand-dark-green/80 transition-colors line-clamp-2">
-                    {post.title}
-                  </h3>
-                  <p className="text-sm text-brand-dark-green/70 mb-4 line-clamp-2">
-                    {post.excerpt}
-                  </p>
-                  <div className="flex items-center justify-between text-xs text-brand-dark-green/60">
-                    <span>{post.readTime} de leitura</span>
-                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+          <div className="max-w-2xl mx-auto mb-10">
+            <Card 
+              className="bg-brand-white border border-brand-dark-green/10 hover:border-brand-dark-green/20 hover:shadow-lg transition-all duration-300 cursor-pointer group"
+              onClick={() => navigate("/blog/organizacao-financeira-2026")}
+            >
+              <CardContent className="p-6">
+                <div className="inline-flex items-center gap-2 bg-brand-light-green/50 px-3 py-1 rounded-full text-xs font-medium text-brand-dark-green mb-4">
+                  Finanças Pessoais
+                </div>
+                <h3 className="text-lg font-bold text-brand-dark-green mb-3 group-hover:text-brand-dark-green/80 transition-colors">
+                  Organização Financeira em 2026: O guia definitivo para começar o ano com clareza e estratégia
+                </h3>
+                <p className="text-sm text-brand-dark-green/70 mb-4 line-clamp-2">
+                  Descubra como estruturar suas finanças pessoais e empresariais para 2026. Um guia completo com estratégias práticas para ter clareza e controle do seu dinheiro.
+                </p>
+                <div className="flex items-center justify-between text-xs text-brand-dark-green/60">
+                  <span>8 min de leitura</span>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
           <div className="text-center">
