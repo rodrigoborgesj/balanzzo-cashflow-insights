@@ -98,6 +98,7 @@ export default function LandingPage() {
               <a href="#recursos" className="hover:text-brand-dark-green transition-colors">Recursos</a>
               <a href="#precos" className="hover:text-brand-dark-green transition-colors">Preços</a>
               <a href="#sobre" className="hover:text-brand-dark-green transition-colors">Sobre</a>
+              <button onClick={() => navigate("/blog")} className="hover:text-brand-dark-green transition-colors">Blog</button>
             </nav>
 
             {/* Header CTAs - Mobile Optimized */}
@@ -465,6 +466,79 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Blog Section */}
+      <section className="py-10 sm:py-16 md:py-20 bg-gradient-to-b from-brand-cream/30 to-brand-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-8 sm:mb-12">
+            <div className="inline-flex items-center gap-2 bg-brand-light-green/50 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium text-brand-dark-green mb-3 sm:mb-4">
+              <FileText className="w-3 h-3 sm:w-4 sm:h-4" />
+              Blog Balanzzo
+            </div>
+            <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-brand-dark-green mb-3 sm:mb-4">
+              Dicas para sua gestão financeira
+            </h3>
+            <p className="text-sm sm:text-base md:text-lg text-brand-dark-green/70 max-w-2xl mx-auto">
+              Conteúdos práticos para ajudar você a tomar melhores decisões no seu negócio.
+            </p>
+          </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-10">
+            {[
+              {
+                title: "5 Passos para Organizar seu Fluxo de Caixa",
+                excerpt: "Aprenda como estruturar um fluxo de caixa eficiente para sua empresa.",
+                category: "Gestão Financeira",
+                readTime: "5 min"
+              },
+              {
+                title: "O que é DRE e Por que sua Empresa Precisa",
+                excerpt: "Entenda o Demonstrativo de Resultado e como ele ajuda na análise financeira.",
+                category: "Contabilidade",
+                readTime: "6 min"
+              },
+              {
+                title: "Conciliação Bancária: Guia Completo",
+                excerpt: "Saiba como fazer a conciliação da forma correta e evite erros.",
+                category: "Gestão Financeira",
+                readTime: "7 min"
+              }
+            ].map((post, index) => (
+              <Card 
+                key={index}
+                className="bg-brand-white border border-brand-dark-green/10 hover:border-brand-dark-green/20 hover:shadow-lg transition-all duration-300 cursor-pointer group"
+                onClick={() => navigate("/blog")}
+              >
+                <CardContent className="p-5 sm:p-6">
+                  <div className="inline-flex items-center gap-2 bg-brand-light-green/50 px-3 py-1 rounded-full text-xs font-medium text-brand-dark-green mb-3">
+                    {post.category}
+                  </div>
+                  <h4 className="text-base sm:text-lg font-bold text-brand-dark-green mb-2 group-hover:text-brand-dark-green/80 transition-colors line-clamp-2">
+                    {post.title}
+                  </h4>
+                  <p className="text-sm text-brand-dark-green/70 mb-3 line-clamp-2">
+                    {post.excerpt}
+                  </p>
+                  <div className="flex items-center justify-between text-xs text-brand-dark-green/60">
+                    <span>{post.readTime} de leitura</span>
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          <div className="text-center">
+            <Button 
+              onClick={() => navigate("/blog")}
+              variant="outline"
+              className="border-brand-dark-green text-brand-dark-green hover:bg-brand-dark-green hover:text-brand-white px-6 sm:px-8 py-2.5 sm:py-3 rounded-lg transition-all duration-200"
+            >
+              Ver todos os artigos
+              <ArrowRight className="ml-2 w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      </section>
 
       {/* Final CTA Section */}
       <section className="py-10 sm:py-16 md:py-20 lg:py-24 bg-gradient-to-br from-brand-dark-green via-brand-dark-green to-brand-dark-green/90 relative overflow-hidden">
