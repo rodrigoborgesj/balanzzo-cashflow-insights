@@ -19,10 +19,13 @@ export function ClientLogosCarousel() {
   return (
     <section className="py-8 sm:py-12 md:py-16 bg-brand-white overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-6 sm:mb-8 md:mb-10">
-          <p className="text-sm sm:text-base md:text-lg text-brand-dark-green/60 font-medium">
-            Empresas que confiam na Balanzzo
-          </p>
+        <div className="text-center mb-8 sm:mb-10 md:mb-12">
+          <span className="inline-block px-4 py-1.5 bg-brand-light-green/50 text-brand-dark-green text-xs sm:text-sm font-semibold rounded-full mb-3 sm:mb-4">
+            Nossos Clientes
+          </span>
+          <h3 className="text-xl sm:text-2xl md:text-3xl font-bold text-brand-dark-green">
+            Empresas que <span className="text-brand-medium-green">confiam</span> na Balanzzo
+          </h3>
         </div>
 
         {/* Infinite Scroll Container */}
