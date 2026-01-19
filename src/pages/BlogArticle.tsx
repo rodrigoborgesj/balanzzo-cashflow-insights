@@ -8,7 +8,7 @@ export default function BlogArticle() {
   const { slug } = useParams();
 
   // SEO Meta Tags para o artigo
-  const articleTitle = "Organização Financeira em 2026: O Guia Definitivo para Começar o Ano com Clareza e Estratégia";
+  const articleTitle = "Organização Financeira em 2026: O guia definitivo para começar o ano com clareza e estratégia";
   const articleDescription = "Aprenda como organizar suas finanças pessoais e empresariais em 2026. Guia completo sobre planejamento financeiro, reserva de emergência, controle de dívidas, empréstimos e investimentos. Dicas práticas para ter clareza e controle do seu dinheiro.";
   const articleKeywords = "organização financeira, finanças pessoais, finanças empresariais, planejamento financeiro 2026, reserva de emergência, controle de dívidas, empréstimos, investimentos, gestão financeira, orçamento pessoal, conciliação bancária, fluxo de caixa, educação financeira, dicas financeiras, economia doméstica";
   const articleUrl = "https://balanzzo.lovable.app/blog/organizacao-financeira-2026";
@@ -156,7 +156,7 @@ export default function BlogArticle() {
           </div>
           
           <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-brand-dark-green mb-4 sm:mb-6 leading-tight">
-            Organização Financeira em 2026: o Guia Definitivo para Começar o Ano com Clareza e Estratégia
+            Organização Financeira em 2026: O guia definitivo para começar o ano com clareza e estratégia
           </h1>
 
           <div className="flex flex-wrap items-center gap-3 sm:gap-4 md:gap-6 text-xs sm:text-sm text-brand-dark-green/60 pb-6 sm:pb-8 border-b border-brand-dark-green/10">
