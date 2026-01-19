@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 
 interface BlogPost {
   id: string;
+  slug: string;
   title: string;
   excerpt: string;
   category: string;
@@ -30,6 +31,7 @@ interface BlogPost {
 const blogPosts: BlogPost[] = [
   {
     id: "1",
+    slug: "organizacao-financeira-2026",
     title: "Organização Financeira em 2026: O guia definitivo para começar o ano com clareza e estratégia",
     excerpt: "Descubra como estruturar suas finanças pessoais e empresariais para 2026. Um guia completo com estratégias práticas para ter clareza e controle do seu dinheiro.",
     category: "Finanças Pessoais",
@@ -179,6 +181,7 @@ export default function Blog() {
               {featuredPosts.map((post) => (
                 <Card 
                   key={post.id}
+                  onClick={() => navigate(`/blog/${post.slug}`)}
                   className="group bg-gradient-to-br from-brand-light-green/30 to-brand-cream/50 border-brand-dark-green/10 hover:border-brand-dark-green/20 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden"
                 >
                   <CardContent className="p-8">
@@ -245,6 +248,7 @@ export default function Blog() {
               {(selectedCategory === "Todos" ? regularPosts : filteredPosts).map((post) => (
                 <Card 
                   key={post.id}
+                  onClick={() => navigate(`/blog/${post.slug}`)}
                   className="group bg-brand-white border-brand-dark-green/10 hover:border-brand-dark-green/20 hover:shadow-lg transition-all duration-300 cursor-pointer"
                 >
                   <CardContent className="p-6">

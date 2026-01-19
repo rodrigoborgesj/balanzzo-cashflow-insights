@@ -37,6 +37,7 @@ import PersonalMovimentacoesPage from "./pages/personal/PersonalMovimentacoesPag
 import PersonalComoUsar from "./pages/personal/PersonalComoUsar";
 import PersonalDebtPlanningPage from "./pages/personal/PersonalDebtPlanningPage";
 import Blog from "./pages/Blog";
+import BlogArticle from "./pages/BlogArticle";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -105,6 +106,7 @@ const App = () => {
           <Route path="/" element={<LandingPage />} />
           <Route path="/pessoal" element={<PersonalLandingPage />} />
           <Route path="/blog" element={<Blog />} />
+          <Route path="/blog/organizacao-financeira-2026" element={<BlogArticle />} />
           
           {/* Auth routes */}
           <Route path="/login" element={<Login />} />
