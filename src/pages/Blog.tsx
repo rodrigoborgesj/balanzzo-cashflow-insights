@@ -30,59 +30,13 @@ interface BlogPost {
 const blogPosts: BlogPost[] = [
   {
     id: "1",
-    title: "5 Passos para Organizar seu Fluxo de Caixa Empresarial",
-    excerpt: "Aprenda como estruturar um fluxo de caixa eficiente e tome decisões mais estratégicas para o crescimento do seu negócio.",
-    category: "Gestão Financeira",
+    title: "Organização Financeira em 2026: O guia definitivo para começar o ano com clareza e estratégia",
+    excerpt: "Descubra como estruturar suas finanças pessoais e empresariais para 2026. Um guia completo com estratégias práticas para ter clareza e controle do seu dinheiro.",
+    category: "Finanças Pessoais",
     author: "Equipe Balanzzo",
-    date: "15 Jan 2025",
-    readTime: "5 min",
+    date: "19 Jan 2026",
+    readTime: "8 min",
     featured: true
-  },
-  {
-    id: "2",
-    title: "Como Criar uma Reserva de Emergência em 2025",
-    excerpt: "Descubra o passo a passo para construir sua reserva financeira e ter mais tranquilidade no dia a dia.",
-    category: "Finanças Pessoais",
-    author: "Equipe Balanzzo",
-    date: "12 Jan 2025",
-    readTime: "4 min",
-    featured: true
-  },
-  {
-    id: "3",
-    title: "O que é DRE e Por que sua Empresa Precisa Dele",
-    excerpt: "Entenda o Demonstrativo de Resultado do Exercício e como ele pode ajudar na análise da saúde financeira do seu negócio.",
-    category: "Contabilidade",
-    author: "Equipe Balanzzo",
-    date: "10 Jan 2025",
-    readTime: "6 min"
-  },
-  {
-    id: "4",
-    title: "Conciliação Bancária: O Guia Completo para Iniciantes",
-    excerpt: "Saiba como fazer a conciliação bancária da forma correta e evite erros que podem custar caro para sua empresa.",
-    category: "Gestão Financeira",
-    author: "Equipe Balanzzo",
-    date: "08 Jan 2025",
-    readTime: "7 min"
-  },
-  {
-    id: "5",
-    title: "Como Categorizar suas Despesas Pessoais",
-    excerpt: "Aprenda a organizar seus gastos em categorias e descubra onde você pode economizar mais.",
-    category: "Finanças Pessoais",
-    author: "Equipe Balanzzo",
-    date: "05 Jan 2025",
-    readTime: "4 min"
-  },
-  {
-    id: "6",
-    title: "Planejamento Financeiro para Freelancers",
-    excerpt: "Dicas essenciais para quem trabalha por conta própria e precisa gerenciar renda variável.",
-    category: "Finanças Pessoais",
-    author: "Equipe Balanzzo",
-    date: "02 Jan 2025",
-    readTime: "5 min"
   }
 ];
 
