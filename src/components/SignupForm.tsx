@@ -18,6 +18,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { validatePasswordAsync } from "@/utils/passwordValidationAsync";
 import { PasswordValidationDisplay } from "@/components/PasswordValidationDisplay";
 import { PasswordValidationResult } from "@/utils/passwordValidation";
+import { supabase } from "@/integrations/supabase/client";
 const revenueRanges = [
   "Até R$ 360.000/ano (MEI)",
   "R$ 360.001 a R$ 4.800.000/ano (Micro)",
@@ -167,22 +168,40 @@ export function SignupForm({ onBack }: SignupFormProps) {
       // Store with 24 hour expiry for temporary signup data
       secureStorage.setItem('pendingProfileData', profileData, 24 * 60 * 60 * 1000);
 
-      toast({
-        title: "Conta criada com sucesso!",
-        description: redirectTo ? "Você será redirecionado..." : "Agora você será redirecionado para escolher um plano de assinatura.",
-      });
+      // Check if user has free access before redirecting to checkout
+      const { data: hasFreeAccessData } = await supabase
+        .rpc('has_free_access', { user_email: data.email });
+      
+      const userHasFreeAccess = !!hasFreeAccessData;
+      console.log('🆓 Signup - Free access check for', data.email, ':', userHasFreeAccess);
 
-      // Redireciona para o checkout se houver redirect/planId, caso contrário vai para checkout
-      setTimeout(() => {
-        if (redirectTo) {
-          navigate(redirectTo, { replace: true });
-        } else if (planId) {
-          navigate(`/checkout?plan=${planId}`, { replace: true });
-        } else {
-          // Default: go to checkout to select a plan
-          navigate('/checkout', { replace: true });
-        }
-      }, 1500);
+      if (userHasFreeAccess) {
+        toast({
+          title: "Conta criada com sucesso!",
+          description: "Você possui acesso gratuito! Redirecionando...",
+        });
+        
+        setTimeout(() => {
+          navigate('/select-module', { replace: true });
+        }, 1500);
+      } else {
+        toast({
+          title: "Conta criada com sucesso!",
+          description: redirectTo ? "Você será redirecionado..." : "Agora você será redirecionado para escolher um plano de assinatura.",
+        });
+
+        // Redireciona para o checkout se houver redirect/planId, caso contrário vai para checkout
+        setTimeout(() => {
+          if (redirectTo) {
+            navigate(redirectTo, { replace: true });
+          } else if (planId) {
+            navigate(`/checkout?plan=${planId}`, { replace: true });
+          } else {
+            // Default: go to checkout to select a plan
+            navigate('/checkout', { replace: true });
+          }
+        }, 1500);
+      }
     } catch (error: any) {
       toast({
         title: "Erro no cadastro",
