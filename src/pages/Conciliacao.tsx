@@ -306,59 +306,59 @@ export default function Conciliacao() {
   }
   
   return (
-    <div className="min-h-screen bg-white p-3 md:p-6">
+    <div className="min-h-screen bg-white p-2 sm:p-4 md:p-6">
       {/* Header */}
-      <div className="mb-6 md:mb-8">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 md:gap-4">
+      <div className="mb-4 md:mb-8">
+        <div className="flex flex-col gap-3 md:gap-4">
           <div>
-            <h1 className="text-xl md:text-2xl font-bold text-foreground mb-2 md:mb-3">Conciliação Bancária</h1>
-            <p className="text-sm md:text-base text-muted-foreground">
+            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground mb-1 md:mb-3">Conciliação Bancária</h1>
+            <p className="text-xs sm:text-sm md:text-base text-muted-foreground">
               Faça upload e concilie suas transações bancárias
             </p>
           </div>
           
-            <div className="space-y-2 w-full sm:w-auto">
-              <label className="text-sm font-medium text-foreground mb-1 block pl-1">Mês de Referência</label>
-              <MonthSelector
-                value={selectedMonth}
-                onChange={(value) => {
-                  setSelectedMonth(value);
-                  setPage(0); // Reset pagination when month changes
-                }}
-              />
-            </div>
+          <div className="w-full">
+            <label className="text-xs sm:text-sm font-medium text-foreground mb-1 block">Mês de Referência</label>
+            <MonthSelector
+              value={selectedMonth}
+              onChange={(value) => {
+                setSelectedMonth(value);
+                setPage(0);
+              }}
+            />
+          </div>
         </div>
       </div>
 
 
       {/* Upload Section */}
-      <div className="mb-6 md:mb-8">
+      <div className="mb-4 md:mb-8">
         {/* Upload Area - Rectangular Modern Design */}
-        <Card className="bg-gradient-to-br from-card via-card to-card/95 border border-border/50 rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300">
-          <CardHeader className="border-b border-border/30 pb-4">
-            <CardTitle className="text-xl font-bold text-foreground flex items-center gap-3">
-              <div className="p-2 bg-gradient-to-br from-primary to-primary/80 rounded-xl text-white">
-                <Upload className="h-5 w-5" />
+        <Card className="bg-gradient-to-br from-card via-card to-card/95 border border-border/50 rounded-2xl sm:rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300">
+          <CardHeader className="border-b border-border/30 pb-3 sm:pb-4 p-3 sm:p-6">
+            <CardTitle className="text-base sm:text-lg md:text-xl font-bold text-foreground flex items-center gap-2 sm:gap-3">
+              <div className="p-1.5 sm:p-2 bg-gradient-to-br from-primary to-primary/80 rounded-lg sm:rounded-xl text-white">
+                <Upload className="h-4 w-4 sm:h-5 sm:w-5" />
               </div>
               Upload do Extrato
             </CardTitle>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
               Envie seu extrato bancário em formato CSV, OFX ou PDF
             </p>
           </CardHeader>
-          <CardContent className="p-6">
-            <div className="space-y-4">
+          <CardContent className="p-3 sm:p-6">
+            <div className="space-y-3 sm:space-y-4">
               <FileUploader onFileSelect={handleFileSelect} acceptedFormats={['.csv', '.ofx', '.pdf']} maxSize={5} />
               
               {selectedFile && (
                 <div className="animate-fade-in">
-                  <div className="p-4 bg-gradient-to-r from-success/10 to-success/5 border border-success/20 rounded-xl">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-success/10 rounded-lg">
-                        <Upload className="h-4 w-4 text-success" />
+                  <div className="p-3 sm:p-4 bg-gradient-to-r from-success/10 to-success/5 border border-success/20 rounded-lg sm:rounded-xl">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div className="p-1.5 sm:p-2 bg-success/10 rounded-lg flex-shrink-0">
+                        <Upload className="h-3 w-3 sm:h-4 sm:w-4 text-success" />
                       </div>
-                      <div>
-                        <p className="text-sm font-medium text-foreground">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs sm:text-sm font-medium text-foreground truncate">
                           {selectedFile.name}
                         </p>
                         <p className="text-xs text-muted-foreground">
@@ -373,17 +373,17 @@ export default function Conciliacao() {
               <Button 
                 onClick={handleProcessTransactions}
                 disabled={!selectedFile || isLoading}
-                className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 text-white font-semibold py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+                className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 text-white font-semibold py-2.5 sm:py-3 rounded-lg sm:rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 min-h-[44px]"
               >
                 {isLoading ? (
                   <div className="flex items-center justify-center">
-                    <Loader2 className="mr-3 h-5 w-5 animate-spin" />
-                    Processando extrato...
+                    <Loader2 className="mr-2 sm:mr-3 h-4 w-4 sm:h-5 sm:w-5 animate-spin" />
+                    <span className="text-sm sm:text-base">Processando extrato...</span>
                   </div>
                 ) : (
                   <div className="flex items-center justify-center">
-                    <Upload className="mr-3 h-5 w-5" />
-                    Processar Transações
+                    <Upload className="mr-2 sm:mr-3 h-4 w-4 sm:h-5 sm:w-5" />
+                    <span className="text-sm sm:text-base">Processar Transações</span>
                   </div>
                 )}
               </Button>
@@ -504,20 +504,20 @@ export default function Conciliacao() {
       </div>
 
       {/* Tabs para transações */}
-      <div className="mt-8">
-        <Tabs defaultValue="conciliacao" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 bg-gradient-to-r from-muted to-muted/50 p-1 rounded-xl">
+      <div className="mt-4 sm:mt-8">
+        <Tabs defaultValue="conciliacao" className="space-y-4 sm:space-y-6">
+          <TabsList className="grid w-full grid-cols-2 bg-gradient-to-r from-muted to-muted/50 p-1 rounded-lg sm:rounded-xl h-auto">
             <TabsTrigger 
               value="conciliacao"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/90 data-[state=active]:text-white data-[state=active]:shadow-lg font-medium"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/90 data-[state=active]:text-white data-[state=active]:shadow-lg font-medium text-xs sm:text-sm py-2 sm:py-2.5"
             >
-              Conciliar Transações
+              Conciliar
             </TabsTrigger>
             <TabsTrigger 
               value="processamento"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/90 data-[state=active]:text-white data-[state=active]:shadow-lg font-medium"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/90 data-[state=active]:text-white data-[state=active]:shadow-lg font-medium text-xs sm:text-sm py-2 sm:py-2.5"
             >
-              Processamento Automático
+              Automático
             </TabsTrigger>
           </TabsList>
 
@@ -597,7 +597,82 @@ export default function Conciliacao() {
             {/* Tabela de Transações */}
             <Card>
               <CardContent className="p-0">
-                <div className="overflow-x-auto -mx-3 md:mx-0">
+                {/* Mobile Card View */}
+                <div className="block sm:hidden p-2 space-y-2">
+                  {isLoading && (
+                    <div className="flex items-center justify-center gap-2 py-8">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span className="text-sm">Carregando transações...</span>
+                    </div>
+                  )}
+                  
+                  {!isLoading && filteredTransactions.length === 0 && (
+                    <div className="text-center py-8 text-gray-500 text-sm">
+                      Nenhuma transação encontrada
+                    </div>
+                  )}
+                  
+                  {!isLoading && 
+                    filteredTransactions
+                      .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                      .map((transaction) => (
+                    <div key={transaction.id} className={`p-3 rounded-lg border bg-white ${transaction.valor >= 0 ? 'border-l-4 border-l-green-500' : 'border-l-4 border-l-red-500'}`}>
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-gray-500">
+                            {new Date(transaction.data_transacao).toLocaleDateString('pt-BR')}
+                          </p>
+                          <p className="text-sm font-medium text-foreground truncate" title={transaction.descricao}>
+                            {transaction.descricao}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-1 flex-shrink-0 ml-2">
+                          <span className={`text-sm font-bold ${transaction.valor >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            R$ {transaction.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                            onClick={() => {
+                              if (window.confirm('Tem certeza que deseja deletar esta transação?')) {
+                                handleDeleteTransaction(transaction.id);
+                              }
+                            }}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Select
+                          value={transaction.categoria_final || ""}
+                          onValueChange={(value) => handleCategorize(transaction.id, value)}
+                        >
+                          <SelectTrigger className="h-8 w-32 text-xs">
+                            <SelectValue placeholder="Categoria" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {allCategories.map((category) => (
+                              <SelectItem key={category} value={category}>
+                                {category}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Badge 
+                          variant={transaction.status_conciliacao ? "default" : "secondary"}
+                          className={`text-xs ${transaction.status_conciliacao ? "bg-black text-white" : "bg-gray-200 text-gray-700"}`}
+                        >
+                          {transaction.status_conciliacao ? "Conciliado" : "Pendente"}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Desktop Table View */}
+                <div className="hidden sm:block overflow-x-auto">
                   <div className="min-w-[640px]">
                     <Table>
                       <TableHeader>
@@ -608,103 +683,102 @@ export default function Conciliacao() {
                           <TableHead className="text-xs md:text-sm">Categoria</TableHead>
                           <TableHead className="text-xs md:text-sm">Status</TableHead>
                           <TableHead className="w-[50px]">
-                          <div className="flex items-center justify-between">
-                            <span className="sr-only">Ações</span>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-6 px-2 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
-                              onClick={() => {
-                                if (window.confirm('Remover todas as transações visíveis?')) {
-                                  // Remove all visible transactions
-                                  const visibleIds = filteredTransactions.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map(t => t.id);
-                                  Promise.all(visibleIds.map(id => handleDeleteTransaction(id)));
-                                }
-                              }}
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {isLoading && (
-                        <TableRow>
-                          <TableCell colSpan={5} className="text-center py-8">
-                            <div className="flex items-center justify-center gap-2">
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                              Carregando transações...
+                            <div className="flex items-center justify-between">
+                              <span className="sr-only">Ações</span>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-6 px-2 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                                onClick={() => {
+                                  if (window.confirm('Remover todas as transações visíveis?')) {
+                                    const visibleIds = filteredTransactions.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map(t => t.id);
+                                    Promise.all(visibleIds.map(id => handleDeleteTransaction(id)));
+                                  }
+                                }}
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
                             </div>
-                          </TableCell>
+                          </TableHead>
                         </TableRow>
-                      )}
-                      
-                      {!isLoading && filteredTransactions.length === 0 && (
-                        <TableRow>
-                          <TableCell colSpan={5} className="text-center py-8 text-gray-500">
-                            Nenhuma transação encontrada
-                          </TableCell>
-                        </TableRow>
-                      )}
-                      
-                      {!isLoading && 
-                        filteredTransactions
-                          .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                          .map((transaction, index) => (
-                        <TableRow key={transaction.id}>
-                          <TableCell>
-                            {new Date(transaction.data_transacao).toLocaleDateString('pt-BR')}
-                          </TableCell>
-                          <TableCell className="max-w-xs truncate">
-                            {transaction.descricao}
-                          </TableCell>
-                          <TableCell className={transaction.valor >= 0 ? "text-green-600 font-medium" : "text-red-600 font-medium"}>
-                            R$ {transaction.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                          </TableCell>
-                          <TableCell>
-                            <Select
-                              value={transaction.categoria_final || ""}
-                              onValueChange={(value) => handleCategorize(transaction.id, value)}
-                            >
-                              <SelectTrigger className="w-40">
-                                <SelectValue placeholder="Selecione" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {allCategories.map((category) => (
-                                  <SelectItem key={category} value={category}>
-                                    {category}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </TableCell>
-                          <TableCell>
-                            <Badge 
-                              variant={transaction.status_conciliacao ? "default" : "secondary"}
-                              className={transaction.status_conciliacao ? "bg-black text-white" : "bg-gray-200 text-gray-700"}
-                            >
-                              {transaction.status_conciliacao ? "Conciliado" : "Pendente"}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-6 w-6 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                              onClick={() => {
-                                if (window.confirm('Tem certeza que deseja deletar esta transação?')) {
-                                  handleDeleteTransaction(transaction.id);
-                                }
-                              }}
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                     </TableBody>
-                   </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {isLoading && (
+                          <TableRow>
+                            <TableCell colSpan={6} className="text-center py-8">
+                              <div className="flex items-center justify-center gap-2">
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                Carregando transações...
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        )}
+                        
+                        {!isLoading && filteredTransactions.length === 0 && (
+                          <TableRow>
+                            <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                              Nenhuma transação encontrada
+                            </TableCell>
+                          </TableRow>
+                        )}
+                        
+                        {!isLoading && 
+                          filteredTransactions
+                            .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                            .map((transaction) => (
+                          <TableRow key={transaction.id}>
+                            <TableCell>
+                              {new Date(transaction.data_transacao).toLocaleDateString('pt-BR')}
+                            </TableCell>
+                            <TableCell className="max-w-xs truncate">
+                              {transaction.descricao}
+                            </TableCell>
+                            <TableCell className={transaction.valor >= 0 ? "text-green-600 font-medium" : "text-red-600 font-medium"}>
+                              R$ {transaction.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                            </TableCell>
+                            <TableCell>
+                              <Select
+                                value={transaction.categoria_final || ""}
+                                onValueChange={(value) => handleCategorize(transaction.id, value)}
+                              >
+                                <SelectTrigger className="w-40">
+                                  <SelectValue placeholder="Selecione" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {allCategories.map((category) => (
+                                    <SelectItem key={category} value={category}>
+                                      {category}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </TableCell>
+                            <TableCell>
+                              <Badge 
+                                variant={transaction.status_conciliacao ? "default" : "secondary"}
+                                className={transaction.status_conciliacao ? "bg-black text-white" : "bg-gray-200 text-gray-700"}
+                              >
+                                {transaction.status_conciliacao ? "Conciliado" : "Pendente"}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 w-6 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                onClick={() => {
+                                  if (window.confirm('Tem certeza que deseja deletar esta transação?')) {
+                                    handleDeleteTransaction(transaction.id);
+                                  }
+                                }}
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
                   </div>
                 </div>
                 <TablePagination
