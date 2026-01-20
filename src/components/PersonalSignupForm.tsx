@@ -15,6 +15,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { validatePasswordAsync } from "@/utils/passwordValidationAsync";
 import { PasswordValidationDisplay } from "@/components/PasswordValidationDisplay";
 import { PasswordValidationResult } from "@/utils/passwordValidation";
+import { supabase } from "@/integrations/supabase/client";
 
 const personalSignupSchema = z.object({
   email: z.string().email("Email inválido"),
@@ -146,21 +147,39 @@ export function PersonalSignupForm({ onBack }: PersonalSignupFormProps) {
         return;
       }
 
-      toast({
-        title: "Conta criada com sucesso!",
-        description: redirectTo ? "Você será redirecionado..." : "Verifique seu email para confirmar sua conta.",
-      });
+      // Check if user has free access before redirecting to checkout
+      const { data: hasFreeAccessData } = await supabase
+        .rpc('has_free_access', { user_email: data.email });
+      
+      const userHasFreeAccess = !!hasFreeAccessData;
+      console.log('🆓 Personal Signup - Free access check for', data.email, ':', userHasFreeAccess);
 
-      setTimeout(() => {
-        if (redirectTo) {
-          navigate(redirectTo, { replace: true });
-        } else if (planId) {
-          navigate(`/checkout?plan=${planId}`, { replace: true });
-        } else {
-          // Default: go to personal landing page
-          navigate('/pessoal', { replace: true });
-        }
-      }, 1500);
+      if (userHasFreeAccess) {
+        toast({
+          title: "Conta criada com sucesso!",
+          description: "Você possui acesso gratuito! Redirecionando...",
+        });
+        
+        setTimeout(() => {
+          navigate('/select-module', { replace: true });
+        }, 1500);
+      } else {
+        toast({
+          title: "Conta criada com sucesso!",
+          description: redirectTo ? "Você será redirecionado..." : "Verifique seu email para confirmar sua conta.",
+        });
+
+        setTimeout(() => {
+          if (redirectTo) {
+            navigate(redirectTo, { replace: true });
+          } else if (planId) {
+            navigate(`/checkout?plan=${planId}`, { replace: true });
+          } else {
+            // Default: go to personal landing page
+            navigate('/pessoal', { replace: true });
+          }
+        }, 1500);
+      }
     } catch (error: any) {
       toast({
         title: "Erro no cadastro",
