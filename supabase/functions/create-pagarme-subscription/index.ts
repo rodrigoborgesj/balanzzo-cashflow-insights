@@ -178,7 +178,7 @@ serve(async (req) => {
       type: 'subscription',
       is_payment_link: true,
       payment_settings: {
-        accepted_payment_methods: ['credit_card'],
+        accepted_payment_methods: ['credit_card', 'pix'],
         credit_card_settings: {
           operation_type: 'auth_and_capture'
         }
