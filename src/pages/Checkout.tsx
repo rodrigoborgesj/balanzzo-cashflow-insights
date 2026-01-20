@@ -8,9 +8,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, CreditCard, Lock } from "lucide-react";
+import { Loader2, CreditCard, Lock, QrCode } from "lucide-react";
+
+type PaymentMethod = 'credit_card' | 'pix';
 
 export default function Checkout() {
   const navigate = useNavigate();
@@ -25,7 +28,7 @@ export default function Checkout() {
   } = useModule();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('credit_card');
   // Check if user already has access - redirect them away from checkout
   const hasAnyAccess = hasCompanySubscription || hasPersonalSubscription || hasFreeAccess;
 
@@ -89,6 +92,7 @@ export default function Checkout() {
       const { data, error } = await supabase.functions.invoke('create-pagarme-subscription', {
         body: {
           planId: selectedPlan.id,
+          paymentMethod: paymentMethod,
           customer: {
             name: formData.name,
             email: formData.email,
@@ -196,7 +200,7 @@ export default function Checkout() {
                   {formatPrice(selectedPlan.price_cents)}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Cobrança recorrente
+                  {paymentMethod === 'credit_card' ? 'Cobrança recorrente' : 'Pagamento único (1 mês)'}
                 </p>
                 <div className="mt-4">
                   <Label htmlFor="plan">Escolher plano</Label>
@@ -243,7 +247,11 @@ export default function Checkout() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <CreditCard className="h-5 w-5" />
+                {paymentMethod === 'credit_card' ? (
+                  <CreditCard className="h-5 w-5" />
+                ) : (
+                  <QrCode className="h-5 w-5" />
+                )}
                 Dados de Pagamento
               </CardTitle>
               <CardDescription>
@@ -251,6 +259,44 @@ export default function Checkout() {
               </CardDescription>
             </CardHeader>
             <CardContent>
+              {/* Payment Method Selection */}
+              <div className="mb-6 space-y-3">
+                <Label>Forma de pagamento</Label>
+                <RadioGroup 
+                  value={paymentMethod} 
+                  onValueChange={(value: PaymentMethod) => setPaymentMethod(value)}
+                  className="grid grid-cols-2 gap-4"
+                >
+                  <div>
+                    <RadioGroupItem value="credit_card" id="credit_card" className="peer sr-only" />
+                    <Label
+                      htmlFor="credit_card"
+                      className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                    >
+                      <CreditCard className="mb-2 h-6 w-6" />
+                      <span className="text-sm font-medium">Cartão de Crédito</span>
+                      <span className="text-xs text-muted-foreground mt-1">Recorrente</span>
+                    </Label>
+                  </div>
+                  <div>
+                    <RadioGroupItem value="pix" id="pix" className="peer sr-only" />
+                    <Label
+                      htmlFor="pix"
+                      className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                    >
+                      <QrCode className="mb-2 h-6 w-6" />
+                      <span className="text-sm font-medium">PIX</span>
+                      <span className="text-xs text-muted-foreground mt-1">Pagamento único</span>
+                    </Label>
+                  </div>
+                </RadioGroup>
+                {paymentMethod === 'pix' && (
+                  <p className="text-xs text-amber-600 bg-amber-50 p-2 rounded">
+                    ⚠️ Com PIX, você terá acesso por 1 mês. Após esse período, será necessário efetuar novo pagamento.
+                  </p>
+                )}
+              </div>
+
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Nome Completo</Label>
