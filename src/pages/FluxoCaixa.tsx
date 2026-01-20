@@ -275,27 +275,28 @@ export default function FluxoCaixa() {
   };
 
   return (
-    <div className="space-y-4 md:space-y-6 bg-white min-h-screen px-3 md:px-6" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+    <div className="space-y-4 md:space-y-6 bg-white min-h-screen px-2 sm:px-4 md:px-6" style={{ fontFamily: 'Montserrat, sans-serif' }}>
       {/* Header */}
       <div className="flex flex-col gap-3 md:gap-4 pt-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-black mb-2">Fluxo de Caixa</h1>
-          <p className="text-sm md:text-base text-gray-600">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-black mb-1 md:mb-2">Fluxo de Caixa</h1>
+          <p className="text-xs sm:text-sm md:text-base text-gray-600 line-clamp-2">
             Baseado nas transações conciliadas - {periodDisplayText}
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2 md:gap-3">
-          <ManualTransactionForm
-            onTransactionAdded={() => {
-              // Force reload of transactions without month filter to show all data
-              loadTransactions(selectedMonth);
-            }}
-            userCategories={userCategories}
-            loadUserCategories={loadUserCategories}
-          />
-          
-          {/* Period Mode Selector */}
-          <div className="flex items-center gap-2">
+        
+        {/* Controls - Mobile optimized stacking */}
+        <div className="flex flex-col gap-3">
+          {/* Row 1: Manual Transaction + Period Mode */}
+          <div className="flex flex-wrap items-center gap-2">
+            <ManualTransactionForm
+              onTransactionAdded={() => {
+                loadTransactions(selectedMonth);
+              }}
+              userCategories={userCategories}
+              loadUserCategories={loadUserCategories}
+            />
+            
             <Select value={periodMode} onValueChange={(value: PeriodMode) => {
               setPeriodMode(value);
               if (value === 'month') {
@@ -305,7 +306,7 @@ export default function FluxoCaixa() {
                 setPendingEndDate(undefined);
               }
             }}>
-              <SelectTrigger className="w-32 text-xs md:text-sm">
+              <SelectTrigger className="w-28 sm:w-32 text-xs">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -315,89 +316,105 @@ export default function FluxoCaixa() {
             </Select>
           </div>
 
-          {periodMode === 'month' ? (
-            <MonthSelector
-              value={selectedMonth}
-              onChange={(value) => {
-                console.log('Month changed from', selectedMonth, 'to', value);
-                setSelectedMonth(value);
-              }}
-            />
-          ) : (
-            <div className="flex items-center gap-2">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm" className={cn(
-                    "text-xs md:text-sm justify-start text-left font-normal",
-                    !pendingStartDate && "text-muted-foreground"
-                  )}>
-                    <CalendarRange className="h-4 w-4 mr-2" />
-                    {pendingStartDate ? format(pendingStartDate, "dd/MM/yyyy") : "Data início"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 pointer-events-auto" align="start">
-                  <CalendarComponent
-                    mode="single"
-                    selected={pendingStartDate}
-                    onSelect={setPendingStartDate}
-                    locale={ptBR}
-                    className="pointer-events-auto"
-                  />
-                </PopoverContent>
-              </Popover>
-              <span className="text-gray-500">até</span>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm" className={cn(
-                    "text-xs md:text-sm justify-start text-left font-normal",
-                    !pendingEndDate && "text-muted-foreground"
-                  )}>
-                    <CalendarRange className="h-4 w-4 mr-2" />
-                    {pendingEndDate ? format(pendingEndDate, "dd/MM/yyyy") : "Data fim"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 pointer-events-auto" align="start">
-                  <CalendarComponent
-                    mode="single"
-                    selected={pendingEndDate}
-                    onSelect={setPendingEndDate}
-                    locale={ptBR}
-                    disabled={(date) => pendingStartDate ? date < pendingStartDate : false}
-                    className="pointer-events-auto"
-                  />
-                </PopoverContent>
-              </Popover>
-              <Button 
-                size="sm" 
-                onClick={() => {
-                  if (pendingStartDate && pendingEndDate) {
-                    setCustomStartDate(pendingStartDate);
-                    setCustomEndDate(pendingEndDate);
-                    // Carregar TODAS as transações para filtrar pelo período personalizado
-                    console.log('🔄 FluxoCaixa: Carregando todas transações para período personalizado');
-                    loadTransactions(); // Sem filtro de mês = carrega todas
-                  }
-                }}
-                disabled={!pendingStartDate || !pendingEndDate}
-                className="text-xs md:text-sm bg-primary hover:bg-primary/90"
-              >
-                Aplicar
-              </Button>
-            </div>
-          )}
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => setShowSettings(!showSettings)}
-            className="text-xs md:text-sm"
-          >
-            <Settings className="h-4 w-4 md:mr-2" />
-            <span className="hidden md:inline">Configurações</span>
-          </Button>
-          <Button variant="outline" size="sm" disabled={!hasData} onClick={exportToCSV} className="text-xs md:text-sm">
-            <Download className="h-4 w-4 md:mr-2" />
-            <span className="hidden md:inline">Exportar</span>
-          </Button>
+          {/* Row 2: Month/Date Selector */}
+          <div className="w-full">
+            {periodMode === 'month' ? (
+              <div className="w-full sm:w-auto">
+                <MonthSelector
+                  value={selectedMonth}
+                  onChange={(value) => {
+                    console.log('Month changed from', selectedMonth, 'to', value);
+                    setSelectedMonth(value);
+                  }}
+                />
+              </div>
+            ) : (
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                <div className="flex items-center gap-2 flex-1">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" size="sm" className={cn(
+                        "text-xs flex-1 sm:flex-none justify-start text-left font-normal min-h-[40px]",
+                        !pendingStartDate && "text-muted-foreground"
+                      )}>
+                        <CalendarRange className="h-4 w-4 mr-2 flex-shrink-0" />
+                        <span className="truncate">{pendingStartDate ? format(pendingStartDate, "dd/MM/yyyy") : "Data início"}</span>
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0 pointer-events-auto" align="start">
+                      <CalendarComponent
+                        mode="single"
+                        selected={pendingStartDate}
+                        onSelect={setPendingStartDate}
+                        locale={ptBR}
+                        className="pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <span className="text-gray-500 text-xs flex-shrink-0">até</span>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" size="sm" className={cn(
+                        "text-xs flex-1 sm:flex-none justify-start text-left font-normal min-h-[40px]",
+                        !pendingEndDate && "text-muted-foreground"
+                      )}>
+                        <CalendarRange className="h-4 w-4 mr-2 flex-shrink-0" />
+                        <span className="truncate">{pendingEndDate ? format(pendingEndDate, "dd/MM/yyyy") : "Data fim"}</span>
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0 pointer-events-auto" align="start">
+                      <CalendarComponent
+                        mode="single"
+                        selected={pendingEndDate}
+                        onSelect={setPendingEndDate}
+                        locale={ptBR}
+                        disabled={(date) => pendingStartDate ? date < pendingStartDate : false}
+                        className="pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <Button 
+                  size="sm" 
+                  onClick={() => {
+                    if (pendingStartDate && pendingEndDate) {
+                      setCustomStartDate(pendingStartDate);
+                      setCustomEndDate(pendingEndDate);
+                      console.log('🔄 FluxoCaixa: Carregando todas transações para período personalizado');
+                      loadTransactions();
+                    }
+                  }}
+                  disabled={!pendingStartDate || !pendingEndDate}
+                  className="text-xs bg-primary hover:bg-primary/90 min-h-[40px] w-full sm:w-auto"
+                >
+                  Aplicar
+                </Button>
+              </div>
+            )}
+          </div>
+
+          {/* Row 3: Settings + Export */}
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setShowSettings(!showSettings)}
+              className="text-xs min-h-[40px] flex-1 sm:flex-none"
+            >
+              <Settings className="h-4 w-4 mr-2" />
+              <span className="sm:inline">Configurações</span>
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              disabled={!hasData} 
+              onClick={exportToCSV} 
+              className="text-xs min-h-[40px] flex-1 sm:flex-none"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              <span className="sm:inline">Exportar</span>
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -614,14 +631,56 @@ export default function FluxoCaixa() {
               </div>
             </div>
           </CardHeader>
-          <CardContent className="space-y-4 p-3 md:p-6">
+          <CardContent className="space-y-4 p-2 sm:p-3 md:p-6">
             {/* Unified Transaction List */}
             <div className="space-y-3">
               <div className="flex items-center gap-2 pb-2 border-b border-black">
                 <Calendar className="h-4 w-4 text-black" />
                 <h3 className="text-sm md:text-base font-semibold text-black">TRANSAÇÕES</h3>
               </div>
-              <div className="overflow-x-auto -mx-3 md:mx-0">
+              
+              {/* Mobile Card View */}
+              <div className="block sm:hidden space-y-2">
+                {allTransactionsSorted.map((transaction) => (
+                  <div 
+                    key={transaction.id} 
+                    className={`p-3 rounded-lg border bg-white ${transaction.valor > 0 ? 'border-l-4 border-l-green-500' : 'border-l-4 border-l-red-500'}`}
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-gray-500">
+                          {new Date(transaction.data_transacao).toLocaleDateString('pt-BR')}
+                        </p>
+                        <p className="text-sm font-medium text-black truncate" title={transaction.descricao}>
+                          {transaction.descricao}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1 flex-shrink-0 ml-2">
+                        <span className={`text-sm font-bold ${transaction.valor > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {transaction.valor > 0 ? '+' : ''}R$ {Math.abs(transaction.valor).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                        </span>
+                        <TransactionActions 
+                          transaction={transaction}
+                          onTransactionUpdated={() => loadTransactions(selectedMonth)}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-xs">
+                        {transaction.categoria_final || transaction.categoria_sugerida || 'Outros'}
+                      </Badge>
+                      {transaction.origem_arquivo === 'manual_entry' && (
+                        <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20">
+                          Manual
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              {/* Desktop Table View */}
+              <div className="hidden sm:block overflow-x-auto">
                 <div className="min-w-[640px]">
                   <Table>
                     <TableHeader>
