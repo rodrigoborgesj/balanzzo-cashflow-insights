@@ -8,6 +8,7 @@ const corsHeaders = {
 
 interface CreateSubscriptionRequest {
   planId: string;
+  paymentMethod?: 'credit_card' | 'pix';
   customer: {
     name: string;
     email: string;
@@ -41,9 +42,9 @@ serve(async (req) => {
       );
     }
 
-    const { planId, customer }: CreateSubscriptionRequest = await req.json();
+    const { planId, paymentMethod = 'credit_card', customer }: CreateSubscriptionRequest = await req.json();
     
-    console.log('Creating subscription for user:', user.id, 'plan:', planId);
+    console.log('Creating subscription for user:', user.id, 'plan:', planId, 'method:', paymentMethod);
 
     // Get plan details
     const { data: plan, error: planError } = await supabase
@@ -169,38 +170,78 @@ serve(async (req) => {
       console.log('Created new customer:', customerId);
     }
 
-    // Step 2: Create Payment Link for subscription using the correct endpoint
-    console.log('Creating payment link for subscription...');
+    // Step 2: Create Payment Link - different approach for PIX vs Credit Card
+    console.log('Creating payment link with method:', paymentMethod);
 
-    // Use paymentlinks endpoint for subscription checkout
-    const paymentLinkPayload = {
-      name: `Assinatura ${plan.name}`,
-      type: 'subscription',
-      is_payment_link: true,
-      payment_settings: {
-        accepted_payment_methods: ['credit_card'],
-        credit_card_settings: {
-          operation_type: 'auth_and_capture'
-        }
-      },
-      customer_settings: {
-        customer_id: customerId
-      },
-      cart_settings: {
-        recurrences: [
-          {
-            plan_id: plan.pagarme_plan_id,
-            start_in: 0
+    let paymentLinkPayload: Record<string, unknown>;
+
+    if (paymentMethod === 'pix') {
+      // PIX: Single payment (order type) for 1 month access
+      paymentLinkPayload = {
+        name: `${plan.name} - 1 Mês`,
+        type: 'order',
+        is_payment_link: true,
+        payment_settings: {
+          accepted_payment_methods: ['pix'],
+          pix_settings: {
+            expires_in: 86400, // 24 hours to pay
           }
-        ]
-      },
-      metadata: {
-        user_id: user.id,
-        plan_id: planId,
-        plan_name: plan.name,
-        subscription_type: plan.subscription_type
-      }
-    };
+        },
+        customer_settings: {
+          customer_id: customerId
+        },
+        cart_settings: {
+          items: [
+            {
+              amount: plan.price_cents,
+              description: `${plan.name} - Acesso por 1 mês`,
+              quantity: 1,
+              code: plan.id
+            }
+          ]
+        },
+        metadata: {
+          user_id: user.id,
+          plan_id: planId,
+          plan_name: plan.name,
+          subscription_type: plan.subscription_type,
+          payment_method: 'pix',
+          is_single_payment: true
+        }
+      };
+    } else {
+      // Credit Card: Recurring subscription
+      paymentLinkPayload = {
+        name: `Assinatura ${plan.name}`,
+        type: 'subscription',
+        is_payment_link: true,
+        payment_settings: {
+          accepted_payment_methods: ['credit_card'],
+          credit_card_settings: {
+            operation_type: 'auth_and_capture'
+          }
+        },
+        customer_settings: {
+          customer_id: customerId
+        },
+        cart_settings: {
+          recurrences: [
+            {
+              plan_id: plan.pagarme_plan_id,
+              start_in: 0
+            }
+          ]
+        },
+        metadata: {
+          user_id: user.id,
+          plan_id: planId,
+          plan_name: plan.name,
+          subscription_type: plan.subscription_type,
+          payment_method: 'credit_card',
+          is_single_payment: false
+        }
+      };
+    }
 
     console.log('Payment link payload:', JSON.stringify(paymentLinkPayload, null, 2));
 
@@ -256,7 +297,8 @@ serve(async (req) => {
         checkout_url: paymentLink.url,
         checkout_id: paymentLink.id,
         customer_id: customerId,
-        message: 'Redirecionando para pagamento...' 
+        payment_method: paymentMethod,
+        message: paymentMethod === 'pix' ? 'Redirecionando para pagamento via PIX...' : 'Redirecionando para pagamento...' 
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
