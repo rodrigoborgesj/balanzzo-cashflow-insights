@@ -40,11 +40,18 @@ export function ModuleProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
+      console.log('🔍 Checking subscriptions for user:', user.email);
+      
       // Check free access first
-      const { data: freeAccessData } = await supabase
+      const { data: freeAccessData, error: freeAccessError } = await supabase
         .rpc('has_free_access', { user_email: user.email || '' });
       
+      if (freeAccessError) {
+        console.error('❌ Error checking free access:', freeAccessError);
+      }
+      
       const isFreeAccess = !!freeAccessData;
+      console.log('🆓 Free access check result:', isFreeAccess, 'for email:', user.email);
       setHasFreeAccess(isFreeAccess);
 
       // Check company subscription
@@ -64,8 +71,13 @@ export function ModuleProvider({ children }: { children: React.ReactNode }) {
         .rpc('get_user_context', { p_user_id: user.id });
 
       // Free access grants both subscriptions
-      setHasCompanySubscription(!!companyData || isFreeAccess);
-      setHasPersonalSubscription(!!personalData || isFreeAccess);
+      const finalCompanyAccess = !!companyData || isFreeAccess;
+      const finalPersonalAccess = !!personalData || isFreeAccess;
+      
+      console.log('📊 Access summary - Company:', finalCompanyAccess, 'Personal:', finalPersonalAccess, 'Free:', isFreeAccess);
+      
+      setHasCompanySubscription(finalCompanyAccess);
+      setHasPersonalSubscription(finalPersonalAccess);
       setIsPersonalProfileComplete(!!profileComplete);
       setCurrentContextState(contextData as SubscriptionType || null);
     } catch (error) {
