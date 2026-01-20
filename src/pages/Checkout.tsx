@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useModule } from "@/contexts/ModuleContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -16,8 +17,25 @@ export default function Checkout() {
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { plans, isLoading: plansLoading, refetchSubscription } = useSubscription();
+  const { 
+    hasCompanySubscription, 
+    hasPersonalSubscription, 
+    hasFreeAccess, 
+    isLoading: moduleLoading 
+  } = useModule();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+
+  // Check if user already has access - redirect them away from checkout
+  const hasAnyAccess = hasCompanySubscription || hasPersonalSubscription || hasFreeAccess;
+
+  useEffect(() => {
+    // If user already has access, redirect to module selector
+    if (!moduleLoading && hasAnyAccess) {
+      console.log('✅ User has access (free or paid), redirecting away from checkout');
+      navigate('/select-module', { replace: true });
+    }
+  }, [moduleLoading, hasAnyAccess, navigate]);
 
   const planId = searchParams.get('plan');
   // Se não houver planId na URL, usar o primeiro plano disponível
@@ -114,12 +132,25 @@ export default function Checkout() {
     });
   };
 
-  if (plansLoading || !plans) {
+  // Show loading while checking module access or loading plans
+  if (moduleLoading || plansLoading || !plans) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          <p className="text-sm text-muted-foreground">Carregando checkout...</p>
+          <p className="text-sm text-muted-foreground">Verificando acesso...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If user has access, don't show checkout (will redirect via useEffect)
+  if (hasAnyAccess) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <p className="text-sm text-muted-foreground">Você já possui acesso! Redirecionando...</p>
         </div>
       </div>
     );
