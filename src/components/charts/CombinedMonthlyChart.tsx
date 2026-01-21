@@ -151,12 +151,14 @@ export const CombinedMonthlyChart = ({ data, formatCurrency }: CombinedMonthlyCh
                 fill="hsl(var(--success))"
                 radius={[4, 4, 0, 0]}
                 name="Entradas"
+                maxBarSize={60}
               />
               <Bar 
                 dataKey="saidas" 
                 fill="hsl(var(--destructive))"
                 radius={[4, 4, 0, 0]}
                 name="Saídas"
+                maxBarSize={60}
               />
             </BarChart>
           </ResponsiveContainer>
