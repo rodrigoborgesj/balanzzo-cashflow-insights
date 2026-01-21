@@ -24,12 +24,16 @@ import {
   AlertCircle,
   Loader2,
   Plus,
-  Trash2
+  Trash2,
+  CalendarRange,
+  X
 } from "lucide-react";
 import { MonthSelector } from "@/components/MonthSelector";
+import { PeriodSelector } from "@/components/PeriodSelector";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { format, parseISO, isWithinInterval } from "date-fns";
 
 // Categorias para classificação
 const categoriesReceitas = [
@@ -61,6 +65,15 @@ export default function Conciliacao() {
   // Filter and search state
   const [filterStatus, setFilterStatus] = useState("todos");
   const [searchTerm, setSearchTerm] = useState("");
+  
+  // Date filter state
+  const [periodMode, setPeriodMode] = useState<'month' | 'custom'>('month');
+  const [filterMonth, setFilterMonth] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  });
+  const [customStartDate, setCustomStartDate] = useState<Date | undefined>(undefined);
+  const [customEndDate, setCustomEndDate] = useState<Date | undefined>(undefined);
   
   // Pagination state
   const [page, setPage] = useState(0);
@@ -267,12 +280,43 @@ export default function Conciliacao() {
     }
   };
 
+  // Handle custom period apply
+  const handleApplyCustomPeriod = (start: Date, end: Date) => {
+    setCustomStartDate(start);
+    setCustomEndDate(end);
+    setPage(0);
+  };
+
+  // Clear date filter
+  const handleClearDateFilter = () => {
+    setPeriodMode('month');
+    setCustomStartDate(undefined);
+    setCustomEndDate(undefined);
+    const now = new Date();
+    setFilterMonth(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`);
+    setPage(0);
+  };
+
   const filteredTransactions = transactions.filter(transaction => {
     const matchesSearch = transaction.descricao.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = filterStatus === "todos" || 
       (filterStatus === "pendente" && !transaction.status_conciliacao) ||
       (filterStatus === "conciliado" && transaction.status_conciliacao);
-    return matchesSearch && matchesStatus;
+    
+    // Date filter logic
+    let matchesDate = true;
+    if (periodMode === 'custom' && customStartDate && customEndDate) {
+      const transactionDate = parseISO(transaction.data_transacao);
+      matchesDate = isWithinInterval(transactionDate, { start: customStartDate, end: customEndDate });
+    } else if (periodMode === 'month' && filterMonth) {
+      const [year, month] = filterMonth.split('-');
+      const transactionDate = parseISO(transaction.data_transacao);
+      matchesDate = 
+        transactionDate.getFullYear() === parseInt(year) && 
+        transactionDate.getMonth() + 1 === parseInt(month);
+    }
+    
+    return matchesSearch && matchesStatus && matchesDate;
   });
 
   // Calculate balances reactively
@@ -569,29 +613,58 @@ export default function Conciliacao() {
             </div>
 
             {/* Controles de filtro */}
-            <div className="flex flex-col sm:flex-row gap-3 md:gap-4 items-stretch sm:items-center">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input
-                    placeholder="Buscar transações..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
+            <div className="flex flex-col gap-3 md:gap-4">
+              <div className="flex flex-col sm:flex-row gap-3 md:gap-4 items-stretch sm:items-center">
+                <div className="flex-1">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Buscar transações..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+                
+                <Select value={filterStatus} onValueChange={setFilterStatus}>
+                  <SelectTrigger className="w-full sm:w-48">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todas</SelectItem>
+                    <SelectItem value="pendente">Pendentes</SelectItem>
+                    <SelectItem value="conciliado">Conciliadas</SelectItem>
+                  </SelectContent>
+                </Select>
+                
+                {/* Date Filter */}
+                <div className="flex items-center gap-2">
+                  <PeriodSelector
+                    periodMode={periodMode}
+                    setPeriodMode={setPeriodMode}
+                    selectedMonth={filterMonth}
+                    setSelectedMonth={(month) => {
+                      setFilterMonth(month);
+                      setPage(0);
+                    }}
+                    customStartDate={customStartDate}
+                    customEndDate={customEndDate}
+                    onApplyCustomPeriod={handleApplyCustomPeriod}
                   />
+                  {(periodMode === 'custom' && customStartDate && customEndDate) && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={handleClearDateFilter}
+                      className="h-10 w-10 text-muted-foreground hover:text-destructive"
+                      title="Limpar filtro de data"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
               </div>
-              
-              <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger className="w-full sm:w-48">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todas</SelectItem>
-                  <SelectItem value="pendente">Pendentes</SelectItem>
-                  <SelectItem value="conciliado">Conciliadas</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
 
             {/* Tabela de Transações */}
