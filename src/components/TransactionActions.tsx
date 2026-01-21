@@ -48,6 +48,8 @@ export function TransactionActions({ transaction, onTransactionUpdated }: Transa
         description: 'A transação manual foi removida com sucesso',
       });
 
+      // Dispatch global event to sync future transactions and other components
+      window.dispatchEvent(new Event('transactionsUpdated'));
       onTransactionUpdated();
     } catch (error) {
       console.error('Erro ao excluir transação:', error);

@@ -52,6 +52,8 @@ type PeriodMode = 'month' | 'custom';
 
 export default function FluxoCaixa() {
   const [saldoInicial, setSaldoInicial] = useState(0);
+  const [saldoInicialTemp, setSaldoInicialTemp] = useState('');
+  const [saldoInicialApplied, setSaldoInicialApplied] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [periodMode, setPeriodMode] = useState<PeriodMode>('month');
   const [selectedMonth, setSelectedMonth] = useState<string>(() => {
@@ -248,8 +250,9 @@ export default function FluxoCaixa() {
   // Check if any filter is active
   const hasActiveFilters = transactionFilter !== 'todas' || selectedCategories.length > 0;
   
-  // Use filtered result when filters are active, otherwise use total
-  const displayNetResult = hasActiveFilters ? filteredNetResult : (totalInflow - totalOutflow);
+  // Use filtered result when filters are active, otherwise use total + saldo inicial
+  const baseNetResult = hasActiveFilters ? filteredNetResult : (totalInflow - totalOutflow);
+  const displayNetResult = baseNetResult + saldoInicial;
 
   // Format period display text
   const periodDisplayText = useMemo(() => {
@@ -297,9 +300,9 @@ export default function FluxoCaixa() {
           </p>
         </div>
         
-        {/* Controls - Mobile optimized stacking */}
-        <div className="flex flex-col gap-3">
-          {/* Row 1: Manual Transaction + Period Mode */}
+        {/* Controls - Single row layout */}
+        <div className="flex flex-wrap items-center gap-2 justify-between">
+          {/* Left side: Add Transaction + Period Controls */}
           <div className="flex flex-wrap items-center gap-2">
             <ManualTransactionForm
               onTransactionAdded={() => {
@@ -326,150 +329,170 @@ export default function FluxoCaixa() {
                 <SelectItem value="custom">Personalizado</SelectItem>
               </SelectContent>
             </Select>
-          </div>
 
-          {/* Row 2: Month/Date Selector */}
-          <div className="w-full">
-            {periodMode === 'month' ? (
-              <div className="w-full sm:w-auto">
-                <MonthSelector
-                  value={selectedMonth}
-                  onChange={(value) => {
-                    console.log('Month changed from', selectedMonth, 'to', value);
-                    setSelectedMonth(value);
-                  }}
-                />
-              </div>
-            ) : (
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                <div className="flex items-center gap-2 flex-1">
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" size="sm" className={cn(
-                        "text-xs flex-1 sm:flex-none justify-start text-left font-normal min-h-[40px]",
-                        !pendingStartDate && "text-muted-foreground"
-                      )}>
-                        <CalendarRange className="h-4 w-4 mr-2 flex-shrink-0" />
-                        <span className="truncate">{pendingStartDate ? format(pendingStartDate, "dd/MM/yyyy") : "Data início"}</span>
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 pointer-events-auto" align="start">
-                      <CalendarComponent
-                        mode="single"
-                        selected={pendingStartDate}
-                        onSelect={setPendingStartDate}
-                        locale={ptBR}
-                        className="pointer-events-auto"
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  <span className="text-gray-500 text-xs flex-shrink-0">até</span>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" size="sm" className={cn(
-                        "text-xs flex-1 sm:flex-none justify-start text-left font-normal min-h-[40px]",
-                        !pendingEndDate && "text-muted-foreground"
-                      )}>
-                        <CalendarRange className="h-4 w-4 mr-2 flex-shrink-0" />
-                        <span className="truncate">{pendingEndDate ? format(pendingEndDate, "dd/MM/yyyy") : "Data fim"}</span>
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 pointer-events-auto" align="start">
-                      <CalendarComponent
-                        mode="single"
-                        selected={pendingEndDate}
-                        onSelect={setPendingEndDate}
-                        locale={ptBR}
-                        disabled={(date) => pendingStartDate ? date < pendingStartDate : false}
-                        className="pointer-events-auto"
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-                <Button 
-                  size="sm" 
-                  onClick={() => {
-                    if (pendingStartDate && pendingEndDate) {
-                      setCustomStartDate(pendingStartDate);
-                      setCustomEndDate(pendingEndDate);
-                      console.log('🔄 FluxoCaixa: Carregando todas transações para período personalizado');
-                      loadTransactions();
-                    }
-                  }}
-                  disabled={!pendingStartDate || !pendingEndDate}
-                  className="text-xs bg-primary hover:bg-primary/90 min-h-[40px] w-full sm:w-auto"
-                >
-                  Aplicar
-                </Button>
-              </div>
+            {/* Month Selector inline */}
+            {periodMode === 'month' && (
+              <MonthSelector
+                value={selectedMonth}
+                onChange={(value) => {
+                  console.log('Month changed from', selectedMonth, 'to', value);
+                  setSelectedMonth(value);
+                }}
+              />
             )}
           </div>
 
-          {/* Row 3: Settings + Export */}
+          {/* Right side: Settings + Export */}
           <div className="flex items-center gap-2">
             <Button 
               variant="outline" 
               size="sm"
               onClick={() => setShowSettings(!showSettings)}
-              className="text-xs min-h-[40px] flex-1 sm:flex-none"
+              className="text-xs min-h-[40px]"
             >
               <Settings className="h-4 w-4 mr-2" />
-              <span className="sm:inline">Configurações</span>
+              <span className="hidden sm:inline">Configurações</span>
             </Button>
             <Button 
               variant="outline" 
               size="sm" 
               disabled={!hasData} 
               onClick={exportToCSV} 
-              className="text-xs min-h-[40px] flex-1 sm:flex-none"
+              className="text-xs min-h-[40px]"
             >
               <Download className="h-4 w-4 mr-2" />
-              <span className="sm:inline">Exportar</span>
+              <span className="hidden sm:inline">Exportar</span>
             </Button>
           </div>
         </div>
+
+        {/* Custom Period Selector - Show when custom mode is active */}
+        {periodMode === 'custom' && (
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+            <div className="flex items-center gap-2 flex-1">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className={cn(
+                    "text-xs flex-1 sm:flex-none justify-start text-left font-normal min-h-[40px]",
+                    !pendingStartDate && "text-muted-foreground"
+                  )}>
+                    <CalendarRange className="h-4 w-4 mr-2 flex-shrink-0" />
+                    <span className="truncate">{pendingStartDate ? format(pendingStartDate, "dd/MM/yyyy") : "Data início"}</span>
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0 pointer-events-auto" align="start">
+                  <CalendarComponent
+                    mode="single"
+                    selected={pendingStartDate}
+                    onSelect={setPendingStartDate}
+                    locale={ptBR}
+                    className="pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+              <span className="text-gray-500 text-xs flex-shrink-0">até</span>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className={cn(
+                    "text-xs flex-1 sm:flex-none justify-start text-left font-normal min-h-[40px]",
+                    !pendingEndDate && "text-muted-foreground"
+                  )}>
+                    <CalendarRange className="h-4 w-4 mr-2 flex-shrink-0" />
+                    <span className="truncate">{pendingEndDate ? format(pendingEndDate, "dd/MM/yyyy") : "Data fim"}</span>
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0 pointer-events-auto" align="start">
+                  <CalendarComponent
+                    mode="single"
+                    selected={pendingEndDate}
+                    onSelect={setPendingEndDate}
+                    locale={ptBR}
+                    disabled={(date) => pendingStartDate ? date < pendingStartDate : false}
+                    className="pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+            <Button 
+              size="sm" 
+              onClick={() => {
+                if (pendingStartDate && pendingEndDate) {
+                  setCustomStartDate(pendingStartDate);
+                  setCustomEndDate(pendingEndDate);
+                  console.log('🔄 FluxoCaixa: Carregando todas transações para período personalizado');
+                  loadTransactions();
+                }
+              }}
+              disabled={!pendingStartDate || !pendingEndDate}
+              className="text-xs bg-primary hover:bg-primary/90 min-h-[40px] w-full sm:w-auto"
+            >
+              Aplicar
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Settings Panel */}
       {showSettings && (
         <Card className="bg-accent/10 border-accent/20">
-          <CardHeader>
+          <CardHeader className="pb-2">
             <CardTitle className="text-lg">Configurações do Fluxo de Caixa</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
+              <div className="flex flex-col sm:flex-row items-start sm:items-end gap-3">
+                <div className="space-y-2 flex-1 max-w-xs">
                   <Label htmlFor="saldo-inicial">Saldo Inicial (R$)</Label>
                   <Input
                     id="saldo-inicial"
                     type="text"
-                    value={saldoInicial === 0 ? '' : saldoInicial.toString()}
+                    value={saldoInicialTemp}
                     onChange={(e) => {
-                      const rawValue = e.target.value.replace(/[^\d,.-]/g, '');
-                      const normalizedValue = rawValue.replace(',', '.');
-                      const numValue = normalizedValue === '' || normalizedValue === '-' ? 0 : parseFloat(normalizedValue);
-                      if (!isNaN(numValue)) {
-                        setSaldoInicial(numValue);
-                      }
+                      setSaldoInicialTemp(e.target.value);
                     }}
-                    onBlur={(e) => {
-                      // Format on blur for better UX
-                      if (saldoInicial !== 0) {
-                        e.target.value = saldoInicial.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                      }
-                    }}
-                    onFocus={(e) => {
-                      // Show raw number on focus for easier editing
-                      if (saldoInicial !== 0) {
-                        e.target.value = saldoInicial.toString();
-                        e.target.select();
-                      }
-                    }}
-                    placeholder="0,00"
+                    placeholder="Ex: 5000,00"
+                    className="w-full"
                   />
+                  <p className="text-xs text-muted-foreground">
+                    O saldo inicial será somado às entradas no resultado líquido
+                  </p>
                 </div>
+                <Button 
+                  onClick={() => {
+                    const rawValue = saldoInicialTemp.replace(/[^\d,.-]/g, '');
+                    const normalizedValue = rawValue.replace(',', '.');
+                    const numValue = normalizedValue === '' || normalizedValue === '-' ? 0 : parseFloat(normalizedValue);
+                    if (!isNaN(numValue)) {
+                      setSaldoInicial(numValue);
+                      setSaldoInicialApplied(true);
+                      setShowSettings(false);
+                    }
+                  }}
+                  className="min-h-[40px]"
+                >
+                  Salvar Saldo
+                </Button>
+                {saldoInicialApplied && saldoInicial !== 0 && (
+                  <Button 
+                    variant="outline"
+                    onClick={() => {
+                      setSaldoInicial(0);
+                      setSaldoInicialTemp('');
+                      setSaldoInicialApplied(false);
+                    }}
+                    className="min-h-[40px] text-destructive border-destructive/50 hover:bg-destructive/10"
+                  >
+                    Limpar
+                  </Button>
+                )}
               </div>
+              {saldoInicialApplied && saldoInicial !== 0 && (
+                <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <p className="text-sm text-green-800">
+                    ✓ Saldo inicial aplicado: <strong>R$ {saldoInicial.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong>
+                  </p>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -566,7 +589,7 @@ export default function FluxoCaixa() {
                   <TrendingDown className="h-4 w-4 text-[#E4F8CA]" />
                 )}
                 <p className="text-[10px] md:text-xs font-medium text-[#A9C7A1] uppercase tracking-wide">
-                  Resultado {hasActiveFilters && "(filtrado)"}
+                  Resultado {hasActiveFilters && "(filtrado)"} {saldoInicialApplied && saldoInicial !== 0 && "+ Saldo"}
                 </p>
               </div>
               <div className="flex flex-col">
@@ -576,6 +599,7 @@ export default function FluxoCaixa() {
                 {futureTransactions.length > 0 && (
                   <span className="text-[10px] md:text-xs text-[#E4F8CA] font-medium">
                     Projetado: R$ {(
+                      displayNetResult +
                       futureTransactions.filter(t => t.tipo === 'entrada').reduce((sum, t) => sum + t.valor, 0) -
                       futureTransactions.filter(t => t.tipo === 'saida').reduce((sum, t) => sum + t.valor, 0)
                     ).toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
