@@ -88,20 +88,27 @@ export default function Dashboard() {
   const expenseProjectionsAnnual = getExpenseProjections('annual');
   const expenseProjectionsMonthly = getExpenseProjections('monthly');
 
-  // Generate months for dropdown
-  const currentDate = new Date();
-  const currentYear = currentDate.getFullYear();
-  const months = Array.from({ length: 12 }, (_, i) => {
-    const monthValue = `${currentYear}-${String(i + 1).padStart(2, '0')}`;
+  // Generate months for dropdown - last 24 months for historical access
+  const months = (() => {
     const monthNames = [
       "janeiro", "fevereiro", "março", "abril", "maio", "junho",
       "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"
     ];
-    return {
-      value: monthValue,
-      label: `${monthNames[i]} de ${currentYear}`
-    };
-  });
+    const result = [];
+    const now = new Date();
+    
+    for (let i = 0; i < 24; i++) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const year = date.getFullYear();
+      const month = date.getMonth();
+      const monthValue = `${year}-${String(month + 1).padStart(2, '0')}`;
+      result.push({
+        value: monthValue,
+        label: `${monthNames[month]} de ${year}`
+      });
+    }
+    return result;
+  })();
 
   // Month Selector Component
   const MonthSelector = () => (

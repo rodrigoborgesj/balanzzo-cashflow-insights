@@ -145,7 +145,7 @@ export const CombinedMonthlyChart = ({ data, formatCurrency }: CombinedMonthlyCh
                   return value.toString();
                 }}
               />
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip content={<CustomTooltip />} cursor={false} />
               <Bar 
                 dataKey="entradas" 
                 fill="hsl(var(--success))"
