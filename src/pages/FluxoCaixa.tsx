@@ -89,6 +89,7 @@ export default function FluxoCaixa() {
     const handleTransactionsUpdate = () => {
       console.log('FluxoCaixa: Transações atualizadas, recarregando dados...');
       loadTransactions(selectedMonth);
+      loadFutureTransactions(); // Also reload future transactions when any transaction is updated/deleted
     };
 
     window.addEventListener('transactionsUpdated', handleTransactionsUpdate);
@@ -96,7 +97,7 @@ export default function FluxoCaixa() {
     return () => {
       window.removeEventListener('transactionsUpdated', handleTransactionsUpdate);
     };
-  }, [selectedMonth]); // ✅ FIX: Removido loadTransactions das dependências para evitar re-criação do listener
+  }, [selectedMonth, loadFutureTransactions]); // ✅ Include loadFutureTransactions to sync future data
 
   // Realtime: atualizar automaticamente quando houver mudanças nas tabelas relevantes
   useEffect(() => {
@@ -116,6 +117,7 @@ export default function FluxoCaixa() {
         () => {
           console.log('FluxoCaixa: Mudança em fluxo_caixa (realtime) → recarregando...');
           loadTransactions(selectedMonth);
+          loadFutureTransactions(); // Reload future transactions when fluxo_caixa changes
         }
       )
       .subscribe();
@@ -123,7 +125,7 @@ export default function FluxoCaixa() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [selectedMonth]);
+  }, [selectedMonth, loadFutureTransactions]);
 
   // Group transactions by category - only include categorized transactions
   useEffect(() => {
@@ -489,137 +491,96 @@ export default function FluxoCaixa() {
         </Card>
       )}
 
-      {/* Summary Cards */}
+      {/* Combined Summary Cards - Minimalist Design */}
       {hasData && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-          <Card className="bg-white border border-black" style={{ borderRadius: '50px' }}>
-            <CardContent className="p-4 md:p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs md:text-sm font-medium text-black">Total Transações</p>
-                  <p className="text-lg md:text-xl font-bold text-black">
-                    {transactions.length}
-                  </p>
-                </div>
-                <Calendar className="h-5 w-5 md:h-6 md:w-6 text-black" />
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-3">
+          {/* Transactions Count */}
+          <Card className="bg-white border border-slate-200 shadow-sm" style={{ borderRadius: '16px' }}>
+            <CardContent className="p-3 md:p-4">
+              <div className="flex items-center gap-2 mb-1">
+                <Calendar className="h-4 w-4 text-slate-500" />
+                <p className="text-[10px] md:text-xs font-medium text-slate-500 uppercase tracking-wide">Transações</p>
               </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white border border-black" style={{ borderRadius: '50px' }}>
-            <CardContent className="p-4 md:p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs md:text-sm font-medium text-black">Total Entradas</p>
-                  <p className="text-lg md:text-xl font-bold text-black">
-                    R$ {totalInflow.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                  </p>
-                </div>
-                <ArrowUpCircle className="h-5 w-5 md:h-6 md:w-6 text-black" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white border border-black" style={{ borderRadius: '50px' }}>
-            <CardContent className="p-4 md:p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs md:text-sm font-medium text-black">Total Saídas</p>
-                  <p className="text-lg md:text-xl font-bold text-black">
-                    R$ {totalOutflow.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                  </p>
-                </div>
-                <ArrowDownCircle className="h-5 w-5 md:h-6 md:w-6 text-black" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card style={{ backgroundColor: '#1A3423', borderRadius: '50px' }}>
-            <CardContent className="p-4 md:p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs md:text-sm font-medium text-white">
-                    Resultado Líquido {hasActiveFilters && <span className="text-xs opacity-75">(filtrado)</span>}
-                  </p>
-                  <p className="text-lg md:text-xl font-bold text-white">
-                    R$ {displayNetResult.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                  </p>
-                </div>
-                {displayNetResult >= 0 ? (
-                  <TrendingUp className="h-5 w-5 md:h-6 md:w-6 text-white" />
-                ) : (
-                  <TrendingDown className="h-5 w-5 md:h-6 md:w-6 text-white" />
+              <div className="flex items-baseline gap-2">
+                <span className="text-lg md:text-xl font-bold text-slate-900">{transactions.length}</span>
+                {futureTransactions.length > 0 && (
+                  <span className="text-xs text-blue-600 font-medium">+{futureTransactions.length} futuras</span>
                 )}
               </div>
             </CardContent>
           </Card>
-        </div>
-      )}
 
-      {/* Future Transactions Summary Cards */}
-      {hasData && futureTransactions.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-          <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200" style={{ borderRadius: '50px' }}>
-            <CardContent className="p-4 md:p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs md:text-sm font-medium text-blue-700">Lançamentos Futuros</p>
-                  <p className="text-lg md:text-xl font-bold text-blue-900">
-                    {futureTransactions.length}
-                  </p>
-                </div>
-                <Clock className="h-5 w-5 md:h-6 md:w-6 text-blue-600" />
+          {/* Incomes */}
+          <Card className="bg-white border border-slate-200 shadow-sm" style={{ borderRadius: '16px' }}>
+            <CardContent className="p-3 md:p-4">
+              <div className="flex items-center gap-2 mb-1">
+                <ArrowUpCircle className="h-4 w-4 text-green-600" />
+                <p className="text-[10px] md:text-xs font-medium text-slate-500 uppercase tracking-wide">Entradas</p>
               </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-green-50 to-green-100 border border-green-200" style={{ borderRadius: '50px' }}>
-            <CardContent className="p-4 md:p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs md:text-sm font-medium text-green-700">Entradas Futuras</p>
-                  <p className="text-lg md:text-xl font-bold text-green-900">
-                    R$ {futureTransactions
+              <div className="flex flex-col">
+                <span className="text-base md:text-lg font-bold text-slate-900">
+                  R$ {totalInflow.toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                </span>
+                {futureTransactions.filter(t => t.tipo === 'entrada').length > 0 && (
+                  <span className="text-[10px] md:text-xs text-green-600 font-medium">
+                    +R$ {futureTransactions
                       .filter(t => t.tipo === 'entrada')
                       .reduce((sum, t) => sum + t.valor, 0)
-                      .toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                  </p>
-                </div>
-                <ArrowUpCircle className="h-5 w-5 md:h-6 md:w-6 text-green-600" />
+                      .toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })} projetado
+                  </span>
+                )}
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-red-50 to-red-100 border border-red-200" style={{ borderRadius: '50px' }}>
-            <CardContent className="p-4 md:p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs md:text-sm font-medium text-red-700">Saídas Futuras</p>
-                  <p className="text-lg md:text-xl font-bold text-red-900">
-                    R$ {futureTransactions
+          {/* Expenses */}
+          <Card className="bg-white border border-slate-200 shadow-sm" style={{ borderRadius: '16px' }}>
+            <CardContent className="p-3 md:p-4">
+              <div className="flex items-center gap-2 mb-1">
+                <ArrowDownCircle className="h-4 w-4 text-red-600" />
+                <p className="text-[10px] md:text-xs font-medium text-slate-500 uppercase tracking-wide">Saídas</p>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-base md:text-lg font-bold text-slate-900">
+                  R$ {totalOutflow.toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                </span>
+                {futureTransactions.filter(t => t.tipo === 'saida').length > 0 && (
+                  <span className="text-[10px] md:text-xs text-red-600 font-medium">
+                    +R$ {futureTransactions
                       .filter(t => t.tipo === 'saida')
                       .reduce((sum, t) => sum + t.valor, 0)
-                      .toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                  </p>
-                </div>
-                <ArrowDownCircle className="h-5 w-5 md:h-6 md:w-6 text-red-600" />
+                      .toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })} projetado
+                  </span>
+                )}
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200" style={{ borderRadius: '50px' }}>
-            <CardContent className="p-4 md:p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs md:text-sm font-medium text-purple-700">Saldo Projetado</p>
-                  <p className="text-lg md:text-xl font-bold text-purple-900">
-                    R$ {(
+          {/* Net Result */}
+          <Card className="border-0 shadow-sm" style={{ backgroundColor: '#1A3423', borderRadius: '16px' }}>
+            <CardContent className="p-3 md:p-4">
+              <div className="flex items-center gap-2 mb-1">
+                {displayNetResult >= 0 ? (
+                  <TrendingUp className="h-4 w-4 text-[#E4F8CA]" />
+                ) : (
+                  <TrendingDown className="h-4 w-4 text-[#E4F8CA]" />
+                )}
+                <p className="text-[10px] md:text-xs font-medium text-[#A9C7A1] uppercase tracking-wide">
+                  Resultado {hasActiveFilters && "(filtrado)"}
+                </p>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-base md:text-lg font-bold text-white">
+                  R$ {displayNetResult.toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                </span>
+                {futureTransactions.length > 0 && (
+                  <span className="text-[10px] md:text-xs text-[#E4F8CA] font-medium">
+                    Projetado: R$ {(
                       futureTransactions.filter(t => t.tipo === 'entrada').reduce((sum, t) => sum + t.valor, 0) -
                       futureTransactions.filter(t => t.tipo === 'saida').reduce((sum, t) => sum + t.valor, 0)
-                    ).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                  </p>
-                </div>
-                <ArrowRight className="h-5 w-5 md:h-6 md:w-6 text-purple-600" />
+                    ).toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                  </span>
+                )}
               </div>
             </CardContent>
           </Card>
