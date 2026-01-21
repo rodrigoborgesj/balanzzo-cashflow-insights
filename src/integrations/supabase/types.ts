@@ -870,6 +870,7 @@ export type Database = {
           categoria_final: string | null
           categoria_sugerida: string | null
           company_id: string | null
+          comprovante_url: string | null
           criado_em: string | null
           data_transacao: string
           descricao: string | null
@@ -878,14 +879,17 @@ export type Database = {
           mes_referencia: string | null
           origem_arquivo: string | null
           status_conciliacao: boolean | null
+          status_validacao: string | null
           tipo: string | null
           user_id: string
           valor: number
+          valor_comprovante: number | null
         }
         Insert: {
           categoria_final?: string | null
           categoria_sugerida?: string | null
           company_id?: string | null
+          comprovante_url?: string | null
           criado_em?: string | null
           data_transacao: string
           descricao?: string | null
@@ -894,14 +898,17 @@ export type Database = {
           mes_referencia?: string | null
           origem_arquivo?: string | null
           status_conciliacao?: boolean | null
+          status_validacao?: string | null
           tipo?: string | null
           user_id: string
           valor: number
+          valor_comprovante?: number | null
         }
         Update: {
           categoria_final?: string | null
           categoria_sugerida?: string | null
           company_id?: string | null
+          comprovante_url?: string | null
           criado_em?: string | null
           data_transacao?: string
           descricao?: string | null
@@ -910,9 +917,11 @@ export type Database = {
           mes_referencia?: string | null
           origem_arquivo?: string | null
           status_conciliacao?: boolean | null
+          status_validacao?: string | null
           tipo?: string | null
           user_id?: string
           valor?: number
+          valor_comprovante?: number | null
         }
         Relationships: [
           {

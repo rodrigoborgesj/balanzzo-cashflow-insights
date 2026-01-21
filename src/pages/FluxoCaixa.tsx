@@ -22,13 +22,15 @@ import {
   ChevronDown,
   ChevronRight,
   Filter,
-  CalendarRange
+  CalendarRange,
+  FileCheck
 } from "lucide-react";
 import { MonthSelector } from "@/components/MonthSelector";
 import { useConciliacao, Transaction } from "@/hooks/useConciliacao";
 import { useNavigate } from "react-router-dom";
 import { ManualTransactionForm } from "@/components/ManualTransactionForm";
 import { TransactionActions } from "@/components/TransactionActions";
+import { ReceiptValidationDialog } from "@/components/ReceiptValidationDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { format, isWithinInterval, parseISO, startOfMonth, endOfMonth } from "date-fns";
@@ -60,6 +62,8 @@ export default function FluxoCaixa() {
   const [categoryGroups, setCategoryGroups] = useState<CategoryGroup[]>([]);
   const [transactionFilter, setTransactionFilter] = useState<'todas' | 'entradas' | 'saidas'>('todas');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [validationDialogOpen, setValidationDialogOpen] = useState(false);
+  const [selectedTransactionForValidation, setSelectedTransactionForValidation] = useState<Transaction | null>(null);
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -641,42 +645,72 @@ export default function FluxoCaixa() {
               
               {/* Mobile Card View */}
               <div className="block sm:hidden space-y-2">
-                {allTransactionsSorted.map((transaction) => (
-                  <div 
-                    key={transaction.id} 
-                    className={`p-3 rounded-lg border bg-white ${transaction.valor > 0 ? 'border-l-4 border-l-green-500' : 'border-l-4 border-l-red-500'}`}
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs text-gray-500">
-                          {new Date(transaction.data_transacao).toLocaleDateString('pt-BR')}
-                        </p>
-                        <p className="text-sm font-medium text-black truncate" title={transaction.descricao}>
-                          {transaction.descricao}
-                        </p>
+                {allTransactionsSorted.map((transaction) => {
+                  // Determine border color based on validation status
+                  const isPending = transaction.status_validacao === 'pendente';
+                  const borderColorClass = isPending 
+                    ? 'border-l-4 border-l-yellow-500' 
+                    : transaction.valor > 0 
+                      ? 'border-l-4 border-l-green-500' 
+                      : 'border-l-4 border-l-red-500';
+                  
+                  return (
+                    <div 
+                      key={transaction.id} 
+                      className={`p-3 rounded-lg border bg-white ${borderColorClass} ${isPending ? 'cursor-pointer hover:bg-yellow-50/50' : ''}`}
+                      onClick={() => {
+                        if (isPending) {
+                          setSelectedTransactionForValidation(transaction);
+                          setValidationDialogOpen(true);
+                        }
+                      }}
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-gray-500">
+                            {new Date(transaction.data_transacao).toLocaleDateString('pt-BR')}
+                          </p>
+                          <p className="text-sm font-medium text-black truncate" title={transaction.descricao}>
+                            {transaction.descricao}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-1 flex-shrink-0 ml-2">
+                          <span className={`text-sm font-bold ${
+                            isPending 
+                              ? 'text-yellow-600' 
+                              : transaction.valor > 0 ? 'text-green-600' : 'text-red-600'
+                          }`}>
+                            {transaction.valor > 0 ? '+' : ''}R$ {Math.abs(transaction.valor).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                          </span>
+                          <TransactionActions 
+                            transaction={transaction}
+                            onTransactionUpdated={() => loadTransactions(selectedMonth)}
+                          />
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1 flex-shrink-0 ml-2">
-                        <span className={`text-sm font-bold ${transaction.valor > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          {transaction.valor > 0 ? '+' : ''}R$ {Math.abs(transaction.valor).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                        </span>
-                        <TransactionActions 
-                          transaction={transaction}
-                          onTransactionUpdated={() => loadTransactions(selectedMonth)}
-                        />
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="text-xs">
-                        {transaction.categoria_final || transaction.categoria_sugerida || 'Outros'}
-                      </Badge>
-                      {transaction.origem_arquivo === 'manual_entry' && (
-                        <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20">
-                          Manual
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Badge variant="outline" className="text-xs">
+                          {transaction.categoria_final || transaction.categoria_sugerida || 'Outros'}
                         </Badge>
-                      )}
+                        {transaction.origem_arquivo === 'manual_entry' && (
+                          <Badge variant="outline" className={`text-xs ${
+                            isPending 
+                              ? 'bg-yellow-100 text-yellow-700 border-yellow-300' 
+                              : 'bg-primary/10 text-primary border-primary/20'
+                          }`}>
+                            {isPending ? 'Pendente' : 'Manual'}
+                          </Badge>
+                        )}
+                        {isPending && (
+                          <Badge variant="outline" className="text-xs bg-yellow-100 text-yellow-700 border-yellow-300">
+                            <FileCheck className="h-3 w-3 mr-1" />
+                            Validar
+                          </Badge>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
               
               {/* Desktop Table View */}
@@ -693,42 +727,74 @@ export default function FluxoCaixa() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {allTransactionsSorted.map((transaction) => (
-                        <TableRow key={transaction.id} className={`hover:bg-gray-50 ${transaction.valor > 0 ? 'border-l-4 border-l-green-500' : 'border-l-4 border-l-red-500'}`}>
-                          <TableCell className="font-medium text-xs md:text-sm whitespace-nowrap">
-                            {new Date(transaction.data_transacao).toLocaleDateString('pt-BR', { 
-                              day: '2-digit', 
-                              month: '2-digit'
-                            })}
-                          </TableCell>
-                          <TableCell className="text-xs md:text-sm">
-                            <div className="font-medium text-black text-left">
-                              {transaction.categoria_final || transaction.categoria_sugerida || 'Outros'}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2 w-full">
-                              <div className="flex-1 text-xs md:text-sm whitespace-nowrap overflow-hidden text-ellipsis" title={transaction.descricao}>
-                                {transaction.descricao}
+                      {allTransactionsSorted.map((transaction) => {
+                        const isPending = transaction.status_validacao === 'pendente';
+                        const borderColorClass = isPending 
+                          ? 'border-l-4 border-l-yellow-500' 
+                          : transaction.valor > 0 
+                            ? 'border-l-4 border-l-green-500' 
+                            : 'border-l-4 border-l-red-500';
+                        
+                        return (
+                          <TableRow 
+                            key={transaction.id} 
+                            className={`hover:bg-gray-50 ${borderColorClass} ${isPending ? 'cursor-pointer hover:bg-yellow-50/50' : ''}`}
+                            onClick={() => {
+                              if (isPending) {
+                                setSelectedTransactionForValidation(transaction);
+                                setValidationDialogOpen(true);
+                              }
+                            }}
+                          >
+                            <TableCell className="font-medium text-xs md:text-sm whitespace-nowrap">
+                              {new Date(transaction.data_transacao).toLocaleDateString('pt-BR', { 
+                                day: '2-digit', 
+                                month: '2-digit'
+                              })}
+                            </TableCell>
+                            <TableCell className="text-xs md:text-sm">
+                              <div className="font-medium text-black text-left">
+                                {transaction.categoria_final || transaction.categoria_sugerida || 'Outros'}
                               </div>
-                              {transaction.origem_arquivo === 'manual_entry' && (
-                                <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20 flex-shrink-0">
-                                  Manual
-                                </Badge>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell className={`text-right font-bold whitespace-nowrap text-xs md:text-sm ${transaction.valor > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                            {transaction.valor > 0 ? '+' : ''}R$ {Math.abs(transaction.valor).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                          </TableCell>
-                          <TableCell>
-                            <TransactionActions 
-                              transaction={transaction}
-                              onTransactionUpdated={() => loadTransactions(selectedMonth)}
-                            />
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2 w-full">
+                                <div className="flex-1 text-xs md:text-sm whitespace-nowrap overflow-hidden text-ellipsis" title={transaction.descricao}>
+                                  {transaction.descricao}
+                                </div>
+                                {transaction.origem_arquivo === 'manual_entry' && (
+                                  <Badge variant="outline" className={`text-xs flex-shrink-0 ${
+                                    isPending 
+                                      ? 'bg-yellow-100 text-yellow-700 border-yellow-300' 
+                                      : 'bg-primary/10 text-primary border-primary/20'
+                                  }`}>
+                                    {isPending ? 'Pendente' : 'Manual'}
+                                  </Badge>
+                                )}
+                                {isPending && (
+                                  <Badge variant="outline" className="text-xs bg-yellow-100 text-yellow-700 border-yellow-300 flex-shrink-0">
+                                    <FileCheck className="h-3 w-3 mr-1" />
+                                    Validar
+                                  </Badge>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell className={`text-right font-bold whitespace-nowrap text-xs md:text-sm ${
+                              isPending 
+                                ? 'text-yellow-600' 
+                                : transaction.valor > 0 ? 'text-green-600' : 'text-red-600'
+                            }`}>
+                              {transaction.valor > 0 ? '+' : ''}R$ {Math.abs(transaction.valor).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                            </TableCell>
+                            <TableCell onClick={(e) => e.stopPropagation()}>
+                              <TransactionActions 
+                                transaction={transaction}
+                                onTransactionUpdated={() => loadTransactions(selectedMonth)}
+                              />
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 </div>
@@ -764,6 +830,17 @@ export default function FluxoCaixa() {
           </CardContent>
         </Card>
       )}
+
+      {/* Receipt Validation Dialog */}
+      <ReceiptValidationDialog
+        isOpen={validationDialogOpen}
+        onClose={() => {
+          setValidationDialogOpen(false);
+          setSelectedTransactionForValidation(null);
+        }}
+        transaction={selectedTransactionForValidation}
+        onValidationComplete={() => loadTransactions(selectedMonth)}
+      />
     </div>
   );
 }

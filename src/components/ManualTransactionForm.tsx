@@ -244,7 +244,8 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [],
         status_conciliacao: true, // ✅ CRÍTICO: Marca como conciliada para aparecer no fluxo de caixa
         origem_arquivo: 'manual_entry',
         mes_referencia: formData.date.substring(0, 7) + '-01',
-        hash_transacao: btoa(`${formData.date}-${formData.description}-${finalAmount}-${user.id}-${Date.now()}`).substring(0, 50)
+        hash_transacao: btoa(`${formData.date}-${formData.description}-${finalAmount}-${user.id}-${Date.now()}`).substring(0, 50),
+        status_validacao: 'pendente' // 🟡 Transações manuais ficam pendentes até validação com comprovante
       };
 
       // Insert into transacoes_conciliadas
