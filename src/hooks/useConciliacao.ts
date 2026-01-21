@@ -28,6 +28,10 @@ export interface Transaction {
   hash_transacao?: string;
   mes_referencia?: string;
   criado_em?: string;
+  // Receipt validation fields
+  status_validacao?: 'pendente' | 'validado' | 'rejeitado';
+  comprovante_url?: string | null;
+  valor_comprovante?: number | null;
 }
 
 export interface UserCategory {
