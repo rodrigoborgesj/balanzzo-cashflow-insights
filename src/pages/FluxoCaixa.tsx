@@ -23,10 +23,13 @@ import {
   ChevronRight,
   Filter,
   CalendarRange,
-  FileCheck
+  FileCheck,
+  Clock,
+  ArrowRight
 } from "lucide-react";
 import { MonthSelector } from "@/components/MonthSelector";
 import { useConciliacao, Transaction } from "@/hooks/useConciliacao";
+import { useFutureCashFlow } from "@/hooks/useFutureCashFlow";
 import { useNavigate } from "react-router-dom";
 import { ManualTransactionForm } from "@/components/ManualTransactionForm";
 import { TransactionActions } from "@/components/TransactionActions";
@@ -69,6 +72,9 @@ export default function FluxoCaixa() {
 
   // Use reconciliation hook to get categorized transactions
   const { transactions, isLoading, loadTransactions, userCategories, loadUserCategories } = useConciliacao();
+  
+  // Use future cash flow hook for projected transactions
+  const { futureTransactions, isLoading: isLoadingFuture, loadFutureTransactions } = useFutureCashFlow();
 
   // Load transactions when month or user changes
   useEffect(() => {
@@ -550,7 +556,195 @@ export default function FluxoCaixa() {
         </div>
       )}
 
-      {/* Cash Flow - Unified Transaction List */}
+      {/* Future Transactions Summary Cards */}
+      {hasData && futureTransactions.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+          <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200" style={{ borderRadius: '50px' }}>
+            <CardContent className="p-4 md:p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs md:text-sm font-medium text-blue-700">Lançamentos Futuros</p>
+                  <p className="text-lg md:text-xl font-bold text-blue-900">
+                    {futureTransactions.length}
+                  </p>
+                </div>
+                <Clock className="h-5 w-5 md:h-6 md:w-6 text-blue-600" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-green-50 to-green-100 border border-green-200" style={{ borderRadius: '50px' }}>
+            <CardContent className="p-4 md:p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs md:text-sm font-medium text-green-700">Entradas Futuras</p>
+                  <p className="text-lg md:text-xl font-bold text-green-900">
+                    R$ {futureTransactions
+                      .filter(t => t.tipo === 'entrada')
+                      .reduce((sum, t) => sum + t.valor, 0)
+                      .toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                  </p>
+                </div>
+                <ArrowUpCircle className="h-5 w-5 md:h-6 md:w-6 text-green-600" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-red-50 to-red-100 border border-red-200" style={{ borderRadius: '50px' }}>
+            <CardContent className="p-4 md:p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs md:text-sm font-medium text-red-700">Saídas Futuras</p>
+                  <p className="text-lg md:text-xl font-bold text-red-900">
+                    R$ {futureTransactions
+                      .filter(t => t.tipo === 'saida')
+                      .reduce((sum, t) => sum + t.valor, 0)
+                      .toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                  </p>
+                </div>
+                <ArrowDownCircle className="h-5 w-5 md:h-6 md:w-6 text-red-600" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200" style={{ borderRadius: '50px' }}>
+            <CardContent className="p-4 md:p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs md:text-sm font-medium text-purple-700">Saldo Projetado</p>
+                  <p className="text-lg md:text-xl font-bold text-purple-900">
+                    R$ {(
+                      futureTransactions.filter(t => t.tipo === 'entrada').reduce((sum, t) => sum + t.valor, 0) -
+                      futureTransactions.filter(t => t.tipo === 'saida').reduce((sum, t) => sum + t.valor, 0)
+                    ).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                  </p>
+                </div>
+                <ArrowRight className="h-5 w-5 md:h-6 md:w-6 text-purple-600" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Future Transactions List */}
+      {hasData && futureTransactions.length > 0 && (
+        <Card className="bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200">
+          <CardHeader className="p-4 md:p-6">
+            <CardTitle className="flex items-center gap-2 text-slate-800 text-base md:text-lg">
+              <Clock className="h-4 w-4 md:h-5 md:w-5 text-slate-600" />
+              Lançamentos Futuros Programados
+            </CardTitle>
+            <p className="text-xs md:text-sm text-slate-600 mt-1">
+              Transações recorrentes e projeções para os próximos meses
+            </p>
+          </CardHeader>
+          <CardContent className="p-4 md:p-6 pt-0">
+            {/* Mobile Card View */}
+            <div className="block sm:hidden space-y-2">
+              {futureTransactions.slice(0, 10).map((transaction) => (
+                <div 
+                  key={transaction.id} 
+                  className={`p-3 rounded-lg border bg-white ${
+                    transaction.tipo === 'entrada' 
+                      ? 'border-l-4 border-l-green-400' 
+                      : 'border-l-4 border-l-red-400'
+                  }`}
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-slate-500">
+                        {new Date(transaction.data_competencia).toLocaleDateString('pt-BR')}
+                      </p>
+                      <p className="text-sm font-medium text-slate-800 truncate" title={transaction.descricao || ''}>
+                        {transaction.descricao || 'Sem descrição'}
+                      </p>
+                    </div>
+                    <span className={`text-sm font-bold ${
+                      transaction.tipo === 'entrada' ? 'text-green-600' : 'text-red-600'
+                    }`}>
+                      {transaction.tipo === 'entrada' ? '+' : '-'}R$ {transaction.valor.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="text-xs bg-slate-100 text-slate-600 border-slate-300">
+                      {transaction.categoria || 'Outros'}
+                    </Badge>
+                    <Badge variant="outline" className="text-xs bg-blue-100 text-blue-600 border-blue-300">
+                      <Clock className="h-3 w-3 mr-1" />
+                      Futuro
+                    </Badge>
+                  </div>
+                </div>
+              ))}
+              {futureTransactions.length > 10 && (
+                <p className="text-xs text-center text-slate-500 py-2">
+                  + {futureTransactions.length - 10} lançamentos futuros
+                </p>
+              )}
+            </div>
+
+            {/* Desktop Table View */}
+            <div className="hidden sm:block overflow-x-auto">
+              <div className="min-w-[640px]">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-slate-100">
+                      <TableHead className="text-slate-700 text-xs md:text-sm">Data</TableHead>
+                      <TableHead className="text-slate-700 text-xs md:text-sm">Categoria</TableHead>
+                      <TableHead className="text-slate-700 text-xs md:text-sm">Descrição</TableHead>
+                      <TableHead className="text-right text-slate-700 text-xs md:text-sm">Valor</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {futureTransactions.slice(0, 15).map((transaction) => (
+                      <TableRow 
+                        key={transaction.id} 
+                        className={`hover:bg-slate-50 ${
+                          transaction.tipo === 'entrada' 
+                            ? 'border-l-4 border-l-green-400' 
+                            : 'border-l-4 border-l-red-400'
+                        }`}
+                      >
+                        <TableCell className="font-medium text-xs md:text-sm whitespace-nowrap text-slate-700">
+                          {new Date(transaction.data_competencia).toLocaleDateString('pt-BR', { 
+                            day: '2-digit', 
+                            month: '2-digit',
+                            year: '2-digit'
+                          })}
+                        </TableCell>
+                        <TableCell className="text-xs md:text-sm">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-slate-700">
+                              {transaction.categoria || 'Outros'}
+                            </span>
+                            <Badge variant="outline" className="text-xs bg-blue-100 text-blue-600 border-blue-300">
+                              <Clock className="h-3 w-3 mr-1" />
+                              Futuro
+                            </Badge>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-xs md:text-sm text-slate-600 max-w-[200px] truncate" title={transaction.descricao || ''}>
+                          {transaction.descricao || 'Sem descrição'}
+                        </TableCell>
+                        <TableCell className={`text-right font-bold whitespace-nowrap text-xs md:text-sm ${
+                          transaction.tipo === 'entrada' ? 'text-green-600' : 'text-red-600'
+                        }`}>
+                          {transaction.tipo === 'entrada' ? '+' : '-'}R$ {transaction.valor.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+                {futureTransactions.length > 15 && (
+                  <p className="text-xs text-center text-slate-500 py-3 border-t">
+                    Mostrando 15 de {futureTransactions.length} lançamentos futuros
+                  </p>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
       {hasData && (
         <Card className="bg-white border border-black">
           <CardHeader className="p-4 md:p-6">
