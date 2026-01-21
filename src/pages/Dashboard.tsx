@@ -2,33 +2,24 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
-  DollarSign, 
   TrendingUp, 
   TrendingDown, 
   Activity,
-  Calendar,
-  ChevronDown,
-  BarChart3,
   RefreshCw,
   AlertCircle,
   Wallet
 } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { useDashboard } from "@/hooks/useDashboard";
 import { useProfile } from "@/hooks/useProfile";
 import { useCashFlowIntegration } from "@/hooks/useCashFlowIntegration";
 import { useFutureCashFlow } from "@/hooks/useFutureCashFlow";
 import { useToast } from "@/hooks/use-toast";
+import { format } from "date-fns";
 
-// Modern Chart Components
+// Components
+import { PeriodSelector } from "@/components/PeriodSelector";
 import { ExpenseRanking } from "@/components/charts/ExpenseRanking";
 import { RecentTransactions } from "@/components/charts/RecentTransactions";
 import { CombinedMonthlyChart } from "@/components/charts/CombinedMonthlyChart";
@@ -39,18 +30,20 @@ import { ExpenseProjectionChart } from "@/components/charts/ExpenseProjectionCha
 import { 
   KPISkeleton, 
   ChartSkeleton, 
-  MonthSelectorSkeleton, 
-  InsightsSkeleton 
+  MonthSelectorSkeleton
 } from "@/components/ui/skeleton-loading";
 
 export default function Dashboard() {
-  const navigate = useNavigate();
   const { profile } = useProfile();
   const { toast } = useToast();
   
   const {
     selectedMonth,
     setSelectedMonth,
+    periodMode,
+    setPeriodMode,
+    customDateRange,
+    setCustomDateRange,
     isLoading,
     error,
     hasData,
@@ -88,68 +81,13 @@ export default function Dashboard() {
   const expenseProjectionsAnnual = getExpenseProjections('annual');
   const expenseProjectionsMonthly = getExpenseProjections('monthly');
 
-  // Generate months for dropdown - last 24 months for historical access
-  const months = (() => {
-    const monthNames = [
-      "janeiro", "fevereiro", "março", "abril", "maio", "junho",
-      "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"
-    ];
-    const result = [];
-    const now = new Date();
-    
-    for (let i = 0; i < 24; i++) {
-      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const year = date.getFullYear();
-      const month = date.getMonth();
-      const monthValue = `${year}-${String(month + 1).padStart(2, '0')}`;
-      result.push({
-        value: monthValue,
-        label: `${monthNames[month]} de ${year}`
-      });
-    }
-    return result;
-  })();
-
-  // Month Selector Component
-  const MonthSelector = () => (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="outline"
-          className="px-4 py-2 font-medium text-foreground hover:bg-muted"
-        >
-          <Calendar className="w-4 h-4 mr-2" />
-          {new Date(selectedMonth + '-01').toLocaleDateString('pt-BR', { 
-            month: 'long', 
-            year: 'numeric',
-            timeZone: 'America/Sao_Paulo'
-          }).replace(/^./, str => str.toUpperCase())}
-          <ChevronDown className="w-4 h-4 ml-2" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent 
-        align="end" 
-        className="w-56 bg-card border border-border shadow-xl rounded-xl z-50"
-      >
-        {months.map((month) => (
-          <DropdownMenuItem
-            key={month.value}
-            onClick={() => {
-              console.log('Dashboard month changed from', selectedMonth, 'to', month.value);
-              setSelectedMonth(month.value);
-            }}
-            className={`px-4 py-3 cursor-pointer transition-all duration-200 ${
-              selectedMonth === month.value 
-                ? 'bg-primary text-primary-foreground font-semibold' 
-                : 'hover:bg-muted'
-            }`}
-          >
-            {month.label}
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
+  // Handle custom period apply
+  const handleApplyCustomPeriod = (start: Date, end: Date) => {
+    setCustomDateRange({
+      startDate: format(start, 'yyyy-MM-dd'),
+      endDate: format(end, 'yyyy-MM-dd')
+    });
+  };
 
   // Company name from profile
   const companyName = profile?.full_name || "Empresa";
@@ -229,7 +167,15 @@ export default function Dashboard() {
           <p className="text-sm text-muted-foreground">Bem-vindo de volta,</p>
           <h1 className="text-xl font-bold text-foreground">{companyName}</h1>
         </div>
-        <MonthSelector />
+        <PeriodSelector
+          periodMode={periodMode}
+          setPeriodMode={setPeriodMode}
+          selectedMonth={selectedMonth}
+          setSelectedMonth={setSelectedMonth}
+          customStartDate={customDateRange ? new Date(customDateRange.startDate) : undefined}
+          customEndDate={customDateRange ? new Date(customDateRange.endDate) : undefined}
+          onApplyCustomPeriod={handleApplyCustomPeriod}
+        />
       </div>
 
       {/* KPI Cards - Clean Design */}
