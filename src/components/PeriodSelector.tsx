@@ -105,7 +105,7 @@ export function PeriodSelector({
         </Button>
       </PopoverTrigger>
       <PopoverContent 
-        className="w-auto p-0 bg-popover border border-border shadow-xl rounded-xl z-[9999]" 
+        className="w-[280px] p-0 bg-popover border border-border shadow-xl rounded-xl z-[9999]" 
         align="end"
         translate="no"
       >
@@ -114,7 +114,7 @@ export function PeriodSelector({
           <button
             onClick={() => handleModeChange('month')}
             className={cn(
-              "flex-1 px-4 py-3 text-sm font-medium transition-colors",
+              "flex-1 px-4 py-3 text-sm font-medium transition-colors rounded-tl-xl",
               periodMode === 'month' 
                 ? "bg-primary text-primary-foreground" 
                 : "hover:bg-muted text-muted-foreground"
@@ -125,7 +125,7 @@ export function PeriodSelector({
           <button
             onClick={() => handleModeChange('custom')}
             className={cn(
-              "flex-1 px-4 py-3 text-sm font-medium transition-colors",
+              "flex-1 px-4 py-3 text-sm font-medium transition-colors rounded-tr-xl",
               periodMode === 'custom' 
                 ? "bg-primary text-primary-foreground" 
                 : "hover:bg-muted text-muted-foreground"
@@ -136,25 +136,27 @@ export function PeriodSelector({
         </div>
 
         {periodMode === 'month' ? (
-          /* Month Selection */
-          <div className="max-h-[300px] overflow-y-auto">
-            {months.map((month) => (
-              <button
-                key={month.value}
-                onClick={() => {
-                  setSelectedMonth(month.value);
-                  setIsOpen(false);
-                }}
-                className={cn(
-                  "w-full px-4 py-3 text-left text-sm transition-colors",
-                  selectedMonth === month.value 
-                    ? "bg-primary text-primary-foreground font-semibold" 
-                    : "hover:bg-muted"
-                )}
-              >
-                {month.label}
-              </button>
-            ))}
+          /* Month Selection - Compact Grid */
+          <div className="p-3 max-h-[280px] overflow-y-auto">
+            <div className="grid grid-cols-2 gap-2">
+              {months.map((month) => (
+                <button
+                  key={month.value}
+                  onClick={() => {
+                    setSelectedMonth(month.value);
+                    setIsOpen(false);
+                  }}
+                  className={cn(
+                    "px-3 py-2 text-xs rounded-lg transition-colors text-left capitalize",
+                    selectedMonth === month.value 
+                      ? "bg-primary text-primary-foreground font-semibold" 
+                      : "hover:bg-muted bg-muted/30"
+                  )}
+                >
+                  {month.label}
+                </button>
+              ))}
+            </div>
           </div>
         ) : (
           /* Custom Date Range */
