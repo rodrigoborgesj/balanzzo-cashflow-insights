@@ -85,7 +85,12 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [],
   };
 
   // NEW: Function to generate future occurrences for projections
-  const generateFutureOccurrences = (startDate: string, amount: number, numOccurrences: number) => {
+  const generateFutureOccurrences = (
+    startDate: string,
+    amount: number,
+    numOccurrences: number,
+    transacaoOrigemId?: string
+  ) => {
     const occurrences = [];
     let currentDate = startDate;
 
@@ -99,7 +104,8 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [],
         tipo: formData.type,
         categoria: formData.category,
         descricao: formData.description,
-        valor: Math.abs(amount)
+        valor: Math.abs(amount),
+        transacao_origem_id: transacaoOrigemId ?? null,
       });
     }
 
@@ -107,7 +113,11 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [],
   };
 
   // NEW: Function to handle recurring transaction creation
-  const handleRecurringTransaction = async (transactionData: any, company_id: string | null, amount: number) => {
+  const handleRecurringTransaction = async (
+    transacaoOrigemId: string,
+    company_id: string | null,
+    amount: number
+  ) => {
     try {
       // Validate recurring fields
       if (formData.recurrenceType === 'custom' && !formData.customIntervalDays) {
@@ -120,7 +130,7 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [],
       const nextOccurrence = calculateNextOccurrence(formData.date);
 
       const recurringData = {
-        transacao_origem_id: transactionData.hash_transacao, // Using hash as unique identifier
+        transacao_origem_id: transacaoOrigemId,
         user_id: user!.id,
         company_id,
         tipo_recorrencia: formData.recurrenceType,
@@ -140,7 +150,7 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [],
 
       // Generate and insert future occurrences for projections
       const numOccurrences = formData.recurrenceType === 'specific_month' ? 5 : 12; // 12 months for monthly/custom, 5 years for specific month
-      const futureOccurrences = generateFutureOccurrences(formData.date, amount, numOccurrences);
+      const futureOccurrences = generateFutureOccurrences(formData.date, amount, numOccurrences, transacaoOrigemId);
       
       // Set company_id for all occurrences
       const futureOccurrencesWithCompany = futureOccurrences.map(occ => ({
@@ -254,14 +264,15 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [],
         status_validacao: needsValidation ? 'pendente' : 'validado' // ✅ Apenas transações futuras ficam pendentes
       };
 
-      // Insert into transacoes_conciliadas
-      const { error: transactionError } = await supabase
+      // Insert into transacoes_conciliadas (precisamos do ID para vincular com fluxo_caixa)
+      const { data: insertedTx, error: transactionError } = await supabase
         .from('transacoes_conciliadas')
-        .insert([transactionData]);
+        .insert([transactionData])
+        .select('id')
+        .single();
 
-      if (transactionError) {
-        throw transactionError;
-      }
+      if (transactionError) throw transactionError;
+      if (!insertedTx?.id) throw new Error('Não foi possível obter o ID da transação inserida');
 
       // Get company_id for fluxo_caixa
       const { data: companies } = await supabase
@@ -281,7 +292,8 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [],
         tipo: formData.type,
         categoria: formData.category,
         descricao: formData.description,
-        valor: Math.abs(amount)
+        valor: Math.abs(amount),
+        transacao_origem_id: insertedTx.id,
       };
 
       const { error: fluxoError } = await supabase
@@ -297,7 +309,7 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [],
 
       // NEW: Handle recurring transaction if enabled
       if (formData.isRecurring && formData.recurrenceType) {
-        await handleRecurringTransaction(transactionData, company_id, amount);
+        await handleRecurringTransaction(insertedTx.id, company_id, amount);
       }
 
       toast({
@@ -363,7 +375,7 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [],
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button className="flex items-center gap-2" size="sm">
+        <Button className="flex items-center gap-2 min-h-[40px]" size="sm">
           <Plus className="h-4 w-4" />
           Adicionar Transação
         </Button>
