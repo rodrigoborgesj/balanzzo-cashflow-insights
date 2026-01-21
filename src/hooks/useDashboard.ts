@@ -408,8 +408,44 @@ export function useDashboard() {
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [handleVisibilityChange]);
 
-  // Calcular dados do mês atual
+  // Calcular dados do período selecionado (mês único ou período customizado)
   const currentMonthData = useMemo(() => {
+    // When in custom period mode, sum all data from painelData (all months in the custom range)
+    if (periodMode === 'custom' && painelData.length > 0) {
+      // Sum all months in the custom period
+      const aggregated = painelData.reduce((acc, item) => {
+        acc.total_entradas += Number(item.total_entradas || 0);
+        acc.total_saidas += Number(item.total_saidas || 0);
+        
+        // Merge categoria_gastos
+        Object.entries(item.categoria_gastos || {}).forEach(([key, value]) => {
+          acc.categoria_gastos[key] = (acc.categoria_gastos[key] || 0) + Number(value);
+        });
+        
+        // Merge categoria_receitas
+        Object.entries(item.categoria_receitas || {}).forEach(([key, value]) => {
+          acc.categoria_receitas[key] = (acc.categoria_receitas[key] || 0) + Number(value);
+        });
+        
+        // Merge dados_brutos
+        if (item.dados_brutos && Array.isArray(item.dados_brutos)) {
+          acc.dados_brutos.push(...item.dados_brutos);
+        }
+        
+        return acc;
+      }, {
+        total_entradas: 0,
+        total_saidas: 0,
+        categoria_gastos: {} as Record<string, number>,
+        categoria_receitas: {} as Record<string, number>,
+        dados_brutos: [] as any[],
+        insights: { insights: [], gerado_em: '' }
+      });
+      
+      return aggregated;
+    }
+    
+    // For month mode, find the specific month
     const [ano, mes] = selectedMonth.split('-').map(Number);
     const current = painelData.find(p => p.ano === ano && p.mes === mes);
     
@@ -420,7 +456,7 @@ export function useDashboard() {
       categoria_receitas: {},
       insights: { insights: [], gerado_em: '' }
     };
-  }, [painelData, selectedMonth]);
+  }, [painelData, selectedMonth, periodMode]);
 
   // Get raw transactions data for the ExpenseChart component
   const transactionsForSelectedMonth = useMemo(() => {
