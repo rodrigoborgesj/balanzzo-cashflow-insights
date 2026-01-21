@@ -233,6 +233,12 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [],
         descricao: formData.description
       });
 
+      // Determina se a transação precisa de validação
+      // Transações com data de hoje ou passada são automaticamente validadas
+      const today = new Date().toISOString().split('T')[0];
+      const transactionDate = formData.date;
+      const needsValidation = transactionDate > today; // Apenas datas futuras precisam de validação
+
       const transactionData = {
         user_id: user.id,
         data_transacao: formData.date, // Manter como string YYYY-MM-DD
@@ -245,7 +251,7 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [],
         origem_arquivo: 'manual_entry',
         mes_referencia: formData.date.substring(0, 7) + '-01',
         hash_transacao: btoa(`${formData.date}-${formData.description}-${finalAmount}-${user.id}-${Date.now()}`).substring(0, 50),
-        status_validacao: 'pendente' // 🟡 Transações manuais ficam pendentes até validação com comprovante
+        status_validacao: needsValidation ? 'pendente' : 'validado' // ✅ Apenas transações futuras ficam pendentes
       };
 
       // Insert into transacoes_conciliadas
