@@ -39,19 +39,29 @@ export interface MonthlyData {
 
 // Query keys for React Query
 const QUERY_KEYS = {
-  dashboardData: (userId: string, monthFilter?: string) => 
-    ['dashboard', userId, monthFilter].filter(Boolean),
+  dashboardData: (userId: string, monthFilter?: string, dateRange?: { startDate: string; endDate: string } | null) => 
+    ['dashboard', userId, monthFilter, dateRange?.startDate, dateRange?.endDate].filter(Boolean),
   painelMensal: (userId: string, monthFilter?: string) => 
     ['painel-mensal', userId, monthFilter].filter(Boolean),
   transactions: (userId: string, monthFilter?: string) => 
     ['transactions', userId, monthFilter].filter(Boolean),
 } as const;
 
+export type PeriodMode = 'month' | 'custom';
+
+export interface DateRange {
+  startDate: string;
+  endDate: string;
+}
+
 export function useDashboard() {
   const [selectedMonth, setSelectedMonth] = useState<string>(() => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   });
+  const [periodMode, setPeriodMode] = useState<PeriodMode>('month');
+  const [customDateRange, setCustomDateRange] = useState<DateRange | null>(null);
+  
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const requestIdRef = useRef(0);
@@ -83,6 +93,7 @@ export function useDashboard() {
   // Função para calcular dados do dashboard a partir das transações conciliadas
   const calculateDashboardFromTransactions = useCallback(async (
     monthFilter?: string,
+    dateRange?: DateRange | null,
     signal?: AbortSignal
   ): Promise<PainelMensal[]> => {
     if (!user?.id) return [];
@@ -90,7 +101,8 @@ export function useDashboard() {
     try {
       console.log(`[${correlationId}] Calculating dashboard from transactions`, { 
         userId: user.id, 
-        monthFilter 
+        monthFilter,
+        dateRange
       });
 
       let query = supabase
@@ -99,8 +111,12 @@ export function useDashboard() {
         .eq('user_id', user.id)
         .eq('status_conciliacao', true);
 
-      // Filter by month if specified
-      if (monthFilter) {
+      // Filter by custom date range if provided
+      if (dateRange) {
+        console.log(`[${correlationId}] Filtering by custom date range:`, dateRange);
+        query = query.gte('data_transacao', dateRange.startDate).lte('data_transacao', dateRange.endDate);
+      } else if (monthFilter) {
+        // Filter by month if specified
         const [year, month] = monthFilter.split('-').map(Number);
         
         // Calculate the actual last day of the month to avoid invalid dates like "2025-09-31"
@@ -222,7 +238,10 @@ export function useDashboard() {
   }, [user?.id, correlationId]);
 
   // Main data fetching function with race condition protection
-  const fetchDashboardData = useCallback(async (monthFilter?: string): Promise<PainelMensal[]> => {
+  const fetchDashboardData = useCallback(async (
+    monthFilter?: string, 
+    dateRange?: DateRange | null
+  ): Promise<PainelMensal[]> => {
     if (!user?.id) {
       console.log(`[${correlationId}] No user ID available, skipping data load`);
       return [];
@@ -240,8 +259,9 @@ export function useDashboard() {
 
     console.log(`[${correlationId}] Fetching dashboard data`, { 
       userId: user.id, 
-      monthFilter, 
-      requestId 
+      monthFilter,
+      dateRange,
+      requestId
     });
 
     try {
@@ -305,7 +325,7 @@ export function useDashboard() {
 
       // Always calculate from transacoes_conciliadas to garantir dados em tempo real
       console.log(`[${correlationId}] Calculating dashboard from transactions (real-time)...`);
-      const calculatedData = await calculateDashboardFromTransactions(monthFilter, controller.signal);
+      const calculatedData = await calculateDashboardFromTransactions(monthFilter, dateRange, controller.signal);
       
       // Final check before returning
       if (requestId !== requestIdRef.current || controller.signal.aborted) {
@@ -360,9 +380,9 @@ export function useDashboard() {
     error,
     refetch
   } = useQuery({
-    queryKey: QUERY_KEYS.dashboardData(user?.id || '', selectedMonth),
-    queryFn: () => fetchDashboardData(selectedMonth),
-    enabled: !!user?.id,
+    queryKey: QUERY_KEYS.dashboardData(user?.id || '', periodMode === 'month' ? selectedMonth : undefined, customDateRange),
+    queryFn: () => fetchDashboardData(periodMode === 'month' ? selectedMonth : undefined, customDateRange),
+    enabled: !!user?.id && (periodMode === 'month' || (periodMode === 'custom' && !!customDateRange)),
     staleTime: 30_000, // 30 seconds
     gcTime: 5 * 60_000, // 5 minutes (renamed from cacheTime)
     refetchOnWindowFocus: true,
@@ -377,10 +397,10 @@ export function useDashboard() {
     if (document.visibilityState === 'visible' && user?.id) {
       console.log(`[${correlationId}] Tab visible - soft refetch`);
       queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.dashboardData(user.id, selectedMonth)
+        queryKey: QUERY_KEYS.dashboardData(user.id, periodMode === 'month' ? selectedMonth : undefined, customDateRange)
       });
     }
-  }, [user?.id, selectedMonth, queryClient, correlationId]);
+  }, [user?.id, selectedMonth, customDateRange, periodMode, queryClient, correlationId]);
 
   // Set up visibility change listener
   useMemo(() => {
@@ -491,9 +511,9 @@ export function useDashboard() {
   const refreshData = useCallback(async () => {
     console.log(`[${correlationId}] Manual refresh triggered`);
     await queryClient.invalidateQueries({
-      queryKey: QUERY_KEYS.dashboardData(user?.id || '', selectedMonth)
+      queryKey: QUERY_KEYS.dashboardData(user?.id || '', periodMode === 'month' ? selectedMonth : undefined, customDateRange)
     });
-  }, [user?.id, selectedMonth, queryClient, correlationId]);
+  }, [user?.id, selectedMonth, customDateRange, periodMode, queryClient, correlationId]);
 
   // Verificar se há dados disponíveis
   const hasData = painelData.length > 0;
@@ -502,6 +522,10 @@ export function useDashboard() {
     painelData,
     selectedMonth,
     setSelectedMonth,
+    periodMode,
+    setPeriodMode,
+    customDateRange,
+    setCustomDateRange,
     isLoading,
     error,
     hasData,
