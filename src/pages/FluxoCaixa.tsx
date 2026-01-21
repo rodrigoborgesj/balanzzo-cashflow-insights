@@ -25,8 +25,11 @@ import {
   CalendarRange,
   FileCheck,
   Clock,
-  ArrowRight
+  ArrowRight,
+  Trash2
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { MonthSelector } from "@/components/MonthSelector";
 import { useConciliacao, Transaction } from "@/hooks/useConciliacao";
 import { useFutureCashFlow } from "@/hooks/useFutureCashFlow";
@@ -69,8 +72,10 @@ export default function FluxoCaixa() {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [validationDialogOpen, setValidationDialogOpen] = useState(false);
   const [selectedTransactionForValidation, setSelectedTransactionForValidation] = useState<Transaction | null>(null);
+  const [deletingFutureId, setDeletingFutureId] = useState<string | null>(null);
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { toast } = useToast();
 
   // Use reconciliation hook to get categorized transactions
   const { transactions, isLoading, loadTransactions, userCategories, loadUserCategories } = useConciliacao();
@@ -289,6 +294,37 @@ export default function FluxoCaixa() {
     document.body.removeChild(link);
   };
 
+  // Delete future transaction
+  const handleDeleteFutureTransaction = async (transactionId: string) => {
+    setDeletingFutureId(transactionId);
+    try {
+      const { error } = await supabase
+        .from('fluxo_caixa')
+        .delete()
+        .eq('id', transactionId);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Lançamento futuro excluído',
+        description: 'O lançamento foi removido com sucesso',
+      });
+
+      // Refresh future transactions
+      loadFutureTransactions();
+      window.dispatchEvent(new Event('transactionsUpdated'));
+    } catch (error) {
+      console.error('Erro ao excluir lançamento futuro:', error);
+      toast({
+        title: 'Erro ao excluir',
+        description: error instanceof Error ? error.message : 'Erro desconhecido',
+        variant: 'destructive'
+      });
+    } finally {
+      setDeletingFutureId(null);
+    }
+  };
+
   return (
     <div className="space-y-4 md:space-y-6 bg-white min-h-screen px-2 sm:px-4 md:px-6" style={{ fontFamily: 'Montserrat, sans-serif' }}>
       {/* Header */}
@@ -321,7 +357,7 @@ export default function FluxoCaixa() {
                 setPendingEndDate(undefined);
               }
             }}>
-              <SelectTrigger className="w-28 sm:w-32 text-xs">
+              <SelectTrigger className="w-28 sm:w-32 text-xs min-h-[40px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -644,11 +680,46 @@ export default function FluxoCaixa() {
                         {transaction.descricao || 'Sem descrição'}
                       </p>
                     </div>
-                    <span className={`text-sm font-bold ${
-                      transaction.tipo === 'entrada' ? 'text-green-600' : 'text-red-600'
-                    }`}>
-                      {transaction.tipo === 'entrada' ? '+' : '-'}R$ {transaction.valor.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-sm font-bold ${
+                        transaction.tipo === 'entrada' ? 'text-green-600' : 'text-red-600'
+                      }`}>
+                        {transaction.tipo === 'entrada' ? '+' : '-'}R$ {transaction.valor.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      </span>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                            disabled={deletingFutureId === transaction.id}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Excluir lançamento futuro</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Tem certeza que deseja excluir este lançamento futuro?
+                              <br /><br />
+                              <strong>{transaction.descricao || 'Sem descrição'}</strong>
+                              <br />
+                              <strong>Valor:</strong> R$ {transaction.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction 
+                              onClick={() => handleDeleteFutureTransaction(transaction.id)}
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                              Excluir
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge variant="outline" className="text-xs bg-slate-100 text-slate-600 border-slate-300">
@@ -678,6 +749,7 @@ export default function FluxoCaixa() {
                       <TableHead className="text-slate-700 text-xs md:text-sm">Categoria</TableHead>
                       <TableHead className="text-slate-700 text-xs md:text-sm">Descrição</TableHead>
                       <TableHead className="text-right text-slate-700 text-xs md:text-sm">Valor</TableHead>
+                      <TableHead className="w-10 text-slate-700 text-xs md:text-sm"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -715,6 +787,41 @@ export default function FluxoCaixa() {
                           transaction.tipo === 'entrada' ? 'text-green-600' : 'text-red-600'
                         }`}>
                           {transaction.tipo === 'entrada' ? '+' : '-'}R$ {transaction.valor.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                                disabled={deletingFutureId === transaction.id}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Excluir lançamento futuro</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Tem certeza que deseja excluir este lançamento futuro?
+                                  <br /><br />
+                                  <strong>{transaction.descricao || 'Sem descrição'}</strong>
+                                  <br />
+                                  <strong>Valor:</strong> R$ {transaction.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction 
+                                  onClick={() => handleDeleteFutureTransaction(transaction.id)}
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                >
+                                  Excluir
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </TableCell>
                       </TableRow>
                     ))}
