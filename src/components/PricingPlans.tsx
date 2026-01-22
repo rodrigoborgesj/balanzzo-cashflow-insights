@@ -22,11 +22,13 @@ export function PricingPlans({ showTitle = true }: PricingPlansProps) {
     return () => clearTimeout(t);
   }, []);
 
-  // Mark quarterly plan as popular
-  const displayPlans = plans?.map(plan => ({
-    ...plan,
-    popular: plan.billing_cycle === 'quarterly'
-  }));
+  // Filter to show only enterprise plans (exclude personal plans) and mark quarterly as popular
+  const displayPlans = plans
+    ?.filter(plan => !plan.name.toLowerCase().includes('pessoal'))
+    .map(plan => ({
+      ...plan,
+      popular: plan.billing_cycle === 'quarterly'
+    }));
 
   const fallbackPlans = [
     { id: 'fallback-monthly', name: 'Plano Mensal', price_cents: 7800, billing_cycle: 'monthly', features: ['Todos os recursos essenciais', 'Suporte por email', 'Sem fidelidade'], popular: false },
