@@ -200,12 +200,19 @@ export default function FluxoCaixa() {
     return categorized;
   }, [transactions, periodMode, customStartDate, customEndDate]);
 
-  // Calculate totals from period-filtered transactions
-  const totalInflow = periodFilteredTransactions
+  // Filter only validated transactions for totals (exclude pending validation)
+  const validatedTransactionsForTotals = useMemo(() => {
+    return periodFilteredTransactions.filter(t => 
+      t.status_validacao !== 'pendente'
+    );
+  }, [periodFilteredTransactions]);
+
+  // Calculate totals from validated transactions only (exclude pending validation)
+  const totalInflow = validatedTransactionsForTotals
     .filter(t => t.valor > 0)
     .reduce((sum, t) => sum + t.valor, 0);
   
-  const totalOutflow = Math.abs(periodFilteredTransactions
+  const totalOutflow = Math.abs(validatedTransactionsForTotals
     .filter(t => t.valor < 0)
     .reduce((sum, t) => sum + t.valor, 0));
   
@@ -239,13 +246,15 @@ export default function FluxoCaixa() {
       .sort((a, b) => new Date(a.data_transacao).getTime() - new Date(b.data_transacao).getTime());
   }, [periodFilteredTransactions, transactionFilter, selectedCategories]);
 
-  // Calculate filtered result based on currently displayed transactions
+  // Calculate filtered result based on currently displayed transactions (excluding pending validation)
   const filteredNetResult = useMemo(() => {
-    const filteredInflow = allTransactionsSorted
+    const validatedFiltered = allTransactionsSorted.filter(t => t.status_validacao !== 'pendente');
+    
+    const filteredInflow = validatedFiltered
       .filter(t => t.valor > 0)
       .reduce((sum, t) => sum + t.valor, 0);
     
-    const filteredOutflow = Math.abs(allTransactionsSorted
+    const filteredOutflow = Math.abs(validatedFiltered
       .filter(t => t.valor < 0)
       .reduce((sum, t) => sum + t.valor, 0));
     
