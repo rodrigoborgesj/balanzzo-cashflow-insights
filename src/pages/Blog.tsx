@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
@@ -31,6 +31,17 @@ interface BlogPost {
 
 const blogPosts: BlogPost[] = [
   {
+    id: "2",
+    slug: "planejamento-sair-dividas-2026",
+    title: "Como fazer um planejamento para sair das dívidas: o guia definitivo para 2026",
+    excerpt: "Aprenda como fazer um planejamento financeiro para sair das dívidas em 2026. Guia completo com estratégias práticas de renegociação, organização do orçamento e como usar a funcionalidade de Renegociação de Dívidas da Balanzzo.",
+    category: "Finanças Pessoais",
+    author: "Equipe Balanzzo",
+    date: "26 Jan 2026",
+    readTime: "10 min",
+    featured: true
+  },
+  {
     id: "1",
     slug: "organizacao-financeira-2026",
     title: "Organização Financeira em 2026: O guia definitivo para começar o ano com clareza e estratégia",
@@ -39,7 +50,7 @@ const blogPosts: BlogPost[] = [
     author: "Equipe Balanzzo",
     date: "19 Jan 2026",
     readTime: "8 min",
-    featured: true
+    featured: false
   }
 ];
 
@@ -54,6 +65,11 @@ export default function Blog() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Todos");
+
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const filteredPosts = blogPosts.filter(post => {
     const matchesSearch = post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
