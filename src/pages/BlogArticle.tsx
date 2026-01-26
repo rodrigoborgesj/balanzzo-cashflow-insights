@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Calendar, Clock, User, Share2 } from "lucide-react";
@@ -6,6 +7,11 @@ import { Helmet } from "react-helmet-async";
 export default function BlogArticle() {
   const navigate = useNavigate();
   const { slug } = useParams();
+
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   // SEO Meta Tags para o artigo
   const articleTitle = "Organização Financeira em 2026: O guia definitivo para começar o ano com clareza e estratégia";
