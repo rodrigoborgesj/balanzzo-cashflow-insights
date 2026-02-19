@@ -39,6 +39,7 @@ import PersonalDebtPlanningPage from "./pages/personal/PersonalDebtPlanningPage"
 import Blog from "./pages/Blog";
 import BlogArticle from "./pages/BlogArticle";
 import BlogArticleDebt from "./pages/BlogArticleDebt";
+import BlogArticleCarnival from "./pages/BlogArticleCarnival";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -109,6 +110,7 @@ const App = () => {
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/organizacao-financeira-2026" element={<BlogArticle />} />
           <Route path="/blog/planejamento-sair-dividas-2026" element={<BlogArticleDebt />} />
+          <Route path="/blog/organizacao-financeira-pos-carnaval" element={<BlogArticleCarnival />} />
           
           {/* Auth routes */}
           <Route path="/login" element={<Login />} />

@@ -31,6 +31,17 @@ interface BlogPost {
 
 const blogPosts: BlogPost[] = [
   {
+    id: "3",
+    slug: "organizacao-financeira-pos-carnaval",
+    title: "Medo de abrir o aplicativo do banco depois do Carnaval? Por onde começar a organização financeira",
+    excerpt: "Se você está com medo de ver o saldo depois do Carnaval, saiba por onde começar. Um guia prático para reorganizar suas finanças após o feriado e se planejar melhor para os próximos ciclos.",
+    category: "Finanças Pessoais",
+    author: "Equipe Balanzzo",
+    date: "19 Fev 2026",
+    readTime: "7 min",
+    featured: true
+  },
+  {
     id: "2",
     slug: "planejamento-sair-dividas-2026",
     title: "Como fazer um planejamento para sair das dívidas: o guia definitivo para 2026",
