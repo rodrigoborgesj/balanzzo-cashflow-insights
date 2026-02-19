@@ -1,8 +1,9 @@
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Calendar, Clock, User, Share2 } from "lucide-react";
+import { ArrowLeft, Calendar, Clock, Share2 } from "lucide-react";
 import { Helmet } from "react-helmet-async";
+import autorPhoto from "@/assets/autor-rodrigo-borges.jpeg";
 
 export default function BlogArticleCarnival() {
   const navigate = useNavigate();
@@ -155,19 +156,29 @@ export default function BlogArticleCarnival() {
               Medo de abrir o aplicativo do banco depois do Carnaval? Por onde começar a organização financeira
             </h1>
 
-            <div className="flex flex-wrap items-center gap-3 sm:gap-4 md:gap-6 text-xs sm:text-sm text-brand-dark-green/60 pb-6 sm:pb-8 border-b border-brand-dark-green/10">
-              <span className="flex items-center gap-1.5 sm:gap-2">
-                <User className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                Equipe Balanzzo
-              </span>
-              <span className="flex items-center gap-1.5 sm:gap-2">
-                <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                19 de Fevereiro de 2026
-              </span>
-              <span className="flex items-center gap-1.5 sm:gap-2">
-                <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                7 min de leitura
-              </span>
+            {/* Author + Meta */}
+            <div className="flex flex-wrap items-center gap-4 sm:gap-6 pb-6 sm:pb-8 border-b border-brand-dark-green/10">
+              <div className="flex items-center gap-3">
+                <img
+                  src={autorPhoto}
+                  alt="Rodrigo Borges"
+                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-brand-light-green"
+                />
+                <div className="flex flex-col">
+                  <span className="text-sm sm:text-base font-semibold text-brand-dark-green leading-tight">Rodrigo Borges</span>
+                  <span className="text-xs sm:text-sm text-brand-dark-green/60 leading-tight">Fundador da Balanzzo</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 sm:gap-4 text-xs sm:text-sm text-brand-dark-green/60">
+                <span className="flex items-center gap-1.5 sm:gap-2">
+                  <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  19 de Fevereiro de 2026
+                </span>
+                <span className="flex items-center gap-1.5 sm:gap-2">
+                  <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  7 min de leitura
+                </span>
+              </div>
             </div>
           </div>
 
