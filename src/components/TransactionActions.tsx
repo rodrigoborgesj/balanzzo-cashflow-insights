@@ -72,7 +72,7 @@ export function TransactionActions({ transaction, onTransactionUpdated }: Transa
             <AlertDialogHeader>
               <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
               <AlertDialogDescription>
-                Tem certeza que deseja excluir esta transação manual? Esta ação não pode ser desfeita.
+                Tem certeza que deseja excluir esta transação? Esta ação não pode ser desfeita e o lançamento correspondente no fluxo de caixa também será removido.
                 <br />
                 <br />
                 <strong>Transação:</strong> {transaction.descricao}
