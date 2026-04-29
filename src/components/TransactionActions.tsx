@@ -16,15 +16,11 @@ export function TransactionActions({ transaction, onTransactionUpdated }: Transa
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  // Only show actions for manual entries
-  if (transaction.origem_arquivo !== 'manual_entry') {
-    return null;
-  }
-
   const handleDelete = async () => {
+    if (!transaction.id) return;
     setIsLoading(true);
     try {
-      // Delete from transacoes_conciliadas
+      // O fluxo_caixa vinculado é removido automaticamente via ON DELETE CASCADE
       const { error: transactionError } = await supabase
         .from('transacoes_conciliadas')
         .delete()
@@ -32,20 +28,9 @@ export function TransactionActions({ transaction, onTransactionUpdated }: Transa
 
       if (transactionError) throw transactionError;
 
-      // Delete from fluxo_caixa (if exists)
-      const { error: fluxoError } = await supabase
-        .from('fluxo_caixa')
-        .delete()
-        .eq('transacao_origem_id', transaction.id);
-
-      // Don't throw error if fluxo deletion fails, just log it
-      if (fluxoError) {
-        console.warn('Warning: Could not delete from fluxo_caixa:', fluxoError);
-      }
-
       toast({
         title: 'Transação excluída',
-        description: 'A transação manual foi removida com sucesso',
+        description: 'A transação foi removida com sucesso',
       });
 
       // Dispatch global event to sync future transactions and other components
@@ -87,7 +72,7 @@ export function TransactionActions({ transaction, onTransactionUpdated }: Transa
             <AlertDialogHeader>
               <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
               <AlertDialogDescription>
-                Tem certeza que deseja excluir esta transação manual? Esta ação não pode ser desfeita.
+                Tem certeza que deseja excluir esta transação? Esta ação não pode ser desfeita e o lançamento correspondente no fluxo de caixa também será removido.
                 <br />
                 <br />
                 <strong>Transação:</strong> {transaction.descricao}
