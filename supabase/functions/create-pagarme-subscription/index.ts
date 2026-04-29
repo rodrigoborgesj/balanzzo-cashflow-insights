@@ -25,7 +25,21 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const pagarmeKey = Deno.env.get('PAGARME_API_KEY')!;
+    const pagarmeKey = Deno.env.get('PAGARME_SECRET_KEY') || Deno.env.get('PAGARME_API_KEY');
+    if (!pagarmeKey) {
+      console.error('PAGARME_SECRET_KEY/PAGARME_API_KEY not configured');
+      return new Response(
+        JSON.stringify({ error: 'Configuração de pagamento ausente. Contate o suporte.' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    if (!pagarmeKey.startsWith('sk_')) {
+      console.error('Pagar.me key is not a secret key (must start with sk_). Got prefix:', pagarmeKey.slice(0, 5));
+      return new Response(
+        JSON.stringify({ error: 'Chave da Pagar.me inválida (deve ser secret key sk_).' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
     
     const supabase = createClient(supabaseUrl, supabaseKey);
     
