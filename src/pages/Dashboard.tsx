@@ -353,6 +353,14 @@ export default function Dashboard() {
         </Card>
       </div>
 
+      {/* Income Ranking - Full Width */}
+      <IncomeRanking
+        transactions={transactionsForSelectedMonth}
+        selectedMonth={selectedMonth}
+        formatCurrency={formatCurrency}
+        limit={5}
+      />
+
       {/* Future Cash Flow Projections */}
       {(hasFutureData && (incomeProjectionsAnnual.length > 0 || expenseProjectionsAnnual.length > 0)) && (
         <div className="space-y-6">
