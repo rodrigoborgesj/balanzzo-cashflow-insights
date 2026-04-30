@@ -21,6 +21,7 @@ import { format } from "date-fns";
 // Components
 import { PeriodSelector } from "@/components/PeriodSelector";
 import { ExpenseRanking } from "@/components/charts/ExpenseRanking";
+import { IncomeRanking } from "@/components/charts/IncomeRanking";
 import { RecentTransactions } from "@/components/charts/RecentTransactions";
 import { CombinedMonthlyChart } from "@/components/charts/CombinedMonthlyChart";
 import { ProjectionChart } from "@/components/charts/ProjectionChart";
@@ -352,6 +353,14 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Income Ranking - Full Width */}
+      <IncomeRanking
+        transactions={transactionsForSelectedMonth}
+        selectedMonth={selectedMonth}
+        formatCurrency={formatCurrency}
+        limit={5}
+      />
 
       {/* Future Cash Flow Projections */}
       {(hasFutureData && (incomeProjectionsAnnual.length > 0 || expenseProjectionsAnnual.length > 0)) && (
