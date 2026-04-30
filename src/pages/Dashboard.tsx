@@ -21,6 +21,7 @@ import { format } from "date-fns";
 // Components
 import { PeriodSelector } from "@/components/PeriodSelector";
 import { ExpenseRanking } from "@/components/charts/ExpenseRanking";
+import { IncomeRanking } from "@/components/charts/IncomeRanking";
 import { RecentTransactions } from "@/components/charts/RecentTransactions";
 import { CombinedMonthlyChart } from "@/components/charts/CombinedMonthlyChart";
 import { ProjectionChart } from "@/components/charts/ProjectionChart";
