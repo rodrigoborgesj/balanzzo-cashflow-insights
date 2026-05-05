@@ -83,6 +83,35 @@ export default function Checkout() {
     setFormData(prev => ({ ...prev, [field]: formattedValue }));
   };
 
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim() || !selectedPlan) return;
+    setCouponState({ status: 'validating' });
+    const { data, error } = await supabase.rpc('validate_coupon', {
+      p_code: couponCode.trim(),
+      p_plan_id: selectedPlan.id,
+    });
+    if (error) {
+      setCouponState({ status: 'invalid', message: 'Erro ao validar cupom' });
+      return;
+    }
+    const result = Array.isArray(data) ? data[0] : data;
+    if (result?.valid) {
+      setCouponState({ status: 'valid', finalPriceCents: result.final_price_cents, discountCents: result.discount_cents, message: result.message });
+      toast({ title: 'Cupom aplicado!', description: `Desconto de ${formatPrice(result.discount_cents)} aplicado.` });
+    } else {
+      setCouponState({ status: 'invalid', message: result?.message || 'Cupom inválido' });
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setCouponCode('');
+    setCouponState({ status: 'idle' });
+  };
+
+  const effectivePriceCents = couponState.status === 'valid' && couponState.finalPriceCents !== undefined
+    ? couponState.finalPriceCents
+    : selectedPlan?.price_cents ?? 0;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -95,6 +124,7 @@ export default function Checkout() {
         body: {
           planId: selectedPlan.id,
           paymentMethod: paymentMethod,
+          couponCode: couponState.status === 'valid' ? couponCode.trim() : undefined,
           customer: {
             name: formData.name,
             email: formData.email,
