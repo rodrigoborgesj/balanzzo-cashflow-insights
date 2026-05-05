@@ -29,6 +29,8 @@ export default function Checkout() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('credit_card');
+  const [couponCode, setCouponCode] = useState('');
+  const [couponState, setCouponState] = useState<{ status: 'idle' | 'validating' | 'valid' | 'invalid'; finalPriceCents?: number; discountCents?: number; message?: string }>({ status: 'idle' });
   // Check if user already has access - redirect them away from checkout
   const hasAnyAccess = hasCompanySubscription || hasPersonalSubscription || hasFreeAccess;
 
