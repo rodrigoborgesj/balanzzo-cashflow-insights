@@ -9,6 +9,7 @@ const corsHeaders = {
 interface CreateSubscriptionRequest {
   planId: string;
   paymentMethod?: 'credit_card' | 'pix';
+  couponCode?: string;
   customer: {
     name: string;
     email: string;
@@ -56,7 +57,7 @@ serve(async (req) => {
       );
     }
 
-    const { planId, paymentMethod = 'credit_card', customer }: CreateSubscriptionRequest = await req.json();
+    const { planId, paymentMethod = 'credit_card', couponCode, customer }: CreateSubscriptionRequest = await req.json();
     
     console.log('Creating subscription for user:', user.id, 'plan:', planId, 'method:', paymentMethod);
 
@@ -184,31 +185,69 @@ serve(async (req) => {
       console.log('Created new customer:', customerId);
     }
 
+    // Step 1.5: Validate coupon if provided
+    let finalPriceCents = plan.price_cents;
+    let appliedCoupon: string | null = null;
+    if (couponCode && couponCode.trim()) {
+      const { data: couponResult, error: couponError } = await supabase.rpc('validate_coupon', {
+        p_code: couponCode.trim(),
+        p_plan_id: planId,
+      });
+      if (couponError) {
+        console.error('Coupon validation error:', couponError);
+        return new Response(
+          JSON.stringify({ error: 'Erro ao validar cupom' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      const result = Array.isArray(couponResult) ? couponResult[0] : couponResult;
+      if (!result?.valid) {
+        return new Response(
+          JSON.stringify({ error: result?.message || 'Cupom inválido' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      finalPriceCents = result.final_price_cents;
+      appliedCoupon = couponCode.trim().toUpperCase();
+      console.log(`Coupon ${appliedCoupon} applied. Price: ${plan.price_cents} → ${finalPriceCents}`);
+    }
+
     // Step 2: Create Payment Link - different approach for PIX vs Credit Card
-    console.log('Creating payment link with method:', paymentMethod);
+    // When a coupon is applied, we use a one-off order (1 month access) for both methods
+    // since Pagar.me recurring plans have fixed pricing
+    console.log('Creating payment link with method:', paymentMethod, 'coupon:', appliedCoupon);
 
     let paymentLinkPayload: Record<string, unknown>;
+    const useOrder = paymentMethod === 'pix' || !!appliedCoupon;
 
-    if (paymentMethod === 'pix') {
-      // PIX: Single payment (order type) for 1 month access
+    if (useOrder) {
+      // Single payment (order type) for 1 month access — used for PIX or whenever a coupon is applied
+      const acceptedMethods = paymentMethod === 'pix' ? ['pix'] : ['credit_card', 'pix'];
+      const paymentSettings: Record<string, unknown> = {
+        accepted_payment_methods: acceptedMethods,
+      };
+      if (acceptedMethods.includes('pix')) {
+        paymentSettings.pix_settings = { expires_in: 86400 };
+      }
+      if (acceptedMethods.includes('credit_card')) {
+        paymentSettings.credit_card_settings = { operation_type: 'auth_and_capture' };
+      }
+
       paymentLinkPayload = {
         name: `${plan.name} - 1 Mês`,
         type: 'order',
         is_payment_link: true,
-        payment_settings: {
-          accepted_payment_methods: ['pix'],
-          pix_settings: {
-            expires_in: 86400, // 24 hours to pay
-          }
-        },
+        payment_settings: paymentSettings,
         customer_settings: {
           customer_id: customerId
         },
         cart_settings: {
           items: [
             {
-              amount: plan.price_cents,
-              description: `${plan.name} - Acesso por 1 mês`,
+              amount: finalPriceCents,
+              description: appliedCoupon
+                ? `${plan.name} - Acesso por 1 mês (cupom ${appliedCoupon})`
+                : `${plan.name} - Acesso por 1 mês`,
               quantity: 1,
               code: plan.id
             }
@@ -219,8 +258,9 @@ serve(async (req) => {
           plan_id: planId,
           plan_name: plan.name,
           subscription_type: plan.subscription_type,
-          payment_method: 'pix',
-          is_single_payment: true
+          payment_method: paymentMethod,
+          is_single_payment: true,
+          coupon_code: appliedCoupon || ''
         }
       };
     } else {

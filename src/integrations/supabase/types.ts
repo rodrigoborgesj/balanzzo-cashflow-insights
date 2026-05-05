@@ -92,6 +92,60 @@ export type Database = {
         }
         Relationships: []
       }
+      coupons: {
+        Row: {
+          active: boolean
+          code: string
+          created_at: string
+          expires_at: string | null
+          final_price_cents: number
+          id: string
+          max_uses: number | null
+          plan_id: string | null
+          updated_at: string
+          uses_count: number
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          created_at?: string
+          expires_at?: string | null
+          final_price_cents: number
+          id?: string
+          max_uses?: number | null
+          plan_id?: string | null
+          updated_at?: string
+          uses_count?: number
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          created_at?: string
+          expires_at?: string | null
+          final_price_cents?: number
+          id?: string
+          max_uses?: number | null
+          plan_id?: string | null
+          updated_at?: string
+          uses_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coupons_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "public_subscription_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coupons_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_logs: {
         Row: {
           created_at: string
@@ -1103,6 +1157,16 @@ export type Database = {
         Returns: boolean
       }
       sugerir_categoria: { Args: { descricao_input: string }; Returns: string }
+      validate_coupon: {
+        Args: { p_code: string; p_plan_id: string }
+        Returns: {
+          discount_cents: number
+          final_price_cents: number
+          message: string
+          original_price_cents: number
+          valid: boolean
+        }[]
+      }
     }
     Enums: {
       subscription_type: "company" | "personal"
