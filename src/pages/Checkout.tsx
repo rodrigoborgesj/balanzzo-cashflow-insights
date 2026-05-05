@@ -238,7 +238,7 @@ export default function Checkout() {
                   <Label htmlFor="plan">Escolher plano</Label>
                   <Select 
                     value={selectedPlan.id}
-                    onValueChange={(val) => navigate(`/checkout?plan=${val}`, { replace: true })}
+                    onValueChange={(val) => { handleRemoveCoupon(); navigate(`/checkout?plan=${val}`, { replace: true }); }}
                   >
                     <SelectTrigger id="plan" className="mt-1">
                       <SelectValue placeholder="Selecione um plano" />
