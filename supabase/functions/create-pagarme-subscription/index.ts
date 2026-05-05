@@ -9,6 +9,7 @@ const corsHeaders = {
 interface CreateSubscriptionRequest {
   planId: string;
   paymentMethod?: 'credit_card' | 'pix';
+  couponCode?: string;
   customer: {
     name: string;
     email: string;
