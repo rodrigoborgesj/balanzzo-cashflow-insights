@@ -185,12 +185,42 @@ serve(async (req) => {
       console.log('Created new customer:', customerId);
     }
 
+    // Step 1.5: Validate coupon if provided
+    let finalPriceCents = plan.price_cents;
+    let appliedCoupon: string | null = null;
+    if (couponCode && couponCode.trim()) {
+      const { data: couponResult, error: couponError } = await supabase.rpc('validate_coupon', {
+        p_code: couponCode.trim(),
+        p_plan_id: planId,
+      });
+      if (couponError) {
+        console.error('Coupon validation error:', couponError);
+        return new Response(
+          JSON.stringify({ error: 'Erro ao validar cupom' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      const result = Array.isArray(couponResult) ? couponResult[0] : couponResult;
+      if (!result?.valid) {
+        return new Response(
+          JSON.stringify({ error: result?.message || 'Cupom inválido' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      finalPriceCents = result.final_price_cents;
+      appliedCoupon = couponCode.trim().toUpperCase();
+      console.log(`Coupon ${appliedCoupon} applied. Price: ${plan.price_cents} → ${finalPriceCents}`);
+    }
+
     // Step 2: Create Payment Link - different approach for PIX vs Credit Card
-    console.log('Creating payment link with method:', paymentMethod);
+    // When a coupon is applied, we use a one-off order (1 month access) for both methods
+    // since Pagar.me recurring plans have fixed pricing
+    console.log('Creating payment link with method:', paymentMethod, 'coupon:', appliedCoupon);
 
     let paymentLinkPayload: Record<string, unknown>;
+    const useOrder = paymentMethod === 'pix' || !!appliedCoupon;
 
-    if (paymentMethod === 'pix') {
+    if (useOrder) {
       // PIX: Single payment (order type) for 1 month access
       paymentLinkPayload = {
         name: `${plan.name} - 1 Mês`,
