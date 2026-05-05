@@ -245,9 +245,11 @@ serve(async (req) => {
           items: [
             {
               amount: finalPriceCents,
+              name: `${plan.name} - 1 Mês`,
               description: appliedCoupon
                 ? `${plan.name} - Acesso por 1 mês (cupom ${appliedCoupon})`
                 : `${plan.name} - Acesso por 1 mês`,
+              default_quantity: 1,
               quantity: 1,
               code: plan.id
             }
