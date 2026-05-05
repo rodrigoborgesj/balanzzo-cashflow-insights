@@ -266,11 +266,53 @@ export default function Checkout() {
                 </ul>
               </div>
 
-              <div className="border-t pt-4">
+              <div className="border-t pt-4 space-y-3">
+                <Label htmlFor="coupon">Cupom de desconto</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="coupon"
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                    placeholder="Digite seu cupom"
+                    disabled={couponState.status === 'valid'}
+                  />
+                  {couponState.status === 'valid' ? (
+                    <Button type="button" variant="outline" onClick={handleRemoveCoupon}>Remover</Button>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleApplyCoupon}
+                      disabled={!couponCode.trim() || couponState.status === 'validating'}
+                    >
+                      {couponState.status === 'validating' ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Aplicar'}
+                    </Button>
+                  )}
+                </div>
+                {couponState.status === 'valid' && (
+                  <p className="text-xs text-green-600">✓ {couponState.message} — desconto de {formatPrice(couponState.discountCents || 0)}</p>
+                )}
+                {couponState.status === 'invalid' && (
+                  <p className="text-xs text-destructive">{couponState.message}</p>
+                )}
+              </div>
+
+              <div className="border-t pt-4 space-y-1">
+                {couponState.status === 'valid' && (
+                  <div className="flex justify-between items-center text-sm text-muted-foreground">
+                    <span>Subtotal</span>
+                    <span className="line-through">{formatPrice(selectedPlan.price_cents)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between items-center font-semibold">
                   <span>Total</span>
-                  <span className="text-xl">{formatPrice(selectedPlan.price_cents)}</span>
+                  <span className="text-xl">{formatPrice(effectivePriceCents)}</span>
                 </div>
+                {couponState.status === 'valid' && paymentMethod === 'credit_card' && (
+                  <p className="text-xs text-amber-600 mt-2">
+                    ⚠️ Com cupom aplicado, o pagamento será único (acesso por 1 mês), não recorrente.
+                  </p>
+                )}
               </div>
             </CardContent>
           </Card>
