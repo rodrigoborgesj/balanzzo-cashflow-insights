@@ -254,6 +254,39 @@ export default function Checkout() {
                 </div>
               </div>
 
+              <div className="border-2 border-primary/30 bg-primary/5 rounded-lg p-4 space-y-3">
+                <Label htmlFor="coupon" className="text-sm font-semibold flex items-center gap-2">
+                  🎟️ Possui um cupom de desconto?
+                </Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="coupon"
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                    placeholder="Ex: PESSOAL999"
+                    disabled={couponState.status === 'valid'}
+                    className="bg-background"
+                  />
+                  {couponState.status === 'valid' ? (
+                    <Button type="button" variant="outline" onClick={handleRemoveCoupon}>Remover</Button>
+                  ) : (
+                    <Button
+                      type="button"
+                      onClick={handleApplyCoupon}
+                      disabled={!couponCode.trim() || couponState.status === 'validating'}
+                    >
+                      {couponState.status === 'validating' ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Aplicar'}
+                    </Button>
+                  )}
+                </div>
+                {couponState.status === 'valid' && (
+                  <p className="text-xs text-green-600 font-medium">✓ {couponState.message} — desconto de {formatPrice(couponState.discountCents || 0)}</p>
+                )}
+                {couponState.status === 'invalid' && (
+                  <p className="text-xs text-destructive">{couponState.message}</p>
+                )}
+              </div>
+
               <div className="border-t pt-4">
                 <h4 className="font-semibold mb-2">Inclui:</h4>
                 <ul className="space-y-2">
@@ -264,37 +297,6 @@ export default function Checkout() {
                     </li>
                   ))}
                 </ul>
-              </div>
-
-              <div className="border-t pt-4 space-y-3">
-                <Label htmlFor="coupon">Cupom de desconto</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="coupon"
-                    value={couponCode}
-                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                    placeholder="Digite seu cupom"
-                    disabled={couponState.status === 'valid'}
-                  />
-                  {couponState.status === 'valid' ? (
-                    <Button type="button" variant="outline" onClick={handleRemoveCoupon}>Remover</Button>
-                  ) : (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={handleApplyCoupon}
-                      disabled={!couponCode.trim() || couponState.status === 'validating'}
-                    >
-                      {couponState.status === 'validating' ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Aplicar'}
-                    </Button>
-                  )}
-                </div>
-                {couponState.status === 'valid' && (
-                  <p className="text-xs text-green-600">✓ {couponState.message} — desconto de {formatPrice(couponState.discountCents || 0)}</p>
-                )}
-                {couponState.status === 'invalid' && (
-                  <p className="text-xs text-destructive">{couponState.message}</p>
-                )}
               </div>
 
               <div className="border-t pt-4 space-y-1">
