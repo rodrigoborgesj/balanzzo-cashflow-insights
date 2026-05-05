@@ -57,7 +57,7 @@ serve(async (req) => {
       );
     }
 
-    const { planId, paymentMethod = 'credit_card', customer }: CreateSubscriptionRequest = await req.json();
+    const { planId, paymentMethod = 'credit_card', couponCode, customer }: CreateSubscriptionRequest = await req.json();
     
     console.log('Creating subscription for user:', user.id, 'plan:', planId, 'method:', paymentMethod);
 
