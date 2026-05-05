@@ -221,25 +221,33 @@ serve(async (req) => {
     const useOrder = paymentMethod === 'pix' || !!appliedCoupon;
 
     if (useOrder) {
-      // PIX: Single payment (order type) for 1 month access
+      // Single payment (order type) for 1 month access — used for PIX or whenever a coupon is applied
+      const acceptedMethods = paymentMethod === 'pix' ? ['pix'] : ['credit_card', 'pix'];
+      const paymentSettings: Record<string, unknown> = {
+        accepted_payment_methods: acceptedMethods,
+      };
+      if (acceptedMethods.includes('pix')) {
+        paymentSettings.pix_settings = { expires_in: 86400 };
+      }
+      if (acceptedMethods.includes('credit_card')) {
+        paymentSettings.credit_card_settings = { operation_type: 'auth_and_capture' };
+      }
+
       paymentLinkPayload = {
         name: `${plan.name} - 1 Mês`,
         type: 'order',
         is_payment_link: true,
-        payment_settings: {
-          accepted_payment_methods: ['pix'],
-          pix_settings: {
-            expires_in: 86400, // 24 hours to pay
-          }
-        },
+        payment_settings: paymentSettings,
         customer_settings: {
           customer_id: customerId
         },
         cart_settings: {
           items: [
             {
-              amount: plan.price_cents,
-              description: `${plan.name} - Acesso por 1 mês`,
+              amount: finalPriceCents,
+              description: appliedCoupon
+                ? `${plan.name} - Acesso por 1 mês (cupom ${appliedCoupon})`
+                : `${plan.name} - Acesso por 1 mês`,
               quantity: 1,
               code: plan.id
             }
@@ -250,8 +258,9 @@ serve(async (req) => {
           plan_id: planId,
           plan_name: plan.name,
           subscription_type: plan.subscription_type,
-          payment_method: 'pix',
-          is_single_payment: true
+          payment_method: paymentMethod,
+          is_single_payment: true,
+          coupon_code: appliedCoupon || ''
         }
       };
     } else {
