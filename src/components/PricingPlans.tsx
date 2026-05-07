@@ -22,9 +22,11 @@ export function PricingPlans({ showTitle = true }: PricingPlansProps) {
     return () => clearTimeout(t);
   }, []);
 
-  // Filter to show only enterprise plans (exclude personal plans) and mark quarterly as popular
+  // Filter to show only enterprise recurring plans (exclude personal and one-time services) and mark quarterly as popular
+  const cycleOrder: Record<string, number> = { monthly: 0, quarterly: 1, semiannual: 2, yearly: 3 };
   const displayPlans = plans
-    ?.filter(plan => !plan.name.toLowerCase().includes('pessoal'))
+    ?.filter(plan => !plan.name.toLowerCase().includes('pessoal') && plan.billing_cycle !== 'one_time')
+    .sort((a, b) => (cycleOrder[a.billing_cycle] ?? 99) - (cycleOrder[b.billing_cycle] ?? 99))
     .map(plan => ({
       ...plan,
       popular: plan.billing_cycle === 'quarterly'
@@ -32,8 +34,9 @@ export function PricingPlans({ showTitle = true }: PricingPlansProps) {
 
   const fallbackPlans = [
     { id: 'fallback-monthly', name: 'Plano Mensal', price_cents: 7800, billing_cycle: 'monthly', features: ['Todos os recursos essenciais', 'Suporte por email', 'Sem fidelidade'], popular: false },
-    { id: 'fallback-quarterly', name: 'Plano Trimestral', price_cents: 20400, billing_cycle: 'quarterly', features: ['Economize 12%', 'Todos os recursos', 'Prioridade no suporte'], popular: true },
-    { id: 'fallback-semiannual', name: 'Plano Semestral', price_cents: 36000, billing_cycle: 'semiannual', features: ['Economize 23%', 'Todos os recursos', 'Suporte prioritário'], popular: false },
+    { id: 'fallback-quarterly', name: 'Plano Trimestral', price_cents: 22200, billing_cycle: 'quarterly', features: ['Todos os recursos', 'Prioridade no suporte', 'Economia vs. mensal'], popular: true },
+    { id: 'fallback-semiannual', name: 'Plano Semestral', price_cents: 39800, billing_cycle: 'semiannual', features: ['Todos os recursos', 'Suporte prioritário', 'Economia vs. mensal'], popular: false },
+    { id: 'fallback-yearly', name: 'Plano Anual', price_cents: 74900, billing_cycle: 'yearly', features: ['Todos os recursos', 'Suporte VIP', 'Maior economia do ano'], popular: false },
   ];
 
   const plansToRender = (displayPlans && displayPlans.length > 0)
@@ -67,6 +70,8 @@ export function PricingPlans({ showTitle = true }: PricingPlansProps) {
       monthly: 'por mês',
       quarterly: 'a cada 3 meses',
       semiannual: 'a cada 6 meses',
+      yearly: 'por ano',
+      one_time: 'pagamento único',
     };
     return map[cycle] || cycle;
   };
@@ -76,6 +81,8 @@ export function PricingPlans({ showTitle = true }: PricingPlansProps) {
       monthly: 'Cobrança mensal no cartão de crédito',
       quarterly: 'Cobrança trimestral no cartão de crédito',
       semiannual: 'Cobrança semestral no cartão de crédito',
+      yearly: 'Cobrança anual no cartão de crédito',
+      one_time: 'Pagamento único via cartão ou PIX',
     };
     return map[cycle] || 'Cobrança recorrente no cartão de crédito';
   };
@@ -140,11 +147,11 @@ export function PricingPlans({ showTitle = true }: PricingPlansProps) {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {plansToRender.map((plan) => (
               <Card 
                 key={plan.id}
-                className={`relative ${plan.popular ? 'border-primary shadow-lg md:scale-105' : ''}`}
+                className={`relative ${plan.popular ? 'border-primary shadow-lg lg:scale-105' : ''}`}
               >
                 {plan.popular && (
                   <div className="absolute -top-3 sm:-top-4 left-1/2 -translate-x-1/2">
@@ -155,9 +162,9 @@ export function PricingPlans({ showTitle = true }: PricingPlansProps) {
                 )}
                 
                 <CardHeader className="p-4 sm:p-6 pb-2 sm:pb-4">
-                  <CardTitle className="text-lg sm:text-xl md:text-2xl">{plan.name}</CardTitle>
+                  <CardTitle className="text-base sm:text-lg md:text-xl">{plan.name}</CardTitle>
                   <CardDescription>
-                    <span className="text-2xl sm:text-3xl font-bold text-foreground">
+                    <span className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground">
                       {formatPrice(plan.price_cents)}
                     </span>
                     <span className="text-muted-foreground text-xs sm:text-sm ml-1 sm:ml-2">
@@ -197,6 +204,58 @@ export function PricingPlans({ showTitle = true }: PricingPlansProps) {
             ))}
           </div>
         )}
+
+        {/* Consultoria — Diagnóstico Financeiro Estratégico */}
+        {(() => {
+          const consultoria = plans?.find(p => p.billing_cycle === 'one_time' && p.name.toLowerCase().includes('diagnóstico'));
+          if (!consultoria) return null;
+          return (
+            <div className="mt-10 sm:mt-16">
+              <Card className="relative overflow-hidden border-2 border-primary/40 bg-gradient-to-br from-primary/5 via-background to-primary/10">
+                <div className="absolute -top-3 left-6 sm:left-8">
+                  <span className="bg-primary text-primary-foreground px-3 sm:px-4 py-1 rounded-full text-xs sm:text-sm font-semibold uppercase tracking-wide">
+                    Serviço Premium
+                  </span>
+                </div>
+                <div className="grid md:grid-cols-2 gap-6 p-6 sm:p-8 md:p-10 pt-8 sm:pt-10">
+                  <div>
+                    <p className="text-xs sm:text-sm font-semibold text-primary uppercase tracking-wider mb-2">
+                      Arrumamos a vida financeira da sua empresa
+                    </p>
+                    <h3 className="text-xl sm:text-2xl md:text-3xl font-bold mb-3">
+                      {consultoria.name}
+                    </h3>
+                    <p className="text-sm sm:text-base text-muted-foreground mb-4">
+                      Por <strong>2 meses</strong>, entramos na operação do seu negócio para diagnosticar, estruturar e entregar um plano financeiro prático.
+                    </p>
+                    <div className="flex items-baseline gap-2 mb-4">
+                      <span className="text-3xl sm:text-4xl font-bold text-foreground">
+                        {formatPrice(consultoria.price_cents)}
+                      </span>
+                      <span className="text-sm text-muted-foreground">pagamento único</span>
+                    </div>
+                    <Button
+                      size="lg"
+                      className="w-full sm:w-auto"
+                      onClick={() => handleSelectPlan(consultoria.id, false)}
+                    >
+                      Quero o diagnóstico
+                      <Check className="ml-2 h-4 w-4" />
+                    </Button>
+                  </div>
+                  <ul className="space-y-2 sm:space-y-3">
+                    {(Array.isArray(consultoria.features) ? consultoria.features : []).map((feature, index) => (
+                      <li key={index} className="flex items-start gap-2">
+                        <Check className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0 mt-0.5" />
+                        <span className="text-xs sm:text-sm">{String(feature)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </Card>
+            </div>
+          );
+        })()}
 
         <div className="text-center mt-6 sm:mt-8 space-y-1.5 sm:space-y-2 px-2">
           <p className="text-xs sm:text-sm text-muted-foreground">
