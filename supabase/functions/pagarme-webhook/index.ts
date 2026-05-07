@@ -24,6 +24,10 @@ function calculatePeriodEnd(billingCycle: string, startDate: Date): Date {
     case 'yearly':
       periodEnd.setDate(periodEnd.getDate() + 365);
       break;
+    case 'one_time':
+      // Consultoria / serviço pontual: 2 meses de acesso
+      periodEnd.setDate(periodEnd.getDate() + 60);
+      break;
     default:
       // Default to monthly if unknown
       periodEnd.setDate(periodEnd.getDate() + 30);
