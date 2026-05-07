@@ -76,7 +76,9 @@ serve(async (req) => {
       );
     }
 
-    if (!plan.pagarme_plan_id) {
+    const isOneTimeService = plan.billing_cycle === 'one_time';
+
+    if (!isOneTimeService && !plan.pagarme_plan_id) {
       console.error('Plan does not have pagarme_plan_id:', plan.id);
       return new Response(
         JSON.stringify({ error: 'Plano não configurado para pagamento' }),
