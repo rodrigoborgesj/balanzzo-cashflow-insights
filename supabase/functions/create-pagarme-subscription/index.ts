@@ -220,10 +220,10 @@ serve(async (req) => {
     console.log('Creating payment link with method:', paymentMethod, 'coupon:', appliedCoupon);
 
     let paymentLinkPayload: Record<string, unknown>;
-    const useOrder = paymentMethod === 'pix' || !!appliedCoupon;
+    const useOrder = paymentMethod === 'pix' || !!appliedCoupon || isOneTimeService;
 
     if (useOrder) {
-      // Single payment (order type) for 1 month access — used for PIX or whenever a coupon is applied
+      // Single payment (order type) — for PIX, coupons applied, or one-time services like consultoria
       const acceptedMethods = paymentMethod === 'pix' ? ['pix'] : ['credit_card', 'pix'];
       const paymentSettings: Record<string, unknown> = {
         accepted_payment_methods: acceptedMethods,
