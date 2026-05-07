@@ -70,6 +70,8 @@ export function PricingPlans({ showTitle = true }: PricingPlansProps) {
       monthly: 'por mês',
       quarterly: 'a cada 3 meses',
       semiannual: 'a cada 6 meses',
+      yearly: 'por ano',
+      one_time: 'pagamento único',
     };
     return map[cycle] || cycle;
   };
@@ -79,6 +81,8 @@ export function PricingPlans({ showTitle = true }: PricingPlansProps) {
       monthly: 'Cobrança mensal no cartão de crédito',
       quarterly: 'Cobrança trimestral no cartão de crédito',
       semiannual: 'Cobrança semestral no cartão de crédito',
+      yearly: 'Cobrança anual no cartão de crédito',
+      one_time: 'Pagamento único via cartão ou PIX',
     };
     return map[cycle] || 'Cobrança recorrente no cartão de crédito';
   };
