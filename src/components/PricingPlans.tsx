@@ -22,9 +22,11 @@ export function PricingPlans({ showTitle = true }: PricingPlansProps) {
     return () => clearTimeout(t);
   }, []);
 
-  // Filter to show only enterprise plans (exclude personal plans) and mark quarterly as popular
+  // Filter to show only enterprise recurring plans (exclude personal and one-time services) and mark quarterly as popular
+  const cycleOrder: Record<string, number> = { monthly: 0, quarterly: 1, semiannual: 2, yearly: 3 };
   const displayPlans = plans
-    ?.filter(plan => !plan.name.toLowerCase().includes('pessoal'))
+    ?.filter(plan => !plan.name.toLowerCase().includes('pessoal') && plan.billing_cycle !== 'one_time')
+    .sort((a, b) => (cycleOrder[a.billing_cycle] ?? 99) - (cycleOrder[b.billing_cycle] ?? 99))
     .map(plan => ({
       ...plan,
       popular: plan.billing_cycle === 'quarterly'
@@ -32,8 +34,9 @@ export function PricingPlans({ showTitle = true }: PricingPlansProps) {
 
   const fallbackPlans = [
     { id: 'fallback-monthly', name: 'Plano Mensal', price_cents: 7800, billing_cycle: 'monthly', features: ['Todos os recursos essenciais', 'Suporte por email', 'Sem fidelidade'], popular: false },
-    { id: 'fallback-quarterly', name: 'Plano Trimestral', price_cents: 20400, billing_cycle: 'quarterly', features: ['Economize 12%', 'Todos os recursos', 'Prioridade no suporte'], popular: true },
-    { id: 'fallback-semiannual', name: 'Plano Semestral', price_cents: 36000, billing_cycle: 'semiannual', features: ['Economize 23%', 'Todos os recursos', 'Suporte prioritário'], popular: false },
+    { id: 'fallback-quarterly', name: 'Plano Trimestral', price_cents: 22200, billing_cycle: 'quarterly', features: ['Todos os recursos', 'Prioridade no suporte', 'Economia vs. mensal'], popular: true },
+    { id: 'fallback-semiannual', name: 'Plano Semestral', price_cents: 39800, billing_cycle: 'semiannual', features: ['Todos os recursos', 'Suporte prioritário', 'Economia vs. mensal'], popular: false },
+    { id: 'fallback-yearly', name: 'Plano Anual', price_cents: 74900, billing_cycle: 'yearly', features: ['Todos os recursos', 'Suporte VIP', 'Maior economia do ano'], popular: false },
   ];
 
   const plansToRender = (displayPlans && displayPlans.length > 0)
