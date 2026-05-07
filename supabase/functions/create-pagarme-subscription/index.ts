@@ -235,8 +235,17 @@ serve(async (req) => {
         paymentSettings.credit_card_settings = { operation_type: 'auth_and_capture' };
       }
 
+      const itemLabel = isOneTimeService
+        ? plan.name
+        : `${plan.name} - 1 Mês`;
+      const itemDescription = isOneTimeService
+        ? `${plan.name} - Serviço com duração de 2 meses`
+        : (appliedCoupon
+            ? `${plan.name} - Acesso por 1 mês (cupom ${appliedCoupon})`
+            : `${plan.name} - Acesso por 1 mês`);
+
       paymentLinkPayload = {
-        name: `${plan.name} - 1 Mês`,
+        name: itemLabel,
         type: 'order',
         is_payment_link: true,
         payment_settings: paymentSettings,
@@ -247,10 +256,8 @@ serve(async (req) => {
           items: [
             {
               amount: finalPriceCents,
-              name: `${plan.name} - 1 Mês`,
-              description: appliedCoupon
-                ? `${plan.name} - Acesso por 1 mês (cupom ${appliedCoupon})`
-                : `${plan.name} - Acesso por 1 mês`,
+              name: itemLabel,
+              description: itemDescription,
               default_quantity: 1,
               quantity: 1,
               code: plan.id
@@ -264,6 +271,7 @@ serve(async (req) => {
           subscription_type: plan.subscription_type,
           payment_method: paymentMethod,
           is_single_payment: true,
+          is_one_time_service: isOneTimeService ? 'true' : 'false',
           coupon_code: appliedCoupon || ''
         }
       };
