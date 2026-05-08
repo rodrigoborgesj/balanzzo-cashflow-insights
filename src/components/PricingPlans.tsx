@@ -212,12 +212,12 @@ export function PricingPlans({ showTitle = true }: PricingPlansProps) {
           return (
             <div className="mt-10 sm:mt-16">
               <Card className="relative overflow-hidden border-2 border-primary/40 bg-gradient-to-br from-primary/5 via-background to-primary/10">
-                <div className="absolute -top-3 left-6 sm:left-8">
-                  <span className="bg-primary text-primary-foreground px-3 sm:px-4 py-1 rounded-full text-xs sm:text-sm font-semibold uppercase tracking-wide">
+                <div className="flex justify-center pt-6">
+                  <span className="bg-primary text-primary-foreground px-4 py-1 rounded-full text-xs sm:text-sm font-semibold uppercase tracking-wide whitespace-nowrap">
                     Serviço Premium
                   </span>
                 </div>
-                <div className="grid md:grid-cols-2 gap-6 p-6 sm:p-8 md:p-10 pt-8 sm:pt-10">
+                <div className="grid md:grid-cols-2 gap-6 p-6 sm:p-8 md:p-10 pt-6">
                   <div>
                     <p className="text-xs sm:text-sm font-semibold text-primary uppercase tracking-wider mb-2">
                       Arrumamos a vida financeira da sua empresa
@@ -225,21 +225,15 @@ export function PricingPlans({ showTitle = true }: PricingPlansProps) {
                     <h3 className="text-xl sm:text-2xl md:text-3xl font-bold mb-3">
                       {consultoria.name}
                     </h3>
-                    <p className="text-sm sm:text-base text-muted-foreground mb-4">
+                    <p className="text-sm sm:text-base text-muted-foreground mb-6">
                       Por <strong>2 meses</strong>, entramos na operação do seu negócio para diagnosticar, estruturar e entregar um plano financeiro prático.
                     </p>
-                    <div className="flex items-baseline gap-2 mb-4">
-                      <span className="text-3xl sm:text-4xl font-bold text-foreground">
-                        {formatPrice(consultoria.price_cents)}
-                      </span>
-                      <span className="text-sm text-muted-foreground">pagamento único</span>
-                    </div>
                     <Button
                       size="lg"
                       className="w-full sm:w-auto"
-                      onClick={() => handleSelectPlan(consultoria.id, false)}
+                      onClick={() => window.open('https://wa.me/5551994876689?text=Ol%C3%A1!%20Quero%20saber%20mais%20sobre%20o%20Diagn%C3%B3stico%20Financeiro%20Estrat%C3%A9gico%20Balanzzo.', '_blank')}
                     >
-                      Quero o diagnóstico
+                      Saiba mais
                       <Check className="ml-2 h-4 w-4" />
                     </Button>
                   </div>
