@@ -235,10 +235,16 @@ export default function FluxoCaixaProjetado() {
       }
     });
 
-    // Process projected transactions
+    // Process projected transactions — respect each projection's actual date
     futureTransactions.forEach(transaction => {
       const category = transaction.categoria || 'Outros';
-      
+      const transDate = transaction.data_competencia;
+      // YYYY-MM of the projected entry (avoid timezone shift by string-slicing)
+      const transMonth = transDate.slice(0, 7);
+
+      // Only consider projections that fall inside the currently selected month
+      if (transMonth !== selectedMonth) return;
+
       if (!categories.has(category)) {
         categories.set(category, {
           name: category,
@@ -249,7 +255,6 @@ export default function FluxoCaixaProjetado() {
       }
 
       const catData = categories.get(category)!;
-      const transDate = transaction.data_competencia;
       let periodKey: string;
 
       if (periodType === 'daily') {
