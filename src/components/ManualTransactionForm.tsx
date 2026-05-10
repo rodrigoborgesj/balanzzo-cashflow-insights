@@ -144,15 +144,17 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [],
         .from('transacoes_recorrentes')
         .insert([recurringData]);
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Erro ao inserir transacoes_recorrentes:', error, recurringData);
+        throw error;
+      }
 
       console.log('✅ Configuração de recorrência salva:', recurringData);
 
       // Generate and insert future occurrences for projections
-      const numOccurrences = formData.recurrenceType === 'specific_month' ? 5 : 12; // 12 months for monthly/custom, 5 years for specific month
+      const numOccurrences = formData.recurrenceType === 'specific_month' ? 5 : 12;
       const futureOccurrences = generateFutureOccurrences(formData.date, amount, numOccurrences, transacaoOrigemId);
-      
-      // Set company_id for all occurrences
+
       const futureOccurrencesWithCompany = futureOccurrences.map(occ => ({
         ...occ,
         company_id
@@ -164,22 +166,23 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [],
           .insert(futureOccurrencesWithCompany);
 
         if (fluxoError) {
-          console.error('Erro ao criar lançamentos futuros:', fluxoError);
+          console.error('❌ Erro ao criar lançamentos futuros:', fluxoError, futureOccurrencesWithCompany[0]);
           toast({
-            title: 'Aviso',
-            description: 'Recorrência configurada, mas houve erro ao criar projeções futuras',
-            variant: 'default'
+            title: 'Recorrência configurada parcialmente',
+            description: `Projeções futuras não geradas: ${fluxoError.message}`,
+            variant: 'destructive'
           });
         } else {
-          console.log(`✅ ${futureOccurrencesWithCompany.length} lançamentos futuros criados para projeção`);
+          console.log(`✅ ${futureOccurrencesWithCompany.length} lançamentos futuros criados`);
         }
       }
 
     } catch (error) {
       console.error('Erro ao configurar recorrência:', error);
+      const message = error instanceof Error ? error.message : 'Erro desconhecido';
       toast({
-        title: 'Aviso',
-        description: 'Transação salva, mas houve erro ao configurar recorrência',
+        title: 'Erro ao configurar recorrência',
+        description: `Transação salva, mas a recorrência falhou: ${message}`,
         variant: 'destructive'
       });
     }
