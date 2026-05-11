@@ -1,0 +1,1 @@
+INSERT INTO public.free_access_users (email, expires_at) VALUES ('lauraferreiradias61@gmail.com', now() + interval '30 days');
