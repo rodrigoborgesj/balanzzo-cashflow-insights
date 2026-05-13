@@ -104,7 +104,8 @@ export default function FluxoCaixa() {
     console.log('🔄 FluxoCaixa: Carregando transações para o mês:', selectedMonth);
     loadTransactions(selectedMonth);
     loadUserCategories();
-  }, [selectedMonth, user?.id, loadTransactions, loadUserCategories]); // Garantir carregamento inicial após login
+    loadFutureTransactions(); // Recarregar projeções ao trocar de mês para refletir lançamentos futuros já existentes
+  }, [selectedMonth, user?.id, loadTransactions, loadUserCategories, loadFutureTransactions]);
 
   // Listen for transaction updates (when manual transactions are removed)
   useEffect(() => {
