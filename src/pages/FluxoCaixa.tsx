@@ -586,8 +586,8 @@ export default function FluxoCaixa() {
               </div>
               <div className="flex items-baseline gap-2">
                 <span className="text-lg md:text-xl font-bold text-slate-900">{transactions.length}</span>
-                {futureTransactions.length > 0 && (
-                  <span className="text-xs text-blue-600 font-medium">+{futureTransactions.length} futuras</span>
+                {futureTransactionsForPeriod.length > 0 && (
+                  <span className="text-xs text-blue-600 font-medium">+{futureTransactionsForPeriod.length} futuras</span>
                 )}
               </div>
             </CardContent>
@@ -604,7 +604,7 @@ export default function FluxoCaixa() {
                 <span className="text-base md:text-lg font-bold text-slate-900">
                   R$ {totalInflow.toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                 </span>
-                {futureTransactions.filter(t => t.tipo === 'entrada').length > 0 && (
+                {futureTransactionsForPeriod.filter(t => t.tipo === 'entrada').length > 0 && (
                   <span className="text-[10px] md:text-xs text-green-600 font-medium">
                     +R$ {futureTransactions
                       .filter(t => t.tipo === 'entrada')
@@ -627,7 +627,7 @@ export default function FluxoCaixa() {
                 <span className="text-base md:text-lg font-bold text-slate-900">
                   R$ {totalOutflow.toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                 </span>
-                {futureTransactions.filter(t => t.tipo === 'saida').length > 0 && (
+                {futureTransactionsForPeriod.filter(t => t.tipo === 'saida').length > 0 && (
                   <span className="text-[10px] md:text-xs text-red-600 font-medium">
                     +R$ {futureTransactions
                       .filter(t => t.tipo === 'saida')
@@ -656,12 +656,12 @@ export default function FluxoCaixa() {
                 <span className="text-base md:text-lg font-bold text-white">
                   R$ {displayNetResult.toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                 </span>
-                {futureTransactions.length > 0 && (
+                {futureTransactionsForPeriod.length > 0 && (
                   <span className="text-[10px] md:text-xs text-[#E4F8CA] font-medium">
                     Projetado: R$ {(
                       displayNetResult +
-                      futureTransactions.filter(t => t.tipo === 'entrada').reduce((sum, t) => sum + t.valor, 0) -
-                      futureTransactions.filter(t => t.tipo === 'saida').reduce((sum, t) => sum + t.valor, 0)
+                      futureTransactionsForPeriod.filter(t => t.tipo === 'entrada').reduce((sum, t) => sum + t.valor, 0) -
+                      futureTransactionsForPeriod.filter(t => t.tipo === 'saida').reduce((sum, t) => sum + t.valor, 0)
                     ).toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                   </span>
                 )}
@@ -672,7 +672,7 @@ export default function FluxoCaixa() {
       )}
 
       {/* Future Transactions List */}
-      {hasData && futureTransactions.length > 0 && (
+      {hasData && futureTransactionsForPeriod.length > 0 && (
         <Card className="bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200">
           <CardHeader className="p-4 md:p-6">
             <CardTitle className="flex items-center gap-2 text-slate-800 text-base md:text-lg">
@@ -686,7 +686,7 @@ export default function FluxoCaixa() {
           <CardContent className="p-4 md:p-6 pt-0">
             {/* Mobile Card View */}
             <div className="block sm:hidden space-y-2">
-              {futureTransactions.slice(0, 10).map((transaction) => (
+              {futureTransactionsForPeriod.slice(0, 10).map((transaction) => (
                 <div 
                   key={transaction.id} 
                   className={`p-3 rounded-lg border bg-white ${
@@ -756,9 +756,9 @@ export default function FluxoCaixa() {
                   </div>
                 </div>
               ))}
-              {futureTransactions.length > 10 && (
+              {futureTransactionsForPeriod.length > 10 && (
                 <p className="text-xs text-center text-slate-500 py-2">
-                  + {futureTransactions.length - 10} lançamentos futuros
+                  + {futureTransactionsForPeriod.length - 10} lançamentos futuros
                 </p>
               )}
             </div>
@@ -777,7 +777,7 @@ export default function FluxoCaixa() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {futureTransactions.slice(0, 15).map((transaction) => (
+                    {futureTransactionsForPeriod.slice(0, 15).map((transaction) => (
                       <TableRow 
                         key={transaction.id} 
                         className={`hover:bg-slate-50 ${
@@ -851,9 +851,9 @@ export default function FluxoCaixa() {
                     ))}
                   </TableBody>
                 </Table>
-                {futureTransactions.length > 15 && (
+                {futureTransactionsForPeriod.length > 15 && (
                   <p className="text-xs text-center text-slate-500 py-3 border-t">
-                    Mostrando 15 de {futureTransactions.length} lançamentos futuros
+                    Mostrando 15 de {futureTransactionsForPeriod.length} lançamentos futuros
                   </p>
                 )}
               </div>
