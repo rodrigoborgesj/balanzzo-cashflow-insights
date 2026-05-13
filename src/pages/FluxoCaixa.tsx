@@ -104,7 +104,8 @@ export default function FluxoCaixa() {
     console.log('🔄 FluxoCaixa: Carregando transações para o mês:', selectedMonth);
     loadTransactions(selectedMonth);
     loadUserCategories();
-  }, [selectedMonth, user?.id, loadTransactions, loadUserCategories]); // Garantir carregamento inicial após login
+    loadFutureTransactions(); // Recarregar projeções ao trocar de mês para refletir lançamentos futuros já existentes
+  }, [selectedMonth, user?.id, loadTransactions, loadUserCategories, loadFutureTransactions]);
 
   // Listen for transaction updates (when manual transactions are removed)
   useEffect(() => {
@@ -223,15 +224,25 @@ export default function FluxoCaixa() {
   }, [periodFilteredTransactions]);
 
   // Calculate totals from validated transactions only (exclude pending validation)
+  // Plus future projected transactions for the selected period (so months without
+  // reconciled data still reflect the projected cash flow, like May does).
+  const futureInflowForPeriod = futureTransactionsForPeriod
+    .filter(t => t.tipo === 'entrada')
+    .reduce((sum, t) => sum + Number(t.valor), 0);
+
+  const futureOutflowForPeriod = futureTransactionsForPeriod
+    .filter(t => t.tipo === 'saida')
+    .reduce((sum, t) => sum + Number(t.valor), 0);
+
   const totalInflow = validatedTransactionsForTotals
     .filter(t => t.valor > 0)
-    .reduce((sum, t) => sum + t.valor, 0);
+    .reduce((sum, t) => sum + t.valor, 0) + futureInflowForPeriod;
   
   const totalOutflow = Math.abs(validatedTransactionsForTotals
     .filter(t => t.valor < 0)
-    .reduce((sum, t) => sum + t.valor, 0));
+    .reduce((sum, t) => sum + t.valor, 0)) + futureOutflowForPeriod;
   
-  const hasData = transactions.length > 0;
+  const hasData = transactions.length > 0 || futureTransactionsForPeriod.length > 0;
 
   // Get all unique categories from transactions
   const availableCategories = Array.from(
