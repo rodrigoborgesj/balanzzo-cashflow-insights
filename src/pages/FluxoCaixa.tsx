@@ -83,6 +83,21 @@ export default function FluxoCaixa() {
   // Use future cash flow hook for projected transactions
   const { futureTransactions, isLoading: isLoadingFuture, loadFutureTransactions } = useFutureCashFlow();
 
+  // Filter future transactions to match the currently selected period (month or custom range)
+  // so projections only appear in the month they actually belong to.
+  const futureTransactionsForPeriod = useMemo(() => {
+    if (periodMode === 'custom' && customStartDate && customEndDate) {
+      const start = customStartDate.toISOString().slice(0, 10);
+      const end = customEndDate.toISOString().slice(0, 10);
+      return futureTransactions.filter(t => {
+        const d = t.data_competencia.slice(0, 10);
+        return d >= start && d <= end;
+      });
+    }
+    // Month mode: only include projections inside the selected YYYY-MM
+    return futureTransactions.filter(t => t.data_competencia.slice(0, 7) === selectedMonth);
+  }, [futureTransactions, periodMode, customStartDate, customEndDate, selectedMonth]);
+
   // Load transactions when month or user changes
   useEffect(() => {
     if (!user?.id) return;
