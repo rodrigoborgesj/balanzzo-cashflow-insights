@@ -16,6 +16,7 @@ import Dashboard from "./pages/Dashboard";
 import Conciliacao from "./pages/Conciliacao";
 import FluxoCaixa from "./pages/FluxoCaixa";
 import FluxoCaixaProjetado from "./pages/FluxoCaixaProjetado";
+import ContasAPagar from "./pages/ContasAPagar";
 import DRE from "./pages/DRE";
 import Configuracoes from "./pages/Configuracoes";
 import ComoUsar from "./pages/ComoUsar";
@@ -153,6 +154,15 @@ const App = () => {
               <SubscriptionGuard>
                 <AppLayout>
                   <FluxoCaixa />
+                </AppLayout>
+              </SubscriptionGuard>
+            </ProtectedRoute>
+          } />
+          <Route path="/contas-a-pagar" element={
+            <ProtectedRoute>
+              <SubscriptionGuard>
+                <AppLayout>
+                  <ContasAPagar />
                 </AppLayout>
               </SubscriptionGuard>
             </ProtectedRoute>
