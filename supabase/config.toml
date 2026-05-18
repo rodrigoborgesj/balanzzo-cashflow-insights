@@ -20,3 +20,5 @@ verify_jwt = false
 
 [functions.categorize-transactions]
 verify_jwt = true
+[functions.zz-chat]
+verify_jwt = false

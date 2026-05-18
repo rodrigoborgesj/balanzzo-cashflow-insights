@@ -3,6 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Footer } from "@/components/Footer";
+import { ZZChatWidget } from "@/components/zz/ZZChatWidget";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -36,6 +37,7 @@ export function AppLayout({ children }: AppLayoutProps) {
           {/* Footer */}
           <Footer />
         </div>
+        <ZZChatWidget />
       </div>
     </SidebarProvider>
   );

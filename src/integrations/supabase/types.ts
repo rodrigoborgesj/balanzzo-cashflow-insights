@@ -92,6 +92,69 @@ export type Database = {
         }
         Relationships: []
       }
+      contas_a_pagar: {
+        Row: {
+          categoria: string | null
+          company_id: string | null
+          comprovante_url: string | null
+          created_at: string
+          data_pagamento: string | null
+          data_vencimento: string
+          fornecedor: string | null
+          id: string
+          nome: string
+          observacoes: string | null
+          parcela_atual: number | null
+          parcelas_total: number | null
+          recorrencia: string
+          status: string
+          tipo: string
+          updated_at: string
+          user_id: string
+          valor: number
+        }
+        Insert: {
+          categoria?: string | null
+          company_id?: string | null
+          comprovante_url?: string | null
+          created_at?: string
+          data_pagamento?: string | null
+          data_vencimento: string
+          fornecedor?: string | null
+          id?: string
+          nome: string
+          observacoes?: string | null
+          parcela_atual?: number | null
+          parcelas_total?: number | null
+          recorrencia?: string
+          status?: string
+          tipo: string
+          updated_at?: string
+          user_id: string
+          valor: number
+        }
+        Update: {
+          categoria?: string | null
+          company_id?: string | null
+          comprovante_url?: string | null
+          created_at?: string
+          data_pagamento?: string | null
+          data_vencimento?: string
+          fornecedor?: string | null
+          id?: string
+          nome?: string
+          observacoes?: string | null
+          parcela_atual?: number | null
+          parcelas_total?: number | null
+          recorrencia?: string
+          status?: string
+          tipo?: string
+          updated_at?: string
+          user_id?: string
+          valor?: number
+        }
+        Relationships: []
+      }
       coupons: {
         Row: {
           active: boolean

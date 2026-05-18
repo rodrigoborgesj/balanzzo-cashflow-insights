@@ -1,6 +1,7 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { PersonalSidebar } from "@/components/personal/PersonalSidebar";
 import { Footer } from "@/components/Footer";
+import { ZZChatWidget } from "@/components/zz/ZZChatWidget";
 
 interface PersonalLayoutProps {
   children: React.ReactNode;
@@ -26,6 +27,7 @@ export function PersonalLayout({ children }: PersonalLayoutProps) {
           {/* Footer */}
           <Footer />
         </div>
+        <ZZChatWidget />
       </div>
     </SidebarProvider>
   );
