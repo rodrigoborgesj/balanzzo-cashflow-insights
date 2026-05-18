@@ -26,6 +26,7 @@ import { RecentTransactions } from "@/components/charts/RecentTransactions";
 import { CombinedMonthlyChart } from "@/components/charts/CombinedMonthlyChart";
 import { ProjectionChart } from "@/components/charts/ProjectionChart";
 import { ExpenseProjectionChart } from "@/components/charts/ExpenseProjectionChart";
+import { ContasAPagarTermometro } from "@/components/dashboard/ContasAPagarTermometro";
 
 // Loading Skeletons
 import { 
@@ -274,6 +275,9 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Termômetro de Contas a Pagar */}
+      <ContasAPagarTermometro selectedMonth={selectedMonth} />
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
