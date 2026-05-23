@@ -360,45 +360,17 @@ export default function Dashboard() {
         limit={5}
       />
 
-      {/* Future Cash Flow Projections */}
-      {(hasFutureData && (incomeProjectionsAnnual.length > 0 || expenseProjectionsAnnual.length > 0)) && (
+      {/* Future Cash Flow Projections - unified bar chart */}
+      {hasFutureData && (
         <div className="space-y-6">
           <div className="flex items-center gap-3">
             <div className="w-1 h-6 bg-primary rounded-full"></div>
             <h2 className="text-lg font-semibold text-foreground">Projeções Futuras</h2>
           </div>
-          
-          {/* Annual Projections */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <ProjectionChart 
-              data={incomeProjectionsAnnual}
-              formatCurrency={formatCurrency}
-              title="Projeção de Entradas - Anual"
-              type="annual"
-            />
-            <ExpenseProjectionChart 
-              data={expenseProjectionsAnnual}
-              formatCurrency={formatCurrency}
-              title="Projeção de Despesas - Anual"
-              type="annual"
-            />
-          </div>
-
-          {/* Monthly Projections */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <ProjectionChart 
-              data={incomeProjectionsMonthly}
-              formatCurrency={formatCurrency}
-              title="Projeção de Entradas - Mensal"
-              type="monthly"
-            />
-            <ExpenseProjectionChart 
-              data={expenseProjectionsMonthly}
-              formatCurrency={formatCurrency}
-              title="Projeção de Despesas - Mensal"
-              type="monthly"
-            />
-          </div>
+          <FutureProjectionsChart
+            futureTransactions={futureTransactions}
+            formatCurrency={formatCurrency}
+          />
         </div>
       )}
     </div>
