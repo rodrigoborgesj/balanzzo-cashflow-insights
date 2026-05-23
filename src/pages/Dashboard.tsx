@@ -270,8 +270,8 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* Termômetro de Contas a Pagar */}
-      <ContasAPagarTermometro selectedMonth={selectedMonth} />
+      {/* Termômetro de Contas a Pagar - Em ajuste */}
+      {/* <ContasAPagarTermometro selectedMonth={selectedMonth} /> */}
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
