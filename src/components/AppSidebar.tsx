@@ -36,7 +36,7 @@ import {
 const mainItems = [
   { title: "Dados", url: "/dashboard", icon: BarChart3 },
   { title: "Fluxo de Caixa", url: "/fluxo-caixa", icon: TrendingUp },
-  { title: "Contas a Pagar", url: "/contas-a-pagar", icon: Receipt },
+  // { title: "Contas a Pagar", url: "/contas-a-pagar", icon: Receipt }, // Em ajuste
   // { title: "Fluxo de Caixa Projetado", url: "/fluxo-caixa-projetado", icon: LineChart }, // Em construção
   { title: "DRE", url: "/dre", icon: Calculator },
   { title: "Conciliação Bancária", url: "/conciliacao", icon: CheckSquare },
