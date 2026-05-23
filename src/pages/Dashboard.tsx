@@ -75,12 +75,7 @@ export default function Dashboard() {
   const { summary, categorySummary, hasData: hasCashFlowData } = useCashFlowIntegration(selectedMonth);
   
   // Get future cash flow projections data
-  const { getIncomeProjections, getExpenseProjections, hasData: hasFutureData } = useFutureCashFlow();
-  
-  const incomeProjectionsAnnual = getIncomeProjections('annual');
-  const incomeProjectionsMonthly = getIncomeProjections('monthly');
-  const expenseProjectionsAnnual = getExpenseProjections('annual');
-  const expenseProjectionsMonthly = getExpenseProjections('monthly');
+  const { futureTransactions, hasData: hasFutureData } = useFutureCashFlow();
 
   // Handle custom period apply
   const handleApplyCustomPeriod = (start: Date, end: Date) => {
