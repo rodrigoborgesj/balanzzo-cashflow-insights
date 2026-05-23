@@ -24,9 +24,8 @@ import { ExpenseRanking } from "@/components/charts/ExpenseRanking";
 import { IncomeRanking } from "@/components/charts/IncomeRanking";
 import { RecentTransactions } from "@/components/charts/RecentTransactions";
 import { CombinedMonthlyChart } from "@/components/charts/CombinedMonthlyChart";
-import { ProjectionChart } from "@/components/charts/ProjectionChart";
-import { ExpenseProjectionChart } from "@/components/charts/ExpenseProjectionChart";
-import { ContasAPagarTermometro } from "@/components/dashboard/ContasAPagarTermometro";
+import { FutureProjectionsChart } from "@/components/charts/FutureProjectionsChart";
+// import { ContasAPagarTermometro } from "@/components/dashboard/ContasAPagarTermometro"; // Em ajuste
 
 // Loading Skeletons
 import { 
@@ -76,12 +75,7 @@ export default function Dashboard() {
   const { summary, categorySummary, hasData: hasCashFlowData } = useCashFlowIntegration(selectedMonth);
   
   // Get future cash flow projections data
-  const { getIncomeProjections, getExpenseProjections, hasData: hasFutureData } = useFutureCashFlow();
-  
-  const incomeProjectionsAnnual = getIncomeProjections('annual');
-  const incomeProjectionsMonthly = getIncomeProjections('monthly');
-  const expenseProjectionsAnnual = getExpenseProjections('annual');
-  const expenseProjectionsMonthly = getExpenseProjections('monthly');
+  const { futureTransactions, hasData: hasFutureData } = useFutureCashFlow();
 
   // Handle custom period apply
   const handleApplyCustomPeriod = (start: Date, end: Date) => {
@@ -276,8 +270,8 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* Termômetro de Contas a Pagar */}
-      <ContasAPagarTermometro selectedMonth={selectedMonth} />
+      {/* Termômetro de Contas a Pagar - Em ajuste */}
+      {/* <ContasAPagarTermometro selectedMonth={selectedMonth} /> */}
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -366,45 +360,17 @@ export default function Dashboard() {
         limit={5}
       />
 
-      {/* Future Cash Flow Projections */}
-      {(hasFutureData && (incomeProjectionsAnnual.length > 0 || expenseProjectionsAnnual.length > 0)) && (
+      {/* Future Cash Flow Projections - unified bar chart */}
+      {hasFutureData && (
         <div className="space-y-6">
           <div className="flex items-center gap-3">
             <div className="w-1 h-6 bg-primary rounded-full"></div>
             <h2 className="text-lg font-semibold text-foreground">Projeções Futuras</h2>
           </div>
-          
-          {/* Annual Projections */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <ProjectionChart 
-              data={incomeProjectionsAnnual}
-              formatCurrency={formatCurrency}
-              title="Projeção de Entradas - Anual"
-              type="annual"
-            />
-            <ExpenseProjectionChart 
-              data={expenseProjectionsAnnual}
-              formatCurrency={formatCurrency}
-              title="Projeção de Despesas - Anual"
-              type="annual"
-            />
-          </div>
-
-          {/* Monthly Projections */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <ProjectionChart 
-              data={incomeProjectionsMonthly}
-              formatCurrency={formatCurrency}
-              title="Projeção de Entradas - Mensal"
-              type="monthly"
-            />
-            <ExpenseProjectionChart 
-              data={expenseProjectionsMonthly}
-              formatCurrency={formatCurrency}
-              title="Projeção de Despesas - Mensal"
-              type="monthly"
-            />
-          </div>
+          <FutureProjectionsChart
+            futureTransactions={futureTransactions}
+            formatCurrency={formatCurrency}
+          />
         </div>
       )}
     </div>
