@@ -24,9 +24,8 @@ import { ExpenseRanking } from "@/components/charts/ExpenseRanking";
 import { IncomeRanking } from "@/components/charts/IncomeRanking";
 import { RecentTransactions } from "@/components/charts/RecentTransactions";
 import { CombinedMonthlyChart } from "@/components/charts/CombinedMonthlyChart";
-import { ProjectionChart } from "@/components/charts/ProjectionChart";
-import { ExpenseProjectionChart } from "@/components/charts/ExpenseProjectionChart";
-import { ContasAPagarTermometro } from "@/components/dashboard/ContasAPagarTermometro";
+import { FutureProjectionsChart } from "@/components/charts/FutureProjectionsChart";
+// import { ContasAPagarTermometro } from "@/components/dashboard/ContasAPagarTermometro"; // Em ajuste
 
 // Loading Skeletons
 import { 
