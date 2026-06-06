@@ -847,6 +847,65 @@ export type Database = {
           },
         ]
       }
+      professional_access: {
+        Row: {
+          accepted_at: string | null
+          company_id: string
+          created_at: string
+          id: string
+          invite_token: string
+          owner_user_id: string
+          permission_level: string
+          professional_email: string
+          professional_name: string | null
+          professional_user_id: string | null
+          revoked_at: string | null
+          role: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          company_id: string
+          created_at?: string
+          id?: string
+          invite_token?: string
+          owner_user_id: string
+          permission_level?: string
+          professional_email: string
+          professional_name?: string | null
+          professional_user_id?: string | null
+          revoked_at?: string | null
+          role?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          company_id?: string
+          created_at?: string
+          id?: string
+          invite_token?: string
+          owner_user_id?: string
+          permission_level?: string
+          professional_email?: string
+          professional_name?: string | null
+          professional_user_id?: string | null
+          revoked_at?: string | null
+          role?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "professional_access_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string | null
@@ -1215,6 +1274,10 @@ export type Database = {
         Returns: boolean
       }
       has_free_access: { Args: { user_email: string }; Returns: boolean }
+      has_professional_access: {
+        Args: { p_company_id: string; p_user_id: string }
+        Returns: boolean
+      }
       is_personal_profile_complete: {
         Args: { p_user_id: string }
         Returns: boolean

@@ -12,7 +12,8 @@ import {
   LineChart,
   ArrowLeftRight,
   Wallet,
-  Receipt
+  Receipt,
+  Users
 } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -40,6 +41,7 @@ const mainItems = [
   // { title: "Fluxo de Caixa Projetado", url: "/fluxo-caixa-projetado", icon: LineChart }, // Em construção
   { title: "DRE", url: "/dre", icon: Calculator },
   { title: "Conciliação Bancária", url: "/conciliacao", icon: CheckSquare },
+  { title: "Acesso Profissional", url: "/configuracoes/acesso-profissional", icon: Users },
   { title: "Como Usar", url: "/como-usar", icon: HelpCircle },
   { title: "Suporte", url: "/suporte", icon: MessageCircle },
 ];

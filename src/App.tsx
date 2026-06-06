@@ -41,6 +41,9 @@ import Blog from "./pages/Blog";
 import BlogArticle from "./pages/BlogArticle";
 import BlogArticleDebt from "./pages/BlogArticleDebt";
 import BlogArticleCarnival from "./pages/BlogArticleCarnival";
+import ProfessionalAccess from "./pages/ProfessionalAccess";
+import ProfessionalPortal from "./pages/ProfessionalPortal";
+import ProfessionalCompanyView from "./pages/ProfessionalCompanyView";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -260,6 +263,27 @@ const App = () => {
           <Route path="/personal/debt-planning" element={
             <ProtectedRoute>
               <PersonalDebtPlanningPage />
+            </ProtectedRoute>
+          } />
+
+          {/* Professional Access */}
+          <Route path="/configuracoes/acesso-profissional" element={
+            <ProtectedRoute>
+              <SubscriptionGuard>
+                <AppLayout>
+                  <ProfessionalAccess />
+                </AppLayout>
+              </SubscriptionGuard>
+            </ProtectedRoute>
+          } />
+          <Route path="/profissional" element={
+            <ProtectedRoute>
+              <ProfessionalPortal />
+            </ProtectedRoute>
+          } />
+          <Route path="/profissional/empresa/:companyId" element={
+            <ProtectedRoute>
+              <ProfessionalCompanyView />
             </ProtectedRoute>
           } />
 
