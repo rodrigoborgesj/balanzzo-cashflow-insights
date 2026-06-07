@@ -23,6 +23,7 @@ export default function ProfessionalAccess() {
   const { data, isLoading } = useOwnerProfessionalAccess();
   const revoke = useRevokeProfessional();
   const reactivate = useReactivateProfessional();
+  const updatePerm = useUpdateProfessionalPermission();
   const { toast } = useToast();
 
   const copyInvite = async (token: string) => {
