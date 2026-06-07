@@ -5,10 +5,15 @@ import { Badge } from "@/components/ui/badge";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import { InviteProfessionalDialog } from "@/components/professional/InviteProfessionalDialog";
 import {
   useOwnerProfessionalAccess, useRevokeProfessional, useReactivateProfessional,
+  useUpdateProfessionalPermission,
   ROLE_LABELS, PERMISSION_LABELS, STATUS_LABELS,
+  type PermissionLevel,
 } from "@/hooks/useProfessionalAccess";
 import { UserPlus, Copy, Loader2, ShieldOff, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -18,6 +23,7 @@ export default function ProfessionalAccess() {
   const { data, isLoading } = useOwnerProfessionalAccess();
   const revoke = useRevokeProfessional();
   const reactivate = useReactivateProfessional();
+  const updatePerm = useUpdateProfessionalPermission();
   const { toast } = useToast();
 
   const copyInvite = async (token: string) => {
@@ -76,7 +82,23 @@ export default function ProfessionalAccess() {
                     </TableCell>
                     <TableCell>{r.companies?.company_name ?? "—"}</TableCell>
                     <TableCell>{ROLE_LABELS[r.role]}</TableCell>
-                    <TableCell>{PERMISSION_LABELS[r.permission_level]}</TableCell>
+                    <TableCell>
+                      <Select
+                        value={r.permission_level}
+                        onValueChange={(v) =>
+                          updatePerm.mutate({ id: r.id, permission_level: v as PermissionLevel })
+                        }
+                      >
+                        <SelectTrigger className="h-8 w-[170px] text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Object.entries(PERMISSION_LABELS).map(([k, v]) => (
+                            <SelectItem key={k} value={k}>{v}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
                     <TableCell>
                       <Badge variant={r.status === "accepted" ? "default" : "secondary"}>
                         {STATUS_LABELS[r.status]}

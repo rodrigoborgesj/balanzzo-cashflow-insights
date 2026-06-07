@@ -140,6 +140,25 @@ export function useReactivateProfessional() {
   });
 }
 
+export function useUpdateProfessionalPermission() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: {
+      id: string;
+      permission_level?: PermissionLevel;
+      role?: ProfessionalRole;
+    }) => {
+      const { id, ...patch } = input;
+      const { error } = await supabase
+        .from("professional_access")
+        .update(patch)
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["professional-access"] }),
+  });
+}
+
 export function useAcceptProfessionalInvite() {
   const qc = useQueryClient();
   const { user } = useAuth();
