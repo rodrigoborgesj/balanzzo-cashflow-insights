@@ -82,7 +82,23 @@ export default function ProfessionalAccess() {
                     </TableCell>
                     <TableCell>{r.companies?.company_name ?? "—"}</TableCell>
                     <TableCell>{ROLE_LABELS[r.role]}</TableCell>
-                    <TableCell>{PERMISSION_LABELS[r.permission_level]}</TableCell>
+                    <TableCell>
+                      <Select
+                        value={r.permission_level}
+                        onValueChange={(v) =>
+                          updatePerm.mutate({ id: r.id, permission_level: v as PermissionLevel })
+                        }
+                      >
+                        <SelectTrigger className="h-8 w-[170px] text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Object.entries(PERMISSION_LABELS).map(([k, v]) => (
+                            <SelectItem key={k} value={k}>{v}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
                     <TableCell>
                       <Badge variant={r.status === "accepted" ? "default" : "secondary"}>
                         {STATUS_LABELS[r.status]}
