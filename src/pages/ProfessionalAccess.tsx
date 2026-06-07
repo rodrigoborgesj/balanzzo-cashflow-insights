@@ -5,10 +5,15 @@ import { Badge } from "@/components/ui/badge";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import { InviteProfessionalDialog } from "@/components/professional/InviteProfessionalDialog";
 import {
   useOwnerProfessionalAccess, useRevokeProfessional, useReactivateProfessional,
+  useUpdateProfessionalPermission,
   ROLE_LABELS, PERMISSION_LABELS, STATUS_LABELS,
+  type PermissionLevel,
 } from "@/hooks/useProfessionalAccess";
 import { UserPlus, Copy, Loader2, ShieldOff, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
