@@ -29,6 +29,8 @@ export default function PersonalDashboard() {
   } = useModule();
   const { isLoading: profileLoading } = usePersonalProfile();
   const { totalMonthlyExpenses, fixedExpenses } = usePersonalFixedExpenses();
+  const { totalMonthlyIncome } = usePersonalFixedIncome();
+  const { totalActiveDebtsAmount, totalMonthlyInstallments } = usePersonalDebts();
   const { initializeDefaultCategories, isLoading: categoriesLoading } = usePersonalCategories();
 
   const [selectedMonth, setSelectedMonth] = useState(() => {
@@ -86,6 +88,14 @@ export default function PersonalDashboard() {
           expense={monthlyTotals.expense}
           balance={monthlyTotals.balance}
           fixedExpenses={totalMonthlyExpenses}
+        />
+
+        {/* Financial Health */}
+        <PersonalFinancialHealthCard
+          fixedIncome={totalMonthlyIncome}
+          fixedExpenses={totalMonthlyExpenses}
+          totalDebts={totalActiveDebtsAmount}
+          monthlyDebtInstallments={totalMonthlyInstallments}
         />
 
         {/* Rankings */}
