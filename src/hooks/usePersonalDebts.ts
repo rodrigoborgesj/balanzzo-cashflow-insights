@@ -139,9 +139,13 @@ export const usePersonalDebts = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ['personal-debts'] });
-      toast.success('Dívida atualizada!');
+      if (data?.status === 'quitada') {
+        toast.success('Dívida quitada e arquivada!');
+      } else {
+        toast.success('Dívida atualizada!');
+      }
     },
     onError: (error) => {
       console.error('Error updating debt:', error);

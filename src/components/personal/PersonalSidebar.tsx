@@ -34,7 +34,7 @@ const analiseItems = [
   { title: "Dashboard", url: "/personal", icon: BarChart3 },
   { title: "Caixinhas", url: "/personal/savings", icon: PiggyBank },
   { title: "Contas Fixas", url: "/personal/fixed-expenses", icon: Receipt },
-  { title: "Planejamento de Dívidas", url: "/personal/debt-planning", icon: CreditCard },
+  { title: "Dívidas", url: "/personal/debt-planning", icon: CreditCard },
 ];
 
 const suporteItems = [

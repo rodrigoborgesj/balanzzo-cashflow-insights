@@ -5,10 +5,13 @@ import { useModule } from '@/contexts/ModuleContext';
 import { useAuth } from '@/hooks/useAuth';
 import { usePersonalProfile } from '@/hooks/usePersonalProfile';
 import { usePersonalFixedExpenses } from '@/hooks/usePersonalFixedExpenses';
+import { usePersonalFixedIncome } from '@/hooks/usePersonalFixedIncome';
+import { usePersonalDebts } from '@/hooks/usePersonalDebts';
 import { usePersonalDashboard } from '@/hooks/usePersonalDashboard';
 import { usePersonalCategories } from '@/hooks/usePersonalCategories';
 import { PersonalLayout } from '@/components/personal/PersonalLayout';
 import { PersonalDashboardMetrics } from '@/components/personal/PersonalDashboardMetrics';
+import { PersonalFinancialHealthCard } from '@/components/personal/PersonalFinancialHealthCard';
 import { PersonalMonthlyChart } from '@/components/personal/PersonalMonthlyChart';
 import { PersonalCategoryRanking } from '@/components/personal/PersonalCategoryRanking';
 import { PersonalFixedExpensesChart } from '@/components/personal/PersonalFixedExpensesChart';
@@ -26,6 +29,8 @@ export default function PersonalDashboard() {
   } = useModule();
   const { isLoading: profileLoading } = usePersonalProfile();
   const { totalMonthlyExpenses, fixedExpenses } = usePersonalFixedExpenses();
+  const { totalMonthlyIncome } = usePersonalFixedIncome();
+  const { totalActiveDebtsAmount, totalMonthlyInstallments } = usePersonalDebts();
   const { initializeDefaultCategories, isLoading: categoriesLoading } = usePersonalCategories();
 
   const [selectedMonth, setSelectedMonth] = useState(() => {
@@ -83,6 +88,14 @@ export default function PersonalDashboard() {
           expense={monthlyTotals.expense}
           balance={monthlyTotals.balance}
           fixedExpenses={totalMonthlyExpenses}
+        />
+
+        {/* Financial Health */}
+        <PersonalFinancialHealthCard
+          fixedIncome={totalMonthlyIncome}
+          fixedExpenses={totalMonthlyExpenses}
+          totalDebts={totalActiveDebtsAmount}
+          monthlyDebtInstallments={totalMonthlyInstallments}
         />
 
         {/* Rankings */}
