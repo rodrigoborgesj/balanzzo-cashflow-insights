@@ -10,6 +10,7 @@ import { ModuleProvider } from "@/contexts/ModuleContext";
 import { AppLayout } from "./components/AppLayout";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { SubscriptionGuard } from "./components/SubscriptionGuard";
+import { CompanySubscriptionGuard } from "./components/CompanySubscriptionGuard";
 import LandingPage from "./pages/LandingPage";
 import PersonalLandingPage from "./pages/PersonalLandingPage";
 import Dashboard from "./pages/Dashboard";
@@ -133,60 +134,51 @@ const App = () => {
             </ProtectedRoute>
           } />
           
-          {/* Protected app routes - Require active subscription */}
+          {/* Protected app routes - Require COMPANY subscription */}
           <Route path="/dashboard" element={
             <ProtectedRoute>
-              <SubscriptionGuard>
+              <CompanySubscriptionGuard>
                 <AppLayout>
                   <Dashboard />
                 </AppLayout>
-              </SubscriptionGuard>
+              </CompanySubscriptionGuard>
             </ProtectedRoute>
           } />
           <Route path="/conciliacao" element={
             <ProtectedRoute>
-              <SubscriptionGuard>
+              <CompanySubscriptionGuard>
                 <AppLayout>
                   <Conciliacao />
                 </AppLayout>
-              </SubscriptionGuard>
+              </CompanySubscriptionGuard>
             </ProtectedRoute>
           } />
           <Route path="/fluxo-caixa" element={
             <ProtectedRoute>
-              <SubscriptionGuard>
+              <CompanySubscriptionGuard>
                 <AppLayout>
                   <FluxoCaixa />
                 </AppLayout>
-              </SubscriptionGuard>
+              </CompanySubscriptionGuard>
             </ProtectedRoute>
           } />
           <Route path="/contas-a-pagar" element={
             <ProtectedRoute>
-              <SubscriptionGuard>
+              <CompanySubscriptionGuard>
                 <AppLayout>
                   <ContasAPagar />
                 </AppLayout>
-              </SubscriptionGuard>
+              </CompanySubscriptionGuard>
             </ProtectedRoute>
           } />
           {/* Fluxo de Caixa Projetado - Em construção */}
-          {/* <Route path="/fluxo-caixa-projetado" element={
-            <ProtectedRoute>
-              <SubscriptionGuard>
-                <AppLayout>
-                  <FluxoCaixaProjetado />
-                </AppLayout>
-              </SubscriptionGuard>
-            </ProtectedRoute>
-          } /> */}
           <Route path="/dre" element={
             <ProtectedRoute>
-              <SubscriptionGuard>
+              <CompanySubscriptionGuard>
                 <AppLayout>
                   <DRE />
                 </AppLayout>
-              </SubscriptionGuard>
+              </CompanySubscriptionGuard>
             </ProtectedRoute>
           } />
           <Route path="/configuracoes" element={
@@ -200,11 +192,11 @@ const App = () => {
           } />
           <Route path="/como-usar" element={
             <ProtectedRoute>
-              <SubscriptionGuard>
+              <CompanySubscriptionGuard>
                 <AppLayout>
                   <ComoUsar />
                 </AppLayout>
-              </SubscriptionGuard>
+              </CompanySubscriptionGuard>
             </ProtectedRoute>
           } />
           <Route path="/suporte" element={
