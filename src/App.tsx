@@ -266,7 +266,8 @@ const App = () => {
             </ProtectedRoute>
           } />
 
-          {/* Professional Access */}
+          {/* Professional Access - oculto até nova atualização */}
+          {/*
           <Route path="/configuracoes/acesso-profissional" element={
             <ProtectedRoute>
               <SubscriptionGuard>
@@ -286,6 +287,7 @@ const App = () => {
               <ProfessionalCompanyView />
             </ProtectedRoute>
           } />
+          */}
 
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

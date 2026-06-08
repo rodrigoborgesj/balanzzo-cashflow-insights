@@ -41,7 +41,7 @@ const mainItems = [
   // { title: "Fluxo de Caixa Projetado", url: "/fluxo-caixa-projetado", icon: LineChart }, // Em construção
   { title: "DRE", url: "/dre", icon: Calculator },
   { title: "Conciliação Bancária", url: "/conciliacao", icon: CheckSquare },
-  { title: "Acesso Profissional", url: "/configuracoes/acesso-profissional", icon: Users },
+  // { title: "Acesso Profissional", url: "/configuracoes/acesso-profissional", icon: Users }, // Oculto até nova atualização
   { title: "Como Usar", url: "/como-usar", icon: HelpCircle },
   { title: "Suporte", url: "/suporte", icon: MessageCircle },
 ];
