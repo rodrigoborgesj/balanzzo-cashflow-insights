@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Edit2, Trash2, ChevronDown, ChevronUp, Calendar, DollarSign } from 'lucide-react';
+import { Edit2, Trash2, ChevronDown, ChevronUp, Calendar, DollarSign, Archive, RotateCcw } from 'lucide-react';
 import { PersonalDebt, DEBT_TYPE_LABELS } from '@/hooks/usePersonalDebts';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -12,9 +12,10 @@ interface DebtCardProps {
   onEdit: (debt: PersonalDebt) => void;
   onDelete: (id: string) => void;
   onEditRenegotiation: (debt: PersonalDebt) => void;
+  onToggleStatus?: (debt: PersonalDebt) => void;
 }
 
-export function DebtCard({ debt, onEdit, onDelete, onEditRenegotiation }: DebtCardProps) {
+export function DebtCard({ debt, onEdit, onDelete, onEditRenegotiation, onToggleStatus }: DebtCardProps) {
   const [expanded, setExpanded] = useState(false);
 
   const formatCurrency = (value: number) => {
@@ -27,22 +28,34 @@ export function DebtCard({ debt, onEdit, onDelete, onEditRenegotiation }: DebtCa
   const isActive = debt.status === 'ativa';
 
   return (
-    <Card className={`transition-all ${isActive ? 'border-border' : 'border-muted opacity-75'}`}>
+    <Card className={`transition-all ${isActive ? 'border-border' : 'border-muted bg-muted/20'}`}>
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1">
               <CardTitle className="text-base font-semibold">{debt.name}</CardTitle>
               <Badge variant={isActive ? 'default' : 'secondary'} className="text-xs">
-                {isActive ? 'Ativa' : 'Quitada'}
+                {isActive ? 'Ativa' : 'Arquivada'}
               </Badge>
             </div>
             <p className="text-sm text-muted-foreground">{DEBT_TYPE_LABELS[debt.type]}</p>
           </div>
           <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" onClick={() => onEdit(debt)}>
-              <Edit2 className="h-4 w-4" />
-            </Button>
+            {onToggleStatus && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => onToggleStatus(debt)}
+                title={isActive ? 'Marcar como quitada e arquivar' : 'Reativar dívida'}
+              >
+                {isActive ? <Archive className="h-4 w-4" /> : <RotateCcw className="h-4 w-4" />}
+              </Button>
+            )}
+            {isActive && (
+              <Button variant="ghost" size="icon" onClick={() => onEdit(debt)}>
+                <Edit2 className="h-4 w-4" />
+              </Button>
+            )}
             <Button variant="ghost" size="icon" onClick={() => onDelete(debt.id)}>
               <Trash2 className="h-4 w-4 text-destructive" />
             </Button>
