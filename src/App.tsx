@@ -41,9 +41,9 @@ import Blog from "./pages/Blog";
 import BlogArticle from "./pages/BlogArticle";
 import BlogArticleDebt from "./pages/BlogArticleDebt";
 import BlogArticleCarnival from "./pages/BlogArticleCarnival";
-import ProfessionalAccess from "./pages/ProfessionalAccess";
-import ProfessionalPortal from "./pages/ProfessionalPortal";
-import ProfessionalCompanyView from "./pages/ProfessionalCompanyView";
+// import ProfessionalAccess from "./pages/ProfessionalAccess";
+// import ProfessionalPortal from "./pages/ProfessionalPortal";
+// import ProfessionalCompanyView from "./pages/ProfessionalCompanyView";
 
 const queryClient = new QueryClient({
   defaultOptions: {
