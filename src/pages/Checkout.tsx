@@ -20,6 +20,7 @@ export default function Checkout() {
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { plans, isLoading: plansLoading, refetchSubscription } = useSubscription();
+  const { logout } = useAuth();
   const { 
     hasCompanySubscription, 
     hasPersonalSubscription, 
