@@ -218,6 +218,16 @@ export default function Checkout() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20 py-12 px-4">
       <div className="container mx-auto max-w-4xl">
+        <div className="flex justify-end mb-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={async () => { await logout(); }}
+          >
+            <LogOut className="h-4 w-4" />
+            Sair
+          </Button>
+        </div>
         <div className="grid md:grid-cols-2 gap-8">
           {/* Plan Summary */}
           <Card>
