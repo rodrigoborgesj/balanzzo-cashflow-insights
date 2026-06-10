@@ -11,14 +11,14 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, CreditCard, Lock, QrCode } from "lucide-react";
+import { Loader2, CreditCard, Lock, QrCode, LogOut } from "lucide-react";
 
 type PaymentMethod = 'credit_card' | 'pix';
 
 export default function Checkout() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { plans, isLoading: plansLoading, refetchSubscription } = useSubscription();
   const { 
     hasCompanySubscription, 
@@ -218,6 +218,16 @@ export default function Checkout() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20 py-12 px-4">
       <div className="container mx-auto max-w-4xl">
+        <div className="flex justify-end mb-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={async () => { await logout(); }}
+          >
+            <LogOut className="h-4 w-4" />
+            Sair
+          </Button>
+        </div>
         <div className="grid md:grid-cols-2 gap-8">
           {/* Plan Summary */}
           <Card>
