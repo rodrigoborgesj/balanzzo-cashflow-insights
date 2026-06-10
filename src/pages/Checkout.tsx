@@ -18,9 +18,8 @@ type PaymentMethod = 'credit_card' | 'pix';
 export default function Checkout() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { plans, isLoading: plansLoading, refetchSubscription } = useSubscription();
-  const { logout } = useAuth();
   const { 
     hasCompanySubscription, 
     hasPersonalSubscription, 
