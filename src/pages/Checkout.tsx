@@ -11,7 +11,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, CreditCard, Lock, QrCode } from "lucide-react";
+import { Loader2, CreditCard, Lock, QrCode, LogOut } from "lucide-react";
 
 type PaymentMethod = 'credit_card' | 'pix';
 
