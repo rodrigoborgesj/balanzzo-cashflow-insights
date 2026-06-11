@@ -275,6 +275,9 @@ export default function Dashboard() {
       {/* Termômetro de Contas a Pagar - Em ajuste */}
       {/* <ContasAPagarTermometro selectedMonth={selectedMonth} /> */}
 
+      {/* Faturamento x Despesas - Anual */}
+      <YearlyRevenueChart painelData={painelData} formatCurrency={formatCurrency} />
+
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Combined Chart - Takes 2 columns */}
