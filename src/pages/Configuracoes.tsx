@@ -13,6 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 
 import { useToast } from "@/hooks/use-toast";
 import { useProfile } from "@/hooks/useProfile";
+import { Link } from "react-router-dom";
 import { 
   Settings, 
   Bell, 
@@ -24,6 +25,7 @@ import {
   Trash2,
   User,
   Loader2,
+  Users,
 } from "lucide-react";
 
 interface UserSettings {
