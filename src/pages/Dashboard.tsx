@@ -24,6 +24,7 @@ import { ExpenseRanking } from "@/components/charts/ExpenseRanking";
 import { IncomeRanking } from "@/components/charts/IncomeRanking";
 import { RecentTransactions } from "@/components/charts/RecentTransactions";
 import { CombinedMonthlyChart } from "@/components/charts/CombinedMonthlyChart";
+import { YearlyRevenueChart } from "@/components/charts/YearlyRevenueChart";
 import { FutureProjectionsChart } from "@/components/charts/FutureProjectionsChart";
 // import { ContasAPagarTermometro } from "@/components/dashboard/ContasAPagarTermometro"; // Em ajuste
 
@@ -54,7 +55,8 @@ export default function Dashboard() {
     kpiData,
     formatCurrency,
     refreshData,
-    correlationId
+    correlationId,
+    painelData
   } = useDashboard();
 
   // Listen for transaction updates
@@ -272,6 +274,9 @@ export default function Dashboard() {
 
       {/* Termômetro de Contas a Pagar - Em ajuste */}
       {/* <ContasAPagarTermometro selectedMonth={selectedMonth} /> */}
+
+      {/* Faturamento x Despesas - Anual */}
+      <YearlyRevenueChart painelData={painelData} formatCurrency={formatCurrency} />
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
