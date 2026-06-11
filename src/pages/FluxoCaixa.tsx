@@ -61,6 +61,7 @@ export default function FluxoCaixa() {
   const [saldoInicialTemp, setSaldoInicialTemp] = useState('');
   const [saldoInicialApplied, setSaldoInicialApplied] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showInviteProfessional, setShowInviteProfessional] = useState(false);
   const [periodMode, setPeriodMode] = useState<PeriodMode>('month');
   const [selectedMonth, setSelectedMonth] = useState<string>(() => {
     const now = new Date();
