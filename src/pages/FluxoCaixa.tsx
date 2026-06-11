@@ -422,6 +422,16 @@ export default function FluxoCaixa() {
             <Button 
               variant="outline" 
               size="sm"
+              onClick={() => setShowInviteProfessional(true)}
+              className="text-xs min-h-[40px]"
+            >
+              <Users className="h-4 w-4 mr-2" />
+              <span className="hidden sm:inline">Compartilhar com profissional</span>
+              <span className="sm:hidden">Compartilhar</span>
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm"
               onClick={() => setShowSettings(!showSettings)}
               className="text-xs min-h-[40px]"
             >
@@ -440,6 +450,11 @@ export default function FluxoCaixa() {
             </Button>
           </div>
         </div>
+
+        <InviteProfessionalDialog
+          open={showInviteProfessional}
+          onOpenChange={setShowInviteProfessional}
+        />
 
         {/* Custom Period Selector - Show when custom mode is active */}
         {periodMode === 'custom' && (
