@@ -44,6 +44,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { format, isWithinInterval, parseISO, startOfMonth, endOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { InviteProfessionalDialog } from "@/components/professional/InviteProfessionalDialog";
 
 interface CategoryGroup {
   category: string;
