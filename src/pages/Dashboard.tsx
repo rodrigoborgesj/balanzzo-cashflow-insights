@@ -24,6 +24,7 @@ import { ExpenseRanking } from "@/components/charts/ExpenseRanking";
 import { IncomeRanking } from "@/components/charts/IncomeRanking";
 import { RecentTransactions } from "@/components/charts/RecentTransactions";
 import { CombinedMonthlyChart } from "@/components/charts/CombinedMonthlyChart";
+import { YearlyRevenueChart } from "@/components/charts/YearlyRevenueChart";
 import { FutureProjectionsChart } from "@/components/charts/FutureProjectionsChart";
 // import { ContasAPagarTermometro } from "@/components/dashboard/ContasAPagarTermometro"; // Em ajuste
 
