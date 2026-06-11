@@ -354,6 +354,31 @@ export default function Configuracoes() {
           </CardContent>
         </Card>
 
+        {/* Acesso Profissional */}
+        <Card className="bg-gradient-to-br from-card to-card/80 border-border/50 shadow-soft lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Compartilhar com contador ou consultor
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <p className="text-sm text-muted-foreground max-w-2xl">
+                Convide seu contador, consultor ou parceiro financeiro para acessar
+                os dados da sua empresa com permissões controladas. Você gerencia
+                quem entra, o que pode ver e revoga o acesso a qualquer momento.
+              </p>
+              <Button asChild>
+                <Link to="/configuracoes/acesso-profissional">
+                  <Users className="h-4 w-4 mr-2" />
+                  Gerenciar acessos
+                </Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Preferências */}
         <Card className="bg-gradient-to-br from-card to-card/80 border-border/50 shadow-soft lg:col-span-2">
           <CardHeader>
