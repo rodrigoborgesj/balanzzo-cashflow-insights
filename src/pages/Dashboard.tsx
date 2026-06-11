@@ -55,7 +55,8 @@ export default function Dashboard() {
     kpiData,
     formatCurrency,
     refreshData,
-    correlationId
+    correlationId,
+    painelData
   } = useDashboard();
 
   // Listen for transaction updates
