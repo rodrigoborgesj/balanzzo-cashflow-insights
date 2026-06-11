@@ -392,6 +392,38 @@ export function useDashboard() {
     placeholderData: (previousData) => previousData, // Replacement for keepPreviousData
   });
 
+  // Yearly data — always fetches the full current year, ignores selected month/period filters
+  const currentYear = new Date().getFullYear();
+  const { data: yearlyPainelData = [] } = useQuery({
+    queryKey: ['dashboard-yearly', user?.id, currentYear],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      const startDate = `${currentYear}-01-01`;
+      const endDate = `${currentYear}-12-31`;
+      const { data, error } = await supabase
+        .from('transacoes_conciliadas')
+        .select('data_transacao, valor, tipo')
+        .eq('user_id', user.id)
+        .eq('status_conciliacao', true)
+        .gte('data_transacao', startDate)
+        .lte('data_transacao', endDate);
+      if (error) throw error;
+      const map = new Map<number, { ano: number; mes: number; total_entradas: number; total_saidas: number }>();
+      (data || []).forEach((t: any) => {
+        const d = new Date(t.data_transacao);
+        const m = d.getMonth() + 1;
+        if (!map.has(m)) map.set(m, { ano: currentYear, mes: m, total_entradas: 0, total_saidas: 0 });
+        const entry = map.get(m)!;
+        const v = Math.abs(Number(t.valor));
+        if (t.tipo === 'entrada') entry.total_entradas += v;
+        else entry.total_saidas += v;
+      });
+      return Array.from(map.values());
+    },
+    enabled: !!user?.id,
+    staleTime: 30_000,
+  });
+
   // Invalidate queries when visibility changes (soft refetch only)
   const handleVisibilityChange = useCallback(() => {
     if (document.visibilityState === 'visible' && user?.id) {
@@ -556,6 +588,7 @@ export function useDashboard() {
 
   return {
     painelData,
+    yearlyPainelData,
     selectedMonth,
     setSelectedMonth,
     periodMode,

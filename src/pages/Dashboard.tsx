@@ -56,7 +56,8 @@ export default function Dashboard() {
     formatCurrency,
     refreshData,
     correlationId,
-    painelData
+    painelData,
+    yearlyPainelData
   } = useDashboard();
 
   // Listen for transaction updates
@@ -276,7 +277,7 @@ export default function Dashboard() {
       {/* <ContasAPagarTermometro selectedMonth={selectedMonth} /> */}
 
       {/* Faturamento x Despesas - Anual */}
-      <YearlyRevenueChart painelData={painelData} formatCurrency={formatCurrency} />
+      <YearlyRevenueChart painelData={yearlyPainelData} formatCurrency={formatCurrency} />
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
