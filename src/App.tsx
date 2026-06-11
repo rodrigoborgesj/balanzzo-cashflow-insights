@@ -42,9 +42,9 @@ import Blog from "./pages/Blog";
 import BlogArticle from "./pages/BlogArticle";
 import BlogArticleDebt from "./pages/BlogArticleDebt";
 import BlogArticleCarnival from "./pages/BlogArticleCarnival";
-// import ProfessionalAccess from "./pages/ProfessionalAccess";
-// import ProfessionalPortal from "./pages/ProfessionalPortal";
-// import ProfessionalCompanyView from "./pages/ProfessionalCompanyView";
+import ProfessionalAccess from "./pages/ProfessionalAccess";
+import ProfessionalPortal from "./pages/ProfessionalPortal";
+import ProfessionalCompanyView from "./pages/ProfessionalCompanyView";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -258,8 +258,7 @@ const App = () => {
             </ProtectedRoute>
           } />
 
-          {/* Professional Access - oculto até nova atualização */}
-          {/*
+          {/* Professional Access */}
           <Route path="/configuracoes/acesso-profissional" element={
             <ProtectedRoute>
               <SubscriptionGuard>
@@ -279,7 +278,6 @@ const App = () => {
               <ProfessionalCompanyView />
             </ProtectedRoute>
           } />
-          */}
 
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

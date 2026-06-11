@@ -26,7 +26,9 @@ import {
   FileCheck,
   Clock,
   ArrowRight,
-  Trash2
+  Trash2,
+  Users
+
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
@@ -42,6 +44,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { format, isWithinInterval, parseISO, startOfMonth, endOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { InviteProfessionalDialog } from "@/components/professional/InviteProfessionalDialog";
 
 interface CategoryGroup {
   category: string;
@@ -58,6 +61,7 @@ export default function FluxoCaixa() {
   const [saldoInicialTemp, setSaldoInicialTemp] = useState('');
   const [saldoInicialApplied, setSaldoInicialApplied] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showInviteProfessional, setShowInviteProfessional] = useState(false);
   const [periodMode, setPeriodMode] = useState<PeriodMode>('month');
   const [selectedMonth, setSelectedMonth] = useState<string>(() => {
     const now = new Date();
@@ -418,6 +422,16 @@ export default function FluxoCaixa() {
             <Button 
               variant="outline" 
               size="sm"
+              onClick={() => setShowInviteProfessional(true)}
+              className="text-xs min-h-[40px]"
+            >
+              <Users className="h-4 w-4 mr-2" />
+              <span className="hidden sm:inline">Compartilhar com profissional</span>
+              <span className="sm:hidden">Compartilhar</span>
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm"
               onClick={() => setShowSettings(!showSettings)}
               className="text-xs min-h-[40px]"
             >
@@ -436,6 +450,11 @@ export default function FluxoCaixa() {
             </Button>
           </div>
         </div>
+
+        <InviteProfessionalDialog
+          open={showInviteProfessional}
+          onOpenChange={setShowInviteProfessional}
+        />
 
         {/* Custom Period Selector - Show when custom mode is active */}
         {periodMode === 'custom' && (
