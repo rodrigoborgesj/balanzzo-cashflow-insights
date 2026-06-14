@@ -27,6 +27,8 @@ import {
   Loader2,
   Users,
   Layers,
+} from "lucide-react";
+
 
 interface UserSettings {
   relatorios_mensais: boolean;
