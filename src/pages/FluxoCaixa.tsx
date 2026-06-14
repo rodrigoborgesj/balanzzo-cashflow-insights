@@ -735,6 +735,16 @@ export default function FluxoCaixa() {
         </div>
       )}
 
+      {hasData && (
+        <CostCenterSummary
+          transactions={periodFilteredTransactions.map((t) => ({
+            cost_center_id: t.cost_center_id,
+            valor: t.valor,
+            tipo: t.valor >= 0 ? 'entrada' : 'saida',
+          }))}
+        />
+      )}
+
       {/* Future Transactions List */}
       {hasData && futureTransactionsForPeriod.length > 0 && (
         <Card className="bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200">
