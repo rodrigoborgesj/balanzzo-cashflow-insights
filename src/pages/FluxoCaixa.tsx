@@ -82,7 +82,9 @@ export default function FluxoCaixa() {
   const [deletingFutureId, setDeletingFutureId] = useState<string | null>(null);
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { toast } = useToast();
+  const [moveTarget, setMoveTarget] = useState<Transaction | null>(null);
+  const { centers, subgroups } = useCostCenters();
+
 
   // Use reconciliation hook to get categorized transactions
   const { transactions, isLoading, loadTransactions, userCategories, loadUserCategories } = useConciliacao();
