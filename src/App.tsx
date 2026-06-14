@@ -45,6 +45,7 @@ import BlogArticleCarnival from "./pages/BlogArticleCarnival";
 import ProfessionalAccess from "./pages/ProfessionalAccess";
 import ProfessionalPortal from "./pages/ProfessionalPortal";
 import ProfessionalCompanyView from "./pages/ProfessionalCompanyView";
+import CostCentersManager from "./pages/CostCentersManager";
 
 const queryClient = new QueryClient({
   defaultOptions: {
