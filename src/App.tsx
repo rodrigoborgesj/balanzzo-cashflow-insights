@@ -191,6 +191,15 @@ const App = () => {
               </SubscriptionGuard>
             </ProtectedRoute>
           } />
+          <Route path="/configuracoes/centros-de-custo" element={
+            <ProtectedRoute>
+              <CompanySubscriptionGuard>
+                <AppLayout>
+                  <CostCentersManager />
+                </AppLayout>
+              </CompanySubscriptionGuard>
+            </ProtectedRoute>
+          } />
           <Route path="/como-usar" element={
             <ProtectedRoute>
               <CompanySubscriptionGuard>
