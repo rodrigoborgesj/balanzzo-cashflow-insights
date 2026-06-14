@@ -32,6 +32,10 @@ export interface Transaction {
   status_validacao?: 'pendente' | 'validado' | 'rejeitado';
   comprovante_url?: string | null;
   valor_comprovante?: number | null;
+  // Cost center allocation
+  cost_center_id?: string | null;
+  cost_subgroup_id?: string | null;
+  cost_center_source?: 'ai' | 'manual' | 'rule' | null;
 }
 
 export interface UserCategory {
