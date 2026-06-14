@@ -26,7 +26,9 @@ import {
   User,
   Loader2,
   Users,
+  Layers,
 } from "lucide-react";
+
 
 interface UserSettings {
   relatorios_mensais: boolean;
@@ -378,6 +380,32 @@ export default function Configuracoes() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Centros de Receita e Custo */}
+        <Card className="bg-gradient-to-br from-card to-card/80 border-border/50 shadow-soft lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Layers className="h-5 w-5" />
+              Centros de Receita e Custo
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <p className="text-sm text-muted-foreground max-w-2xl">
+                Organize suas movimentações em grupos simples (Vendas, Pessoas, Estrutura, etc.) e crie
+                subcategorias livres. A IA distribui automaticamente cada categoria conciliada no centro mais
+                provável — você pode mover e corrigir quando quiser.
+              </p>
+              <Button asChild variant="outline">
+                <Link to="/configuracoes/centros-de-custo">
+                  <Layers className="h-4 w-4 mr-2" />
+                  Gerenciar centros
+                </Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
 
         {/* Preferências */}
         <Card className="bg-gradient-to-br from-card to-card/80 border-border/50 shadow-soft lg:col-span-2">

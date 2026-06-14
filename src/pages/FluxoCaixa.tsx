@@ -45,6 +45,9 @@ import { format, isWithinInterval, parseISO, startOfMonth, endOfMonth } from "da
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { InviteProfessionalDialog } from "@/components/professional/InviteProfessionalDialog";
+import { CostCenterSummary } from "@/components/cost-centers/CostCenterSummary";
+import { MoveCostCenterDialog } from "@/components/cost-centers/MoveCostCenterDialog";
+import { useCostCenters } from "@/hooks/useCostCenters";
 
 interface CategoryGroup {
   category: string;
@@ -80,6 +83,9 @@ export default function FluxoCaixa() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
+  const [moveTarget, setMoveTarget] = useState<Transaction | null>(null);
+  useCostCenters();
+
 
   // Use reconciliation hook to get categorized transactions
   const { transactions, isLoading, loadTransactions, userCategories, loadUserCategories } = useConciliacao();
@@ -110,6 +116,34 @@ export default function FluxoCaixa() {
     loadUserCategories();
     loadFutureTransactions(); // Recarregar projeções ao trocar de mês para refletir lançamentos futuros já existentes
   }, [selectedMonth, user?.id, loadTransactions, loadUserCategories, loadFutureTransactions]);
+
+  // Auto-classify cost centers for any reconciled transactions without one
+  useEffect(() => {
+    const pending = transactions.filter(
+      (t) =>
+        t.status_conciliacao === true &&
+        (t.categoria_final || t.categoria_sugerida) &&
+        !t.cost_center_id,
+    );
+    if (pending.length === 0) return;
+    const batch = pending.slice(0, 50).map((t) => ({
+      id: t.id,
+      descricao: t.descricao,
+      valor: t.valor,
+      tipo: (t.valor >= 0 ? 'entrada' : 'saida') as 'entrada' | 'saida',
+      categoria: t.categoria_final || t.categoria_sugerida || 'Outros',
+      source_table: 'transacoes_conciliadas' as const,
+    }));
+    supabase.functions
+      .invoke('assign-cost-center', { body: { transactions: batch } })
+      .then(({ data, error }) => {
+        if (error) {
+          console.warn('assign-cost-center error:', error.message);
+          return;
+        }
+        if (data?.updated > 0) loadTransactions(selectedMonth);
+      });
+  }, [transactions, selectedMonth, loadTransactions]);
 
   // Listen for transaction updates (when manual transactions are removed)
   useEffect(() => {
@@ -699,6 +733,16 @@ export default function FluxoCaixa() {
             </CardContent>
           </Card>
         </div>
+      )}
+
+      {hasData && (
+        <CostCenterSummary
+          transactions={periodFilteredTransactions.map((t) => ({
+            cost_center_id: t.cost_center_id,
+            valor: t.valor,
+            tipo: t.valor >= 0 ? 'entrada' : 'saida',
+          }))}
+        />
       )}
 
       {/* Future Transactions List */}

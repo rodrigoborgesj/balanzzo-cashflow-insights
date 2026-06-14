@@ -38,6 +38,51 @@ export type Database = {
         }
         Relationships: []
       }
+      category_cost_center_map: {
+        Row: {
+          category_name: string
+          cost_center_id: string
+          cost_subgroup_id: string | null
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category_name: string
+          cost_center_id: string
+          cost_subgroup_id?: string | null
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category_name?: string
+          cost_center_id?: string
+          cost_subgroup_id?: string | null
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "category_cost_center_map_cost_center_id_fkey"
+            columns: ["cost_center_id"]
+            isOneToOne: false
+            referencedRelation: "cost_centers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "category_cost_center_map_cost_subgroup_id_fkey"
+            columns: ["cost_subgroup_id"]
+            isOneToOne: false
+            referencedRelation: "cost_subgroups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       companies: {
         Row: {
           address_city: string
@@ -155,6 +200,86 @@ export type Database = {
         }
         Relationships: []
       }
+      cost_centers: {
+        Row: {
+          active: boolean
+          color: string
+          company_id: string | null
+          created_at: string
+          id: string
+          is_default: boolean
+          name: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          color?: string
+          company_id?: string | null
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          name: string
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          color?: string
+          company_id?: string | null
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          name?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      cost_subgroups: {
+        Row: {
+          active: boolean
+          cost_center_id: string
+          created_at: string
+          id: string
+          is_default: boolean
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          cost_center_id: string
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          cost_center_id?: string
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cost_subgroups_cost_center_id_fkey"
+            columns: ["cost_center_id"]
+            isOneToOne: false
+            referencedRelation: "cost_centers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       coupons: {
         Row: {
           active: boolean
@@ -246,6 +371,9 @@ export type Database = {
         Row: {
           categoria: string | null
           company_id: string
+          cost_center_id: string | null
+          cost_center_source: string | null
+          cost_subgroup_id: string | null
           created_at: string
           data_competencia: string
           descricao: string | null
@@ -259,6 +387,9 @@ export type Database = {
         Insert: {
           categoria?: string | null
           company_id: string
+          cost_center_id?: string | null
+          cost_center_source?: string | null
+          cost_subgroup_id?: string | null
           created_at?: string
           data_competencia: string
           descricao?: string | null
@@ -272,6 +403,9 @@ export type Database = {
         Update: {
           categoria?: string | null
           company_id?: string
+          cost_center_id?: string | null
+          cost_center_source?: string | null
+          cost_subgroup_id?: string | null
           created_at?: string
           data_competencia?: string
           descricao?: string | null
@@ -295,6 +429,20 @@ export type Database = {
             columns: ["transacao_origem_id"]
             isOneToOne: false
             referencedRelation: "transacoes_conciliadas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fluxo_caixa_cost_center_id_fkey"
+            columns: ["cost_center_id"]
+            isOneToOne: false
+            referencedRelation: "cost_centers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fluxo_caixa_cost_subgroup_id_fkey"
+            columns: ["cost_subgroup_id"]
+            isOneToOne: false
+            referencedRelation: "cost_subgroups"
             referencedColumns: ["id"]
           },
         ]
@@ -1047,6 +1195,9 @@ export type Database = {
           categoria_sugerida: string | null
           company_id: string | null
           comprovante_url: string | null
+          cost_center_id: string | null
+          cost_center_source: string | null
+          cost_subgroup_id: string | null
           criado_em: string | null
           data_transacao: string
           descricao: string | null
@@ -1066,6 +1217,9 @@ export type Database = {
           categoria_sugerida?: string | null
           company_id?: string | null
           comprovante_url?: string | null
+          cost_center_id?: string | null
+          cost_center_source?: string | null
+          cost_subgroup_id?: string | null
           criado_em?: string | null
           data_transacao: string
           descricao?: string | null
@@ -1085,6 +1239,9 @@ export type Database = {
           categoria_sugerida?: string | null
           company_id?: string | null
           comprovante_url?: string | null
+          cost_center_id?: string | null
+          cost_center_source?: string | null
+          cost_subgroup_id?: string | null
           criado_em?: string | null
           data_transacao?: string
           descricao?: string | null
@@ -1105,6 +1262,20 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transacoes_conciliadas_cost_center_id_fkey"
+            columns: ["cost_center_id"]
+            isOneToOne: false
+            referencedRelation: "cost_centers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transacoes_conciliadas_cost_subgroup_id_fkey"
+            columns: ["cost_subgroup_id"]
+            isOneToOne: false
+            referencedRelation: "cost_subgroups"
             referencedColumns: ["id"]
           },
         ]
@@ -1281,6 +1452,10 @@ export type Database = {
       is_personal_profile_complete: {
         Args: { p_user_id: string }
         Returns: boolean
+      }
+      seed_default_cost_centers: {
+        Args: { p_user_id: string }
+        Returns: undefined
       }
       sugerir_categoria: { Args: { descricao_input: string }; Returns: string }
       validate_coupon: {

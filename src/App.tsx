@@ -45,6 +45,7 @@ import BlogArticleCarnival from "./pages/BlogArticleCarnival";
 import ProfessionalAccess from "./pages/ProfessionalAccess";
 import ProfessionalPortal from "./pages/ProfessionalPortal";
 import ProfessionalCompanyView from "./pages/ProfessionalCompanyView";
+import CostCentersManager from "./pages/CostCentersManager";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -188,6 +189,15 @@ const App = () => {
                   <Configuracoes />
                 </AppLayout>
               </SubscriptionGuard>
+            </ProtectedRoute>
+          } />
+          <Route path="/configuracoes/centros-de-custo" element={
+            <ProtectedRoute>
+              <CompanySubscriptionGuard>
+                <AppLayout>
+                  <CostCentersManager />
+                </AppLayout>
+              </CompanySubscriptionGuard>
             </ProtectedRoute>
           } />
           <Route path="/como-usar" element={
