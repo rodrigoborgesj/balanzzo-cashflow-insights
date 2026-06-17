@@ -45,7 +45,7 @@ import { format, isWithinInterval, parseISO, startOfMonth, endOfMonth } from "da
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { InviteProfessionalDialog } from "@/components/professional/InviteProfessionalDialog";
-import { CostCenterSummary } from "@/components/cost-centers/CostCenterSummary";
+import { CostCenterHierarchy } from "@/components/cost-centers/CostCenterHierarchy";
 import { MoveCostCenterDialog } from "@/components/cost-centers/MoveCostCenterDialog";
 import { useCostCenters } from "@/hooks/useCostCenters";
 
