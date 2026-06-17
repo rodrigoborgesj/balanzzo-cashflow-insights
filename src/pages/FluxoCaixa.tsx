@@ -1207,6 +1207,7 @@ export default function FluxoCaixa() {
                   </Table>
                 </div>
               </div>
+              </>)}
             </div>
 
             {/* Net Result Summary */}
