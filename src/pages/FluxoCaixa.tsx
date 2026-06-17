@@ -80,6 +80,7 @@ export default function FluxoCaixa() {
   const [validationDialogOpen, setValidationDialogOpen] = useState(false);
   const [selectedTransactionForValidation, setSelectedTransactionForValidation] = useState<Transaction | null>(null);
   const [deletingFutureId, setDeletingFutureId] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'chronological' | 'hierarchy'>('hierarchy');
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
