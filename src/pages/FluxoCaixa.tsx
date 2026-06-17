@@ -1044,7 +1044,13 @@ export default function FluxoCaixa() {
                 <Calendar className="h-4 w-4 text-black" />
                 <h3 className="text-sm md:text-base font-semibold text-black">TRANSAÇÕES</h3>
               </div>
-              
+
+              {viewMode === 'hierarchy' ? (
+                <CostCenterHierarchy
+                  transactions={allTransactionsSorted}
+                  onUpdated={() => loadTransactions(selectedMonth)}
+                />
+              ) : (<>
               {/* Mobile Card View */}
               <div className="block sm:hidden space-y-2">
                 {allTransactionsSorted.map((transaction) => {
