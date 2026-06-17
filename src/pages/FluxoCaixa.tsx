@@ -45,7 +45,7 @@ import { format, isWithinInterval, parseISO, startOfMonth, endOfMonth } from "da
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { InviteProfessionalDialog } from "@/components/professional/InviteProfessionalDialog";
-import { CostCenterSummary } from "@/components/cost-centers/CostCenterSummary";
+import { CostCenterHierarchy } from "@/components/cost-centers/CostCenterHierarchy";
 import { MoveCostCenterDialog } from "@/components/cost-centers/MoveCostCenterDialog";
 import { useCostCenters } from "@/hooks/useCostCenters";
 
@@ -80,6 +80,7 @@ export default function FluxoCaixa() {
   const [validationDialogOpen, setValidationDialogOpen] = useState(false);
   const [selectedTransactionForValidation, setSelectedTransactionForValidation] = useState<Transaction | null>(null);
   const [deletingFutureId, setDeletingFutureId] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'chronological' | 'hierarchy'>('hierarchy');
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -735,15 +736,6 @@ export default function FluxoCaixa() {
         </div>
       )}
 
-      {hasData && (
-        <CostCenterSummary
-          transactions={periodFilteredTransactions.map((t) => ({
-            cost_center_id: t.cost_center_id,
-            valor: t.valor,
-            tipo: t.valor >= 0 ? 'entrada' : 'saida',
-          }))}
-        />
-      )}
 
       {/* Future Transactions List */}
       {hasData && futureTransactionsForPeriod.length > 0 && (
@@ -1016,6 +1008,32 @@ export default function FluxoCaixa() {
                     </div>
                   </PopoverContent>
                 </Popover>
+
+                {/* Toggle Visualização */}
+                <div className="flex items-center rounded-md border border-gray-200 overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('hierarchy')}
+                    className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+                      viewMode === 'hierarchy'
+                        ? 'bg-[#1A3423] text-white'
+                        : 'bg-white text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    Por Centro
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('chronological')}
+                    className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+                      viewMode === 'chronological'
+                        ? 'bg-[#1A3423] text-white'
+                        : 'bg-white text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    Cronológico
+                  </button>
+                </div>
               </div>
             </div>
           </CardHeader>
@@ -1026,7 +1044,13 @@ export default function FluxoCaixa() {
                 <Calendar className="h-4 w-4 text-black" />
                 <h3 className="text-sm md:text-base font-semibold text-black">TRANSAÇÕES</h3>
               </div>
-              
+
+              {viewMode === 'hierarchy' ? (
+                <CostCenterHierarchy
+                  transactions={allTransactionsSorted}
+                  onUpdated={() => loadTransactions(selectedMonth)}
+                />
+              ) : (<>
               {/* Mobile Card View */}
               <div className="block sm:hidden space-y-2">
                 {allTransactionsSorted.map((transaction) => {
@@ -1183,6 +1207,7 @@ export default function FluxoCaixa() {
                   </Table>
                 </div>
               </div>
+              </>)}
             </div>
 
             {/* Net Result Summary */}
