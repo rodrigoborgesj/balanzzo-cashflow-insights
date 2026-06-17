@@ -94,7 +94,7 @@ export function CostCenterHierarchy({ transactions, onUpdated }: Props) {
     label: string,
     icon: JSX.Element,
     accentColor: string,
-    data: ReturnType<typeof grouped.receitas>,
+    data: typeof grouped.receitas,
     type: 'receita' | 'custo',
   ) => {
     const all = [
