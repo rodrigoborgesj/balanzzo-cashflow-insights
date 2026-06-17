@@ -1008,6 +1008,32 @@ export default function FluxoCaixa() {
                     </div>
                   </PopoverContent>
                 </Popover>
+
+                {/* Toggle Visualização */}
+                <div className="flex items-center rounded-md border border-gray-200 overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('hierarchy')}
+                    className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+                      viewMode === 'hierarchy'
+                        ? 'bg-[#1A3423] text-white'
+                        : 'bg-white text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    Por Centro
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('chronological')}
+                    className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+                      viewMode === 'chronological'
+                        ? 'bg-[#1A3423] text-white'
+                        : 'bg-white text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    Cronológico
+                  </button>
+                </div>
               </div>
             </div>
           </CardHeader>
