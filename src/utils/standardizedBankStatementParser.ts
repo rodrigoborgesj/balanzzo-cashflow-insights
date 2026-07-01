@@ -71,8 +71,24 @@ export class StandardizedBankStatementParser {
    */
   private static isCreditCardStatement(content: string): boolean {
     const lowerContent = content.toLowerCase();
-    // Look for the word "fatura" in the content as indicator of credit card statement
-    return lowerContent.includes('fatura');
+    // Account statements (e.g., Asaas) frequently mention "fatura" (invoice) in
+    // transaction descriptions without being credit card statements. Require
+    // stronger indicators specific to credit card invoices to avoid flipping
+    // legitimate credits into expenses.
+    const creditCardIndicators = [
+      'fatura de cartão',
+      'fatura do cartão',
+      'fatura de cartao',
+      'fatura do cartao',
+      'cartão de crédito',
+      'cartao de credito',
+      'credit card statement',
+      'limite disponível',
+      'limite disponivel',
+      'melhor dia de compra',
+      'vencimento da fatura',
+    ];
+    return creditCardIndicators.some(k => lowerContent.includes(k));
   }
 
   /**
