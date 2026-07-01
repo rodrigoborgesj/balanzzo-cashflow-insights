@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { usePersistedState } from './usePersistedState';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useToast } from './use-toast';
