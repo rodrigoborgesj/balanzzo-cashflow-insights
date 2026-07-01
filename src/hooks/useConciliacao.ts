@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { usePersistedState } from './usePersistedState';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useToast } from './use-toast';
@@ -101,7 +102,7 @@ export function useConciliacao() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [userCategories, setUserCategories] = useState<UserCategory[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedMonth, setSelectedMonth] = useState<string>(() => {
+  const [selectedMonth, setSelectedMonth] = usePersistedState<string>('conciliacao:selectedMonth', () => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   });

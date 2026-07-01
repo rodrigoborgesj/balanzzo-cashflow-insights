@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
+import { usePersistedState } from '@/hooks/usePersistedState';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -63,17 +64,21 @@ export default function Conciliacao() {
   const [isProcessing, setIsProcessing] = useState(false);
   
   // Filter and search state
-  const [filterStatus, setFilterStatus] = useState("todos");
-  const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = usePersistedState<string>('conciliacao:filterStatus', 'todos');
+  const [searchTerm, setSearchTerm] = usePersistedState<string>('conciliacao:searchTerm', '');
   
   // Date filter state
-  const [periodMode, setPeriodMode] = useState<'month' | 'custom'>('month');
-  const [filterMonth, setFilterMonth] = useState(() => {
+  const [periodMode, setPeriodMode] = usePersistedState<'month' | 'custom'>('conciliacao:periodMode', 'month');
+  const [filterMonth, setFilterMonth] = usePersistedState<string>('conciliacao:filterMonth', () => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   });
-  const [customStartDate, setCustomStartDate] = useState<Date | undefined>(undefined);
-  const [customEndDate, setCustomEndDate] = useState<Date | undefined>(undefined);
+  const [customStartISO, setCustomStartISO] = usePersistedState<string | null>('conciliacao:customStart', null);
+  const [customEndISO, setCustomEndISO] = usePersistedState<string | null>('conciliacao:customEnd', null);
+  const customStartDate = customStartISO ? new Date(customStartISO) : undefined;
+  const customEndDate = customEndISO ? new Date(customEndISO) : undefined;
+  const setCustomStartDate = (d: Date | undefined) => setCustomStartISO(d ? d.toISOString() : null);
+  const setCustomEndDate = (d: Date | undefined) => setCustomEndISO(d ? d.toISOString() : null);
   
   // Pagination state
   const [page, setPage] = useState(0);
