@@ -60,12 +60,7 @@ export function useDashboard() {
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   });
   const [periodMode, setPeriodMode] = usePersistedState<PeriodMode>('dashboard:periodMode', 'month');
-  const [customDateRange, setCustomDateRangeRaw] = usePersistedState<{ from: string; to: string } | null>('dashboard:customDateRange', null);
-  const customDateRangeObj: DateRange | null = customDateRange
-    ? { from: new Date(customDateRange.from), to: new Date(customDateRange.to) }
-    : null;
-  const setCustomDateRange = (r: DateRange | null) =>
-    setCustomDateRangeRaw(r ? { from: r.from.toISOString(), to: r.to.toISOString() } : null);
+  const [customDateRange, setCustomDateRange] = usePersistedState<DateRange | null>('dashboard:customDateRange', null);
   
   const { user } = useAuth();
   const queryClient = useQueryClient();
