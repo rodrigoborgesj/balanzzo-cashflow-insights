@@ -66,18 +66,22 @@ export default function FluxoCaixa() {
   const [saldoInicialApplied, setSaldoInicialApplied] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showInviteProfessional, setShowInviteProfessional] = useState(false);
-  const [periodMode, setPeriodMode] = useState<PeriodMode>('month');
-  const [selectedMonth, setSelectedMonth] = useState<string>(() => {
+  const [periodMode, setPeriodMode] = usePersistedState<PeriodMode>('fluxo:periodMode', 'month');
+  const [selectedMonth, setSelectedMonth] = usePersistedState<string>('fluxo:selectedMonth', () => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   });
-  const [customStartDate, setCustomStartDate] = useState<Date | undefined>(undefined);
-  const [customEndDate, setCustomEndDate] = useState<Date | undefined>(undefined);
+  const [customStartISO, setCustomStartISO] = usePersistedState<string | null>('fluxo:customStart', null);
+  const [customEndISO, setCustomEndISO] = usePersistedState<string | null>('fluxo:customEnd', null);
+  const customStartDate = customStartISO ? new Date(customStartISO) : undefined;
+  const customEndDate = customEndISO ? new Date(customEndISO) : undefined;
+  const setCustomStartDate = (d: Date | undefined) => setCustomStartISO(d ? d.toISOString() : null);
+  const setCustomEndDate = (d: Date | undefined) => setCustomEndISO(d ? d.toISOString() : null);
   const [pendingStartDate, setPendingStartDate] = useState<Date | undefined>(undefined);
   const [pendingEndDate, setPendingEndDate] = useState<Date | undefined>(undefined);
   const [categoryGroups, setCategoryGroups] = useState<CategoryGroup[]>([]);
-  const [transactionFilter, setTransactionFilter] = useState<'todas' | 'entradas' | 'saidas'>('todas');
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [transactionFilter, setTransactionFilter] = usePersistedState<'todas' | 'entradas' | 'saidas'>('fluxo:txFilter', 'todas');
+  const [selectedCategories, setSelectedCategories] = usePersistedState<string[]>('fluxo:selectedCategories', []);
   const [validationDialogOpen, setValidationDialogOpen] = useState(false);
   const [selectedTransactionForValidation, setSelectedTransactionForValidation] = useState<Transaction | null>(null);
   const [deletingFutureId, setDeletingFutureId] = useState<string | null>(null);
