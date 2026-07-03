@@ -545,30 +545,30 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [],
             </Select>
           </div>
 
-          {/* NEW: Recurring Transaction Section */}
-          <div className="space-y-4 p-4 border-2 border-dashed border-primary/20 rounded-lg bg-primary/5">
+          {/* Recurring Transaction Section */}
+          <div className="space-y-4 p-4 border border-border rounded-lg bg-muted/30">
             <div className="flex items-center gap-3">
               <Checkbox
                 id="isRecurring"
                 checked={formData.isRecurring}
-                onCheckedChange={(checked) => setFormData(prev => ({ 
-                  ...prev, 
-                  isRecurring: checked as boolean 
+                onCheckedChange={(checked) => setFormData(prev => ({
+                  ...prev,
+                  isRecurring: checked as boolean
                 }))}
               />
               <Label htmlFor="isRecurring" className="flex items-center gap-2 cursor-pointer text-base font-medium">
-                <Repeat className="h-5 w-5 text-primary" />
-                🔁 Tornar Recorrente
+                <Repeat className="h-4 w-4 text-primary" />
+                Tornar recorrente
               </Label>
             </div>
 
             {formData.isRecurring && (
               <div className="space-y-4 pl-8 animate-in slide-in-from-top-2">
                 <div className="space-y-2">
-                  <Label htmlFor="recurrenceType">Qual a frequência de recorrência? *</Label>
+                  <Label htmlFor="recurrenceType">Frequência da recorrência *</Label>
                   <Select
                     value={formData.recurrenceType}
-                    onValueChange={(value: 'monthly' | 'specific_month' | 'custom') => 
+                    onValueChange={(value: 'monthly' | 'specific_month' | 'custom') =>
                       setFormData(prev => ({ ...prev, recurrenceType: value }))
                     }
                   >
@@ -576,21 +576,9 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [],
                       <SelectValue placeholder="Selecione a frequência" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="monthly">
-                        <div className="flex items-center gap-2">
-                          📅 Mensal (repete todo mês)
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="specific_month">
-                        <div className="flex items-center gap-2">
-                          📆 Mês específico (ex: só em Março)
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="custom">
-                        <div className="flex items-center gap-2">
-                          🗓️ Personalizado (escolher intervalo)
-                        </div>
-                      </SelectItem>
+                      <SelectItem value="monthly">Mensal (repete todo mês)</SelectItem>
+                      <SelectItem value="specific_month">Mês específico (uma vez por ano)</SelectItem>
+                      <SelectItem value="custom">Personalizada (intervalo em dias)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -637,9 +625,30 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [],
                   </div>
                 )}
 
+                <div className="space-y-2">
+                  <Label htmlFor="occurrences">
+                    Quantidade de repetições *
+                  </Label>
+                  <Input
+                    id="occurrences"
+                    type="number"
+                    min="1"
+                    max="120"
+                    placeholder="Ex: 12"
+                    value={formData.occurrences}
+                    onChange={(e) => setFormData(prev => ({ ...prev, occurrences: e.target.value }))}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Número de vezes que esta {formData.type === 'entrada' ? 'receita' : 'despesa'} será lançada
+                    {formData.recurrenceType === 'monthly' && ' (em meses consecutivos)'}
+                    {formData.recurrenceType === 'specific_month' && ' (uma vez por ano)'}
+                    {formData.recurrenceType === 'custom' && ' (conforme o intervalo definido)'}.
+                  </p>
+                </div>
+
                 <div className="text-sm text-muted-foreground bg-background p-3 rounded-md border">
-                  <strong>ℹ️ Como funciona:</strong> Esta transação será lançada automaticamente nas próximas datas, 
-                  conforme a frequência selecionada.
+                  Esta transação será lançada automaticamente nas próximas datas,
+                  conforme a frequência e a quantidade selecionadas.
                 </div>
               </div>
             )}
