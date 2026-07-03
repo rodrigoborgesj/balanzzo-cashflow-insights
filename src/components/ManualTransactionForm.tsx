@@ -153,8 +153,10 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [],
 
       console.log('✅ Configuração de recorrência salva:', recurringData);
 
-      // Generate and insert future occurrences for projections
-      const numOccurrences = formData.recurrenceType === 'specific_month' ? 5 : 12;
+      // Generate and insert future occurrences for projections.
+      // Use the user-defined amount of occurrences (fallback to 12).
+      const parsedOccurrences = parseInt(formData.occurrences || '') || 12;
+      const numOccurrences = Math.min(Math.max(parsedOccurrences, 1), 120);
       const futureOccurrences = generateFutureOccurrences(formData.date, amount, numOccurrences, transacaoOrigemId);
 
       const futureOccurrencesWithCompany = futureOccurrences.map(occ => ({
