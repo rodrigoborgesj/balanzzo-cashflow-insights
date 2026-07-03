@@ -31,6 +31,7 @@ interface ManualTransactionData {
   recurrenceType?: 'monthly' | 'specific_month' | 'custom';
   customIntervalDays?: string;
   specificMonth?: string;
+  occurrences?: string; // quantidade de repetições
 }
 
 export function ManualTransactionForm({ onTransactionAdded, userCategories = [], loadUserCategories }: ManualTransactionFormProps) {
