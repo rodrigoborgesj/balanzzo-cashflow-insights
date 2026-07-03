@@ -384,9 +384,10 @@ export function useDashboard() {
     queryKey: QUERY_KEYS.dashboardData(user?.id || '', periodMode === 'month' ? selectedMonth : undefined, customDateRange),
     queryFn: () => fetchDashboardData(periodMode === 'month' ? selectedMonth : undefined, customDateRange),
     enabled: !!user?.id && (periodMode === 'month' || (periodMode === 'custom' && !!customDateRange)),
-    staleTime: 30_000, // 30 seconds
-    gcTime: 5 * 60_000, // 5 minutes (renamed from cacheTime)
-    refetchOnWindowFocus: true,
+    staleTime: 5 * 60_000, // 5 minutes - avoid re-fetching just from tab switching
+    gcTime: 30 * 60_000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
     refetchOnReconnect: true,
     retry: 2,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
