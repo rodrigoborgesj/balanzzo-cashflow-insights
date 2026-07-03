@@ -50,12 +50,12 @@ import CostCentersManager from "./pages/CostCentersManager";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 30_000, // 30 seconds
-      gcTime: 5 * 60_000, // 5 minutes
-      refetchOnWindowFocus: true,
+      staleTime: 5 * 60_000, // 5 minutes - avoid re-fetch storms when switching tabs
+      gcTime: 30 * 60_000, // 30 minutes cache retention
+      refetchOnWindowFocus: false, // do NOT refetch when user returns to the tab
+      refetchOnMount: false,
       refetchOnReconnect: true,
       retry: (failureCount, error: any) => {
-        // Don't retry on 4xx errors
         if (error?.status >= 400 && error?.status < 500) return false;
         return failureCount < 2;
       },
@@ -65,39 +65,14 @@ const queryClient = new QueryClient({
 });
 
 const App = () => {
-  // Handle visibility changes for React Query
+  // Only refetch when the connection is restored — never on tab focus,
+  // to keep filters/state stable while the user switches browser tabs.
   useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        console.log('Tab became visible - invalidating queries for fresh data');
-        // Soft refetch all active queries when tab becomes visible
-        queryClient.invalidateQueries();
-      } else {
-        console.log('Tab hidden - pausing background refetches');
-        // Cancel ongoing queries when tab is hidden
-        queryClient.cancelQueries();
-      }
-    };
-
-    const handleFocus = () => {
-      console.log('Window focused - ensuring fresh data');
-      queryClient.invalidateQueries();
-    };
-
     const handleOnline = () => {
-      console.log('Connection restored - refetching data');
       queryClient.invalidateQueries();
     };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('focus', handleFocus);
     window.addEventListener('online', handleOnline);
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', handleFocus);
-      window.removeEventListener('online', handleOnline);
-    };
+    return () => window.removeEventListener('online', handleOnline);
   }, []);
 
   return (
