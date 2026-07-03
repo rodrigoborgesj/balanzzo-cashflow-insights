@@ -384,9 +384,10 @@ export function useDashboard() {
     queryKey: QUERY_KEYS.dashboardData(user?.id || '', periodMode === 'month' ? selectedMonth : undefined, customDateRange),
     queryFn: () => fetchDashboardData(periodMode === 'month' ? selectedMonth : undefined, customDateRange),
     enabled: !!user?.id && (periodMode === 'month' || (periodMode === 'custom' && !!customDateRange)),
-    staleTime: 30_000, // 30 seconds
-    gcTime: 5 * 60_000, // 5 minutes (renamed from cacheTime)
-    refetchOnWindowFocus: true,
+    staleTime: 5 * 60_000, // 5 minutes - avoid re-fetching just from tab switching
+    gcTime: 30 * 60_000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
     refetchOnReconnect: true,
     retry: 2,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
@@ -425,21 +426,12 @@ export function useDashboard() {
     staleTime: 30_000,
   });
 
-  // Invalidate queries when visibility changes (soft refetch only)
+  // Visibility-based invalidation intentionally disabled:
+  // switching browser tabs must NOT trigger a full reload / refetch,
+  // otherwise filters and in-page state feel like they reset.
   const handleVisibilityChange = useCallback(() => {
-    if (document.visibilityState === 'visible' && user?.id) {
-      console.log(`[${correlationId}] Tab visible - soft refetch`);
-      queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.dashboardData(user.id, periodMode === 'month' ? selectedMonth : undefined, customDateRange)
-      });
-    }
-  }, [user?.id, selectedMonth, customDateRange, periodMode, queryClient, correlationId]);
-
-  // Set up visibility change listener
-  useMemo(() => {
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [handleVisibilityChange]);
+    // no-op
+  }, []);
 
   // Calcular dados do período selecionado (mês único ou período customizado)
   const currentMonthData = useMemo(() => {
