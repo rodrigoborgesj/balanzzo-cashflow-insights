@@ -48,7 +48,8 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [],
     isRecurring: false,
     recurrenceType: 'monthly',
     customIntervalDays: '',
-    specificMonth: ''
+    specificMonth: '',
+    occurrences: '12'
   });
   
   const { user } = useAuth();
