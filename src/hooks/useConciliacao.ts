@@ -542,11 +542,15 @@ export function useConciliacao() {
               lastTransaction: chunk[chunk.length - 1]
             });
             
+            // IMPORTANTE: usar ignoreDuplicates=true para NÃO sobrescrever transações
+            // já existentes (que podem ter categoria_final, status_conciliacao=true,
+            // cost_center_id etc. preenchidos manualmente pelo usuário). Reimportar
+            // um extrato deve apenas inserir as novas, preservando conciliações feitas.
             const { data, error } = await supabase
               .from('transacoes_conciliadas')
-              .upsert(chunk, { 
+              .upsert(chunk, {
                 onConflict: 'hash_transacao',
-                ignoreDuplicates: false 
+                ignoreDuplicates: true
               })
               .select('id');
 
