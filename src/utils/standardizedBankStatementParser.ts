@@ -1107,4 +1107,6 @@ export class StandardizedBankStatementParser {
     }
 
     return result;
+  }
 }
+
