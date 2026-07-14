@@ -51,18 +51,19 @@ export function validateFileUpload(file: File): { isValid: boolean; error?: stri
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     'application/x-ofx', // OFX files
     'application/ofx', // Alternative OFX MIME type
+    'application/pdf', // PDF bank statements (e.g. Banrisul)
     'text/plain' // OFX files may be detected as plain text
   ];
   
   const maxSize = 20 * 1024 * 1024; // 20MB
   
-  // For OFX files, also check file extension if MIME type is text/plain or unknown
   const fileExtension = file.name.toLowerCase().split('.').pop();
   const isOFX = fileExtension === 'ofx';
   const isCSV = fileExtension === 'csv';
+  const isPDF = fileExtension === 'pdf';
   
-  if (!allowedTypes.includes(file.type) && !isOFX && !isCSV) {
-    return { isValid: false, error: 'Tipo de arquivo não permitido. Apenas CSV e OFX são aceitos.' };
+  if (!allowedTypes.includes(file.type) && !isOFX && !isCSV && !isPDF) {
+    return { isValid: false, error: 'Tipo de arquivo não permitido. Apenas CSV, OFX e PDF são aceitos.' };
   }
   
   if (file.size > maxSize) {
