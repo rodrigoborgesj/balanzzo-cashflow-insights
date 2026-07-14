@@ -654,19 +654,42 @@ export class StandardizedBankStatementParser {
       
       console.log(`📄 PDF loaded: ${pdf.numPages} pages`);
 
+      // Extract lines grouped by Y coordinate to preserve layout (needed for
+      // banks like Banrisul where description sits on the line below the value)
+      const layoutLines: string[] = [];
       let fullText = '';
 
-      // Extract text from all pages
       for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
         const page = await pdf.getPage(pageNum);
         const textContent = await page.getTextContent();
-        const pageText = textContent.items
-          .map((item: any) => item.str)
-          .join(' ');
-        fullText += pageText + '\n';
+
+        // Group items by rounded Y position (top→bottom, left→right)
+        const rows = new Map<number, Array<{ x: number; str: string }>>();
+        for (const item of textContent.items as any[]) {
+          if (!item.str || !item.transform) continue;
+          const y = Math.round(item.transform[5]);
+          const x = item.transform[4];
+          if (!rows.has(y)) rows.set(y, []);
+          rows.get(y)!.push({ x, str: item.str });
+        }
+        const sortedYs = Array.from(rows.keys()).sort((a, b) => b - a);
+        for (const y of sortedYs) {
+          const rowItems = rows.get(y)!.sort((a, b) => a.x - b.x);
+          const line = rowItems.map(r => r.str).join(' ').replace(/\s+/g, ' ').trim();
+          if (line) layoutLines.push(line);
+        }
+
+        fullText += (textContent.items as any[]).map(i => i.str).join(' ') + '\n';
       }
 
       console.log('📄 Text extracted from PDF, analyzing transactions...');
+
+      // Detect Banrisul layout and delegate to a specific parser
+      const upperFull = fullText.toUpperCase();
+      if (upperFull.includes('BANRISUL') && /MOVIMENTOS\s+[A-Z]{3}\/\d{4}/.test(upperFull)) {
+        console.log('🏦 Banrisul statement detected, using Banrisul PDF parser');
+        return this.parseBanrisulPDFLines(layoutLines);
+      }
 
       // Split text into lines for intelligent parsing
       let lines = fullText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
@@ -952,4 +975,141 @@ export class StandardizedBankStatementParser {
       return result;
     }
   }
+
+  /**
+   * Banrisul-specific PDF parser.
+   * The Banrisul PJ statement puts the day + histórico + document + value on one
+   * line, and the counterparty (NOME: ...) on the following line. Subsequent
+   * transactions on the same day omit the day prefix.
+   */
+  private static parseBanrisulPDFLines(lines: string[]): StandardizedParseResult {
+    const result: StandardizedParseResult = {
+      transactions: [],
+      errors: [],
+      warnings: [],
+      processedRows: 0,
+      validRows: 0
+    };
+
+    const MONTHS: Record<string, number> = {
+      JAN: 1, FEV: 2, MAR: 3, ABR: 4, MAI: 5, JUN: 6,
+      JUL: 7, AGO: 8, SET: 9, OUT: 10, NOV: 11, DEZ: 12
+    };
+
+    // Lines that must be ignored (balances, limits, investment positions, etc.)
+    const EXCLUDE_PATTERNS = [
+      'SALDO DISPONIVEL', 'SALDO DISPONÍVEL',
+      'SALDO INICIAL', 'SALDO ANTERIOR', 'SALDO ANT', 'SALDO NA DATA', 'SALDO EM',
+      'SALDO LIVRE', 'SALDO ATUAL', 'SALDO TOTAL',
+      'INVEST RESGATE', 'INVESTIMENTOS BANRISUL', 'CDB AUTOMATICO',
+      'RESGATE AUTOMATICO CDB', 'VALOR EM CDB',
+      'LIMITE DA CONTA', 'LIMITE DISPONIVEL', 'LIMITE DISPONÍVEL',
+      'LIMITE TOTAL', 'LIMITE UTILIZADO', 'LIMITE........',
+      'UTILIZADO.....', 'DISPONIVEL....', 'DISPONÍVEL....',
+      'ENCARGOS FINANCEIROS', 'TAXA DE JUROS', 'CUSTO EFETIVO TOTAL',
+      'VENCIMENTO DA CONTA', 'BANRICOMPRAS A PRAZO',
+      'TEB PJ', 'TARIFA ECONOMICA', 'BENEFICIOS ADICIONAIS',
+      'QUANTIDADE DE OPER', 'POSICAO EM',
+      'PARA SIMPLES CONFERENCIA', 'IDENTIFICACAO', 'AGENCIA:',
+      'CONTA..', 'NOME...', 'DIA HISTORICO', 'MOVIMENTOS DA CONTA',
+      'PREZADO CLIENTE', 'VALORES DISPONIVEIS'
+    ];
+
+    let currentMonth: number | null = null;
+    let currentYear: number | null = null;
+    let currentDay: number | null = null;
+    let lastTx: StandardizedBankTransaction | null = null;
+
+    // Value at end: 1.234,56 optionally followed by '-' (debit marker)
+    const valueRe = /(\d{1,3}(?:\.\d{3})*,\d{2})\s*(-)?\s*$/;
+    const monthRe = /MOVIMENTOS\s+(JAN|FEV|MAR|ABR|MAI|JUN|JUL|AGO|SET|OUT|NOV|DEZ)\/(\d{4})/i;
+    const nomeRe = /^NOME\s*[:.]\s*(.+)$/i;
+    const dayLeadRe = /^(\d{1,2})\s+([A-Za-zÀ-ÿ].*)$/;
+
+    for (const rawLine of lines) {
+      const line = rawLine.trim();
+      if (!line) continue;
+
+      // Section header (month/year)
+      const mm = line.match(monthRe);
+      if (mm) {
+        currentMonth = MONTHS[mm[1].toUpperCase()];
+        currentYear = parseInt(mm[2], 10);
+        currentDay = null;
+        continue;
+      }
+
+      // Counterparty line — attach to previous transaction
+      const nm = line.match(nomeRe);
+      if (nm && lastTx) {
+        const counterparty = nm[1].replace(/\s+/g, ' ').trim();
+        if (counterparty.length >= 2) {
+          lastTx.description = `${lastTx.description} - ${counterparty}`.substring(0, 200);
+        }
+        continue;
+      }
+
+      // Detect and consume a leading day prefix BEFORE applying exclusions,
+      // because the day column is only present on the first movement of the
+      // day — and that line may itself be an excluded row (e.g. "16 RESGATE
+      // AUTOMATICO CDB"). Losing it would freeze currentDay on the wrong day.
+      let working = line;
+      const preDay = working.match(dayLeadRe);
+      if (preDay) {
+        const d = parseInt(preDay[1], 10);
+        if (d >= 1 && d <= 31) {
+          currentDay = d;
+          working = preDay[2];
+        }
+      }
+
+      // Skip excluded lines
+      const upper = working.toUpperCase();
+      if (EXCLUDE_PATTERNS.some(p => upper.includes(p))) continue;
+
+      // Must have a value at the end to be a transaction line
+      const vm = working.match(valueRe);
+      if (!vm) continue;
+
+      const isNegative = vm[2] === '-';
+      const numeric = this.parseAmount(vm[1]);
+      if (isNaN(numeric) || numeric === 0) continue;
+      const value = isNegative ? -Math.abs(numeric) : Math.abs(numeric);
+
+      // Content before the value
+      let historico = working.substring(0, working.length - vm[0].length).trim();
+
+      // Strip trailing document number (typically 6+ digits)
+      historico = historico.replace(/\s+\d{5,}\s*$/, '').trim();
+
+      if (!historico || historico.length < 3) continue;
+      if (currentMonth === null || currentYear === null || currentDay === null) continue;
+
+      // Guard: some balance snippets slip through
+      if (EXCLUDE_PATTERNS.some(p => historico.toUpperCase().includes(p))) continue;
+
+      const date = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(currentDay).padStart(2, '0')}`;
+
+      const tx: StandardizedBankTransaction = {
+        date,
+        value,
+        description: historico.replace(/\s+/g, ' ').substring(0, 200)
+      };
+      result.transactions.push(tx);
+      result.validRows++;
+      result.processedRows++;
+      lastTx = tx;
+    }
+
+    console.log('✅ Banrisul PDF parse completed:', {
+      transactions: result.transactions.length
+    });
+
+    if (result.transactions.length === 0) {
+      result.errors.push('Nenhuma transação encontrada no extrato Banrisul.');
+    }
+
+    return result;
+  }
 }
+
