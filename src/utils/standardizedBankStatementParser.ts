@@ -654,19 +654,42 @@ export class StandardizedBankStatementParser {
       
       console.log(`📄 PDF loaded: ${pdf.numPages} pages`);
 
+      // Extract lines grouped by Y coordinate to preserve layout (needed for
+      // banks like Banrisul where description sits on the line below the value)
+      const layoutLines: string[] = [];
       let fullText = '';
 
-      // Extract text from all pages
       for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
         const page = await pdf.getPage(pageNum);
         const textContent = await page.getTextContent();
-        const pageText = textContent.items
-          .map((item: any) => item.str)
-          .join(' ');
-        fullText += pageText + '\n';
+
+        // Group items by rounded Y position (top→bottom, left→right)
+        const rows = new Map<number, Array<{ x: number; str: string }>>();
+        for (const item of textContent.items as any[]) {
+          if (!item.str || !item.transform) continue;
+          const y = Math.round(item.transform[5]);
+          const x = item.transform[4];
+          if (!rows.has(y)) rows.set(y, []);
+          rows.get(y)!.push({ x, str: item.str });
+        }
+        const sortedYs = Array.from(rows.keys()).sort((a, b) => b - a);
+        for (const y of sortedYs) {
+          const rowItems = rows.get(y)!.sort((a, b) => a.x - b.x);
+          const line = rowItems.map(r => r.str).join(' ').replace(/\s+/g, ' ').trim();
+          if (line) layoutLines.push(line);
+        }
+
+        fullText += (textContent.items as any[]).map(i => i.str).join(' ') + '\n';
       }
 
       console.log('📄 Text extracted from PDF, analyzing transactions...');
+
+      // Detect Banrisul layout and delegate to a specific parser
+      const upperFull = fullText.toUpperCase();
+      if (upperFull.includes('BANRISUL') && /MOVIMENTOS\s+[A-Z]{3}\/\d{4}/.test(upperFull)) {
+        console.log('🏦 Banrisul statement detected, using Banrisul PDF parser');
+        return this.parseBanrisulPDFLines(layoutLines);
+      }
 
       // Split text into lines for intelligent parsing
       let lines = fullText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
