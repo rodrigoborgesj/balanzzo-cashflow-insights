@@ -1049,12 +1049,26 @@ export class StandardizedBankStatementParser {
         continue;
       }
 
+      // Detect and consume a leading day prefix BEFORE applying exclusions,
+      // because the day column is only present on the first movement of the
+      // day — and that line may itself be an excluded row (e.g. "16 RESGATE
+      // AUTOMATICO CDB"). Losing it would freeze currentDay on the wrong day.
+      let working = line;
+      const preDay = working.match(dayLeadRe);
+      if (preDay) {
+        const d = parseInt(preDay[1], 10);
+        if (d >= 1 && d <= 31) {
+          currentDay = d;
+          working = preDay[2];
+        }
+      }
+
       // Skip excluded lines
-      const upper = line.toUpperCase();
+      const upper = working.toUpperCase();
       if (EXCLUDE_PATTERNS.some(p => upper.includes(p))) continue;
 
       // Must have a value at the end to be a transaction line
-      const vm = line.match(valueRe);
+      const vm = working.match(valueRe);
       if (!vm) continue;
 
       const isNegative = vm[2] === '-';
@@ -1063,18 +1077,7 @@ export class StandardizedBankStatementParser {
       const value = isNegative ? -Math.abs(numeric) : Math.abs(numeric);
 
       // Content before the value
-      const before = line.substring(0, line.length - vm[0].length).trim();
-
-      // Optional day prefix (only present on the first tx of the day)
-      let historico = before;
-      const dm = before.match(dayLeadRe);
-      if (dm) {
-        const d = parseInt(dm[1], 10);
-        if (d >= 1 && d <= 31) {
-          currentDay = d;
-          historico = dm[2];
-        }
-      }
+      let historico = working.substring(0, working.length - vm[0].length).trim();
 
       // Strip trailing document number (typically 6+ digits)
       historico = historico.replace(/\s+\d{5,}\s*$/, '').trim();
