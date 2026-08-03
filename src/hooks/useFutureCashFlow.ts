@@ -68,6 +68,15 @@ export function useFutureCashFlow() {
     loadFutureTransactions();
   }, [loadFutureTransactions]);
 
+  // Mantém as projeções sincronizadas quando novas transações (ou parcelas) são criadas
+  useEffect(() => {
+    const handler = () => {
+      loadFutureTransactions();
+    };
+    window.addEventListener('transactionsUpdated', handler);
+    return () => window.removeEventListener('transactionsUpdated', handler);
+  }, [loadFutureTransactions]);
+
   // Generate income projections data
   const getIncomeProjections = useCallback((type: 'annual' | 'monthly' = 'annual'): ProjectionData[] => {
     const incomeTransactions = futureTransactions.filter(t => t.tipo === 'entrada');
