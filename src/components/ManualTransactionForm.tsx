@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -481,6 +481,11 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [],
     : defaultCategories;
 
   const safeCategoryValue = allCategories.includes(formData.category) ? formData.category : "";
+
+  const installmentPreview = useMemo(
+    () => (formData.entryMode === 'installments' ? buildInstallmentPlan(formData) : null),
+    [formData]
+  );
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
