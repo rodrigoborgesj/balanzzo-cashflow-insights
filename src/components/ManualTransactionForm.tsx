@@ -545,25 +545,39 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [],
             </Select>
           </div>
 
-          {/* Recurring Transaction Section */}
+          {/* Entry mode: single / recurring / installments */}
           <div className="space-y-4 p-4 border border-border rounded-lg bg-muted/30">
-            <div className="flex items-center gap-3">
-              <Checkbox
-                id="isRecurring"
-                checked={formData.isRecurring}
-                onCheckedChange={(checked) => setFormData(prev => ({
-                  ...prev,
-                  isRecurring: checked as boolean
-                }))}
-              />
-              <Label htmlFor="isRecurring" className="flex items-center gap-2 cursor-pointer text-base font-medium">
+            <div className="space-y-2">
+              <Label htmlFor="entryMode" className="flex items-center gap-2 text-base font-medium">
                 <Repeat className="h-4 w-4 text-primary" />
-                Tornar recorrente
+                Forma de lançamento
               </Label>
+              <Select
+                value={formData.entryMode}
+                onValueChange={(value: EntryMode) =>
+                  setFormData(prev => ({
+                    ...prev,
+                    entryMode: value,
+                    isRecurring: value === 'recurring',
+                    firstInstallmentDate:
+                      prev.firstInstallmentDate ||
+                      format(addMonths(new Date(prev.date + 'T00:00:00'), 1), 'yyyy-MM-dd'),
+                  }))
+                }
+              >
+                <SelectTrigger id="entryMode">
+                  <SelectValue placeholder="Selecione" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="single">Lançamento único</SelectItem>
+                  <SelectItem value="recurring">Recorrente</SelectItem>
+                  <SelectItem value="installments">Parcelado (com ou sem entrada)</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
-            {formData.isRecurring && (
-              <div className="space-y-4 pl-8 animate-in slide-in-from-top-2">
+            {formData.entryMode === 'recurring' && (
+              <div className="space-y-4 pl-1 animate-in slide-in-from-top-2">
                 <div className="space-y-2">
                   <Label htmlFor="recurrenceType">Frequência da recorrência *</Label>
                   <Select
@@ -626,9 +640,7 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [],
                 )}
 
                 <div className="space-y-2">
-                  <Label htmlFor="occurrences">
-                    Quantidade de repetições *
-                  </Label>
+                  <Label htmlFor="occurrences">Quantidade de repetições *</Label>
                   <Input
                     id="occurrences"
                     type="number"
@@ -645,14 +657,88 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [],
                     {formData.recurrenceType === 'custom' && ' (conforme o intervalo definido)'}.
                   </p>
                 </div>
+              </div>
+            )}
 
-                <div className="text-sm text-muted-foreground bg-background p-3 rounded-md border">
-                  Esta transação será lançada automaticamente nas próximas datas,
-                  conforme a frequência e a quantidade selecionadas.
+            {formData.entryMode === 'installments' && (
+              <div className="space-y-4 pl-1 animate-in slide-in-from-top-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="downPayment">Entrada / desconto inicial (R$)</Label>
+                    <Input
+                      id="downPayment"
+                      type="text"
+                      inputMode="decimal"
+                      placeholder="0,00"
+                      value={formData.downPayment}
+                      onChange={(e) => setFormData(prev => ({ ...prev, downPayment: e.target.value }))}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Lançada na data informada acima. Deixe vazio se não houver entrada.
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="installmentsCount">Quantidade de parcelas *</Label>
+                    <Input
+                      id="installmentsCount"
+                      type="number"
+                      min="1"
+                      max="120"
+                      placeholder="Ex: 6"
+                      value={formData.installmentsCount}
+                      onChange={(e) => setFormData(prev => ({ ...prev, installmentsCount: e.target.value }))}
+                    />
+                  </div>
                 </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="firstInstallmentDate">Vencimento da 1ª parcela *</Label>
+                  <Input
+                    id="firstInstallmentDate"
+                    type="date"
+                    value={formData.firstInstallmentDate}
+                    onChange={(e) => setFormData(prev => ({ ...prev, firstInstallmentDate: e.target.value }))}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    As demais parcelas seguem mensalmente a partir desta data.
+                  </p>
+                </div>
+
+                {installmentPreview && (
+                  <div className="text-sm bg-background p-3 rounded-md border space-y-1">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Valor total</span>
+                      <span className="font-medium">{brl(installmentPreview.total)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Entrada</span>
+                      <span className="font-medium">{brl(installmentPreview.down)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Saldo parcelado</span>
+                      <span className="font-medium">{brl(installmentPreview.residual)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Parcelas</span>
+                      <span className="font-medium">
+                        {installmentPreview.count}x de {brl(installmentPreview.perInstallment)}
+                        {installmentPreview.lastInstallment !== installmentPreview.perInstallment &&
+                          ` (última de ${brl(installmentPreview.lastInstallment)})`}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {formData.entryMode !== 'single' && (
+              <div className="text-sm text-muted-foreground bg-background p-3 rounded-md border">
+                Os lançamentos futuros aparecem no Fluxo de Caixa e nas Projeções Futuras do Dashboard,
+                distribuídos no mês de cada vencimento.
               </div>
             )}
           </div>
+
 
           {/* Manual Entry Badge */}
           <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
