@@ -49,6 +49,48 @@ const round2 = (value: number) => Math.round(value * 100) / 100;
 
 const parseAmount = (value: string) => parseFloat((value || '').replace(/\./g, '').replace(',', '.'));
 
+interface InstallmentPlan {
+  total: number;
+  down: number;
+  residual: number;
+  count: number;
+  perInstallment: number;
+  lastInstallment: number;
+  schedule: Array<{ number: number; date: string; amount: number }>;
+}
+
+/**
+ * Distribui o saldo residual (total - entrada) em parcelas mensais fixas,
+ * ajustando eventuais centavos na última parcela.
+ */
+function buildInstallmentPlan(form: ManualTransactionData): InstallmentPlan | null {
+  const total = parseAmount(form.amount);
+  const down = form.downPayment ? parseAmount(form.downPayment) : 0;
+  const count = parseInt(form.installmentsCount || '', 10);
+
+  if (!isFinite(total) || total <= 0) return null;
+  if (!isFinite(down) || down < 0) return null;
+  if (!count || count < 1 || count > 120) return null;
+  if (!form.firstInstallmentDate) return null;
+
+  const residual = round2(total - down);
+  if (residual <= 0) return null;
+
+  const perInstallment = round2(residual / count);
+  const lastInstallment = round2(residual - perInstallment * (count - 1));
+
+  const firstDate = new Date(form.firstInstallmentDate + 'T00:00:00');
+  const schedule = Array.from({ length: count }, (_, i) => ({
+    number: i + 1,
+    date: format(addMonths(firstDate, i), 'yyyy-MM-dd'),
+    amount: i === count - 1 ? lastInstallment : perInstallment,
+  }));
+
+  return { total, down, residual, count, perInstallment, lastInstallment, schedule };
+}
+
+
+
 const initialFormState = (): ManualTransactionData => ({
   date: new Date().toISOString().split('T')[0],
   type: 'entrada',
