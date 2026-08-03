@@ -235,7 +235,7 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [],
       return;
     }
 
-    const amount = parseFloat(formData.amount.replace(',', '.'));
+    const amount = parseAmount(formData.amount);
     if (isNaN(amount) || amount <= 0) {
       toast({
         title: 'Valor inválido',
@@ -256,39 +256,58 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [],
       return;
     }
 
+    const plan = formData.entryMode === 'installments' ? buildInstallmentPlan(formData) : null;
+    if (formData.entryMode === 'installments') {
+      if (!plan) {
+        toast({
+          title: 'Parcelamento inválido',
+          description: 'Revise o valor total, a entrada, a quantidade de parcelas e a data da 1ª parcela.',
+          variant: 'destructive'
+        });
+        return;
+      }
+      if (plan.down >= plan.total) {
+        toast({
+          title: 'Entrada inválida',
+          description: 'O valor de entrada deve ser menor que o valor total.',
+          variant: 'destructive'
+        });
+        return;
+      }
+    }
+
     setIsLoading(true);
     try {
-      // Prepare transaction data for insertion
-      // IMPORTANTE: Manter a data como string para evitar problemas de timezone
-      // O input type="date" retorna sempre no formato YYYY-MM-DD
-      const finalAmount = formData.type === 'saida' ? -Math.abs(amount) : Math.abs(amount);
-      
-      console.log('💾 Salvando transação manual:', {
-        data: formData.date,
-        tipo: formData.type,
-        valor: finalAmount,
-        categoria: formData.category,
-        descricao: formData.description
-      });
+      // Data e valor do registro principal (origem)
+      const primaryDate = plan && plan.down <= 0 ? plan.schedule[0].date : formData.date;
+      const primaryAmount = plan
+        ? (plan.down > 0 ? plan.down : plan.schedule[0].amount)
+        : amount;
+      const primaryDescription = plan
+        ? (plan.down > 0
+            ? `${formData.description} - Entrada`
+            : `${formData.description} (1/${plan.count})`)
+        : formData.description;
+
+      const finalAmount = formData.type === 'saida' ? -Math.abs(primaryAmount) : Math.abs(primaryAmount);
 
       // Determina se a transação precisa de validação
       // Transações com data de hoje ou passada são automaticamente validadas
       const today = new Date().toISOString().split('T')[0];
-      const transactionDate = formData.date;
-      const needsValidation = transactionDate > today; // Apenas datas futuras precisam de validação
+      const needsValidation = primaryDate > today; // Apenas datas futuras precisam de validação
 
       const transactionData = {
         user_id: user.id,
-        data_transacao: formData.date, // Manter como string YYYY-MM-DD
+        data_transacao: primaryDate, // Manter como string YYYY-MM-DD
         valor: finalAmount,
-        descricao: formData.description,
+        descricao: primaryDescription,
         tipo: formData.type,
         categoria_final: formData.category,
         categoria_sugerida: formData.category,
         status_conciliacao: true, // ✅ CRÍTICO: Marca como conciliada para aparecer no fluxo de caixa
         origem_arquivo: 'manual_entry',
-        mes_referencia: formData.date.substring(0, 7) + '-01',
-        hash_transacao: btoa(`${formData.date}-${formData.description}-${finalAmount}-${user.id}-${Date.now()}`).substring(0, 50),
+        mes_referencia: primaryDate.substring(0, 7) + '-01',
+        hash_transacao: btoa(`${primaryDate}-${primaryDescription}-${finalAmount}-${user.id}-${Date.now()}`).substring(0, 50),
         status_validacao: needsValidation ? 'pendente' : 'validado' // ✅ Apenas transações futuras ficam pendentes
       };
 
@@ -316,11 +335,11 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [],
       const fluxoCaixaData = {
         company_id,
         user_id: user.id,
-        data_competencia: formData.date, // Manter como string YYYY-MM-DD
+        data_competencia: primaryDate, // Manter como string YYYY-MM-DD
         tipo: formData.type,
         categoria: formData.category,
-        descricao: formData.description,
-        valor: Math.abs(amount),
+        descricao: primaryDescription,
+        valor: Math.abs(primaryAmount),
         transacao_origem_id: insertedTx.id,
       };
 
@@ -333,34 +352,54 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [],
         // Don't throw error as the main transaction was successful
       }
 
-      console.log('✅ Transação salva com sucesso!');
+      // Parcelas restantes viram lançamentos futuros no fluxo de caixa
+      if (plan) {
+        const remaining = plan.schedule
+          .slice(plan.down > 0 ? 0 : 1)
+          .map(item => ({
+            company_id,
+            user_id: user.id,
+            data_competencia: item.date,
+            tipo: formData.type,
+            categoria: formData.category,
+            descricao: `${formData.description} (${item.number}/${plan.count})`,
+            valor: item.amount,
+            transacao_origem_id: insertedTx.id,
+          }));
 
-      // NEW: Handle recurring transaction if enabled
-      if (formData.isRecurring && formData.recurrenceType) {
+        if (remaining.length > 0) {
+          const { error: parcelasError } = await supabase
+            .from('fluxo_caixa')
+            .insert(remaining);
+
+          if (parcelasError) {
+            console.error('❌ Erro ao criar parcelas futuras:', parcelasError);
+            toast({
+              title: 'Parcelamento incompleto',
+              description: `As parcelas futuras não foram geradas: ${parcelasError.message}`,
+              variant: 'destructive'
+            });
+          }
+        }
+      }
+
+      // Handle recurring transaction if enabled
+      if (formData.entryMode === 'recurring' && formData.recurrenceType) {
         await handleRecurringTransaction(insertedTx.id, company_id, amount);
       }
 
       toast({
         title: 'Transação adicionada com sucesso!',
-        description: formData.isRecurring 
-          ? `${formData.type === 'entrada' ? 'Receita' : 'Despesa'} recorrente de R$ ${amount.toFixed(2)} foi registrada`
-          : `${formData.type === 'entrada' ? 'Receita' : 'Despesa'} de R$ ${amount.toFixed(2)} foi registrada`,
+        description: plan
+          ? `Parcelamento registrado: ${plan.down > 0 ? `entrada de ${brl(plan.down)} + ` : ''}${plan.count}x de ${brl(plan.perInstallment)}`
+          : formData.entryMode === 'recurring'
+            ? `${formData.type === 'entrada' ? 'Receita' : 'Despesa'} recorrente de ${brl(amount)} foi registrada`
+            : `${formData.type === 'entrada' ? 'Receita' : 'Despesa'} de ${brl(amount)} foi registrada`,
       });
 
       // Reset form
-      setFormData({
-        date: new Date().toISOString().split('T')[0],
-        type: 'entrada',
-        amount: '',
-        category: '',
-        description: '',
-        paymentMethod: '',
-        isRecurring: false,
-        recurrenceType: 'monthly',
-        customIntervalDays: '',
-        specificMonth: '',
-        occurrences: '12'
-      });
+      setFormData(initialFormState());
+
 
       setIsOpen(false);
       
