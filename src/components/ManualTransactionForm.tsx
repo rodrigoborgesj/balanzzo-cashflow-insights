@@ -19,6 +19,8 @@ interface ManualTransactionFormProps {
   loadUserCategories?: () => Promise<void>;
 }
 
+type EntryMode = 'single' | 'recurring' | 'installments';
+
 interface ManualTransactionData {
   date: string;
   type: 'entrada' | 'saida';
@@ -26,31 +28,50 @@ interface ManualTransactionData {
   category: string;
   description: string;
   paymentMethod?: string;
-  // NEW: Recurring transaction fields
+  // Forma de lançamento
+  entryMode: EntryMode;
+  // Recurring transaction fields
   isRecurring?: boolean;
   recurrenceType?: 'monthly' | 'specific_month' | 'custom';
   customIntervalDays?: string;
   specificMonth?: string;
   occurrences?: string; // quantidade de repetições
+  // Parcelamento
+  downPayment: string;
+  installmentsCount: string;
+  firstInstallmentDate: string;
 }
+
+const brl = (value: number) =>
+  value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+const round2 = (value: number) => Math.round(value * 100) / 100;
+
+const parseAmount = (value: string) => parseFloat((value || '').replace(/\./g, '').replace(',', '.'));
+
+const initialFormState = (): ManualTransactionData => ({
+  date: new Date().toISOString().split('T')[0],
+  type: 'entrada',
+  amount: '',
+  category: '',
+  description: '',
+  paymentMethod: '',
+  entryMode: 'single',
+  isRecurring: false,
+  recurrenceType: 'monthly',
+  customIntervalDays: '',
+  specificMonth: '',
+  occurrences: '12',
+  downPayment: '',
+  installmentsCount: '2',
+  firstInstallmentDate: format(addMonths(new Date(), 1), 'yyyy-MM-dd'),
+});
 
 export function ManualTransactionForm({ onTransactionAdded, userCategories = [], loadUserCategories }: ManualTransactionFormProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState<ManualTransactionData>({
-    date: new Date().toISOString().split('T')[0],
-    type: 'entrada',
-    amount: '',
-    category: '',
-    description: '',
-    paymentMethod: '',
-    // NEW: Initialize recurring fields
-    isRecurring: false,
-    recurrenceType: 'monthly',
-    customIntervalDays: '',
-    specificMonth: '',
-    occurrences: '12'
-  });
+  const [formData, setFormData] = useState<ManualTransactionData>(initialFormState);
+
   
   const { user } = useAuth();
   const { toast } = useToast();
