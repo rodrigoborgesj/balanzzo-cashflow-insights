@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from "@supabase/supabase-js";
+import { getAuthRedirectUrl } from "@/utils/authRedirect";
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
@@ -47,7 +48,7 @@ export function useAuth() {
   }, []);
 
   const signUp = async (email: string, password: string) => {
-    const redirectUrl = `https://www.balanzzo.com.br/`;
+    const redirectUrl = getAuthRedirectUrl();
     
     const { error } = await supabase.auth.signUp({
       email,
@@ -68,7 +69,7 @@ export function useAuth() {
   };
 
   const signInWithGoogle = async () => {
-    const redirectUrl = `https://www.balanzzo.com.br/`;
+    const redirectUrl = getAuthRedirectUrl();
     
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -81,7 +82,7 @@ export function useAuth() {
   };
 
   const resetPassword = async (email: string) => {
-    const redirectUrl = `https://www.balanzzo.com.br/reset-password`;
+    const redirectUrl = getAuthRedirectUrl("/reset-password");
     
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: redirectUrl,

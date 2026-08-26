@@ -16,6 +16,7 @@ import { validatePasswordAsync } from "@/utils/passwordValidationAsync";
 import { PasswordValidationDisplay } from "@/components/PasswordValidationDisplay";
 import { PasswordValidationResult } from "@/utils/passwordValidation";
 import { supabase } from "@/integrations/supabase/client";
+import { getSafeRedirectPath } from "@/utils/authRedirect";
 
 const personalSignupSchema = z.object({
   email: z.string().email("Email inválido"),
@@ -45,7 +46,7 @@ export function PersonalSignupForm({ onBack }: PersonalSignupFormProps) {
   const { signUp, signInWithGoogle } = useSecureAuth();
   
   // Get redirect URL and plan from query params
-  const redirectTo = searchParams.get('redirect');
+  const redirectTo = getSafeRedirectPath(searchParams.get('redirect'));
   const planId = searchParams.get('plan');
 
   const form = useForm<PersonalSignupFormData>({

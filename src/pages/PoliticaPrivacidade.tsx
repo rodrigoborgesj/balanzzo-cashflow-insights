@@ -21,7 +21,7 @@ export default function PoliticaPrivacidade() {
             <div className="space-y-6">
               <div className="text-center mb-8">
                 <p className="text-sm text-muted-foreground">
-                  <strong>Domínio oficial:</strong> www.balanzzo.com.br<br />
+                  <strong>Domínio oficial:</strong> balanzzo.lovable.app<br />
                   <strong>Encarregado de Dados (DPO):</strong> Rodrigo Borges – rodrigoborgesjcontato@gmail.com
                 </p>
               </div>
