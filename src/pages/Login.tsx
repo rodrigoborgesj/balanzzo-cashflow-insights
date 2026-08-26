@@ -13,6 +13,7 @@ import { useModule } from "@/contexts/ModuleContext";
 import { SignupForm } from "@/components/SignupForm";
 import { PersonalSignupForm } from "@/components/PersonalSignupForm";
 import financialHero from "@/assets/financial-hero.png";
+import { getSafeRedirectPath } from "@/utils/authRedirect";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -45,7 +46,7 @@ export default function Login() {
 
     // Wait for both auth and module subscription checks
     if (!authLoading && !moduleLoading && isAuthenticated) {
-      const redirectTo = searchParams.get('redirect');
+      const redirectTo = getSafeRedirectPath(searchParams.get('redirect'));
       const planId = searchParams.get('plan');
 
       // If explicit redirect, use it
@@ -152,7 +153,7 @@ export default function Login() {
   }
 
   // Check if redirect is for personal module to show appropriate signup form
-  const redirectTo = searchParams.get('redirect');
+  const redirectTo = getSafeRedirectPath(searchParams.get('redirect'));
   const isPersonalSignup = redirectTo?.startsWith('/personal');
 
   if (mode === 'signup') {
