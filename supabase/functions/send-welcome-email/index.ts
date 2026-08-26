@@ -255,7 +255,7 @@ async function sendWelcomeEmail(email: string, companyName: string) {
         <body>
           <div class="container">
             <div class="logo">
-              <img src="https://www.balanzzo.com.br/logo.png" alt="Balanzzo" />
+              <img src="https://balanzzo.lovable.app/favicon.png" alt="Balanzzo" />
             </div>
             <h1>Bem-vindo à Balanzzo!</h1>
             <p>
@@ -263,12 +263,12 @@ async function sendWelcomeEmail(email: string, companyName: string) {
               Agora você tem acesso a uma forma simples e inteligente de cuidar das finanças do seu negócio.<br><br>
               Acesse sua conta e comece a explorar as ferramentas que criamos para te ajudar a ter mais clareza e controle financeiro.
             </p>
-            <a href="https://www.balanzzo.com.br/dashboard" class="button">Acessar minha conta</a>
+            <a href="https://balanzzo.lovable.app/dashboard" class="button">Acessar minha conta</a>
             <p class="secondary-text">
               Qualquer dúvida, é só responder este e-mail ou entrar em contato pelo nosso suporte.
             </p>
             <div class="footer">
-              Balanzzo © Todos os direitos reservados — <a href="https://www.balanzzo.com.br">www.balanzzo.com.br</a>
+              Balanzzo © Todos os direitos reservados — <a href="https://balanzzo.lovable.app">balanzzo.lovable.app</a>
             </div>
           </div>
         </body>
