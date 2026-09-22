@@ -60,6 +60,9 @@ interface CategoryGroup {
 
 type PeriodMode = 'month' | 'custom';
 
+// Converte 'YYYY-MM-DD' em data local, evitando o deslocamento de fuso (dia anterior)
+const parseLocalDate = (value: string) => new Date(`${String(value).slice(0, 10)}T00:00:00`);
+
 export default function FluxoCaixa() {
   const [saldoInicial, setSaldoInicial] = useState(0);
   const [saldoInicialTemp, setSaldoInicialTemp] = useState('');
