@@ -370,7 +370,7 @@ export type Database = {
       fluxo_caixa: {
         Row: {
           categoria: string | null
-          company_id: string
+          company_id: string | null
           cost_center_id: string | null
           cost_center_source: string | null
           cost_subgroup_id: string | null
@@ -386,7 +386,7 @@ export type Database = {
         }
         Insert: {
           categoria?: string | null
-          company_id: string
+          company_id?: string | null
           cost_center_id?: string | null
           cost_center_source?: string | null
           cost_subgroup_id?: string | null
@@ -402,7 +402,7 @@ export type Database = {
         }
         Update: {
           categoria?: string | null
-          company_id?: string
+          company_id?: string | null
           cost_center_id?: string | null
           cost_center_source?: string | null
           cost_subgroup_id?: string | null
