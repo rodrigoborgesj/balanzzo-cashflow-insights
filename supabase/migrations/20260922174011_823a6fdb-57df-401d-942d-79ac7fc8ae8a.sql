@@ -1,0 +1,1 @@
+ALTER TABLE public.fluxo_caixa ALTER COLUMN company_id DROP NOT NULL;

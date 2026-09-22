@@ -60,6 +60,9 @@ interface CategoryGroup {
 
 type PeriodMode = 'month' | 'custom';
 
+// Converte 'YYYY-MM-DD' em data local, evitando o deslocamento de fuso (dia anterior)
+const parseLocalDate = (value: string) => new Date(`${String(value).slice(0, 10)}T00:00:00`);
+
 export default function FluxoCaixa() {
   const [saldoInicial, setSaldoInicial] = useState(0);
   const [saldoInicialTemp, setSaldoInicialTemp] = useState('');
@@ -350,7 +353,7 @@ export default function FluxoCaixa() {
   const exportToCSV = () => {
     const headers = ['Data', 'Categoria', 'Descrição', 'Tipo', 'Valor'];
     const csvData = allTransactionsSorted.map(transaction => [
-      new Date(transaction.data_transacao).toLocaleDateString('pt-BR'),
+      parseLocalDate(transaction.data_transacao).toLocaleDateString('pt-BR'),
       transaction.categoria_final || transaction.categoria_sugerida || 'Outros',
       transaction.descricao,
       transaction.valor > 0 ? 'Entrada' : 'Saída',
@@ -769,7 +772,7 @@ export default function FluxoCaixa() {
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex-1 min-w-0">
                       <p className="text-xs text-slate-500">
-                        {new Date(transaction.data_competencia).toLocaleDateString('pt-BR')}
+                        {parseLocalDate(transaction.data_competencia).toLocaleDateString('pt-BR')}
                       </p>
                       <p className="text-sm font-medium text-slate-800 truncate" title={transaction.descricao || ''}>
                         {transaction.descricao || 'Sem descrição'}
@@ -858,7 +861,7 @@ export default function FluxoCaixa() {
                         }`}
                       >
                         <TableCell className="font-medium text-xs md:text-sm whitespace-nowrap text-slate-700">
-                          {new Date(transaction.data_competencia).toLocaleDateString('pt-BR', { 
+                          {parseLocalDate(transaction.data_competencia).toLocaleDateString('pt-BR', { 
                             day: '2-digit', 
                             month: '2-digit',
                             year: '2-digit'
@@ -1081,7 +1084,7 @@ export default function FluxoCaixa() {
                       <div className="flex justify-between items-start mb-2">
                         <div className="flex-1 min-w-0">
                           <p className="text-xs text-gray-500">
-                            {new Date(transaction.data_transacao).toLocaleDateString('pt-BR')}
+                            {parseLocalDate(transaction.data_transacao).toLocaleDateString('pt-BR')}
                           </p>
                           <p className="text-sm font-medium text-black truncate" title={transaction.descricao}>
                             {transaction.descricao}
@@ -1160,7 +1163,7 @@ export default function FluxoCaixa() {
                             }}
                           >
                             <TableCell className="font-medium text-xs md:text-sm whitespace-nowrap">
-                              {new Date(transaction.data_transacao).toLocaleDateString('pt-BR', { 
+                              {parseLocalDate(transaction.data_transacao).toLocaleDateString('pt-BR', { 
                                 day: '2-digit', 
                                 month: '2-digit'
                               })}

@@ -217,10 +217,13 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [],
       console.log('✅ Configuração de recorrência salva:', recurringData);
 
       // Generate and insert future occurrences for projections.
-      // Use the user-defined amount of occurrences (fallback to 12).
+      // A quantidade informada inclui o lançamento inicial já criado, por isso -1.
       const parsedOccurrences = parseInt(formData.occurrences || '') || 12;
-      const numOccurrences = Math.min(Math.max(parsedOccurrences, 1), 120);
-      const futureOccurrences = generateFutureOccurrences(formData.date, amount, numOccurrences, transacaoOrigemId);
+      const totalOccurrences = Math.min(Math.max(parsedOccurrences, 1), 120);
+      const numOccurrences = totalOccurrences - 1;
+      const futureOccurrences = numOccurrences > 0
+        ? generateFutureOccurrences(formData.date, amount, numOccurrences, transacaoOrigemId)
+        : [];
 
       const futureOccurrencesWithCompany = futureOccurrences.map(occ => ({
         ...occ,
@@ -390,8 +393,12 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [],
         .insert([fluxoCaixaData]);
 
       if (fluxoError) {
-        console.warn('Warning: Could not insert into fluxo_caixa:', fluxoError);
-        // Don't throw error as the main transaction was successful
+        console.error('Erro ao inserir no fluxo de caixa:', fluxoError);
+        toast({
+          title: 'Lançamento não refletido no fluxo de caixa',
+          description: fluxoError.message,
+          variant: 'destructive'
+        });
       }
 
       // Parcelas restantes viram lançamentos futuros no fluxo de caixa
