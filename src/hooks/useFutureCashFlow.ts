@@ -86,7 +86,7 @@ export function useFutureCashFlow() {
       const monthlyData = new Map<string, number>();
       
       incomeTransactions.forEach(transaction => {
-        const date = new Date(transaction.data_competencia);
+        const date = new Date(String(transaction.data_competencia).slice(0, 10) + 'T00:00:00');
         const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
         const monthName = date.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
         
@@ -114,7 +114,7 @@ export function useFutureCashFlow() {
       const dailyData = new Map<string, number>();
       
       incomeTransactions.forEach(transaction => {
-        const date = new Date(transaction.data_competencia);
+        const date = new Date(String(transaction.data_competencia).slice(0, 10) + 'T00:00:00');
         const dayKey = date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
         
         if (dailyData.has(dayKey)) {
@@ -142,7 +142,7 @@ export function useFutureCashFlow() {
       const monthlyData = new Map<string, number>();
       
       expenseTransactions.forEach(transaction => {
-        const date = new Date(transaction.data_competencia);
+        const date = new Date(String(transaction.data_competencia).slice(0, 10) + 'T00:00:00');
         const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
         
         if (monthlyData.has(monthKey)) {
@@ -169,7 +169,7 @@ export function useFutureCashFlow() {
       const dailyData = new Map<string, number>();
       
       expenseTransactions.forEach(transaction => {
-        const date = new Date(transaction.data_competencia);
+        const date = new Date(String(transaction.data_competencia).slice(0, 10) + 'T00:00:00');
         const dayKey = date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
         
         if (dailyData.has(dayKey)) {
