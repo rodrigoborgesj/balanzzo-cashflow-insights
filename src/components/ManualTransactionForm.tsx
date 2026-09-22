@@ -393,8 +393,12 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [],
         .insert([fluxoCaixaData]);
 
       if (fluxoError) {
-        console.warn('Warning: Could not insert into fluxo_caixa:', fluxoError);
-        // Don't throw error as the main transaction was successful
+        console.error('Erro ao inserir no fluxo de caixa:', fluxoError);
+        toast({
+          title: 'Lançamento não refletido no fluxo de caixa',
+          description: fluxoError.message,
+          variant: 'destructive'
+        });
       }
 
       // Parcelas restantes viram lançamentos futuros no fluxo de caixa
