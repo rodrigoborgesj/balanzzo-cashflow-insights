@@ -127,6 +127,10 @@ export class StandardizedBankStatementParser {
       }
       
       // Continue with CSV parsing for non-OFX files
+      if (this.isSantanderCSV(content)) {
+        console.log('🏦 Santander CSV detected');
+        return this.parseSantanderCSV(content);
+      }
       
       if (!content || content.trim().length === 0) {
         result.errors.push('Arquivo vazio ou sem conteúdo válido');
@@ -227,12 +231,46 @@ export class StandardizedBankStatementParser {
   }
 
   private static async readFileContent(file: File): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => resolve(e.target?.result as string);
-      reader.onerror = () => reject(new Error('Falha ao ler arquivo'));
-      reader.readAsText(file, 'utf-8');
-    });
+    const buffer = await file.arrayBuffer();
+    try {
+      return new TextDecoder('utf-8', { fatal: true }).decode(buffer);
+    } catch {
+      // Extratos como o do Santander vêm em ISO-8859-1 / Windows-1252
+      return new TextDecoder('windows-1252').decode(buffer);
+    }
+  }
+
+  /** Santander: "AGENCIA;...;CONTA;..." + header "Data;Histórico;Documento;Valor (R$);Saldo (R$)" */
+  private static isSantanderCSV(content: string): boolean {
+    return /^\s*"?AGENCIA"?;/i.test(content) &&
+      /^\s*"?Data"?;"?Hist[oó]rico"?;"?Documento"?;"?Valor/im.test(content);
+  }
+
+  private static parseSantanderCSV(content: string): StandardizedParseResult {
+    const result: StandardizedParseResult = { transactions: [], errors: [], warnings: [], processedRows: 0, validRows: 0 };
+    const parsed = parse(content, { delimiter: ';', header: false, skipEmptyLines: true, quoteChar: '"' });
+    const rows = (parsed.data as string[][]).map(r => r.map(c => (c ?? '').trim()));
+    const headerIdx = rows.findIndex(r => /^data$/i.test(r[0] || '') && /^hist/i.test(r[1] || ''));
+    if (headerIdx < 0) {
+      result.errors.push('Cabeçalho do extrato Santander não encontrado');
+      return result;
+    }
+    const header = rows[headerIdx].map(h => h.toLowerCase());
+    const valueIdx = header.findIndex(h => h.startsWith('valor'));
+    for (let i = headerIdx + 1; i < rows.length; i++) {
+      const row = rows[i];
+      result.processedRows++;
+      const date = this.parseDate(row[0] || '');
+      const description = row[1] || '';
+      const rawValue = row[valueIdx] || '';
+      if (!date || !description || !rawValue) continue; // ignora linhas de saldo/rodapé
+      if (/^saldo/i.test(description)) continue;
+      const value = this.parseAmount(rawValue);
+      if (!value || isNaN(value)) continue;
+      result.transactions.push({ date, description, value } );
+      result.validRows++;
+    }
+    return result;
   }
 
   private static detectDelimiter(content: string): string {
