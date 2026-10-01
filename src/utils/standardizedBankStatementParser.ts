@@ -132,6 +132,11 @@ export class StandardizedBankStatementParser {
         return this.parseSantanderCSV(content);
       }
       
+      if (this.isStoneCSV(content)) {
+        console.log('🏦 Stone CSV detected');
+        return this.parseStoneCSV(content);
+      }
+      
       if (!content || content.trim().length === 0) {
         result.errors.push('Arquivo vazio ou sem conteúdo válido');
         return result;
@@ -273,7 +278,45 @@ export class StandardizedBankStatementParser {
     return result;
   }
 
-  private static detectDelimiter(content: string): string {
+  /** Stone: header "Movimentação,Tipo,Valor,...,Data,...,Destino,..." */
+  private static isStoneCSV(content: string): boolean {
+    const firstLine = (content.split('\n')[0] || '').toLowerCase();
+    return /movimenta[çc][ãa]o/.test(firstLine) && /destino/.test(firstLine) && /valor/.test(firstLine);
+  }
+
+  private static parseStoneCSV(content: string): StandardizedParseResult {
+    const result: StandardizedParseResult = { transactions: [], errors: [], warnings: [], processedRows: 0, validRows: 0 };
+    const parsed = parse(content, { delimiter: ',', header: false, skipEmptyLines: true, quoteChar: '"' });
+    const rows = (parsed.data as string[][]).map(r => r.map(c => (c ?? '').trim()));
+    const headerIdx = rows.findIndex(r =>
+      /movimenta[çc][ãa]o/i.test(r[0] || '') && r.some(c => /^destino$/i.test(c))
+    );
+    if (headerIdx < 0) {
+      result.errors.push('Cabeçalho do extrato Stone não encontrado');
+      return result;
+    }
+    const header = rows[headerIdx].map(h => h.toLowerCase().trim());
+    const dateIdx = header.findIndex(h => h === 'data');
+    const valueIdx = header.findIndex(h => h === 'valor');
+    const destIdx = header.findIndex(h => h === 'destino');
+    if (dateIdx < 0 || valueIdx < 0 || destIdx < 0) {
+      result.errors.push('Colunas Data, Destino ou Valor não encontradas no extrato Stone');
+      return result;
+    }
+    for (let i = headerIdx + 1; i < rows.length; i++) {
+      const row = rows[i];
+      result.processedRows++;
+      const date = this.parseDate(row[dateIdx] || '');
+      const description = row[destIdx] || '';
+      const rawValue = row[valueIdx] || '';
+      if (!date || !description || !rawValue) continue;
+      const value = this.parseAmount(rawValue);
+      if (!value || isNaN(value)) continue;
+      result.transactions.push({ date, description, value });
+      result.validRows++;
+    }
+    return result;
+  }
     const sample = content.split('\n').slice(0, 5).join('\n');
     const delimiters = [',', ';', '\t', '|'];
     
