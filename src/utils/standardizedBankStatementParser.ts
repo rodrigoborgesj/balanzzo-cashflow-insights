@@ -317,6 +317,8 @@ export class StandardizedBankStatementParser {
     }
     return result;
   }
+
+  private static detectDelimiter(content: string): string {
     const sample = content.split('\n').slice(0, 5).join('\n');
     const delimiters = [',', ';', '\t', '|'];
     
