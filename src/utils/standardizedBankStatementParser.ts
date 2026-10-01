@@ -267,7 +267,7 @@ export class StandardizedBankStatementParser {
       if (/^saldo/i.test(description)) continue;
       const value = this.parseAmount(rawValue);
       if (!value || isNaN(value)) continue;
-      result.transactions.push({ date, description, value } as StandardizedTransaction);
+      result.transactions.push({ date, description, value } );
       result.validRows++;
     }
     return result;
