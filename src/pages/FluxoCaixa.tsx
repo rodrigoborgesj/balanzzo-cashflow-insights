@@ -377,19 +377,51 @@ export default function FluxoCaixa() {
   };
 
   // Delete future transaction
-  const handleDeleteFutureTransaction = async (transactionId: string) => {
+  const handleDeleteFutureTransaction = async (transactionId: string, mode: 'single' | 'future' = 'single') => {
     setDeletingFutureId(transactionId);
     try {
-      const { error } = await supabase
-        .from('fluxo_caixa')
-        .delete()
-        .eq('id', transactionId);
+      let removed = 1;
+      if (mode === 'single') {
+        const { error } = await supabase.from('fluxo_caixa').delete().eq('id', transactionId);
+        if (error) throw error;
+      } else {
+        const { data: row, error: rowError } = await supabase
+          .from('fluxo_caixa')
+          .select('id, user_id, data_competencia, tipo, categoria, descricao, valor, transacao_origem_id')
+          .eq('id', transactionId)
+          .single();
+        if (rowError || !row) throw rowError || new Error('Lançamento não encontrado');
 
-      if (error) throw error;
+        let q = supabase
+          .from('fluxo_caixa')
+          .select('id, descricao')
+          .eq('user_id', row.user_id)
+          .eq('tipo', row.tipo)
+          .gte('data_competencia', row.data_competencia);
+        if (row.transacao_origem_id) {
+          q = q.eq('transacao_origem_id', row.transacao_origem_id);
+        } else {
+          q = q.eq('valor', row.valor);
+          q = row.categoria ? q.eq('categoria', row.categoria) : q.is('categoria', null);
+        }
+        const { data: series, error: seriesError } = await q;
+        if (seriesError) throw seriesError;
+
+        // Sem vínculo de origem: compara a descrição sem o sufixo de parcela "(n/total)"
+        const base = (d: string | null) => (d || '').replace(/\s*\(\d+\/\d+\)\s*$/, '').trim();
+        const ids = (series || [])
+          .filter(s => row.transacao_origem_id || base(s.descricao) === base(row.descricao))
+          .map(s => s.id);
+        if (!ids.includes(row.id)) ids.push(row.id);
+
+        const { error } = await supabase.from('fluxo_caixa').delete().in('id', ids);
+        if (error) throw error;
+        removed = ids.length;
+      }
 
       toast({
-        title: 'Lançamento futuro excluído',
-        description: 'O lançamento foi removido com sucesso',
+        title: removed > 1 ? 'Lançamentos futuros excluídos' : 'Lançamento futuro excluído',
+        description: removed > 1 ? `${removed} lançamentos removidos (este mês e os seguintes)` : 'O lançamento foi removido com sucesso',
       });
 
       // Refresh future transactions

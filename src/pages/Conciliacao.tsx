@@ -12,6 +12,7 @@ import { FileUploader } from "@/components/FileUploader";
 
 import TransactionProcessor from "@/components/TransactionProcessor";
 import TransactionRemover from "@/components/TransactionRemover";
+import ScheduledMatchDialog from "@/components/ScheduledMatchDialog";
 import { StandardizedBankStatementParser } from "@/utils/standardizedBankStatementParser";
 import { useConciliacao, ParsedTransaction } from '@/hooks/useConciliacao';
 import { 
@@ -356,6 +357,7 @@ export default function Conciliacao() {
   
   return (
     <div className="min-h-screen bg-white p-2 sm:p-4 md:p-6">
+      <ScheduledMatchDialog />
       {/* Header */}
       <div className="mb-4 md:mb-8">
         <div className="flex flex-col gap-3 md:gap-4">
