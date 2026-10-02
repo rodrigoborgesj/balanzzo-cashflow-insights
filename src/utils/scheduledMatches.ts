@@ -61,9 +61,8 @@ export async function findScheduledMatches(userId: string, imported: any[]): Pro
     const info = originDates.get(r.transacao_origem_id);
     if (!info) return true;
     const [date, origem] = info.split('|');
-    // Linhas vindas de extratos importados não são programadas
-    if (origem && origem !== 'manual' && date === String(r.data_competencia).slice(0, 10)) return false;
-    return date !== String(r.data_competencia).slice(0, 10) || origem === 'manual';
+    if (origem === 'manual_entry') return true;
+    return date !== String(r.data_competencia).slice(0, 10);
   });
 
   const used = new Set<string>();
