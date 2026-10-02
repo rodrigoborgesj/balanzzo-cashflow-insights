@@ -3,6 +3,7 @@ import { usePersistedState } from './usePersistedState';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useToast } from './use-toast';
+import { findScheduledMatches } from '@/utils/scheduledMatches';
 import CryptoJS from 'crypto-js';
 
 // Raw parsed transaction from CSV (standardized format)
@@ -632,6 +633,14 @@ export function useConciliacao() {
           
           if (savedTransactions && savedTransactions.length > 0) {
             await alimentarFluxoCaixa(savedTransactions);
+            try {
+              const matches = await findScheduledMatches(user.id, savedTransactions);
+              if (matches.length) {
+                window.dispatchEvent(new CustomEvent('scheduledMatchesFound', { detail: matches }));
+              }
+            } catch (e) {
+              console.error('Erro ao verificar lançamentos programados:', e);
+            }
           }
         } catch (error) {
           console.error('❌ Error updating cash flow:', error);
