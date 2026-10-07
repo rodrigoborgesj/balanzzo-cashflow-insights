@@ -728,6 +728,56 @@ export default function Conciliacao() {
               </div>
             </div>
 
+            {/* Barra de ações em lote */}
+            {selectedIds.size > 0 && (
+              <Card className="border-primary/30 bg-primary/5">
+                <CardContent className="p-3 md:p-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                  <span className="text-sm font-medium text-foreground">
+                    {selectedIds.size} transação(ões) selecionada(s)
+                  </span>
+                  <div className="flex flex-1 flex-col sm:flex-row gap-2 sm:items-center">
+                    <Select value={bulkCategory} onValueChange={setBulkCategory}>
+                      <SelectTrigger className="w-full sm:w-56">
+                        <SelectValue placeholder="Categoria para conciliar" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {allCategories.map((category) => (
+                          <SelectItem key={category} value={category}>
+                            {category}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      onClick={handleBulkConciliate}
+                      disabled={isBulkProcessing || !bulkCategory}
+                      className="min-h-[44px]"
+                    >
+                      {isBulkProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle className="mr-2 h-4 w-4" />}
+                      Conciliar selecionadas
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      onClick={handleBulkDelete}
+                      disabled={isBulkProcessing}
+                      className="min-h-[44px]"
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Excluir selecionadas
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      onClick={() => setSelectedIds(new Set())}
+                      disabled={isBulkProcessing}
+                      className="min-h-[44px]"
+                    >
+                      Limpar seleção
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Tabela de Transações */}
             <Card>
               <CardContent className="p-0">
