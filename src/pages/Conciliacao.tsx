@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TablePagination } from "@/components/ui/table-pagination";
+import { Checkbox } from "@/components/ui/checkbox";
 import { FileUploader } from "@/components/FileUploader";
 
 import TransactionProcessor from "@/components/TransactionProcessor";
@@ -84,6 +85,11 @@ export default function Conciliacao() {
   // Pagination state
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
+
+  // Bulk selection state
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkCategory, setBulkCategory] = useState<string>("");
+  const [isBulkProcessing, setIsBulkProcessing] = useState(false);
   
   const {
     transactions,
