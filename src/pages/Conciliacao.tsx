@@ -817,6 +817,7 @@ export default function Conciliacao() {
                             {transaction.descricao}
                           </p>
                         </div>
+                        </div>
                         <div className="flex items-center gap-1 flex-shrink-0 ml-2">
                           <span className={`text-sm font-bold ${transaction.valor >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                             R$ {transaction.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
