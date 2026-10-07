@@ -802,6 +802,13 @@ export default function Conciliacao() {
                       .map((transaction) => (
                     <div key={transaction.id} className={`p-3 rounded-lg border bg-white ${transaction.valor >= 0 ? 'border-l-4 border-l-green-500' : 'border-l-4 border-l-red-500'}`}>
                       <div className="flex justify-between items-start mb-2">
+                        <div className="flex items-start gap-2 flex-1 min-w-0">
+                          <Checkbox
+                            checked={selectedIds.has(transaction.id)}
+                            onCheckedChange={() => toggleSelect(transaction.id)}
+                            className="mt-0.5 h-5 w-5"
+                            aria-label="Selecionar transação"
+                          />
                         <div className="flex-1 min-w-0">
                           <p className="text-xs text-gray-500">
                             {new Date(transaction.data_transacao).toLocaleDateString('pt-BR')}
