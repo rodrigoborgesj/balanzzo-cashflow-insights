@@ -132,6 +132,11 @@ export class StandardizedBankStatementParser {
         return this.parseSantanderCSV(content);
       }
       
+      if (this.isPagtrustCSV(content)) {
+        console.log('🏦 Pagtrust CSV detected');
+        return this.parsePagtrustCSV(content);
+      }
+
       if (this.isStoneCSV(content)) {
         console.log('🏦 Stone CSV detected');
         return this.parseStoneCSV(content);
@@ -273,6 +278,52 @@ export class StandardizedBankStatementParser {
       const value = this.parseAmount(rawValue);
       if (!value || isNaN(value)) continue;
       result.transactions.push({ date, description, value } );
+      result.validRows++;
+    }
+    return result;
+  }
+
+  /** Pagtrust: header "Codigo_da_Venda;Status;...;Produtos;...;Valor_Liquido;...;Data;..." */
+  private static isPagtrustCSV(content: string): boolean {
+    const firstLine = (content.split('\n')[0] || '').replace(/^\uFEFF/, '').toLowerCase();
+    return firstLine.includes('codigo_da_venda') && firstLine.includes('valor_liquido') && firstLine.includes('produtos');
+  }
+
+  /**
+   * Usa apenas Valor_Liquido (comissão), Produtos e Data. Como o nome do produto se repete,
+   * o identificador inclui data + hora:minuto:segundo (e o código da venda) para não
+   * tratar vendas diferentes como duplicatas.
+   */
+  private static parsePagtrustCSV(content: string): StandardizedParseResult {
+    const result: StandardizedParseResult = { transactions: [], errors: [], warnings: [], processedRows: 0, validRows: 0 };
+    const parsed = parse(content.replace(/^\uFEFF/, ''), { delimiter: ';', header: false, skipEmptyLines: true, quoteChar: '"' });
+    const rows = (parsed.data as string[][]).map(r => r.map(c => (c ?? '').trim()));
+    const header = (rows[0] || []).map(h => h.toLowerCase());
+    const idx = (n: string) => header.indexOf(n);
+    const valueIdx = idx('valor_liquido'), prodIdx = idx('produtos'), dateIdx = idx('data');
+    const codeIdx = idx('codigo_da_venda'), statusIdx = idx('status'), refundIdx = idx('valor_reembolsado');
+    if (valueIdx < 0 || prodIdx < 0 || dateIdx < 0) {
+      result.errors.push('Colunas Valor_Liquido, Produtos ou Data não encontradas no extrato Pagtrust');
+      return result;
+    }
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i];
+      result.processedRows++;
+      const status = statusIdx >= 0 ? (row[statusIdx] || '').toLowerCase() : 'aprovado';
+      if (status && !status.startsWith('aprovad')) continue;
+      const m = (row[dateIdx] || '').match(/(\d{2})\/(\d{2})\/(\d{4})(?:\s+(\d{2}:\d{2}(?::\d{2})?))?/);
+      if (!m) continue;
+      const date = `${m[3]}-${m[2]}-${m[1]}`;
+      const time = m[4] || '00:00:00';
+      const description = row[prodIdx] || '';
+      let value = parseFloat((row[valueIdx] || '').replace(',', '.'));
+      if (refundIdx >= 0) {
+        const refund = parseFloat((row[refundIdx] || '0').replace(',', '.')) || 0;
+        if (refund > 0) value = value - refund;
+      }
+      if (!description || !value || isNaN(value)) continue;
+      const code = codeIdx >= 0 ? row[codeIdx] : '';
+      result.transactions.push({ date, description, value, identifier: `pagtrust|${date} ${time}|${code}` });
       result.validRows++;
     }
     return result;
