@@ -292,6 +292,54 @@ export default function Conciliacao() {
     }
   };
 
+  // Bulk selection handlers
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = (ids: string[]) => {
+    setSelectedIds(prev => {
+      const allSelected = ids.length > 0 && ids.every(id => prev.has(id));
+      if (allSelected) return new Set<string>();
+      return new Set(ids);
+    });
+  };
+
+  const handleBulkConciliate = async () => {
+    if (selectedIds.size === 0) return;
+    if (!bulkCategory) {
+      toast({ title: 'Selecione uma categoria', description: 'Escolha a categoria para conciliar as transações selecionadas.', variant: 'destructive' });
+      return;
+    }
+    setIsBulkProcessing(true);
+    try {
+      await Promise.all(Array.from(selectedIds).map(id => updateTransactionCategory(id, bulkCategory)));
+      toast({ title: 'Conciliação concluída', description: `${selectedIds.size} transação(ões) conciliada(s) como "${bulkCategory}".` });
+      setSelectedIds(new Set());
+      setBulkCategory("");
+    } catch (error) {
+      console.error('Erro na conciliação em lote:', error);
+    } finally {
+      setIsBulkProcessing(false);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    if (!window.confirm(`Remover ${selectedIds.size} transação(ões) selecionada(s)?`)) return;
+    setIsBulkProcessing(true);
+    try {
+      await Promise.all(Array.from(selectedIds).map(id => handleDeleteTransaction(id)));
+      setSelectedIds(new Set());
+    } finally {
+      setIsBulkProcessing(false);
+    }
+  };
+
   // Handle custom period apply
   const handleApplyCustomPeriod = (start: Date, end: Date) => {
     setCustomStartDate(start);
