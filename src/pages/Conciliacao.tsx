@@ -928,7 +928,14 @@ export default function Conciliacao() {
                           filteredTransactions
                             .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                             .map((transaction) => (
-                          <TableRow key={transaction.id}>
+                          <TableRow key={transaction.id} className={selectedIds.has(transaction.id) ? 'bg-primary/5' : ''}>
+                            <TableCell>
+                              <Checkbox
+                                checked={selectedIds.has(transaction.id)}
+                                onCheckedChange={() => toggleSelect(transaction.id)}
+                                aria-label="Selecionar transação"
+                              />
+                            </TableCell>
                             <TableCell>
                               {new Date(transaction.data_transacao).toLocaleDateString('pt-BR')}
                             </TableCell>
