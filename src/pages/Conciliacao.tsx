@@ -907,7 +907,7 @@ export default function Conciliacao() {
                       <TableBody>
                         {isLoading && (
                           <TableRow>
-                            <TableCell colSpan={6} className="text-center py-8">
+                            <TableCell colSpan={7} className="text-center py-8">
                               <div className="flex items-center justify-center gap-2">
                                 <Loader2 className="h-4 w-4 animate-spin" />
                                 Carregando transações...
@@ -918,7 +918,7 @@ export default function Conciliacao() {
                         
                         {!isLoading && filteredTransactions.length === 0 && (
                           <TableRow>
-                            <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                            <TableCell colSpan={7} className="text-center py-8 text-gray-500">
                               Nenhuma transação encontrada
                             </TableCell>
                           </TableRow>
