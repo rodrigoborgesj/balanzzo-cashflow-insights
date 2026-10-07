@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TablePagination } from "@/components/ui/table-pagination";
+import { Checkbox } from "@/components/ui/checkbox";
 import { FileUploader } from "@/components/FileUploader";
 
 import TransactionProcessor from "@/components/TransactionProcessor";
@@ -84,6 +85,11 @@ export default function Conciliacao() {
   // Pagination state
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
+
+  // Bulk selection state
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkCategory, setBulkCategory] = useState<string>("");
+  const [isBulkProcessing, setIsBulkProcessing] = useState(false);
   
   const {
     transactions,
@@ -283,6 +289,54 @@ export default function Conciliacao() {
         description: 'Erro inesperado ao tentar deletar. Tente novamente.',
         variant: 'destructive',
       });
+    }
+  };
+
+  // Bulk selection handlers
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = (ids: string[]) => {
+    setSelectedIds(prev => {
+      const allSelected = ids.length > 0 && ids.every(id => prev.has(id));
+      if (allSelected) return new Set<string>();
+      return new Set(ids);
+    });
+  };
+
+  const handleBulkConciliate = async () => {
+    if (selectedIds.size === 0) return;
+    if (!bulkCategory) {
+      toast({ title: 'Selecione uma categoria', description: 'Escolha a categoria para conciliar as transações selecionadas.', variant: 'destructive' });
+      return;
+    }
+    setIsBulkProcessing(true);
+    try {
+      await Promise.all(Array.from(selectedIds).map(id => updateTransactionCategory(id, bulkCategory)));
+      toast({ title: 'Conciliação concluída', description: `${selectedIds.size} transação(ões) conciliada(s) como "${bulkCategory}".` });
+      setSelectedIds(new Set());
+      setBulkCategory("");
+    } catch (error) {
+      console.error('Erro na conciliação em lote:', error);
+    } finally {
+      setIsBulkProcessing(false);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    if (!window.confirm(`Remover ${selectedIds.size} transação(ões) selecionada(s)?`)) return;
+    setIsBulkProcessing(true);
+    try {
+      await Promise.all(Array.from(selectedIds).map(id => handleDeleteTransaction(id)));
+      setSelectedIds(new Set());
+    } finally {
+      setIsBulkProcessing(false);
     }
   };
 
@@ -674,6 +728,56 @@ export default function Conciliacao() {
               </div>
             </div>
 
+            {/* Barra de ações em lote */}
+            {selectedIds.size > 0 && (
+              <Card className="border-primary/30 bg-primary/5">
+                <CardContent className="p-3 md:p-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                  <span className="text-sm font-medium text-foreground">
+                    {selectedIds.size} transação(ões) selecionada(s)
+                  </span>
+                  <div className="flex flex-1 flex-col sm:flex-row gap-2 sm:items-center">
+                    <Select value={bulkCategory} onValueChange={setBulkCategory}>
+                      <SelectTrigger className="w-full sm:w-56">
+                        <SelectValue placeholder="Categoria para conciliar" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {allCategories.map((category) => (
+                          <SelectItem key={category} value={category}>
+                            {category}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      onClick={handleBulkConciliate}
+                      disabled={isBulkProcessing || !bulkCategory}
+                      className="min-h-[44px]"
+                    >
+                      {isBulkProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle className="mr-2 h-4 w-4" />}
+                      Conciliar selecionadas
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      onClick={handleBulkDelete}
+                      disabled={isBulkProcessing}
+                      className="min-h-[44px]"
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Excluir selecionadas
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      onClick={() => setSelectedIds(new Set())}
+                      disabled={isBulkProcessing}
+                      className="min-h-[44px]"
+                    >
+                      Limpar seleção
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Tabela de Transações */}
             <Card>
               <CardContent className="p-0">
@@ -698,6 +802,13 @@ export default function Conciliacao() {
                       .map((transaction) => (
                     <div key={transaction.id} className={`p-3 rounded-lg border bg-white ${transaction.valor >= 0 ? 'border-l-4 border-l-green-500' : 'border-l-4 border-l-red-500'}`}>
                       <div className="flex justify-between items-start mb-2">
+                        <div className="flex items-start gap-2 flex-1 min-w-0">
+                          <Checkbox
+                            checked={selectedIds.has(transaction.id)}
+                            onCheckedChange={() => toggleSelect(transaction.id)}
+                            className="mt-0.5 h-5 w-5"
+                            aria-label="Selecionar transação"
+                          />
                         <div className="flex-1 min-w-0">
                           <p className="text-xs text-gray-500">
                             {new Date(transaction.data_transacao).toLocaleDateString('pt-BR')}
@@ -705,6 +816,7 @@ export default function Conciliacao() {
                           <p className="text-sm font-medium text-foreground truncate" title={transaction.descricao}>
                             {transaction.descricao}
                           </p>
+                        </div>
                         </div>
                         <div className="flex items-center gap-1 flex-shrink-0 ml-2">
                           <span className={`text-sm font-bold ${transaction.valor >= 0 ? 'text-green-600' : 'text-red-600'}`}>
@@ -757,6 +869,16 @@ export default function Conciliacao() {
                     <Table>
                       <TableHeader>
                         <TableRow>
+                          <TableHead className="w-[40px]">
+                            <Checkbox
+                              checked={(() => {
+                                const visibleIds = filteredTransactions.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map(t => t.id);
+                                return visibleIds.length > 0 && visibleIds.every(id => selectedIds.has(id));
+                              })()}
+                              onCheckedChange={() => toggleSelectAll(filteredTransactions.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map(t => t.id))}
+                              aria-label="Selecionar todas"
+                            />
+                          </TableHead>
                           <TableHead className="text-xs md:text-sm">Data</TableHead>
                           <TableHead className="text-xs md:text-sm">Descrição</TableHead>
                           <TableHead className="text-xs md:text-sm">Valor</TableHead>
@@ -785,7 +907,7 @@ export default function Conciliacao() {
                       <TableBody>
                         {isLoading && (
                           <TableRow>
-                            <TableCell colSpan={6} className="text-center py-8">
+                            <TableCell colSpan={7} className="text-center py-8">
                               <div className="flex items-center justify-center gap-2">
                                 <Loader2 className="h-4 w-4 animate-spin" />
                                 Carregando transações...
@@ -796,7 +918,7 @@ export default function Conciliacao() {
                         
                         {!isLoading && filteredTransactions.length === 0 && (
                           <TableRow>
-                            <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                            <TableCell colSpan={7} className="text-center py-8 text-gray-500">
                               Nenhuma transação encontrada
                             </TableCell>
                           </TableRow>
@@ -806,7 +928,14 @@ export default function Conciliacao() {
                           filteredTransactions
                             .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                             .map((transaction) => (
-                          <TableRow key={transaction.id}>
+                          <TableRow key={transaction.id} className={selectedIds.has(transaction.id) ? 'bg-primary/5' : ''}>
+                            <TableCell>
+                              <Checkbox
+                                checked={selectedIds.has(transaction.id)}
+                                onCheckedChange={() => toggleSelect(transaction.id)}
+                                aria-label="Selecionar transação"
+                              />
+                            </TableCell>
                             <TableCell>
                               {new Date(transaction.data_transacao).toLocaleDateString('pt-BR')}
                             </TableCell>
