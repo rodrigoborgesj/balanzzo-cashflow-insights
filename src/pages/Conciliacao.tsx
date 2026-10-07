@@ -869,6 +869,16 @@ export default function Conciliacao() {
                     <Table>
                       <TableHeader>
                         <TableRow>
+                          <TableHead className="w-[40px]">
+                            <Checkbox
+                              checked={(() => {
+                                const visibleIds = filteredTransactions.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map(t => t.id);
+                                return visibleIds.length > 0 && visibleIds.every(id => selectedIds.has(id));
+                              })()}
+                              onCheckedChange={() => toggleSelectAll(filteredTransactions.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map(t => t.id))}
+                              aria-label="Selecionar todas"
+                            />
+                          </TableHead>
                           <TableHead className="text-xs md:text-sm">Data</TableHead>
                           <TableHead className="text-xs md:text-sm">Descrição</TableHead>
                           <TableHead className="text-xs md:text-sm">Valor</TableHead>
