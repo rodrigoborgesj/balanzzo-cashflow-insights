@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { calculateMonthlySavings, calculateSavingsProgress, parseSavingsAmount } from './savingsGoalCalculations';
+import { calculateMonthlySavings, calculateSavingsProgress, parseSavingsAmount } from '../src/utils/savingsGoalCalculations';
 
 describe('Metas com saldo inicial', () => {
   test('divide somente o que falta pelo prazo', () => {
