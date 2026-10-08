@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -34,11 +33,13 @@ import {
 import { cn } from '@/lib/utils';
 import { CalendarIcon, Loader2, Target, Banknote } from 'lucide-react';
 import { usePersonalSavingsGoals } from '@/hooks/usePersonalSavingsGoals';
+import { calculateMonthlySavings, parseSavingsAmount } from '@/utils/savingsGoalCalculations';
 
 const savingsGoalSchema = z.object({
   goal_name: z.string().min(1, 'Nome da meta obrigatório').max(100, 'Nome muito longo'),
-  total_target_amount: z.string().min(1, 'Valor total obrigatório'),
-  timeframe_months: z.string().min(1, 'Prazo obrigatório'),
+  total_target_amount: z.string().refine(value => parseSavingsAmount(value) > 0, 'Informe uma meta maior que zero'),
+  initial_saved_amount: z.string().refine(value => Number.isFinite(parseSavingsAmount(value)) && parseSavingsAmount(value) >= 0, 'Informe um valor válido, igual ou maior que zero'),
+  timeframe_months: z.string().refine(value => Number.isInteger(Number(value)) && Number(value) >= 1 && Number(value) <= 120, 'Informe um prazo entre 1 e 120 meses'),
   bank_name: z.string().optional(),
   contribution_day: z.string().optional(),
   start_date: z.date().optional(),
@@ -53,13 +54,13 @@ interface CreateSavingsGoalDialogProps {
 
 export function CreateSavingsGoalDialog({ open, onOpenChange }: CreateSavingsGoalDialogProps) {
   const { createGoal, isCreating } = usePersonalSavingsGoals();
-  const [calculatedMonthly, setCalculatedMonthly] = useState<number | null>(null);
 
   const form = useForm<SavingsGoalFormData>({
     resolver: zodResolver(savingsGoalSchema),
     defaultValues: {
       goal_name: '',
       total_target_amount: '',
+      initial_saved_amount: '0,00',
       timeframe_months: '',
       bank_name: '',
       contribution_day: '10',
@@ -69,21 +70,13 @@ export function CreateSavingsGoalDialog({ open, onOpenChange }: CreateSavingsGoa
 
   const watchAmount = form.watch('total_target_amount');
   const watchMonths = form.watch('timeframe_months');
-
-  useEffect(() => {
-    const amount = parseAmount(watchAmount || '0');
-    const months = parseInt(watchMonths || '0', 10);
-    
-    if (amount > 0 && months > 0) {
-      setCalculatedMonthly(amount / months);
-    } else {
-      setCalculatedMonthly(null);
-    }
-  }, [watchAmount, watchMonths]);
-
-  const parseAmount = (value: string): number => {
-    return parseFloat(value.replace(/\./g, '').replace(',', '.')) || 0;
-  };
+  const watchInitialSaved = form.watch('initial_saved_amount');
+  const amount = parseSavingsAmount(watchAmount);
+  const initialSaved = parseSavingsAmount(watchInitialSaved);
+  const months = Number(watchMonths);
+  const calculatedMonthly = amount > 0 && Number.isFinite(initialSaved) && initialSaved >= 0 && Number.isInteger(months) && months > 0
+    ? calculateMonthlySavings(amount, initialSaved, months)
+    : null;
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -95,7 +88,8 @@ export function CreateSavingsGoalDialog({ open, onOpenChange }: CreateSavingsGoa
   const onSubmit = (data: SavingsGoalFormData) => {
     createGoal({
       goal_name: data.goal_name,
-      total_target_amount: parseAmount(data.total_target_amount),
+      total_target_amount: parseSavingsAmount(data.total_target_amount),
+      initial_saved_amount: parseSavingsAmount(data.initial_saved_amount),
       timeframe_months: parseInt(data.timeframe_months, 10),
       bank_name: data.bank_name || undefined,
       contribution_day: data.contribution_day ? parseInt(data.contribution_day, 10) : undefined,
@@ -111,8 +105,8 @@ export function CreateSavingsGoalDialog({ open, onOpenChange }: CreateSavingsGoa
   const contributionDays = Array.from({ length: 28 }, (_, i) => i + 1);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+    <Dialog open={open} onOpenChange={onOpenChange} modal={false}>
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto notranslate" translate="no">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Target className="h-5 w-5 text-primary" />
@@ -182,14 +176,31 @@ export function CreateSavingsGoalDialog({ open, onOpenChange }: CreateSavingsGoa
               />
             </div>
 
+            <FormField
+              control={form.control}
+              name="initial_saved_amount"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Valor já guardado (R$)</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="0,00" inputMode="decimal" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             {/* Calculated Monthly Amount */}
-            {calculatedMonthly && (
+            {calculatedMonthly !== null && (
               <div className="flex items-center gap-3 p-4 rounded-lg bg-primary/10 border border-primary/20">
                 <Banknote className="h-6 w-6 text-primary" />
                 <div>
                   <p className="text-sm text-muted-foreground">Valor mensal a guardar</p>
                   <p className="text-lg font-bold text-primary">
                     {formatCurrency(calculatedMonthly)}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Falta guardar: {formatCurrency(Math.max(0, amount - initialSaved))}
                   </p>
                 </div>
               </div>

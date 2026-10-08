@@ -2,12 +2,14 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { toast } from 'sonner';
+import { calculateSavingsProgress } from '@/utils/savingsGoalCalculations';
 
 export interface SavingsGoal {
   id: string;
   user_id: string;
   goal_name: string;
   total_target_amount: number;
+  initial_saved_amount: number;
   timeframe_months: number;
   monthly_amount: number;
   bank_name: string | null;
@@ -36,6 +38,7 @@ export interface SavingsContribution {
 export interface SavingsGoalInput {
   goal_name: string;
   total_target_amount: number;
+  initial_saved_amount?: number;
   timeframe_months: number;
   bank_name?: string;
   contribution_day?: number;
@@ -86,6 +89,7 @@ export function usePersonalSavingsGoals() {
           user_id: user.id,
           goal_name: input.goal_name,
           total_target_amount: input.total_target_amount,
+          initial_saved_amount: input.initial_saved_amount ?? 0,
           timeframe_months: input.timeframe_months,
           bank_name: input.bank_name || null,
           contribution_day: input.contribution_day || null,
@@ -313,9 +317,9 @@ export function usePersonalSavingsContributions(goalId?: string) {
 
   // Calculate totals for a goal
   const calculateGoalProgress = (goal: SavingsGoal, goalContributions: SavingsContribution[]) => {
-    const totalSaved = goalContributions.reduce((sum, c) => sum + Number(c.amount), 0);
-    const progressPercentage = (totalSaved / Number(goal.total_target_amount)) * 100;
-    const remaining = Number(goal.total_target_amount) - totalSaved;
+    const { totalSaved, progressPercentage, remaining } = calculateSavingsProgress(
+      Number(goal.total_target_amount), Number(goal.initial_saved_amount || 0), goalContributions
+    );
     
     // Calculate next contribution date
     const startDate = new Date(goal.start_date);

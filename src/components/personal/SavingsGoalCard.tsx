@@ -159,6 +159,10 @@ export function SavingsGoalCard({ goal, contributions, onComplete, onDelete }: S
                   <p className="text-muted-foreground">Falta guardar</p>
                   <p className="font-medium">{formatCurrency(progress.remaining)}</p>
                 </div>
+                <div>
+                  <p className="text-muted-foreground">Valor inicial guardado</p>
+                  <p className="font-medium">{formatCurrency(Number(goal.initial_saved_amount || 0))}</p>
+                </div>
                 {goal.contribution_day && (
                   <div>
                     <p className="text-muted-foreground">Dia da contribuição</p>
