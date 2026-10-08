@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -61,6 +61,13 @@ export function ContributionDialog({ open, onOpenChange, goal, monthlyAmount }: 
     },
   });
 
+  useEffect(() => {
+    if (open) {
+      form.reset({ amount: monthlyAmount.toFixed(2).replace('.', ','), notes: '' });
+      setSelectedFile(null);
+    }
+  }, [open, monthlyAmount, form]);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -107,7 +114,7 @@ export function ContributionDialog({ open, onOpenChange, goal, monthlyAmount }: 
       );
       const isLate = data.contribution_date > expectedDate;
 
-      createContribution({
+      await createContribution({
         goal_id: goal.id,
         contribution_date: format(data.contribution_date, 'yyyy-MM-dd'),
         amount: parseAmount(data.amount),

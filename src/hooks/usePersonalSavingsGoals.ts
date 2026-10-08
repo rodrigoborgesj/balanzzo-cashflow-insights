@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { toast } from 'sonner';
-import { calculateSavingsProgress } from '@/utils/savingsGoalCalculations';
+import { calculateRemainingSavingsPlan } from '@/utils/savingsGoalCalculations';
 
 export interface SavingsGoal {
   id: string;
@@ -317,8 +317,9 @@ export function usePersonalSavingsContributions(goalId?: string) {
 
   // Calculate totals for a goal
   const calculateGoalProgress = (goal: SavingsGoal, goalContributions: SavingsContribution[]) => {
-    const { totalSaved, progressPercentage, remaining } = calculateSavingsProgress(
-      Number(goal.total_target_amount), Number(goal.initial_saved_amount || 0), goalContributions
+    const { totalSaved, progressPercentage, remaining, monthlyAmount, remainingMonths } = calculateRemainingSavingsPlan(
+      Number(goal.total_target_amount), Number(goal.initial_saved_amount || 0),
+      goal.timeframe_months, goal.start_date, goalContributions
     );
     
     // Calculate next contribution date
@@ -344,7 +345,8 @@ export function usePersonalSavingsContributions(goalId?: string) {
       remaining: Math.max(0, remaining),
       nextContributionDate,
       pendingMonths,
-      monthlyAmount: Number(goal.monthly_amount),
+      monthlyAmount,
+      remainingMonths,
     };
   };
 
@@ -353,7 +355,7 @@ export function usePersonalSavingsContributions(goalId?: string) {
     isLoading,
     error,
     uploadProof,
-    createContribution: createContribution.mutate,
+    createContribution: createContribution.mutateAsync,
     deleteContribution: deleteContribution.mutate,
     isCreating: createContribution.isPending,
     isDeleting: deleteContribution.isPending,
