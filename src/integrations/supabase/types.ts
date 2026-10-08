@@ -901,6 +901,7 @@ export type Database = {
           created_at: string | null
           goal_name: string
           id: string
+          initial_saved_amount: number
           monthly_amount: number | null
           start_date: string
           status: string
@@ -915,6 +916,7 @@ export type Database = {
           created_at?: string | null
           goal_name: string
           id?: string
+          initial_saved_amount?: number
           monthly_amount?: number | null
           start_date?: string
           status?: string
@@ -929,6 +931,7 @@ export type Database = {
           created_at?: string | null
           goal_name?: string
           id?: string
+          initial_saved_amount?: number
           monthly_amount?: number | null
           start_date?: string
           status?: string
