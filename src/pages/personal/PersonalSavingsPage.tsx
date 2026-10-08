@@ -58,7 +58,8 @@ export default function PersonalSavingsPage() {
 
   // Calculate totals
   const totalTargetAmount = activeGoals?.reduce((sum, g) => sum + Number(g.total_target_amount), 0) || 0;
-  const totalSaved = contributions?.reduce((sum, c) => sum + Number(c.amount), 0) || 0;
+  const initialSaved = goals?.reduce((sum, goal) => sum + Number(goal.initial_saved_amount || 0), 0) || 0;
+  const totalSaved = initialSaved + (contributions?.reduce((sum, c) => sum + Number(c.amount), 0) || 0);
   const overallProgress = totalTargetAmount > 0 ? (totalSaved / totalTargetAmount) * 100 : 0;
 
   const getContributionsForGoal = (goalId: string) => {
