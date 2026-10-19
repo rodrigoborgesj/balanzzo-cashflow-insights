@@ -1,3 +1,4 @@
+import { parseLocalDate } from "@/utils/localDate";
 import { useMemo, useState } from 'react';
 import { ChevronDown, ChevronRight, MoveRight, ArrowDownCircle, ArrowUpCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -206,8 +207,8 @@ export function CostCenterHierarchy({ transactions, onUpdated }: Props) {
                                 .slice()
                                 .sort(
                                   (a, b) =>
-                                    new Date(b.data_transacao).getTime() -
-                                    new Date(a.data_transacao).getTime(),
+                                    parseLocalDate(b.data_transacao).getTime() -
+                                    parseLocalDate(a.data_transacao).getTime(),
                                 )
                                 .map((t) => (
                                   <li
@@ -215,7 +216,7 @@ export function CostCenterHierarchy({ transactions, onUpdated }: Props) {
                                     className="flex items-center gap-2 pl-14 pr-3 py-2 border-t border-gray-100 hover:bg-gray-50"
                                   >
                                     <span className="text-[10px] md:text-xs text-gray-500 w-14 flex-shrink-0">
-                                      {new Date(t.data_transacao).toLocaleDateString('pt-BR', {
+                                      {parseLocalDate(t.data_transacao).toLocaleDateString('pt-BR', {
                                         day: '2-digit',
                                         month: '2-digit',
                                       })}

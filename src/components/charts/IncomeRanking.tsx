@@ -1,3 +1,4 @@
+import { parseLocalDate } from "@/utils/localDate";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp, Users, Building2, ShoppingCart, Briefcase, Package, CreditCard, DollarSign, Receipt, Banknote, Wallet, HandCoins, Landmark } from 'lucide-react';
 import { useMemo } from 'react';
@@ -40,7 +41,7 @@ export const IncomeRanking = ({ transactions, selectedMonth, formatCurrency, lim
 
     const monthIncomes = transactions.filter(t => {
       if (t.tipo !== 'entrada') return false;
-      const transDate = new Date(t.data_transacao);
+      const transDate = parseLocalDate(t.data_transacao);
       return transDate.getFullYear() === year && (transDate.getMonth() + 1) === month;
     });
 

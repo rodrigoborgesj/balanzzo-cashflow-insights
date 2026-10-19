@@ -1,3 +1,4 @@
+import { parseLocalDate } from "@/utils/localDate";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -323,7 +324,7 @@ export function usePersonalSavingsContributions(goalId?: string) {
     );
     
     // Calculate next contribution date
-    const startDate = new Date(goal.start_date);
+    const startDate = parseLocalDate(goal.start_date);
     const contributionDay = goal.contribution_day || startDate.getDate();
     const now = new Date();
     

@@ -1,3 +1,4 @@
+import { parseLocalDate } from "@/utils/localDate";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowUpRight, ArrowDownRight, Receipt, Users, Building2, Truck, Zap, ShoppingCart, Wrench, FileText, CreditCard, Briefcase, Package, Phone, Wifi, Car, Home, Coffee, Utensils, HeartPulse, GraduationCap, Plane, DollarSign } from 'lucide-react';
 import { useMemo } from 'react';
@@ -78,7 +79,7 @@ const getCategoryIcon = (category: string, tipo: string) => {
 export const RecentTransactions = ({ transactions, formatCurrency, limit = 7 }: RecentTransactionsProps) => {
   const recentTransactions = useMemo(() => {
     return [...transactions]
-      .sort((a, b) => new Date(b.data_transacao).getTime() - new Date(a.data_transacao).getTime())
+      .sort((a, b) => parseLocalDate(b.data_transacao).getTime() - parseLocalDate(a.data_transacao).getTime())
       .slice(0, limit)
       .map(t => ({
         ...t,
@@ -148,7 +149,7 @@ export const RecentTransactions = ({ transactions, formatCurrency, limit = 7 }: 
                     {transaction.category}
                   </span>
                   <span className="text-xs text-muted-foreground">
-                    {format(new Date(transaction.data_transacao), "dd MMM", { locale: ptBR })}
+                    {format(parseLocalDate(transaction.data_transacao), "dd MMM", { locale: ptBR })}
                   </span>
                 </div>
               </div>

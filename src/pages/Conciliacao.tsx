@@ -1,3 +1,4 @@
+import { parseLocalDate } from "@/utils/localDate";
 import { useState, useCallback, useEffect } from 'react';
 import { usePersistedState } from '@/hooks/usePersistedState';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -574,7 +575,7 @@ export default function Conciliacao() {
                             <div key={index} className="text-xs flex justify-between items-center p-1 border-b last:border-b-0">
                               <div className="flex-1 truncate max-w-[200px]">
                                 <div className="text-black">{transaction.description}</div>
-                                <div className="text-gray-600">{new Date(transaction.date).toLocaleDateString('pt-BR')}</div>
+                                <div className="text-gray-600">{parseLocalDate(transaction.date).toLocaleDateString('pt-BR')}</div>
                               </div>
                               <span className={transaction.value >= 0 ? "text-black font-medium" : "text-black font-medium"}>
                                 {transaction.value >= 0 ? '+' : ''}R$ {transaction.value.toFixed(2)}
@@ -811,7 +812,7 @@ export default function Conciliacao() {
                           />
                         <div className="flex-1 min-w-0">
                           <p className="text-xs text-gray-500">
-                            {new Date(transaction.data_transacao).toLocaleDateString('pt-BR')}
+                            {parseLocalDate(transaction.data_transacao).toLocaleDateString('pt-BR')}
                           </p>
                           <p className="text-sm font-medium text-foreground truncate" title={transaction.descricao}>
                             {transaction.descricao}
@@ -937,7 +938,7 @@ export default function Conciliacao() {
                               />
                             </TableCell>
                             <TableCell>
-                              {new Date(transaction.data_transacao).toLocaleDateString('pt-BR')}
+                              {parseLocalDate(transaction.data_transacao).toLocaleDateString('pt-BR')}
                             </TableCell>
                             <TableCell className="max-w-xs truncate">
                               {transaction.descricao}

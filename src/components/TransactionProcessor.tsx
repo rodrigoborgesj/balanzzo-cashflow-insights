@@ -1,3 +1,4 @@
+import { parseLocalDate } from "@/utils/localDate";
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -213,7 +214,7 @@ export default function TransactionProcessor({ onDataChange }: TransactionProces
     const csvContent = [
       "Data,Descrição,Valor,Tipo,Categoria",
       ...filteredTransactions.map(t => 
-        `"${new Date(t.data_transacao).toLocaleDateString('pt-BR')}","${t.descricao}",${t.valor},"${t.tipo}","${t.categoria_final || t.categoria_sugerida || ''}"`
+        `"${parseLocalDate(t.data_transacao).toLocaleDateString('pt-BR')}","${t.descricao}",${t.valor},"${t.tipo}","${t.categoria_final || t.categoria_sugerida || ''}"`
       )
     ].join('\n');
 
@@ -435,7 +436,7 @@ export default function TransactionProcessor({ onDataChange }: TransactionProces
                     .map((transaction) => (
                   <TableRow key={transaction.id}>
                     <TableCell>
-                      {new Date(transaction.data_transacao).toLocaleDateString('pt-BR')}
+                      {parseLocalDate(transaction.data_transacao).toLocaleDateString('pt-BR')}
                     </TableCell>
                     
                     <TableCell>

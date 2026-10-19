@@ -61,7 +61,7 @@ interface CategoryGroup {
 type PeriodMode = 'month' | 'custom';
 
 // Converte 'YYYY-MM-DD' em data local, evitando o deslocamento de fuso (dia anterior)
-const parseLocalDate = (value: string) => new Date(`${String(value).slice(0, 10)}T00:00:00`);
+import { parseLocalDate } from "@/utils/localDate";
 
 export default function FluxoCaixa() {
   const [saldoInicial, setSaldoInicial] = useState(0);
@@ -221,7 +221,7 @@ export default function FluxoCaixa() {
       
       return {
         category,
-        transactions: txs.sort((a, b) => new Date(b.data_transacao).getTime() - new Date(a.data_transacao).getTime()),
+        transactions: txs.sort((a, b) => parseLocalDate(b.data_transacao).getTime() - parseLocalDate(a.data_transacao).getTime()),
         total,
         type,
         isOpen: false
@@ -316,7 +316,7 @@ export default function FluxoCaixa() {
         
         return true;
       })
-      .sort((a, b) => new Date(a.data_transacao).getTime() - new Date(b.data_transacao).getTime());
+      .sort((a, b) => parseLocalDate(a.data_transacao).getTime() - parseLocalDate(b.data_transacao).getTime());
   }, [periodFilteredTransactions, transactionFilter, selectedCategories]);
 
   // Calculate filtered result based on currently displayed transactions (excluding pending validation)
