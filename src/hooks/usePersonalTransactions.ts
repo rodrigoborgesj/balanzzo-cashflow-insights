@@ -60,12 +60,13 @@ export function usePersonalTransactions(month?: string) {
         .order('transaction_date', { ascending: false });
 
       if (month && month.length > 0) {
-        const startDate = new Date(month + '-01');
-        if (!isNaN(startDate.getTime())) {
-          const endDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, 0);
+        const [y, m] = month.split('-').map(Number);
+        if (y && m) {
+          const lastDay = new Date(y, m, 0).getDate();
+          const mm = String(m).padStart(2, '0');
           query = query
-            .gte('transaction_date', startDate.toISOString().split('T')[0])
-            .lte('transaction_date', endDate.toISOString().split('T')[0]);
+            .gte('transaction_date', `${y}-${mm}-01`)
+            .lte('transaction_date', `${y}-${mm}-${String(lastDay).padStart(2, '0')}`);
         }
       }
 

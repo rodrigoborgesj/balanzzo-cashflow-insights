@@ -1,8 +1,16 @@
-const APP_ORIGIN = "https://balanzzo.lovable.app";
+const FALLBACK_ORIGIN = "https://balanzzo.lovable.app";
+const ALLOWED_HOSTS = ["balanzzo.lovable.app", "balanzzo.com.br", "www.balanzzo.com.br"];
 
-export function getAuthRedirectUrl(path = "/") {
+/**
+ * Sempre volta para o MESMO endereço em que o cliente está (balanzzo.com.br
+ * ou balanzzo.lovable.app). Mandar o login do Google para outro domínio fazia
+ * a sessão ficar salva num endereço e o cliente navegar em outro, preso no
+ * "Verificando assinatura".
+ */
+export function getAuthRedirectUrl(path = "/login") {
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-  return `${APP_ORIGIN}${normalizedPath}`;
+  const origin = typeof window !== "undefined" ? window.location.origin : FALLBACK_ORIGIN;
+  return `${origin}${normalizedPath}`;
 }
 
 export function getSafeRedirectPath(value: string | null) {
@@ -14,7 +22,7 @@ export function getSafeRedirectPath(value: string | null) {
 
   try {
     const parsedUrl = new URL(value);
-    if (parsedUrl.hostname === "balanzzo.lovable.app") {
+    if (ALLOWED_HOSTS.includes(parsedUrl.hostname)) {
       return `${parsedUrl.pathname}${parsedUrl.search}${parsedUrl.hash}`;
     }
   } catch {
