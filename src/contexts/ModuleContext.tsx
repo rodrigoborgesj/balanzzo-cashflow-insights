@@ -85,7 +85,7 @@ export function ModuleProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }, [user]);
+  }, [user?.id]);
 
   useEffect(() => {
     checkSubscriptions();

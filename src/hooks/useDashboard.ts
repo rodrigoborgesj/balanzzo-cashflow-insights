@@ -1,3 +1,4 @@
+import { parseLocalDate } from "@/utils/localDate";
 import { useState, useCallback, useMemo, useRef } from 'react';
 import { usePersistedState } from './usePersistedState';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -180,7 +181,7 @@ export function useDashboard() {
       const monthlyData = new Map<string, any>();
 
       transactions.forEach(transaction => {
-        const transactionDate = new Date(transaction.data_transacao);
+        const transactionDate = parseLocalDate(transaction.data_transacao);
         const year = transactionDate.getFullYear();
         const month = transactionDate.getMonth() + 1;
         const key = `${year}-${month}`;
@@ -412,7 +413,7 @@ export function useDashboard() {
       if (error) throw error;
       const map = new Map<number, { ano: number; mes: number; total_entradas: number; total_saidas: number }>();
       (data || []).forEach((t: any) => {
-        const d = new Date(t.data_transacao);
+        const d = parseLocalDate(t.data_transacao);
         const m = d.getMonth() + 1;
         if (!map.has(m)) map.set(m, { ano: currentYear, mes: m, total_entradas: 0, total_saidas: 0 });
         const entry = map.get(m)!;

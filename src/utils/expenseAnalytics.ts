@@ -1,3 +1,4 @@
+import { parseLocalDate } from "@/utils/localDate";
 import { toZonedTime, format } from 'date-fns-tz';
 
 export interface Transaction {
@@ -48,7 +49,7 @@ function isTransactionInMonth(
   timezone: string = 'America/Sao_Paulo'
 ): boolean {
   try {
-    const transactionDate = new Date(transaction.data_transacao);
+    const transactionDate = parseLocalDate(transaction.data_transacao);
     const zonedDate = toZonedTime(transactionDate, timezone);
     const transactionMonthKey = format(zonedDate, 'yyyy-MM', { timeZone: timezone });
     

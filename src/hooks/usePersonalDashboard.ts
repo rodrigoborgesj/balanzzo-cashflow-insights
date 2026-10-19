@@ -1,3 +1,4 @@
+import { parseLocalDate } from "@/utils/localDate";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -171,7 +172,7 @@ export function usePersonalDashboard(selectedMonth?: string) {
 
     if (yearlyTransactions) {
       yearlyTransactions.forEach((t) => {
-        const date = new Date(t.transaction_date);
+        const date = parseLocalDate(t.transaction_date);
         const monthIndex = date.getMonth();
         const amount = Number(t.amount);
 

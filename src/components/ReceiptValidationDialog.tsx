@@ -1,3 +1,4 @@
+import { parseLocalDate } from "@/utils/localDate";
 import { useState, useCallback } from 'react';
 import {
   Dialog,
@@ -223,7 +224,7 @@ export function ReceiptValidationDialog({
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Data:</span>
               <span className="text-sm font-medium">
-                {new Date(transaction.data_transacao).toLocaleDateString('pt-BR')}
+                {parseLocalDate(transaction.data_transacao).toLocaleDateString('pt-BR')}
               </span>
             </div>
             <div className="flex justify-between items-center">

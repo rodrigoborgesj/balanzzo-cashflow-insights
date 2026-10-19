@@ -1,3 +1,4 @@
+import { parseLocalDate } from "@/utils/localDate";
 import { useState, useCallback } from 'react';
 import { usePersistedState } from './usePersistedState';
 import { supabase } from '@/integrations/supabase/client';
@@ -1087,7 +1088,7 @@ export function useConciliacao() {
       const dadosPorMes = new Map();
 
       transacoes.forEach(transacao => {
-        const data = new Date(transacao.data_transacao);
+        const data = parseLocalDate(transacao.data_transacao);
         const ano = data.getFullYear();
         const mes = data.getMonth() + 1;
         const chave = `${ano}-${mes}`;

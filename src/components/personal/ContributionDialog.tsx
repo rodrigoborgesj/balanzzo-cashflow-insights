@@ -1,3 +1,4 @@
+import { parseLocalDate } from "@/utils/localDate";
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -102,7 +103,7 @@ export function ContributionDialog({ open, onOpenChange, goal, monthlyAmount }: 
       const proofUrl = await uploadProof(selectedFile);
 
       // Calculate reference month from contribution date
-      const referenceMonth = new Date(data.contribution_date);
+      const referenceMonth = parseLocalDate(data.contribution_date);
       referenceMonth.setDate(1);
 
       // Check if contribution is late

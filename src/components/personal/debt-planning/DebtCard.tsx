@@ -1,3 +1,4 @@
+import { parseLocalDate } from "@/utils/localDate";
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -91,7 +92,7 @@ export function DebtCard({ debt, onEdit, onDelete, onEditRenegotiation, onToggle
                         <div>
                           <p className="text-muted-foreground">Primeira Parcela</p>
                           <p className="font-medium">
-                            {format(new Date(debt.renegotiation.first_due_date), 'dd/MM/yyyy', { locale: ptBR })}
+                            {format(parseLocalDate(debt.renegotiation.first_due_date), 'dd/MM/yyyy', { locale: ptBR })}
                           </p>
                         </div>
                       </div>

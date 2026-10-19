@@ -1,3 +1,4 @@
+import { parseLocalDate } from "@/utils/localDate";
 import { useState, useEffect, useCallback } from 'react';
 import { Transaction } from '@/hooks/useConciliacao';
 import { supabase } from '@/integrations/supabase/client';
@@ -177,7 +178,7 @@ export function useCashFlowIntegration(selectedMonth: string) {
 
   // Calcular saldo acumulado
   let saldoAcumulado = 0;
-  dailyFlow.sort((a, b) => new Date(a.data).getTime() - new Date(b.data).getTime());
+  dailyFlow.sort((a, b) => parseLocalDate(a.data).getTime() - parseLocalDate(b.data).getTime());
   dailyFlow.forEach(day => {
     saldoAcumulado += day.saldo;
     day.saldoAcumulado = saldoAcumulado;
@@ -185,7 +186,7 @@ export function useCashFlowIntegration(selectedMonth: string) {
 
   // Dados para gráficos
   const chartData = dailyFlow.map(day => ({
-    data: new Date(day.data).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+    data: parseLocalDate(day.data).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
     entradas: day.entradas,
     saidas: day.saidas,
     saldo: day.saldoAcumulado
