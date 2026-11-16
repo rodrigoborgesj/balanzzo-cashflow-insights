@@ -317,7 +317,7 @@ export function useConciliacao() {
   };
 
   // New comprehensive function to normalize and save parsed transactions
-  const saveTransactions = useCallback(async (parsedTransactions: ParsedTransaction[]): Promise<boolean> => {
+  const saveTransactions = useCallback(async (parsedTransactions: ParsedTransaction[], sourceFileName?: string): Promise<boolean> => {
     if (!user) {
       console.error('❌ User not authenticated');
       toast({
@@ -465,7 +465,7 @@ export function useConciliacao() {
             status_conciliacao: false,
             mes_referencia,
             tipo,
-            origem_arquivo: 'CSV'
+            origem_arquivo: sourceFileName ? sourceFileName.slice(0, 200) : 'CSV'
           });
         } catch (error) {
           const errorMsg = error instanceof Error ? error.message : 'Erro desconhecido';
@@ -1275,6 +1275,61 @@ export function useConciliacao() {
     }
   }, [user?.id, selectedMonth, loadTransactions, toast]);
 
+  // Lista os extratos (lotes de upload) com transações no mês selecionado
+  const listStatementsByMonth = useCallback(async (monthReference: string) => {
+    if (!user?.id) return [];
+    const rows: any[] = [];
+    for (let from = 0; ; from += 1000) {
+      const { data, error } = await supabase
+        .from('transacoes_conciliadas')
+        .select('id, origem_arquivo, criado_em, valor, status_conciliacao')
+        .eq('user_id', user.id)
+        .eq('mes_referencia', monthReference)
+        .not('origem_arquivo', 'is', null)
+        .neq('origem_arquivo', 'manual_entry')
+        .range(from, from + 999);
+      if (error) { console.error(error); break; }
+      rows.push(...(data || []));
+      if (!data || data.length < 1000) break;
+    }
+    const groups = new Map<string, { key: string; origem: string; uploadedAt: string; ids: string[]; total: number; conciliadas: number }>();
+    rows.forEach(r => {
+      const minute = String(r.criado_em || '').slice(0, 16);
+      const key = `${r.origem_arquivo}|${minute}`;
+      const g = groups.get(key) || { key, origem: r.origem_arquivo, uploadedAt: r.criado_em, ids: [], total: 0, conciliadas: 0 };
+      g.ids.push(r.id);
+      g.total += Number(r.valor) || 0;
+      if (r.status_conciliacao) g.conciliadas++;
+      groups.set(key, g);
+    });
+    return Array.from(groups.values()).sort((a, b) => String(b.uploadedAt).localeCompare(String(a.uploadedAt)));
+  }, [user?.id]);
+
+  // Remove apenas as transações de um extrato específico
+  const removeTransactionsByIds = useCallback(async (ids: string[]) => {
+    if (!user?.id || ids.length === 0) return false;
+    try {
+      setIsLoading(true);
+      for (let i = 0; i < ids.length; i += 200) {
+        const { error } = await supabase
+          .from('transacoes_conciliadas')
+          .delete()
+          .eq('user_id', user.id)
+          .in('id', ids.slice(i, i + 200));
+        if (error) throw error;
+      }
+      await loadTransactions(selectedMonth);
+      toast({ title: 'Sucesso', description: `${ids.length} transações do extrato removidas` });
+      return true;
+    } catch (error) {
+      console.error('Erro ao remover extrato:', error);
+      toast({ title: 'Erro', description: 'Erro ao remover transações do extrato', variant: 'destructive' });
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user?.id, selectedMonth, loadTransactions, toast]);
+
   // Função para remover todas as transações importadas
   const removeAllImportedTransactions = useCallback(async () => {
     if (!user?.id) {
@@ -1343,6 +1398,8 @@ export function useConciliacao() {
     deleteUserCategory,
     checkCategoryUsage,
     removeTransactionsByMonth,
-    removeAllImportedTransactions
+    removeAllImportedTransactions,
+    listStatementsByMonth,
+    removeTransactionsByIds
   };
 }
