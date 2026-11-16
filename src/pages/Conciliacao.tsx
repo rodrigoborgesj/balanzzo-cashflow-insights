@@ -216,7 +216,7 @@ export default function Conciliacao() {
       }
 
       console.log('💾 Chamando saveTransactions...');
-      const success = await saveTransactions(validTransactions);
+      const success = await saveTransactions(validTransactions, selectedFile?.name);
       console.log('✅ saveTransactions resultado:', success);
       
       if (success) {
