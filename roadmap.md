@@ -1,3 +1,9 @@
+# Checkout audit
+
+- [ ] Inspect card recurring checkout, payment confirmations, and access activation.
+- [ ] Correct confirmed payment defects and run regression tests.
+- [ ] Verify deployed payment endpoints and identify any live-payment blockers.
+
 # Savings goals
 
 - [x] Recalculate remaining monthly installments after actual contributions, including extra deposits and deletions.
