@@ -1,5 +1,12 @@
 # Checkout audit
 
+# Annual cash flow
+
+- [ ] Add an annual view with reconciled months in columns and preserved centers, subgroups, and categories.
+- [ ] Verify totals, filters, and existing monthly view without changing brand styling.
+
+# Checkout audit tasks
+
 - [ ] Inspect card recurring checkout, payment confirmations, and access activation.
 - [ ] Correct confirmed payment defects and run regression tests.
 - [ ] Verify deployed payment endpoints and identify any live-payment blockers.
