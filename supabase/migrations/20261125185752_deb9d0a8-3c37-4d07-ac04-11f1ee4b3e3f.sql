@@ -1,0 +1,1 @@
+CREATE POLICY webhook_receipts_service_only ON public.payment_webhook_receipts FOR ALL TO service_role USING(true) WITH CHECK(true); CREATE INDEX checkout_plan_idx ON public.payment_checkout_sessions(plan_id);

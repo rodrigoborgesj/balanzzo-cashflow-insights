@@ -1,379 +1,67 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.5";
+import { PAGARME_URL, buildPaymentLink, isSinglePayment, matchesGatewayPlan, validateCustomer } from '../_shared/pagarme.ts';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+const corsHeaders = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' };
+const response = (data: unknown, status = 200) => new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
-interface CreateSubscriptionRequest {
-  planId: string;
-  paymentMethod?: 'credit_card' | 'pix';
-  couponCode?: string;
-  customer: {
-    name: string;
-    email: string;
-    document: string;
-    phone: string;
-  };
-}
-
-serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
+serve(async req => {
+  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
+  if (req.method !== 'POST') return response({ error: 'Método não permitido' }, 405);
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const url = Deno.env.get('SUPABASE_URL');
+    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     const pagarmeKey = Deno.env.get('PAGARME_SECRET_KEY') || Deno.env.get('PAGARME_API_KEY');
-    if (!pagarmeKey) {
-      console.error('PAGARME_SECRET_KEY/PAGARME_API_KEY not configured');
-      return new Response(
-        JSON.stringify({ error: 'Configuração de pagamento ausente. Contate o suporte.' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    if (!url || !serviceKey || !pagarmeKey?.startsWith('sk_')) return response({ error: 'Pagamento indisponível: confira a configuração da Pagar.me.' }, 503);
+    const supabase = createClient(url, serviceKey);
+    const auth = req.headers.get('Authorization');
+    if (!auth?.startsWith('Bearer ')) return response({ error: 'Entre na sua conta para assinar.' }, 401);
+    const { data: { user }, error: authError } = await supabase.auth.getUser(auth.slice(7));
+    if (authError || !user) return response({ error: 'Sua sessão expirou. Entre novamente.' }, 401);
+    const body = await req.json();
+    const method = body.paymentMethod || 'credit_card';
+    if (!['credit_card', 'pix'].includes(method)) return response({ error: 'Forma de pagamento inválida.' }, 400);
+    let customer;
+    try { customer = validateCustomer(body.customer); } catch (error) { return response({ error: error instanceof Error ? error.message : 'Dados inválidos.' }, 400); }
+    const { data: plan, error: planError } = await supabase.from('subscription_plans').select('*').eq('id', body.planId).eq('active', true).single();
+    if (planError || !plan) return response({ error: 'Plano não encontrado ou indisponível.' }, 404);
+    let amount = plan.price_cents;
+    let coupon: string | null = null;
+    if (typeof body.couponCode === 'string' && body.couponCode.trim()) {
+      const { data, error } = await supabase.rpc('validate_coupon', { p_code: body.couponCode.trim(), p_plan_id: plan.id });
+      const result = Array.isArray(data) ? data[0] : data;
+      if (error || !result?.valid) return response({ error: result?.message || 'Não foi possível validar o cupom.' }, 400);
+      amount = result.final_price_cents;
+      coupon = body.couponCode.trim().toUpperCase();
     }
-    if (!pagarmeKey.startsWith('sk_')) {
-      console.error('Pagar.me key is not a secret key (must start with sk_). Got prefix:', pagarmeKey.slice(0, 5));
-      return new Response(
-        JSON.stringify({ error: 'Chave da Pagar.me inválida (deve ser secret key sk_).' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-    
-    const supabase = createClient(supabaseUrl, supabaseKey);
-    
-    // Get authenticated user
-    const authHeader = req.headers.get('Authorization')!;
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
-    
-    if (userError || !user) {
-      console.error('Auth error:', userError);
-      return new Response(
-        JSON.stringify({ error: 'Não autorizado' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const { planId, paymentMethod = 'credit_card', couponCode, customer }: CreateSubscriptionRequest = await req.json();
-    
-    console.log('Creating subscription for user:', user.id, 'plan:', planId, 'method:', paymentMethod);
-
-    // Get plan details
-    const { data: plan, error: planError } = await supabase
-      .from('subscription_plans')
-      .select('*')
-      .eq('id', planId)
-      .single();
-
-    if (planError || !plan) {
-      console.error('Plan error:', planError);
-      return new Response(
-        JSON.stringify({ error: 'Plano não encontrado' }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const isOneTimeService = plan.billing_cycle === 'one_time';
-
-    if (!isOneTimeService && !plan.pagarme_plan_id) {
-      console.error('Plan does not have pagarme_plan_id:', plan.id);
-      return new Response(
-        JSON.stringify({ error: 'Plano não configurado para pagamento' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Format phone number
-    const phoneDigits = customer.phone.replace(/\D/g, '');
-    const areaCode = phoneDigits.substring(0, 2);
-    const phoneNumber = phoneDigits.substring(2);
-    const documentClean = customer.document.replace(/\D/g, '');
-
-    const basicAuth = 'Basic ' + btoa(`${pagarmeKey}:`);
-
-    // Step 1: Create or get customer in Pagar.me
-    console.log('Creating/updating customer in Pagar.me...');
-    
-    const customerPayload = {
-      name: customer.name,
-      email: customer.email,
-      document: documentClean,
-      document_type: documentClean.length > 11 ? 'CNPJ' : 'CPF',
-      type: documentClean.length > 11 ? 'company' : 'individual',
-      phones: {
-        mobile_phone: {
-          country_code: '55',
-          area_code: areaCode,
-          number: phoneNumber,
-        }
-      },
-      metadata: {
-        user_id: user.id,
-      }
+    if (!Number.isInteger(amount) || amount <= 0) return response({ error: 'Este plano não possui um valor válido para cobrança.' }, 400);
+    const headers = { Authorization: 'Basic ' + btoa(`${pagarmeKey}:`), 'Content-Type': 'application/json', Accept: 'application/json' };
+    const gateway = async (path: string, payload?: unknown) => {
+      const result = await fetch(`${PAGARME_URL}${path}`, { method: payload ? 'POST' : 'GET', headers, ...(payload ? { body: JSON.stringify(payload) } : {}) });
+      if (!result.ok) { console.error('Pagar.me request failed', result.status, path.split('?')[0]); throw new Error('A Pagar.me não conseguiu preparar o pagamento. Confira os dados e tente novamente.'); }
+      return result.json();
     };
-
-    const customerResponse = await fetch('https://api.pagar.me/core/v5/customers', {
-      method: 'POST',
-      headers: {
-        'Authorization': basicAuth,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: JSON.stringify(customerPayload),
-    });
-
-    let customerId: string;
-    
-    if (customerResponse.status === 409) {
-      // Customer already exists, search for it
-      console.log('Customer exists, searching...');
-      const searchResponse = await fetch(
-        `https://api.pagar.me/core/v5/customers?email=${encodeURIComponent(customer.email)}`,
-        {
-          method: 'GET',
-          headers: {
-            'Authorization': basicAuth,
-            'Accept': 'application/json',
-          },
-        }
-      );
-      
-      if (!searchResponse.ok) {
-        const errorText = await searchResponse.text();
-        console.error('Error searching customer:', errorText);
-        return new Response(
-          JSON.stringify({ error: 'Erro ao buscar cliente' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      
-      const searchData = await searchResponse.json();
-      if (!searchData.data || searchData.data.length === 0) {
-        console.error('Customer not found after 409');
-        return new Response(
-          JSON.stringify({ error: 'Cliente não encontrado' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      
-      customerId = searchData.data[0].id;
-      console.log('Found existing customer:', customerId);
-    } else if (!customerResponse.ok) {
-      const errorText = await customerResponse.text();
-      console.error('Error creating customer:', customerResponse.status, errorText);
-      
-      let errorMessage = 'Erro ao criar cliente';
-      try {
-        const errorData = JSON.parse(errorText);
-        if (errorData.message) {
-          errorMessage = errorData.message;
-        } else if (errorData.errors && Array.isArray(errorData.errors)) {
-          errorMessage = errorData.errors.map((e: { message?: string }) => e.message || JSON.stringify(e)).join(', ');
-        }
-      } catch {
-        // Keep default error message
-      }
-      
-      return new Response(
-        JSON.stringify({ error: errorMessage }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    } else {
-      const customerData = await customerResponse.json();
-      customerId = customerData.id;
-      console.log('Created new customer:', customerId);
+    if (!isSinglePayment(method, coupon, plan.billing_cycle)) {
+      if (!plan.pagarme_plan_id) return response({ error: 'Este plano ainda não está configurado para cobrança recorrente.' }, 503);
+      const remotePlan = await gateway(`/plans/${plan.pagarme_plan_id}`);
+      if (!matchesGatewayPlan(plan, remotePlan)) return response({ error: 'O preço ou a recorrência deste plano precisa ser atualizado antes do pagamento.' }, 503);
     }
-
-    // Step 1.5: Validate coupon if provided
-    let finalPriceCents = plan.price_cents;
-    let appliedCoupon: string | null = null;
-    if (couponCode && couponCode.trim()) {
-      const { data: couponResult, error: couponError } = await supabase.rpc('validate_coupon', {
-        p_code: couponCode.trim(),
-        p_plan_id: planId,
-      });
-      if (couponError) {
-        console.error('Coupon validation error:', couponError);
-        return new Response(
-          JSON.stringify({ error: 'Erro ao validar cupom' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      const result = Array.isArray(couponResult) ? couponResult[0] : couponResult;
-      if (!result?.valid) {
-        return new Response(
-          JSON.stringify({ error: result?.message || 'Cupom inválido' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      finalPriceCents = result.final_price_cents;
-      appliedCoupon = couponCode.trim().toUpperCase();
-      console.log(`Coupon ${appliedCoupon} applied. Price: ${plan.price_cents} → ${finalPriceCents}`);
-    }
-
-    // Step 2: Create Payment Link - different approach for PIX vs Credit Card
-    // When a coupon is applied, we use a one-off order (1 month access) for both methods
-    // since Pagar.me recurring plans have fixed pricing
-    console.log('Creating payment link with method:', paymentMethod, 'coupon:', appliedCoupon);
-
-    let paymentLinkPayload: Record<string, unknown>;
-    const useOrder = paymentMethod === 'pix' || !!appliedCoupon || isOneTimeService;
-
-    if (useOrder) {
-      // Single payment (order type) — for PIX, coupons applied, or one-time services like consultoria
-      const acceptedMethods = paymentMethod === 'pix' ? ['pix'] : ['credit_card', 'pix'];
-      const paymentSettings: Record<string, unknown> = {
-        accepted_payment_methods: acceptedMethods,
-      };
-      if (acceptedMethods.includes('pix')) {
-        paymentSettings.pix_settings = { expires_in: 86400 };
-      }
-      if (acceptedMethods.includes('credit_card')) {
-        paymentSettings.credit_card_settings = { operation_type: 'auth_and_capture' };
-      }
-
-      const itemLabel = isOneTimeService
-        ? plan.name
-        : `${plan.name} - 1 Mês`;
-      const itemDescription = isOneTimeService
-        ? `${plan.name} - Serviço com duração de 2 meses`
-        : (appliedCoupon
-            ? `${plan.name} - Acesso por 1 mês (cupom ${appliedCoupon})`
-            : `${plan.name} - Acesso por 1 mês`);
-
-      paymentLinkPayload = {
-        name: itemLabel,
-        type: 'order',
-        is_payment_link: true,
-        payment_settings: paymentSettings,
-        customer_settings: {
-          customer_id: customerId
-        },
-        cart_settings: {
-          items: [
-            {
-              amount: finalPriceCents,
-              name: itemLabel,
-              description: itemDescription,
-              default_quantity: 1,
-              quantity: 1,
-              code: plan.id
-            }
-          ]
-        },
-        metadata: {
-          user_id: user.id,
-          plan_id: planId,
-          plan_name: plan.name,
-          subscription_type: plan.subscription_type,
-          payment_method: paymentMethod,
-          is_single_payment: true,
-          is_one_time_service: isOneTimeService ? 'true' : 'false',
-          coupon_code: appliedCoupon || ''
-        }
-      };
-    } else {
-      // Credit Card: Recurring subscription
-      paymentLinkPayload = {
-        name: `Assinatura ${plan.name}`,
-        type: 'subscription',
-        is_payment_link: true,
-        payment_settings: {
-          accepted_payment_methods: ['credit_card'],
-          credit_card_settings: {
-            operation_type: 'auth_and_capture'
-          }
-        },
-        customer_settings: {
-          customer_id: customerId
-        },
-        cart_settings: {
-          recurrences: [
-            {
-              plan_id: plan.pagarme_plan_id,
-              start_in: 0
-            }
-          ]
-        },
-        metadata: {
-          user_id: user.id,
-          plan_id: planId,
-          plan_name: plan.name,
-          subscription_type: plan.subscription_type,
-          payment_method: 'credit_card',
-          is_single_payment: false
-        }
-      };
-    }
-
-    console.log('Payment link payload:', JSON.stringify(paymentLinkPayload, null, 2));
-
-    const paymentLinkResponse = await fetch('https://api.pagar.me/core/v5/paymentlinks', {
-      method: 'POST',
-      headers: {
-        'Authorization': basicAuth,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: JSON.stringify(paymentLinkPayload),
-    });
-
-    const paymentLinkText = await paymentLinkResponse.text();
-    console.log('Payment link response status:', paymentLinkResponse.status);
-    console.log('Payment link response:', paymentLinkText);
-
-    if (!paymentLinkResponse.ok) {
-      console.error('Pagar.me payment link creation error:', paymentLinkResponse.status, paymentLinkText);
-      
-      let errorMessage = 'Erro ao criar link de pagamento';
-      try {
-        const errorData = JSON.parse(paymentLinkText);
-        if (errorData.message) {
-          errorMessage = errorData.message;
-        } else if (errorData.errors && Array.isArray(errorData.errors)) {
-          errorMessage = errorData.errors.map((e: { message?: string }) => e.message || JSON.stringify(e)).join(', ');
-        }
-      } catch {
-        // Keep default error message
-      }
-      
-      return new Response(
-        JSON.stringify({ error: errorMessage, details: paymentLinkText }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const paymentLink = JSON.parse(paymentLinkText);
-    console.log('Payment link created:', paymentLink.id, 'URL:', paymentLink.url);
-
-    if (!paymentLink.url) {
-      console.error('No URL in payment link response:', paymentLink);
-      return new Response(
-        JSON.stringify({ error: 'URL de pagamento não disponível' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        checkout_url: paymentLink.url,
-        checkout_id: paymentLink.id,
-        customer_id: customerId,
-        payment_method: paymentMethod,
-        message: paymentMethod === 'pix' ? 'Redirecionando para pagamento via PIX...' : 'Redirecionando para pagamento...' 
-      }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-
+    const customerPayload = { code: user.id, name: customer.name, email: customer.email, document: customer.document, document_type: customer.document.length === 14 ? 'CNPJ' : 'CPF', type: customer.document.length === 14 ? 'company' : 'individual', phones: { mobile_phone: { country_code: '55', area_code: customer.phone.slice(0, 2), number: customer.phone.slice(2) } }, metadata: { user_id: user.id } };
+    const result = await fetch(`${PAGARME_URL}/customers`, { method: 'POST', headers, body: JSON.stringify(customerPayload) });
+    let remoteCustomer;
+    if (result.status === 409) {
+      const found = await gateway(`/customers?code=${encodeURIComponent(user.id)}`);
+      remoteCustomer = found.data?.find((c: any) => c.code === user.id || c.metadata?.user_id === user.id);
+    } else if (result.ok) remoteCustomer = await result.json();
+    if (!remoteCustomer?.id) return response({ error: 'Não foi possível cadastrar os dados de pagamento. Confira CPF/CNPJ e telefone.' }, 400);
+    const sessionId = crypto.randomUUID();
+    const link = await gateway('/paymentlinks', buildPaymentLink(plan, remoteCustomer.id, sessionId, method, coupon, amount));
+    if (!link.id || typeof link.url !== 'string' || !link.url.startsWith('https://')) throw new Error('A Pagar.me não retornou um link de pagamento válido.');
+    const { error: saveError } = await supabase.from('payment_checkout_sessions').insert({ id: sessionId, user_id: user.id, plan_id: plan.id, pagarme_customer_id: remoteCustomer.id, pagarme_link_id: link.id, payment_method: method, amount_cents: amount, is_single_payment: isSinglePayment(method, coupon, plan.billing_cycle) });
+    if (saveError) { console.error('Failed to persist payment session', saveError.code); throw new Error('Não foi possível preparar a confirmação da assinatura. Tente novamente.'); }
+    return response({ success: true, checkout_url: link.url, checkout_id: link.id, payment_method: method, is_single_payment: isSinglePayment(method, coupon, plan.billing_cycle) });
   } catch (error) {
-    console.error('Error in create-pagarme-subscription:', error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    console.error('Checkout preparation failed', error instanceof Error ? error.name : 'unknown');
+    return response({ error: error instanceof SyntaxError ? 'Dados de pagamento inválidos.' : error instanceof Error ? error.message : 'Não foi possível preparar o pagamento.' }, 500);
   }
 });

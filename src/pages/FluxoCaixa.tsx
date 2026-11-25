@@ -49,6 +49,7 @@ import { InviteProfessionalDialog } from "@/components/professional/InviteProfes
 import { CostCenterHierarchy } from "@/components/cost-centers/CostCenterHierarchy";
 import { MoveCostCenterDialog } from "@/components/cost-centers/MoveCostCenterDialog";
 import { useCostCenters } from "@/hooks/useCostCenters";
+import { AnnualCashFlow } from "@/components/cost-centers/AnnualCashFlow";
 
 interface CategoryGroup {
   category: string;
@@ -58,7 +59,7 @@ interface CategoryGroup {
   isOpen: boolean;
 }
 
-type PeriodMode = 'month' | 'custom';
+type PeriodMode = 'month' | 'custom' | 'year';
 
 // Converte 'YYYY-MM-DD' em data local, evitando o deslocamento de fuso (dia anterior)
 import { parseLocalDate } from "@/utils/localDate";
@@ -75,6 +76,7 @@ export default function FluxoCaixa() {
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   });
   const [customStartISO, setCustomStartISO] = usePersistedState<string | null>('fluxo:customStart', null);
+  const [selectedYear, setSelectedYear] = usePersistedState<string>('fluxo:selectedYear', selectedMonth.slice(0, 4));
   const [customEndISO, setCustomEndISO] = usePersistedState<string | null>('fluxo:customEnd', null);
   const customStartDate = customStartISO ? new Date(customStartISO) : undefined;
   const customEndDate = customEndISO ? new Date(customEndISO) : undefined;
@@ -343,11 +345,12 @@ export default function FluxoCaixa() {
 
   // Format period display text
   const periodDisplayText = useMemo(() => {
+    if (periodMode === 'year') return selectedYear;
     if (periodMode === 'custom' && customStartDate && customEndDate) {
       return `${format(customStartDate, 'dd/MM/yyyy')} - ${format(customEndDate, 'dd/MM/yyyy')}`;
     }
     return selectedMonth;
-  }, [periodMode, customStartDate, customEndDate, selectedMonth]);
+  }, [periodMode, customStartDate, customEndDate, selectedMonth, selectedYear]);
 
   // Export to CSV function
   const exportToCSV = () => {
@@ -476,11 +479,13 @@ export default function FluxoCaixa() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="month">Por Mês</SelectItem>
+                <SelectItem value="year">Visão anual</SelectItem>
                 <SelectItem value="custom">Personalizado</SelectItem>
               </SelectContent>
             </Select>
 
             {/* Month Selector inline */}
+            {periodMode === 'year' && <div className="flex items-center gap-2"><Label htmlFor="cash-flow-year">Ano</Label><Input id="cash-flow-year" aria-label="Ano do fluxo de caixa" type="number" min="1900" max="9999" value={selectedYear} onChange={event => setSelectedYear(event.target.value)} className="min-h-11 w-24" /></div>}
             {periodMode === 'month' && (
               <MonthSelector
                 value={selectedMonth}
@@ -508,6 +513,7 @@ export default function FluxoCaixa() {
               variant="outline" 
               size="sm"
               onClick={() => setShowSettings(!showSettings)}
+              disabled={periodMode === 'year'}
               className="text-xs min-h-[40px]"
             >
               <Settings className="h-4 w-4 mr-2" />
@@ -516,7 +522,7 @@ export default function FluxoCaixa() {
             <Button 
               variant="outline" 
               size="sm" 
-              disabled={!hasData} 
+              disabled={!hasData || periodMode === 'year'} 
               onClick={exportToCSV} 
               className="text-xs min-h-[40px]"
             >
@@ -664,6 +670,7 @@ export default function FluxoCaixa() {
       )}
 
       {/* Empty State */}
+      {periodMode === 'year' ? <AnnualCashFlow year={selectedYear} /> : <>
       {!hasData && (
         <Card className="bg-muted/20 border-muted/40">
           <CardContent className="p-8 text-center">
@@ -1281,6 +1288,7 @@ export default function FluxoCaixa() {
       )}
 
       {/* Receipt Validation Dialog */}
+      </>}
       <ReceiptValidationDialog
         isOpen={validationDialogOpen}
         onClose={() => {

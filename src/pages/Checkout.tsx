@@ -53,6 +53,10 @@ export default function Checkout() {
     phone: '',
   });
 
+  useEffect(() => {
+    if (user?.email) setFormData(current => ({ ...current, email: current.email || user.email || '' }));
+  }, [user?.email]);
+
 
 
   const formatDocument = (value: string) => {
@@ -115,7 +119,7 @@ export default function Checkout() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!selectedPlan) return;
+    if (!selectedPlan || isLoading) return;
 
     setIsLoading(true);
 
@@ -134,7 +138,15 @@ export default function Checkout() {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        const context = error.context;
+        if (context instanceof Response) {
+          const detail = await context.json().catch(() => null);
+          throw new Error(detail?.error || 'Não foi possível preparar o pagamento. Tente novamente.');
+        }
+        throw error;
+      }
+      if (data?.error) throw new Error(data.error);
 
       if (data?.checkout_url) {
         toast({
@@ -242,7 +254,7 @@ export default function Checkout() {
                   {formatPrice(selectedPlan.price_cents)}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  {paymentMethod === 'credit_card' ? 'Cobrança recorrente' : 'Pagamento único (1 mês)'}
+                  {selectedPlan.billing_cycle === 'one_time' ? 'Pagamento único (serviço)' : couponState.status === 'valid' || paymentMethod === 'pix' ? 'Pagamento único (1 mês)' : 'Cobrança recorrente'}
                 </p>
                 <div className="mt-4">
                   <Label htmlFor="plan">Escolher plano</Label>
@@ -266,7 +278,7 @@ export default function Checkout() {
 
               <div className="border-2 border-primary/30 bg-primary/5 rounded-lg p-4 space-y-3">
                 <Label htmlFor="coupon" className="text-sm font-semibold flex items-center gap-2">
-                  🎟️ Possui um cupom de desconto?
+                  Possui um cupom de desconto?
                 </Label>
                 <div className="flex gap-2">
                   <Input
@@ -321,8 +333,8 @@ export default function Checkout() {
                   <span className="text-xl">{formatPrice(effectivePriceCents)}</span>
                 </div>
                 {couponState.status === 'valid' && paymentMethod === 'credit_card' && (
-                  <p className="text-xs text-amber-600 mt-2">
-                    ⚠️ Com cupom aplicado, o pagamento será único (acesso por 1 mês), não recorrente.
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Com cupom aplicado, o pagamento será único (acesso por 1 mês), não recorrente.
                   </p>
                 )}
               </div>
@@ -361,7 +373,7 @@ export default function Checkout() {
                     >
                       <CreditCard className="mb-2 h-6 w-6" />
                       <span className="text-sm font-medium">Cartão de Crédito</span>
-                      <span className="text-xs text-muted-foreground mt-1">Recorrente</span>
+                      <span className="text-xs text-muted-foreground mt-1">{selectedPlan.billing_cycle === 'one_time' || couponState.status === 'valid' ? 'Pagamento único' : 'Recorrente'}</span>
                     </Label>
                   </div>
                   <div>
@@ -378,7 +390,7 @@ export default function Checkout() {
                 </RadioGroup>
                 {paymentMethod === 'pix' && (
                   <p className="text-xs text-amber-600 bg-amber-50 p-2 rounded">
-                    ⚠️ Com PIX, você terá acesso por 1 mês. Após esse período, será necessário efetuar novo pagamento.
+                    Com PIX, você terá acesso por 1 mês. Após esse período, será necessário efetuar novo pagamento.
                   </p>
                 )}
               </div>
@@ -436,7 +448,7 @@ export default function Checkout() {
                   type="submit"
                   className="w-full"
                   size="lg"
-                  disabled={isLoading}
+                  disabled={isLoading || couponState.status === 'validating'}
                 >
                   {isLoading ? (
                     <>
