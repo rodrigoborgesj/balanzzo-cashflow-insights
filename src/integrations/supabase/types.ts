@@ -537,6 +537,78 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_checkout_sessions: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          id: string
+          is_single_payment: boolean
+          pagarme_customer_id: string
+          pagarme_link_id: string
+          payment_method: string
+          plan_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          id?: string
+          is_single_payment: boolean
+          pagarme_customer_id: string
+          pagarme_link_id: string
+          payment_method: string
+          plan_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          id?: string
+          is_single_payment?: boolean
+          pagarme_customer_id?: string
+          pagarme_link_id?: string
+          payment_method?: string
+          plan_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_checkout_sessions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "public_subscription_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_checkout_sessions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_webhook_receipts: {
+        Row: {
+          created_at: string
+          event_key: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          event_key: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          event_key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       payments: {
         Row: {
           amount_cents: number
@@ -1410,6 +1482,20 @@ export type Database = {
       }
     }
     Functions: {
+      confirm_pagarme_payment: {
+        Args: {
+          p_amount: number
+          p_end: string
+          p_event_key: string
+          p_method: string
+          p_plan_id: string
+          p_provider_subscription_id: string
+          p_start: string
+          p_transaction_id: string
+          p_user_id: string
+        }
+        Returns: string
+      }
       get_subscription_plans: {
         Args: never
         Returns: {
