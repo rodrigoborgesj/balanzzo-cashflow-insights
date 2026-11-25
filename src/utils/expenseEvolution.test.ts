@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'bun:test';
 import { expenseRanking, expenseEvolution } from './expenseEvolution';
 
 const t = (d: string, valor: number, descricao: string, extra: any = {}) => ({ id: d + descricao + valor, data_transacao: d, mes_referencia: null, valor, descricao, status_conciliacao: true, categoria_final: 'Fornecedores', ...extra }) as any;
