@@ -25,6 +25,7 @@ import { IncomeRanking } from "@/components/charts/IncomeRanking";
 import { RecentTransactions } from "@/components/charts/RecentTransactions";
 import { CombinedMonthlyChart } from "@/components/charts/CombinedMonthlyChart";
 import { YearlyRevenueChart } from "@/components/charts/YearlyRevenueChart";
+import { ExpenseEvolutionChart } from "@/components/charts/ExpenseEvolutionChart";
 import { FutureProjectionsChart } from "@/components/charts/FutureProjectionsChart";
 // import { ContasAPagarTermometro } from "@/components/dashboard/ContasAPagarTermometro"; // Em ajuste
 
@@ -278,6 +279,9 @@ export default function Dashboard() {
 
       {/* Faturamento x Despesas - Anual */}
       <YearlyRevenueChart painelData={yearlyPainelData} formatCurrency={formatCurrency} />
+
+      {/* Ranking de despesas por evolução */}
+      <ExpenseEvolutionChart />
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
