@@ -350,6 +350,7 @@ export function ManualTransactionForm({ onTransactionAdded, userCategories = [],
         categoria_final: formData.category,
         categoria_sugerida: formData.category,
         status_conciliacao: true, // ✅ CRÍTICO: Marca como conciliada para aparecer no fluxo de caixa
+        metodo_pagamento: formData.paymentMethod || null,
         origem_arquivo: 'manual_entry',
         mes_referencia: primaryDate.substring(0, 7) + '-01',
         hash_transacao: btoa(`${primaryDate}-${primaryDescription}-${finalAmount}-${user.id}-${Date.now()}`).substring(0, 50),

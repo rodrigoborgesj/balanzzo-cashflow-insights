@@ -58,6 +58,18 @@ const categoriesDespesas = [
   "Outros Despesas"
 ];
 
+const paymentMethodLabels: Record<string, string> = {
+  pix: 'Pix',
+  cartao_credito: 'Cartão de crédito',
+  cartao_debito: 'Cartão de débito',
+  boleto: 'Boleto',
+  dinheiro: 'Dinheiro',
+  transferencia: 'Transferência',
+  outros: 'Outros',
+};
+
+const formatPaymentMethod = (method?: string | null) => method ? paymentMethodLabels[method] || method : '';
+
 export default function Conciliacao() {
   
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -575,7 +587,10 @@ export default function Conciliacao() {
                             <div key={index} className="text-xs flex justify-between items-center p-1 border-b last:border-b-0">
                               <div className="flex-1 truncate max-w-[200px]">
                                 <div className="text-black">{transaction.description}</div>
-                                <div className="text-gray-600">{parseLocalDate(transaction.date).toLocaleDateString('pt-BR')}</div>
+                                <div className="text-gray-600">
+                                  {parseLocalDate(transaction.date).toLocaleDateString('pt-BR')}
+                                  {transaction.paymentMethod ? ` · ${formatPaymentMethod(transaction.paymentMethod)}` : ''}
+                                </div>
                               </div>
                               <span className={transaction.value >= 0 ? "text-black font-medium" : "text-black font-medium"}>
                                 {transaction.value >= 0 ? '+' : ''}R$ {transaction.value.toFixed(2)}
@@ -838,6 +853,11 @@ export default function Conciliacao() {
                         </div>
                       </div>
                       <div className="flex flex-wrap items-center gap-2">
+                        {transaction.metodo_pagamento && (
+                          <Badge variant="outline" className="text-xs">
+                            {formatPaymentMethod(transaction.metodo_pagamento)}
+                          </Badge>
+                        )}
                         <Select
                           value={transaction.categoria_final || ""}
                           onValueChange={(value) => handleCategorize(transaction.id, value)}
@@ -866,7 +886,7 @@ export default function Conciliacao() {
 
                 {/* Desktop Table View */}
                 <div className="hidden sm:block overflow-x-auto">
-                  <div className="min-w-[640px]">
+                  <div className="min-w-[800px]">
                     <Table>
                       <TableHeader>
                         <TableRow>
@@ -882,6 +902,7 @@ export default function Conciliacao() {
                           </TableHead>
                           <TableHead className="text-xs md:text-sm">Data</TableHead>
                           <TableHead className="text-xs md:text-sm">Descrição</TableHead>
+                          <TableHead className="text-xs md:text-sm">Forma de pagamento</TableHead>
                           <TableHead className="text-xs md:text-sm">Valor</TableHead>
                           <TableHead className="text-xs md:text-sm">Categoria</TableHead>
                           <TableHead className="text-xs md:text-sm">Status</TableHead>
@@ -908,7 +929,7 @@ export default function Conciliacao() {
                       <TableBody>
                         {isLoading && (
                           <TableRow>
-                            <TableCell colSpan={7} className="text-center py-8">
+                            <TableCell colSpan={8} className="text-center py-8">
                               <div className="flex items-center justify-center gap-2">
                                 <Loader2 className="h-4 w-4 animate-spin" />
                                 Carregando transações...
@@ -919,7 +940,7 @@ export default function Conciliacao() {
                         
                         {!isLoading && filteredTransactions.length === 0 && (
                           <TableRow>
-                            <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                            <TableCell colSpan={8} className="text-center py-8 text-gray-500">
                               Nenhuma transação encontrada
                             </TableCell>
                           </TableRow>
@@ -940,8 +961,15 @@ export default function Conciliacao() {
                             <TableCell>
                               {parseLocalDate(transaction.data_transacao).toLocaleDateString('pt-BR')}
                             </TableCell>
-                            <TableCell className="max-w-xs truncate">
+                            <TableCell className="max-w-xs truncate" title={transaction.descricao || ''}>
                               {transaction.descricao}
+                            </TableCell>
+                            <TableCell>
+                              {transaction.metodo_pagamento ? (
+                                <Badge variant="outline">{formatPaymentMethod(transaction.metodo_pagamento)}</Badge>
+                              ) : (
+                                <span className="text-muted-foreground">—</span>
+                              )}
                             </TableCell>
                             <TableCell className={transaction.valor >= 0 ? "text-green-600 font-medium" : "text-red-600 font-medium"}>
                               R$ {transaction.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}

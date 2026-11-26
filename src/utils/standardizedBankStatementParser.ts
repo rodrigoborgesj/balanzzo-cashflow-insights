@@ -26,6 +26,7 @@ export interface StandardizedBankTransaction {
   value: number; // with dot as decimal separator
   description: string;
   identifier?: string; // Unique bank identifier (e.g., Nubank UUID)
+  paymentMethod?: 'pix' | 'cartao_credito' | 'cartao_debito' | 'boleto' | null;
 }
 
 export interface StandardizedParseResult {
@@ -349,8 +350,18 @@ export class StandardizedBankStatementParser {
     return /lan[çc]amento/.test(firstLine) && firstLine.includes('detalhes') && /documento/.test(firstLine) && firstLine.includes('valor');
   }
 
+  /** Infere a forma de pagamento pelo tipo de lançamento informado pelo Banco do Brasil. */
+  private static inferBancoDoBrasilPaymentMethod(lancamento: string): StandardizedBankTransaction['paymentMethod'] {
+    const normalized = this.normalizeForMatching(lancamento);
+    if (/\bpix\b/.test(normalized)) return 'pix';
+    if (/cartao.*credito|credito.*cartao/.test(normalized)) return 'cartao_credito';
+    if (/compra com cartao|cartao.*debito|debito.*cartao|estorno compra/.test(normalized)) return 'cartao_debito';
+    if (/\bboleto\b/.test(normalized)) return 'boleto';
+    return null;
+  }
+
   /**
-   * Descrição = coluna Lançamento; valor = coluna Valor. Linhas de saldo são ignoradas.
+   * Descrição = coluna Detalhes; forma de pagamento = coluna Lançamento; valor = coluna Valor.
    * O identificador usa data + horário (dos Detalhes) + nº do documento, para que
    * transações diferentes com o mesmo valor não sejam tratadas como duplicatas.
    */
@@ -372,12 +383,12 @@ export class StandardizedBankStatementParser {
     for (let i = 1; i < rows.length; i++) {
       const row = rows[i];
       result.processedRows++;
-      const description = row[descIdx] || '';
+      const lancamento = row[descIdx] || '';
       const details = detIdx >= 0 ? row[detIdx] || '' : '';
-      if (!description) continue;
+      if (!lancamento) continue;
       // "Saldo ..." (Saldo Anterior, Saldo do dia) e aplicações/resgates do
       // BB Rende Fácil não são movimentações reais: duplicariam o saldo.
-      const searchable = this.normalizeForMatching(`${description} ${details}`);
+      const searchable = this.normalizeForMatching(`${lancamento} ${details}`);
       if (/^saldo\b/.test(searchable) || /\bsaldo do dia\b/.test(searchable)) continue;
       if (/rende\s*facil\b/.test(searchable)) continue;
       const m = (row[dateIdx] || '').match(/(\d{2})\/(\d{2})\/(\d{4})/);
@@ -390,7 +401,13 @@ export class StandardizedBankStatementParser {
       const key = `bb|${date} ${time}|${doc}|${value}`;
       const n = (seen.get(key) || 0) + 1;
       seen.set(key, n);
-      result.transactions.push({ date, description, value, identifier: n > 1 ? `${key}|${n}` : key });
+      result.transactions.push({
+        date,
+        description: details || lancamento,
+        value,
+        paymentMethod: this.inferBancoDoBrasilPaymentMethod(lancamento),
+        identifier: n > 1 ? `${key}|${n}` : key,
+      });
       result.validRows++;
     }
     return result;

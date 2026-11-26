@@ -1279,6 +1279,7 @@ export type Database = {
           hash_transacao: string | null
           id: string
           mes_referencia: string | null
+          metodo_pagamento: string | null
           origem_arquivo: string | null
           status_conciliacao: boolean | null
           status_validacao: string | null
@@ -1301,6 +1302,7 @@ export type Database = {
           hash_transacao?: string | null
           id?: string
           mes_referencia?: string | null
+          metodo_pagamento?: string | null
           origem_arquivo?: string | null
           status_conciliacao?: boolean | null
           status_validacao?: string | null
@@ -1323,6 +1325,7 @@ export type Database = {
           hash_transacao?: string | null
           id?: string
           mes_referencia?: string | null
+          metodo_pagamento?: string | null
           origem_arquivo?: string | null
           status_conciliacao?: boolean | null
           status_validacao?: string | null

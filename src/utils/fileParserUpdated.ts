@@ -405,7 +405,7 @@ export class FileParser {
           observacoes: '',
           conta_origem: 'importacao',
           conta_destino: '',
-          metodo_pagamento: '',
+          metodo_pagamento: transaction.paymentMethod || '',
           tags: [],
           anexos: [],
           origem_arquivo: 'CSV',

@@ -15,12 +15,16 @@ const FIXTURE = [
   '"02/10/2026","Pix - Enviado","02/10 18:40 59625260000103 FULANO","11400000000002","-6,00","Saída"',
 ].join('\n');
 
-test('ignora BB Rende Fácil e todas as linhas de saldo do extrato Banco do Brasil', () => {
+test('usa Detalhes como descrição e ignora BB Rende Fácil e linhas de saldo', () => {
   const result = StandardizedBankStatementParser.parseBancoDoBrasilCSV(FIXTURE);
   const descriptions = result.transactions.map(t => t.description);
 
   expect(result.transactions).toHaveLength(3);
-  expect(descriptions).toEqual(['Pix - Recebido', 'Pix - Enviado', 'Pix - Enviado']);
+  expect(descriptions).toEqual([
+    '01/10 13:53 59625260000103 CUSCO VEIO',
+    '02/10 09:15 59625260000103 FULANO',
+    '02/10 18:40 59625260000103 FULANO',
+  ]);
   expect(descriptions.some(d => /rende\s*facil/i.test(d))).toBe(false);
   expect(descriptions.some(d => /saldo/i.test(d))).toBe(false);
 });
@@ -38,4 +42,21 @@ test('não trata como duplicata movimentações com o mesmo valor em horários d
   const identifiers = result.transactions.map(t => t.identifier);
 
   expect(new Set(identifiers).size).toBe(3);
+});
+
+test('identifica Pix, débito e crédito pela coluna Lançamento sem classificar boleto como cartão', () => {
+  const result = StandardizedBankStatementParser.parseBancoDoBrasilCSV([
+    HEADER,
+    '"02/10/2026","Pix - Enviado","02/10 10:37 MURIELA ALIMENTOS","100202","-696,50","Saída"',
+    '"02/10/2026","Compra com Cartão","02/10 12:52 MP*TROPICAL","428171","-60,00","Saída"',
+    '"02/10/2026","Compra no Cartão de Crédito","02/10 13:04 HAUSSEN","452796","-51,55","Saída"',
+    '"02/10/2026","Pagamento de Boleto","KEM DISTRIBUIDORA A LTDA","100201","-339,86","Saída"',
+  ].join('\n'));
+
+  expect(result.transactions.map(t => t.paymentMethod)).toEqual([
+    'pix',
+    'cartao_debito',
+    'cartao_credito',
+    'boleto',
+  ]);
 });

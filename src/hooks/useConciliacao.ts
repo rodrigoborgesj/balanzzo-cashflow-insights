@@ -13,6 +13,7 @@ export interface ParsedTransaction {
   value: number;       // Normalized number with dot decimal
   description: string; // Trimmed text
   identifier?: string; // Unique bank identifier (e.g., Nubank UUID)
+  paymentMethod?: 'pix' | 'cartao_credito' | 'cartao_debito' | 'boleto' | null;
 }
 
 // Normalized transaction for database insertion
@@ -28,6 +29,7 @@ export interface Transaction {
   categoria_final?: string;
   status_conciliacao: boolean;
   origem_arquivo?: string;
+  metodo_pagamento?: string | null;
   hash_transacao?: string;
   mes_referencia?: string;
   criado_em?: string;
@@ -443,7 +445,7 @@ export function useConciliacao() {
           } else {
             if (descriptionLower.includes('tarifa') || descriptionLower.includes('taxa')) {
               categoria_sugerida = 'Tarifa bancária';
-            } else if (descriptionLower.includes('transferencia') || descriptionLower.includes('pix')) {
+            } else if (transaction.paymentMethod === 'pix' || descriptionLower.includes('transferencia') || descriptionLower.includes('pix')) {
               categoria_sugerida = 'Fornecedores';
             } else {
               categoria_sugerida = 'Outros Despesas';
@@ -465,6 +467,7 @@ export function useConciliacao() {
             status_conciliacao: false,
             mes_referencia,
             tipo,
+            metodo_pagamento: transaction.paymentMethod || null,
             origem_arquivo: sourceFileName ? sourceFileName.slice(0, 200) : 'CSV'
           });
         } catch (error) {
