@@ -16,3 +16,8 @@
 - [x] Add the field and include initial savings in progress and totals.
 - [x] Run calculation tests and verify the database calculation definition.
 - [ ] Verify authenticated creation through the UI (blocked by external unmanaged authentication).
+# Banco do Brasil statement
+
+- [x] Read the Banco do Brasil statement using Lançamento for description and Valor for amount, identifying rows by date, time and document number.
+- [x] Leave out BB Rende Fácil movements and every "Saldo" line (Saldo Anterior, Saldo do dia) so the balance is not duplicated.
+- [ ] Verify the filtered import through the reconciliation screen with a real account.

@@ -333,6 +333,16 @@ export class StandardizedBankStatementParser {
     return result;
   }
 
+  /** Remove acentos e normaliza espaços para comparações de texto robustas. */
+  private static normalizeForMatching(text: string): string {
+    return (text || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .toLowerCase();
+  }
+
   /** Banco do Brasil: header "Data","Lançamento","Detalhes","Nº documento","Valor","Tipo Lançamento" */
   private static isBancoDoBrasilCSV(content: string): boolean {
     const firstLine = (content.split('\n')[0] || '').replace(/^\uFEFF/, '').toLowerCase();
@@ -363,13 +373,18 @@ export class StandardizedBankStatementParser {
       const row = rows[i];
       result.processedRows++;
       const description = row[descIdx] || '';
-      if (!description || /^s\s*a\s*l\s*d\s*o/i.test(description)) continue;
+      const details = detIdx >= 0 ? row[detIdx] || '' : '';
+      if (!description) continue;
+      // "Saldo ..." (Saldo Anterior, Saldo do dia) e aplicações/resgates do
+      // BB Rende Fácil não são movimentações reais: duplicariam o saldo.
+      const searchable = this.normalizeForMatching(`${description} ${details}`);
+      if (/^saldo\b/.test(searchable) || /\bsaldo do dia\b/.test(searchable)) continue;
+      if (/rende\s*facil\b/.test(searchable)) continue;
       const m = (row[dateIdx] || '').match(/(\d{2})\/(\d{2})\/(\d{4})/);
       if (!m) continue;
       const date = `${m[3]}-${m[2]}-${m[1]}`;
       const value = this.parseAmount(row[valueIdx] || '');
       if (!value || isNaN(value)) continue;
-      const details = detIdx >= 0 ? row[detIdx] || '' : '';
       const time = (details.match(/\b(\d{2}:\d{2}(?::\d{2})?)\b/) || [])[1] || '';
       const doc = docIdx >= 0 ? row[docIdx] || '' : '';
       const key = `bb|${date} ${time}|${doc}|${value}`;
