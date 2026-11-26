@@ -137,6 +137,10 @@ export class StandardizedBankStatementParser {
         return this.parsePagtrustCSV(content);
       }
 
+      if (this.isBancoDoBrasilCSV(content)) {
+        return this.parseBancoDoBrasilCSV(content);
+      }
+
       if (this.isStoneCSV(content)) {
         console.log('🏦 Stone CSV detected');
         return this.parseStoneCSV(content);
@@ -324,6 +328,54 @@ export class StandardizedBankStatementParser {
       if (!description || !value || isNaN(value)) continue;
       const code = codeIdx >= 0 ? row[codeIdx] : '';
       result.transactions.push({ date, description, value, identifier: `pagtrust|${date} ${time}|${code}` });
+      result.validRows++;
+    }
+    return result;
+  }
+
+  /** Banco do Brasil: header "Data","Lançamento","Detalhes","Nº documento","Valor","Tipo Lançamento" */
+  private static isBancoDoBrasilCSV(content: string): boolean {
+    const firstLine = (content.split('\n')[0] || '').replace(/^\uFEFF/, '').toLowerCase();
+    return /lan[çc]amento/.test(firstLine) && firstLine.includes('detalhes') && /documento/.test(firstLine) && firstLine.includes('valor');
+  }
+
+  /**
+   * Descrição = coluna Lançamento; valor = coluna Valor. Linhas de saldo são ignoradas.
+   * O identificador usa data + horário (dos Detalhes) + nº do documento, para que
+   * transações diferentes com o mesmo valor não sejam tratadas como duplicatas.
+   */
+  static parseBancoDoBrasilCSV(content: string): StandardizedParseResult {
+    const result: StandardizedParseResult = { transactions: [], errors: [], warnings: [], processedRows: 0, validRows: 0 };
+    const parsed = parse(content.replace(/^\uFEFF/, ''), { delimiter: ',', header: false, skipEmptyLines: true, quoteChar: '"' });
+    const rows = (parsed.data as string[][]).map(r => r.map(c => (c ?? '').trim()));
+    const header = (rows[0] || []).map(h => h.toLowerCase());
+    const dateIdx = header.findIndex(h => h === 'data');
+    const descIdx = header.findIndex(h => /^lan[çc]amento$/.test(h));
+    const detIdx = header.findIndex(h => h === 'detalhes');
+    const docIdx = header.findIndex(h => /documento/.test(h));
+    const valueIdx = header.findIndex(h => h === 'valor');
+    if (dateIdx < 0 || descIdx < 0 || valueIdx < 0) {
+      result.errors.push('Colunas Data, Lançamento ou Valor não encontradas no extrato Banco do Brasil');
+      return result;
+    }
+    const seen = new Map<string, number>();
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i];
+      result.processedRows++;
+      const description = row[descIdx] || '';
+      if (!description || /^s\s*a\s*l\s*d\s*o/i.test(description)) continue;
+      const m = (row[dateIdx] || '').match(/(\d{2})\/(\d{2})\/(\d{4})/);
+      if (!m) continue;
+      const date = `${m[3]}-${m[2]}-${m[1]}`;
+      const value = this.parseAmount(row[valueIdx] || '');
+      if (!value || isNaN(value)) continue;
+      const details = detIdx >= 0 ? row[detIdx] || '' : '';
+      const time = (details.match(/\b(\d{2}:\d{2}(?::\d{2})?)\b/) || [])[1] || '';
+      const doc = docIdx >= 0 ? row[docIdx] || '' : '';
+      const key = `bb|${date} ${time}|${doc}|${value}`;
+      const n = (seen.get(key) || 0) + 1;
+      seen.set(key, n);
+      result.transactions.push({ date, description, value, identifier: n > 1 ? `${key}|${n}` : key });
       result.validRows++;
     }
     return result;
